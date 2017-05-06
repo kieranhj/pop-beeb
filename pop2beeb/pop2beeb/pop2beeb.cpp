@@ -65,6 +65,18 @@ unsigned char even_columns[8] =
 	WHITE0
 };
 
+unsigned char mode1[8] =
+{
+	0,							// black
+	1,							// purple = magenta
+	2,							// green
+	3,							// white
+	0,							// black
+	1,							// blue = blue or cyan
+	2,							// orange = red or yellow or stiple?
+	3							// white
+};
+
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
 {
 	int pixel_width = apple_width * 7;
@@ -143,8 +155,37 @@ void convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pi
 			{
 				colour_data[y*pixel_width + x] = group1 | even_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
 			}
+
+			total_colours[colour_data[y*pixel_width + x]]++;
 		}
 	}
+}
+
+int convert_colour_to_mode1(unsigned char *colour_data, int pixel_width, int pixel_height)
+{
+	int pixel_pitch = pixel_width;
+
+	for (int x = pixel_pitch - 1; x >= 0; x--)
+	{
+		int y;
+
+		for (y = 0; y < pixel_height; y++)
+		{
+			if (colour_data[y*pixel_pitch + x] != BLACK0 && colour_data[y*pixel_pitch + x] != BLACK1)
+				break;
+		}
+
+		if (y == pixel_height)
+			pixel_width--;
+	}
+
+	int mode1_width = (pixel_width + 3) / 4;
+	int mode1_height = pixel_height;
+	int mode1_bytes = mode1_width * mode1_height;
+
+	printf("%d x %d = %d bytes, %d x %d pixels\n", mode1_width, mode1_height, mode1_bytes, pixel_width, pixel_height);
+
+	return mode1_bytes;
 }
 
 int main(int argc, char **argv)
@@ -264,6 +305,17 @@ int main(int argc, char **argv)
 		sprintf(testname, "%s.png", inputname);
 		img.save(testname);
 	}
+
+	int total_mode1 = 0;
+
+	for (int i = 0; i < num_images; i++)
+	{
+		printf("Image[%d]: MODE1=", i);
+		total_mode1 += convert_colour_to_mode1(colours[i], pixel_size[i][0], pixel_size[i][1]);
+	}
+
+	printf("Total MODE1 bytes = %d\n", total_mode1);
+	printf("Size increase = %f%%\n", 100.0f * total_mode1 / (float)total_bytes);
 
 	fclose(input);
 	if (parity)
