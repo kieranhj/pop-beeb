@@ -45,3 +45,13 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.suo
+pop2beeb/pop2beeb.VC.db
+*.opendb
+pop2beeb/pop2beeb/Debug
+pop2beeb/pop2beeb/Release
+pop2beeb/pop2beeb/pop2beeb.vcxproj.filters
+*.user
+pop2beeb/pop2beeb.ilk
+*.iobj
+pop2beeb/pop2beeb.ipdb
