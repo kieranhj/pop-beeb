@@ -55,3 +55,6 @@ pop2beeb/pop2beeb/pop2beeb.vcxproj.filters
 pop2beeb/pop2beeb.ilk
 *.iobj
 pop2beeb/pop2beeb.ipdb
+compile.txt
+makekc.bat
+runkc.bat
