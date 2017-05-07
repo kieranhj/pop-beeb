@@ -27,11 +27,13 @@ GUARD &3000
 
 .main
 {
+    \\ MODE 4
     LDA #22
     JSR &ffee
     LDA #4
     JSR &ffee
 
+    \\ Parse chtab header
     LDA #LO(chtab1)
     STA readptr
     LDA #HI(chtab1)
@@ -41,6 +43,7 @@ GUARD &3000
     LDA (readptr), Y
     STA numimages
 
+    \\ Relocate pointers to image data
     LDX #0
     .loop
     INY
@@ -58,7 +61,21 @@ GUARD &3000
     CPX numimages
     BCC loop
 
-    LDA #1
+    \\ Sprite plot
+    LDA #LO(&6500)
+    STA writeptr
+    LDA #HI(&6500)
+    STA writeptr+1
+
+    LDA #0
+    JSR apple_plot_mode_4
+
+    .return
+    RTS
+}
+
+.apple_plot_mode_4
+{
     ASL A
     TAX
     LDA chtab1+1, X
@@ -80,11 +97,6 @@ GUARD &3000
     LDA readptr+1
     ADC #0
     STA sprite_addr + 2
-
-    LDA #LO(&6500)
-    STA writeptr
-    LDA #HI(&6500)
-    STA writeptr+1
 
 
     LDX #0          ; data index
@@ -180,6 +192,7 @@ GUARD &3000
     .return
     RTS
 }
+
 
 .chtab1
 INCBIN "Images/IMG.CHTAB7.bin"
