@@ -13,15 +13,14 @@ GUARD &8F
 .yoffset    SKIP 1
 .yindex     SKIP 1
 
-.apple_count    SKIP 1
-.apple_byte     SKIP 1
+.apple_count    SKIP 1          ; width
+.apple_byte     SKIP 1          ; sprite data
 
-.beeb_byte  SKIP 1
-.beeb_count SKIP 1
+.beeb_byte  SKIP 1              ; no lookup for screen byte
+.beeb_count SKIP 1              ; beeb bits (8/4)
 
-.bit_count  SKIP 1
-.pal_index  SKIP 1
-.pal_jump   SKIP 1
+.bit_count  SKIP 1              ; apple bits (7)
+.pal_index  SKIP 1              ; lookup for screen byte
 
 ORG &E00
 GUARD &3000
@@ -249,9 +248,7 @@ ENDIF
     STA apple_count
 
     LDA #0
-    STA beeb_byte
     STA pal_index
-    STA pal_jump
 
     LDA #4
     STA beeb_count
@@ -273,27 +270,16 @@ ENDIF
     LSR apple_byte       ; rotate bottom bit into Carry
     ROL pal_index        ; rotate carry into palette index
 
-    ; look up colour pixel
-    LDA pal_index
-    AND #&7
-    STA pal_index
-    ORA pal_jump
-    TAY
-    LDA pal_table,Y
-    ORA beeb_byte
-    STA beeb_byte
-
-    LDA pal_jump
-    CLC
-    ADC #8
-    STA pal_jump
-
     DEC beeb_count
     BNE next_bit
 
     \\ Write byte to screen
+    LDA pal_index
+    AND #&3F
+    TAY
+    LDA pal_table_6_to_4, Y
+
     LDY yindex
-    LDA beeb_byte
     STA (writeptr), Y
 
     \\ Next screen column
@@ -301,10 +287,6 @@ ENDIF
     CLC
     ADC #8
     STA yindex
-
-    LDA #0
-    STA beeb_byte
-    STA pal_jump
 
     LDA #4
     STA beeb_count
@@ -335,26 +317,15 @@ ENDIF
     .flushloop
     ASL pal_index        ; rotate zero into palette index
 
-    ; look up colour pixel
-    LDA pal_index
-    AND #&7
-    STA pal_index
-    ORA pal_jump
-    TAY
-    LDA pal_table,Y
-    ORA beeb_byte
-    STA beeb_byte
-
-    LDA pal_jump
-    CLC
-    ADC #8
-    STA pal_jump
-
     DEC beeb_count
     BNE flushloop
 
+    LDA pal_index
+    AND #&3F
+    TAY
+    LDA pal_table_6_to_4, Y
+
     LDY yindex
-    LDA beeb_byte
     STA (writeptr), Y
     
     .done_row
@@ -385,59 +356,59 @@ ENDIF
     RTS
 }
 
-MACRO MODE1_PIXEL colour, shift
-    EQUB (((colour AND 2) * 8) OR (colour AND 1)) << shift
-ENDMACRO
 
-.pal_table
-.pal_table_even3
-{
-    MODE1_PIXEL 0, 3
-    MODE1_PIXEL 0, 3
-    MODE1_PIXEL 2, 3
-    MODE1_PIXEL 3, 3
-    MODE1_PIXEL 0, 3
-    MODE1_PIXEL 1, 3
-    MODE1_PIXEL 3, 3
-    MODE1_PIXEL 3, 3
-}
+.pal_table_6_to_4
+FOR n,0,63,1
 
-.pal_table_odd2
-{
-    MODE1_PIXEL 0, 2
-    MODE1_PIXEL 0, 2
-    MODE1_PIXEL 1, 2
-    MODE1_PIXEL 3, 2
-    MODE1_PIXEL 0, 2
-    MODE1_PIXEL 2, 2
-    MODE1_PIXEL 3, 2
-    MODE1_PIXEL 3, 2
-}
+abc=(n >> 3) AND 7
+bcd=(n >> 2) AND 7
+cde=(n >> 1) AND 7
+def=(n) AND 7
 
-.pal_table_even1
-{
-    MODE1_PIXEL 0, 1
-    MODE1_PIXEL 0, 1
-    MODE1_PIXEL 2, 1
-    MODE1_PIXEL 3, 1
-    MODE1_PIXEL 0, 1
-    MODE1_PIXEL 1, 1
-    MODE1_PIXEL 3, 1
-    MODE1_PIXEL 3, 1
-}
+\\ even3
+IF abc=3 OR abc=6 OR abc=7
+    pixel3=&88          ; white3
+ELIF abc=2
+    pixel3=&80          ; yellow3
+ELIF abc=5
+    pixel3=&08          ; red3
+ELSE
+    pixel3=0
+ENDIF
 
-.pal_table_odd0
-{
-    MODE1_PIXEL 0, 0
-    MODE1_PIXEL 0, 0
-    MODE1_PIXEL 1, 0
-    MODE1_PIXEL 3, 0
-    MODE1_PIXEL 0, 0
-    MODE1_PIXEL 2, 0
-    MODE1_PIXEL 3, 0
-    MODE1_PIXEL 3, 0
-}
+IF bcd=3 OR bcd=6 OR bcd=7
+    pixel2=&44          ; white2
+ELIF bcd=5
+    pixel2=&40          ; yellow2
+ELIF bcd=2
+    pixel2=&04          ; red2
+ELSE
+    pixel2=0
+ENDIF
 
+IF cde=3 OR cde=6 OR cde=7
+    pixel1=&22          ; white1
+ELIF cde=2
+    pixel1=&20          ; yellow1
+ELIF cde=5
+    pixel1=&02          ; red1
+ELSE
+    pixel1=0
+ENDIF
+
+IF def=3 OR def=6 OR def=7
+    pixel0=&11          ; white0
+ELIF def=5
+    pixel0=&10          ; yellow0
+ELIF def=2
+    pixel0=&01          ; red0
+ELSE
+    pixel0=0
+ENDIF
+
+EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
+
+NEXT
 
 .chtab1
 INCBIN "Images/IMG.CHTAB7.bin"
