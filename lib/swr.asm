@@ -16,14 +16,18 @@
     ; scan for roms
     ldx #15
 .rom_loop
-    stx &fe30   ; select rom bank
-    lda &8000   ; read byte
-    tay         ; save
-    eor #&FF    ; invert, so that we are know we are writing a different value 
-    sta &8000   ; write byte
+    stx &f4:stx &fe30   ; select rom bank
+    ldy #0      ; assume rom
+    lda &8008   ; read byte
+    eor #&AA    ; invert, so that we are know we are writing a different value 
+    sta &8008   ; write byte
+    cmp &8008   ; check that byte was written by comparing what we wrote with what we read back
+    bne no_ram
+    eor #&AA
+    sta &8008
+    ldy #1      ; is ram
+    .no_ram
     tya
-    sec
-    sbc &8000   ; check that byte was written by comparing what we wrote with what we read back
     sta swr_rom_banks,x ; 0 if ram, non-zero if rom
     dex
     bpl rom_loop
@@ -56,6 +60,7 @@
 
     ; restore previous bank
     pla
+    sta &f4
     sta &fe30
     cli
     lda swr_ram_banks_count
