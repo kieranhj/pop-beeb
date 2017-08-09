@@ -421,7 +421,7 @@ locals = $e8
 \*-------------------------------
 \*  $40-e7: Game globals
 \*-------------------------------
-ORG $40
+;ORG $40
 
 ;.Char skip $10
 ;.Kid skip $10
@@ -472,63 +472,63 @@ ORG $40
 ;.direcpp skip 1
 ;.blockaddr skip 2
 ;.delay skip 1
-.XCOORD skip 2
-.savekidx skip 1
-.mirrx skip 1
-.dmirr skip 1
-.barrdist skip 1
-.barrcode skip 1
-.imwidth skip 1
-.imheight skip 1
-.leadedge skip 1
-.leftej skip 1
-.rightej skip 1
-.topej skip 1
-.leftblock skip 1
-.rightblock skip 1
-.topblock skip 1
-.bottomblock skip 1
-.CDLeftEj skip 1
-.CDRightEj skip 1
-.endrange skip 1
-.bufindex skip 1
-.blockedge skip 1
-.collideL skip 1
-.collideR skip 1
-.weightless skip 1
-.cutorder skip 1
-.AMtimer skip 1
-.begrange skip 1
-.scrn skip 1
-.keybufptr skip 1
-.VisScrn skip 1
-.OppStrength skip 1
-.jarabove skip 1
-.Kiskiptrength skip 1
-.ChgKiskiptr skip 1
-.MaxKiskiptr skip 1
-.EnemyAlert skip 1
-.ChgOppStr skip 1
-.heroic skip 1
-.clrF skip 1
-.clrB skip 1
-.clrU skip 1
-.clrD skip 1
-.clrbtn skip 1
-.Fsword skip 1
-.purpleflag skip 1 ;$da
-.msgtimer skip 1
-.MaxOppStr skip 1
-.guardprog skip 1
-.ManCtrl skip 1
-.mergetimer skip 1
-.lastpotion skip 1
-.origstrength skip 1
-.jmpaddr skip 2
-.alertguard skip 1
-.createshad skip 1
-.stunned skip 1
-.droppedout skip 1
+;.XCOORD skip 2
+;.savekidx skip 1
+;.mirrx skip 1
+;.dmirr skip 1
+;.barrdist skip 1
+;.barrcode skip 1
+;.imwidth skip 1
+;.imheight skip 1
+;.leadedge skip 1
+;.leftej skip 1
+;.rightej skip 1
+;.topej skip 1
+;.leftblock skip 1
+;.rightblock skip 1
+;.topblock skip 1
+;.bottomblock skip 1
+;.CDLeftEj skip 1
+;.CDRightEj skip 1
+;.endrange skip 1
+;.bufindex skip 1
+;.blockedge skip 1
+;.collideL skip 1
+;.collideR skip 1
+;.weightless skip 1
+;.cutorder skip 1
+;.AMtimer skip 1
+;.begrange skip 1
+;.scrn skip 1
+;.keybufptr skip 1
+;.VisScrn skip 1
+;.OppStrength skip 1
+;.jarabove skip 1
+;.Kiskiptrength skip 1
+;.ChgKiskiptr skip 1
+;.MaxKiskiptr skip 1
+;.EnemyAlert skip 1
+;.ChgOppStr skip 1
+;.heroic skip 1
+;.clrF skip 1
+;.clrB skip 1
+;.clrU skip 1
+;.clrD skip 1
+;.clrbtn skip 1
+;.Fsword skip 1
+;.purpleflag skip 1 ;$da
+;.msgtimer skip 1
+;.MaxOppStr skip 1
+;.guardprog skip 1
+;.ManCtrl skip 1
+;.mergetimer skip 1
+;.lastpotion skip 1
+;.origstrength skip 1
+;.jmpaddr skip 2
+;.alertguard skip 1
+;.createshad skip 1
+;.stunned skip 1
+;.droppedout skip 1
 
 \*-------------------------------
 \*

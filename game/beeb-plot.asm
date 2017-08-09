@@ -4,10 +4,10 @@
 
 ; need to know where we're locating this code!
 
-.start_beeb_plot
+.beeb_plot_start
 
-IF PLOT_MODE == 4
-.apple_plot_mode_4
+IF BEEB_SCREEN_MODE == 4
+.beeb_plot_apple_mode_4
 {
     ASL A
     TAX
@@ -127,29 +127,29 @@ IF PLOT_MODE == 4
 }
 ENDIF
 
-IF PLOT_MODE == 1
-.apple_plot_mode_1
+IF BEEB_SCREEN_MODE == 1
+.beeb_plot_apple_mode_1
 {
     ASL A
     TAX
     LDA chtab1+1, X
-    STA readptr
+    STA beeb_readptr
     LDA chtab1+2, X
-    STA readptr+1
+    STA beeb_readptr+1
 
     LDY #0
-    LDA (readptr), Y
-    STA width
+    LDA (beeb_readptr), Y
+    STA beeb_width
     INY
-    LDA (readptr), Y
-    STA height
+    LDA (beeb_readptr), Y
+    STA beeb_height
 
     CLC
-    LDA readptr
+    LDA beeb_readptr
     ADC #2
     STA init_addr + 1
     STA sprite_addr + 1
-    LDA readptr+1
+    LDA beeb_readptr+1
     ADC #0
     STA init_addr + 2
     STA sprite_addr + 2
@@ -159,14 +159,14 @@ IF PLOT_MODE == 1
     LDY #7          ; yoffset
 
     .yloop
-    STY yoffset
-    STY yindex
+    STY beeb_yoffset
+    STY beeb_yindex
 
-    LDA width
-    STA apple_count
+    LDA beeb_width
+    STA beeb_apple_count
 
     LDA #0
-    STA pal_index
+    STA beeb_pal_index
 
     LDA #4
     STA beeb_count
@@ -174,43 +174,43 @@ IF PLOT_MODE == 1
     \\ Initialise palindex
     .init_addr
     LDA &FFFF, X
-    STA apple_byte
+    STA beeb_apple_byte
 
-    LSR apple_byte
-    ROL pal_index
+    LSR beeb_apple_byte
+    ROL beeb_pal_index
 
     LDA #6              ; we just consumed one
-    STA bit_count
+    STA beeb_bit_count
 
     .xloop
 
     .bit_loop    
-    LSR apple_byte       ; rotate bottom bit into Carry
-    ROL pal_index        ; rotate carry into palette index
+    LSR beeb_apple_byte       ; rotate bottom bit into Carry
+    ROL beeb_pal_index        ; rotate carry into palette index
 
     DEC beeb_count
     BNE next_bit
 
     \\ Write byte to screen
-    LDA pal_index
+    LDA beeb_pal_index
     AND #&3F
     TAY
-    LDA pal_table_6_to_4, Y
+    LDA beeb_plot_pal_table_6_to_4, Y
 
-    LDY yindex
-    STA (writeptr), Y
+    LDY beeb_yindex
+    STA (beeb_writeptr), Y
 
     \\ Next screen column
     TYA
     CLC
     ADC #8
-    STA yindex
+    STA beeb_yindex
 
     LDA #4
     STA beeb_count
 
     .next_bit
-    DEC bit_count
+    DEC beeb_bit_count
     BNE bit_loop
 
     \\ Next apple byte
@@ -219,12 +219,12 @@ IF PLOT_MODE == 1
 
     .sprite_addr
     LDA &FFFF, X
-    STA apple_byte
+    STA beeb_apple_byte
 
     LDA #7
-    STA bit_count
+    STA beeb_bit_count
 
-    DEC apple_count
+    DEC beeb_apple_count
     BNE xloop
 
     \\ Flush Beeb byte to screen if needed
@@ -233,36 +233,36 @@ IF PLOT_MODE == 1
     BEQ done_row
 
     .flushloop
-    ASL pal_index        ; rotate zero into palette index
+    ASL beeb_pal_index        ; rotate zero into palette index
 
     DEC beeb_count
     BNE flushloop
 
-    LDA pal_index
+    LDA beeb_pal_index
     AND #&3F
     TAY
-    LDA pal_table_6_to_4, Y
+    LDA beeb_plot_pal_table_6_to_4, Y
 
-    LDY yindex
-    STA (writeptr), Y
+    LDY beeb_yindex
+    STA (beeb_writeptr), Y
     
     .done_row
-    DEC height
+    DEC beeb_height
     BEQ done
 
-    LDY yoffset
+    LDY beeb_yoffset
     DEY
     BPL jump_yloop
     
     \\ Next char row
 
     SEC
-    LDA writeptr
-    SBC #LO(640)
-    STA writeptr
-    LDA writeptr+1
-    SBC #HI(640)
-    STA writeptr+1
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr+1
 
     LDY #7
     .jump_yloop
@@ -274,7 +274,7 @@ IF PLOT_MODE == 1
     RTS
 }
 
-.pal_table_6_to_4
+.beeb_plot_pal_table_6_to_4
 FOR n,0,63,1
 
 abc=(n >> 3) AND 7
@@ -328,4 +328,4 @@ EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
 NEXT
 ENDIF
 
-.end_plot_beeb
+.beeb_plot_end

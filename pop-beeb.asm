@@ -89,9 +89,9 @@ INCLUDE "lib/print.asm"
 
     \\ MODE
     LDA #22
-    JSR &ffee
-    LDA #PLOT_MODE
-    JSR &ffee
+    JSR oswrch
+    LDA #BEEB_SCREEN_MODE
+    JSR oswrch
 
     \\ Select slot 0
     LDA #0
@@ -99,30 +99,30 @@ INCLUDE "lib/print.asm"
 
     \\ Relocate sprite data
     LDA #LO(chtab1)
-    STA readptr
+    STA beeb_readptr
     LDA #HI(chtab1)
-    STA readptr+1
+    STA beeb_readptr+1
     JSR pop_relocate_chtab
 
     LDX #0
 
     .plot_loop
-    STX sprite_no
+    STX beeb_sprite_no
     
     \\ Sprite plot
     LDA #LO(&4A00)
-    STA writeptr
+    STA beeb_writeptr
     LDA #HI(&4A00)
-    STA writeptr+1
+    STA beeb_writeptr+1
 
     TXA
-    JSR apple_plot_mode_1
+    JSR beeb_plot_apple_mode_1
 
     ldx#10:ldy#0:lda#&81:jsr osbyte	
 
-    LDX sprite_no
+    LDX beeb_sprite_no
     INX
-    CPX numimages
+    CPX beeb_numimages
     BCC plot_loop
 
     .return
@@ -132,25 +132,25 @@ INCLUDE "lib/print.asm"
 .pop_relocate_chtab
 {
     LDY #0
-    LDA (readptr), Y
-    STA numimages
+    LDA (beeb_readptr), Y
+    STA beeb_numimages
 
     \\ Relocate pointers to image data
     LDX #0
     .loop
     INY
     CLC
-    LDA (readptr), Y
+    LDA (beeb_readptr), Y
     ADC #LO(chtab1)
-    STA (readptr), Y
+    STA (beeb_readptr), Y
 
     INY
-    LDA (readptr), Y
+    LDA (beeb_readptr), Y
     ADC #LO(HI(chtab1) - &60)
-    STA (readptr), Y
+    STA (beeb_readptr), Y
 
     INX
-    CPX numimages
+    CPX beeb_numimages
     BCC loop
 
     .return
