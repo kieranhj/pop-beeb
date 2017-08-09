@@ -17,15 +17,16 @@ INCLUDE "lib/bbc_utils.h.asm"
 
 ; POP includes
 
+ORG &0
 GUARD &100
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
-
+INCLUDE "game/beeb-plot.h.asm"
 
 ; Main RAM
 
 ORG &E00
-GUARD &3D80
+GUARD &4B80
 
 .pop_beeb_start
 
@@ -156,6 +157,8 @@ INCLUDE "lib/print.asm"
     RTS
 }
 
+INCLUDE "game/beeb-plot.asm"
+
 .pop_beeb_end
 
 SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
@@ -178,7 +181,7 @@ ORG &8000
 
 .bank0_start
 .chtab1
-INCBIN "Images\IMG.CHTAB1.bin"
+INCBIN "Images/IMG.CHTAB1.bin"
 .bank0_end
 
 SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
