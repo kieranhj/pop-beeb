@@ -23,6 +23,8 @@ INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
 INCLUDE "game/beeb-plot.h.asm"
 
+INCLUDE "game/frameadv.h.asm"
+
 ; Main RAM
 
 ORG &E00
@@ -158,10 +160,17 @@ INCLUDE "lib/print.asm"
 }
 
 INCLUDE "game/beeb-plot.asm"
+INCLUDE "game/frameadv.asm"
+INCLUDE "game/grafix.asm"
+INCLUDE "game/tables.asm"
 
 .pop_beeb_end
 
 SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
+
+; Run time initalised data
+
+INCLUDE "game/eq.asm"
 
 
 ; Construct SHADOW RAM

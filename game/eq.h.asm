@@ -20,12 +20,12 @@ master = $f880
 
 \*  Auxmem
 
-grafix = $400
-tables = $e00
-frameadv = $1290
+\grafix = $400                  ; location determined by assembler
+\tables = $e00                  ; location determined by assembler
+\frameadv = $1290               ; location determined by assembler
 redbufs = $5e00
 menudata = $960f ;ed only
-imlists = $ac00
+\imlists = $ac00                ; location determined by assembler
 endimspace = $b600
 blueprnt = $b700
 
@@ -260,22 +260,9 @@ fast ds 3
 getinitobj ds 3
 ENDIF
 
-IF _TODO
- dum tables
+\dum tables
+\ tables moved to eq.asm
 
-ByteTable ds $100
-OffsetTable ds $100
-BlockTable ds $100
-PixelTable ds $100
-Mult10 ds $10
-Mult7 ds $10
-Mult30 ds $40
-BlockEdge ds 20
-BlockTop ds 5
-BlockBot ds 5
-FloorY ds 5
-BlockAy ds 5
-ENDIF
 
 IF _TODO
  dum blueprnt
@@ -326,63 +313,8 @@ maxmid = 46 ;x11
 maxobj = 20 ;x12
 maxmsg = 32 ;x5
 
-IF _TODO
- dum imlists
-
-genCLS ds 1
-
-bgX ds maxback
-bgY ds maxback
-bgIMG ds maxback
-bgOP ds maxback
-
-fgX ds maxfore
-fgY ds maxfore
-fgIMG ds maxfore
-fgOP ds maxfore
-
-wipeX ds maxwipe
-wipeY ds maxwipe
-wipeH ds maxwipe
-wipeW ds maxwipe
-wipeCOL ds maxwipe
-
-peelX ds maxpeel*2
-peelY ds maxpeel*2
-peelIMGL ds maxpeel*2
-peelIMGH ds maxpeel*2
-
-midX ds maxmid
-midOFF ds maxmid
-midY ds maxmid
-midIMG ds maxmid
-midOP ds maxmid
-midTYP ds maxmid
-midCU ds maxmid
-midCD ds maxmid
-midCL ds maxmid
-midCR ds maxmid
-midTAB ds maxmid
-
-objINDX ds maxobj
-objX ds maxobj
-objOFF ds maxobj
-objY ds maxobj
-objIMG ds maxobj
-objFACE ds maxobj
-objTYP ds maxobj
-objCU ds maxobj
-objCD ds maxobj
-objCL ds maxobj
-objCR ds maxobj
-objTAB ds maxobj
-
-msgX ds maxmsg
-msgOFF ds maxmsg
-msgY ds maxmsg
-msgIMG ds maxmsg
-msgOP ds maxmsg
-ENDIF
+\dum imlists
+\ imlists moved to eq.asm
 
 \*-------------------------------
 \*
@@ -394,7 +326,7 @@ ENDIF
 ORG $00
 
 ;.PAGE skip 1
-;.XCO skip 1
+.XCO skip 1
 ;.YCO skip 1
 ;.OFFSET skip 1
 ;.IMAGE skip 2
@@ -430,14 +362,14 @@ ORG $00
 ;.b1down skip 1
 ;.SINGSTEP skip 1
 ;.blackflag skip 1
-;.SCRNUM skip 1
+.SCRNUM skip 1
 ;.BlueType skip 2
 ;.BlueSpec skip 2
 ;.CUTTIMER skip 1
-;.PRECED skip 1
-;.spreced skip 1
-;.PREV skip 3
-;.sprev skip 3
+.PRECED skip 1
+.spreced skip 1
+.PREV skip 3
+.sprev skip 3
 ;.scrnLeft skip 1
 ;.scrnRight skip 1
 ;.scrnAbove skip 1

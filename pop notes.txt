@@ -1,0 +1,584 @@
+POP notes
+
+Apple II screen = 280 x 192 pixels = 40 x 192 bytes = 7.5k
+One byte = 7 pixels
+
+Goal is MODE 1 for "hi-res" so reduce screen to 280x192 also
+70 x 24 CRTC characters = 70 x 24 x 8 bytes = 13.125k
+Ideally double-buffer these for flicker-free animation
+Use shadow ram - can store some other static data in remaining 6.875k
+
+Fallback is MODE 5 for "low-res" as Apple II can only change colour every 2 pixels anyway
+Equivalent would be 140 x 192 pixels = 35 x 24 CRTC characters = 6720 bytes
+Unfortunately the background tiles are 28 pixels wide in hi-res = 14 pixels wide in low-res
+This is not a multiple of 4 pixels, i.e. a whole number of bytes, in MODE 5
+
+Start with hi-res as we want this to look awesome!
+
+Background pieces are going to become 7x63 bytes = 441 bytes each
+
+auto.s - AI for guard
+bgdata.s - bg piece definitions and lookups, maps chtab entries to a/b/c/d in a piece (I think)
+boot.s - entry, check machine type & memory
+coll.s - collision detection, vertical barriers, left, right, slicer, gate
+crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
+ctrlsubs.s - misc subroutines relating to character cotrol & movement
+eq.s - global constants, zero page, global vars, jump tables, image lists, blueprint info
+frameadv.s - draw screen, draw block, draw objects, load objects, piece drawing logic, object sorting
+framedefs.s - animation tables, data for each animation frame
+gamebg.s - draw all special case objects, text boxes, strength meter, character objects
+gameeq.s - game constants, zero page, vars, jump tables, character vars, types
+grafix.s - background list, foreground, peel, messages, wipe, mid, drawall calls hires routines, keyboard / joystick routines, movemem, sound, rnd, frameadv routines, calc blue, vblank
+hires.s - screen render, cls, sprite draw w/ edge clipping, bit shifting & mirroring, fast render functions, double buffering
+hrparams.s - hires zero page, vars
+hrtables.s - hires tables, pixel shift, mirror, mask, self-mod opcodes
+master.s - main, first boot, init system, attract loop, load music, save game, load character set, load level, epilogue, splash, credits, prologue, demo sequence, start game, disk error
+misc.s - player misc, potion fx, mouse, stab, shadow, reflection, skeletons, health, save game, load level, version
+movedata.s - moveable objects definitions
+mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
+seqdata.s - animation state definitions
+seqtable.s - animation state tables
+sound.s - do sound effects
+soundnames.s - sound & music definitions
+specialk.s - special keys, freeze, restart, sound, save game etc., development keys
+subs.s - special cases for certain rooms, cutscenes, songs, demo player control, level start position, gravity, enemy start positions,  
+tables.s - screen coordinate lookups, multiplication tables
+topctrl.s - top level control, save game, resume save game, level restart, main loop, load next level, next frame (draw), player update, timers, game over check
+unpack.s - decrunch hi-res screens, disk prompt, fades, palettes
+version.s - version string
+
+
+Levels folder (both same contents)
+15 levels including demo & cut scenes
+&900 bytes per level, as per page 13 of doc
+Level blueprint
+24 screens * 30 pieces per screen = 720 bytes (&2D0) * 2 (types + spec)
+Link loc + Map = 256 bytes * 2
+Map = 96 bytes
+Info = 256 bytes
+Total = 2304 bytes (&900) = 2.25 kb
+
+Folder 04 Support contains images, not game data
+SS - screen shots
+F - frames before clean up and putting into appropriate format
+I - more animation frames, look much more cleaned up than F
+IP - possibly final sprite frames - someone has already extracted all these as PNG
+(Probably want to use final source data files, even if packed, as truth.)
+PAC. files are packed - check unpack function in source?
+I. IMG. files are Apple II image files
+
+Doesn't look like main sprite files are packed - just double-hires screen for start etc.
+No idea where these are!
+
+Image files in main source directory follow format on page 22
+<byte> # images in file
+<address first image> - starting at &6000
+<address second image> - etc.
+...
+<address first free>
+
+address 1
+<width in bytes><height in bytes>
+<data>
+address 2
+<width in bytes><height in bytes>
+<data>
+etc.
+
+Remember 1 bytes = 7 pixels (!)
+
+eg. img.chtab1
+first two sprites are 14x41 and 21x41
+Hmmm, definitely want to preprocess these files into Beeb format directly
+Some decisions to make as Apple II can have 6x colours simultaneously
+Options are MODE1 (prefered I think), MODE5 (fallback if memory impossible), MODE2 (wild card)
+Probably define which colour from palette we choose per sprite
+
+BGtab appears to be same format.  Could write a convertor that takes these IMG. files and
+keeps the format the same but adjusts to Beeb pixel format and #bytes - these are going to get larger!
+Should be able to check for columns of no pixels, particularly on animated frames
+e.g. chtab1.2 is 21x41 but sprite is actually only 15 wide
+Beeb sprites will be 4 pixels / byte
+Those examples chtab1.1 and chtab1.2 = 2x41 + 3x41 = 205 bytes on Apple
+Beeb equivalent would be 4x41 + 4x41 = 8x41 = 328 bytes on Beeb... ~60% increase
+
+Propose first step is to write a Beeb convertor for the IMG files
+Can calculate size of Beeb files in MODE 1/2/5 and #colours used
+Save back out in Beeb format
+
+Hard code a routine to plot bg & character sprites to Beeb screen
+Next step would be to get level draw module ported, move code into Beeb hires module
+Goal would be to try and draw all the screens in all the levels on Beeb
+
+Next step would be to get character animation rendering going
+
+Directives
+put = INCLUDE
+ds = SKIP
+db = EQUB
+dum locals - might have to rename these to avoid collision?
+
+Color name    phase ampl luma -R- -G- -B-
+purple HCOLOR=2  45 100  50   255  68 253
+orange HCOLOR=5 135 100  50   255 106  60
+green  HCOLOR=1 225 100  50    20 245  60
+blue   HCOLOR=6 315 100  50    20 207 253
+
+and it never explained clearly what the colour output really looked like, in
+case you had no colour monitor (like me). Comparing different emulators I
+finally came to the decision that the following algorithm might give
+good results. (It may still be improved. This is only a base.)
+Important: always take 3 bits to define the colour of the pixel, i.e. the
+original bit + 2 surrounding bits.
+odd columns (1,3,5...)  even columns (0,2,4...)
+000 = black             000 = black
+001 = black             001 = black
+010 = green/orange      010 = purple/blue
+011 = white             011 = white
+100 = black             100 = black
+101 = purple/blue       101 = green/orange
+110 = white             110 = white
+111 = white             111 = white
+I think this is the way AppleWin or Apple2000 work. ApplePC only looks at the
+preceding pixel (i.e. 2 pixels only).
+
+Hmm, converting to MODE1 at 2bpp (4ppb) increases gfx size by 50-66%, i.e. a lot.
+POP doc says in memory image tables ~49.5K this would become more like 80K. Arse.
+Plus MODE1 screen is substantially larger than Apple hires (see above.)
+Also need to be able to plot sprites on any pixel offset. 0-6
+
+Maybe convert sprites on the fly using the algo above?!
+Probably some cunning way to roll the Apple screen bits into the Beeb screen byte format
+The data source parity problem presumably fixes itself as well in this case as will be displaying
+equivalent to Apple screen?  Ponder.
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+7xbytes 1bpp = 56pixels
+AAAAAAAB BBBBBBCC CCCCCDDD DDDDEEEE EEEFFFFF FFGGGGGG GHHHHHHH
+01234560 12345601 23456012 34560123 45601234 56012345 60123456
+
+In theory just rotate the source bytes right into Carry
+then left into the destination byte.
+All based on whole number of source bytes.
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+2bpp
+ABCDABCD colour bits
+
+EOEO EOEO E
+ZAAA AAAA`
+Z012 3456
+AAAA AAAB
+0123 4560
+AAAA AABB
+1234 5601
+
+Continually rotate pixels out of the Apple byte into a 3-bit index
+For each index, lookup Beeb bits from table and mask in
+Toggle lookup table
+Every four look ups, write to screen and increment column
+
+Actually lose last pixel column when 3 bytes = 21 pixels
+because have plotted 20 pixels and no more data to rotate
+14 pixels works fine, 28 pixels should work fine..
+
+This works but is very slow (unsurprisingly!)
+Can surely just look up 7-bits directly into 4 colours?
+3-bits lookup one colour pixel (2 bits) then shifted each pixel
+Therefore 6-bits used to lookup 4 pixels
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+Four pixels from 6 bits:
+XXZAAAAA XXAAAABB XXBBBBBB XXBBBCCC XXCCCCCC XXCCDDDD XXDDDDDE | XXDEEEEE XXEEEEFF XXFFFFFF
+XXZ01234 XX345601 XX012345 XX456012 XX123456 XX560123 XX234560 | XX601234 XX345601 XX012345
+
+Shift left 4 bits
+Add next 4 bits in sequence
+Mask off top 2 bits (or duplicate table x4)
+
+abcdef
+abc = even3
+bcd = odd2
+cde = even1
+def = odd0
+
+Still having to rotate every bit of sprite data, so 3x32 bytes = 672 bits
+672 x LSR + ROL + DEC + DEC = 672 x (5 + 5 + 5 + 5) = 13440 cycles not including everything else !!
+Clearly lots of room for optimisation here. Given how infrequently new bytes are written/read
+would make more sense to keep the bit counters in X&Y rather than data indices, etc.
+But at least it works for now.  :)
+
+IMG.BGTAB1.DUN (9056 b - INTERNAL = 8871b) = dungeon background tiles - walls, floor, spikes etc. also text boxes
+IMG.BGTAB2.DUN (4299 b - INTERNAL = 3580b) = dungeon background tiles - walls, windows, etc.
+IMG.BGTAB1.PAL (9185 b - INTERNAL = 9017b) = palace background tiles - walls, floor, spikes etc. also text boxes
+IMG.BGTAB2.PAL (4593 b - CORRECT) = palace background files  walls, windows, etc.
+
+Max background RAM required = 13778 bytes
+
+IMG.CHTAB1 (9165 b - INTERNAL = 8999b) = kid run, jump etc.
+IMG.CHTAB2 (9189 b - INTERNAL = 8893b) = kid swing, crouch, die spikes etc.
+IMG.CHTAB3 (5985 b - CORRECT) = kid step, fight, sword etc.
+
+IMG.CHTAB4 (5281 b - guard) = enemy fight, die, etc.
+IMG.CHTAB4.GD: file size = 8999b / internal ptr end = 5281 ($14a1)
+IMG.CHTAB4.FAT: file size = 5469b / internal ptr end = 5262 ($148e)
+IMG.CHTAB4.SHAD: file size = 5011b / internal ptr end = 5011 ($1393)
+IMG.CHTAB4.SKEL: file size = 4749b / internal ptr end = 4493 ($118d)
+IMG.CHTAB4.VIZ: file size = 5445b / internal ptr end = 5218 ($1462)
+
+IMG.CHTAB5 (6134 b - CORRECT) = kid fight, drink, die sword etc.
+
+IMG.CHTAB6A (9201 b - CORRECT) = princess scenes, levels 1 & 2
+IMG.CHTAB6B (8092 b - INTERNAL = 8052b) = princess scenes, levels 3+
+IMG.CHTAB7 (1155 b - CORRECT) = princess scenes, all
+
+At run-time: kid needs CHTAB1,2,3,5 resident = 30473 bytes
+Plus background set = 13778 bytes
+Plus enemy CHTAB4.X = 8999 bytes
+
+During cutscenes need to load max 9201 + 1155 = 10356 bytes
+
+In theory with 4x SWRAM banks can have 2x banks for kid, 1x for background 1x enemy
+16kb = 16384 bytes
+BANK1 = CHTAB1 + CHTAB3 = 15150 bytes (1234 bytes)
+BANK2 = CHTAB2 + CHTAB5 = 15323 bytes (1061 bytes)
+BANK3 = CHTAB4.X = 8999 bytes max (7385 bytes free)  <--- ACTUALLY 5281 bytes max !!!
+BANK4 = BGTABX.Y = 13778 bytes (2606 bytes free)
+
+REVISED AFTER INTERNAL IMG PTR CHECK:
+bg dun = 8871 + 3580 = 12451
+bg pal = 9017 + 4593 = 13610
+kid = 8999 + 8893 + 5985 + 6134 = 30011
+guard = 5281
+max resident = 48902 < 48k!  can we get these in just 3x swram banks?!
+
+BANK1 = CHTAB1 + CHTAB3 + 1400b
+BANK2 = CHTAB2 + CHTAB5 + 1357b
+BANK3 = CHTAB.X + 11103b
+BANK4 = BGTAB1.Y + BGTAB2.Y + 2774b
+Total of 16634 bytes free in swram
+
+Level blueprint = &900 bytes = 2304 bytes - so can fit in BANK4 with bg tiles potentially...
+Screen = 13440 bytes (&3480 size, resident at &4B80)
+
+Main challenge is going to be code size as estimated at 48K of code!!!
+Free user memory on Master &4B80 - &E00 = &3D80 = 15744 bytes = 15.375k
+Can steal language workspace = &400 - &800 = 1024 bytes = 1k
+Plus another &900 - &D00 = 1024 = 1k
+Spare in SWRAM banks 1,2,3 = 1k + 1k + 7k
+On Master extra 4k MOS RAM &8000 - &9000 (NAUG p.161)
+
+Total RAM 15+1+1+1+1+7+4 = 30K for code (not contiguous)
+Will need some clever paging or alternative approach...
+
+Alternatively move to MODE 5 for gfx - but would only save screen RAM if keep sprites in Apple format
+FS RAM = 8k but don't know how this is used.  Will need to load files from disc...
+Looks like possibilities for some overlays of code for frontend etc.
+
+Shadow RAM switches 20k in, so in theory have another 20-13.125k = 6.875k of code space
+but this would only be available when shadow buffer paged in
+Alternatively think about some scheme in which we don't double buffer with shadow screen
+but use this space for code
+
+RTW suggests MODE 2 but would ideally need CPC gfx that have more colours
+Could also potentially use MODE 5 if sorted out the pixel alignment issue
+
+Framework thoughts
+Need to draw Apple II memory map to get this clear
+Then get EQ.S ported, this defines all major buffers, jump tables, pre calc tables, data addresses etc.
+Also ZP variables and constants
+
+Accordingt to Apple II docs, overall memory map is:
+
+$0000 - $BFFF = 48K RAM
+$C000 - $CFFF = 4K I/O DEVICES
+$D000 - $DFFF = 2x 4K BANKED (aka language card)
+$E000 - $FFFF = 8K RAM SWITCHED WITH ROM (aka language card)
+
+$4000 - $5FFF = hi-res page 2
+$2000 - 3FFFF = hi-res page 1
+$0400 - $07FF = I/O devices?
+
+Whole lots is then x2 (auxmem) for 128K
+
+*-------------------------------
+*
+* Notes: (from master.s)
+*
+* Game code sits in auxmem & aux l.c. and uses aux z.p.
+*
+* Routines in main l.c. (including MASTER and HIRES)
+* are called via intermediary routines in GRAFIX (in auxmem).
+*
+* RW18 sits in bank 1 of main language card;
+* driveon switches it in, driveoff switches it out.
+*
+*-------------------------------
+
+POP Apple II RAM
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Vars (sparse - total 17 bytes) - Apple II Input Buffer
+$0300 - Small arrays and some vars (sparse - total 48 + 9 = 56 bytes) - Apple II Vectors
+
+game code in auxmem
+$0400 - grafix.s module, includes eq.s, gameeq.s, soundnames.s
+$0e00 - tables in EQ.S (dense - $488 total)
+$1290 - frameadv.s module, includes eq.s, gameeq.s, bgdata.s <- included after jump table
+
+$5e00 - redbufs (redraw buffers) (60 bytes unused then 250 bytes = 310 bytes total)
+$960f - enudata (editor only)
+$ac00 - imlists (image lists) (200x4 + 100x4 + 20x5 + 46x8 + 46x11 + 20x12 + 32x5 = 2574 bytes $a0e)
+$b600 - endimspace (end of image lists) - buffer overrun here?
+$b700 - blueprnt (blue print) - $900 size (runs up to $c000)
+
+aux l.c. (language card)
+$d000 - bluecopy (bank 1) (used to save a copy of the blueprint) (only used in editor)
+music in aux l.c. somewhere?
+
+main l.c. (language card)
+$d000 - rw18 (something to do with disc loader)
+$d000 - peelbuf1 (presume size = $600)
+$d600 - peelbuf2 (presume size = $600)
+$e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes)
+$ea00 - unpack.s module, includes gameeq.s, eq.s
+$ee00 - hires.s module, includes hrparams.s
+$f880 - master.s module, includes eq.s, gameeq.s
+
+boot code will start in main ram
+$0800 - boot.s - uses rw18, probably not required?
+
+game code in auxmem
+$5400 - auto.s module, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4500 - coll.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$3a00 - ctrl.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$d000 - ctrlsubs.s, includes eq.s, gameeq.s, movedata.s, seqdata.s, soundnames.s
+$2800 - framedef.s (animation frames) (1200 + 200 + 450 + 192 = 2042 bytes)
+$4c00 - gamebg.s, includes eq.s, gameeq.s
+$f900 - misc.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$ee00 - mover.s includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$3000 - seqtable.s (animation sequences)
+$ea00 - sound.s
+$d900 - specialk.s, includes eq.s, gameeq.s, soundnames.s, movedata.s
+$e000 - subs.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$2000 - topctrl.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$dfd8 - version.s (text string = 28 bytes)
+
+
+FINAL MEMORY MAP?
+
+main ram
+-----
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Apple II Input Buffer (Vars = total 17 bytes) 
+$0300 - Apple II Vectors (Small arrays and some vars = 48 + 9 = 56 bytes)
+$0400 - $07FF = I/O devices?
+$0800 - chtab3 (kid) - main (5985 = $1761 bytes)
+$2000 - 3FFFF = hi-res page 1
+$4000 - $5FFF = hi-res page 2
+$6000 - chtab1 (kid) - main (9165 = $23cd bytes)
+$8400 - chtab2 (kid) - main (9189 = $23e5 bytes)
+$a800 - chtab5 (kid) - main (6134 = $17f6 bytes)
+-----
+$C000 - $CFFF = 4K I/O DEVICES
+-----
+$d000 - rw18 (something to do with disc loader)
+$d000 - peelbuf1 (presume size = $600)
+$d600 - peelbuf2 (presume size = $600)
+$e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes $8f0)
+$ea00 - unpack.s module, includes gameeq.s, eq.s
+$ee00 - hires.s module, includes hrparams.s
+$f880 - master.s module, includes eq.s, gameeq.s
+-----
+2k system + 16k screens + 30k kid sprites (48k main mem) + 4k disc buffer + 12k rendering code & buffers (main l.c.) = 64k
+
+
+auxmem
+-----
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Apple II Input Buffer?
+$0300 - Apple II Vectors?
+$0400 - grafix.s module, includes eq.s, gameeq.s, soundnames.s
+$0e00 - tables in EQ.S (dense - $488 total)
+$1290 - frameadv.s module, includes eq.s, gameeq.s, bgdata.s <- included after jump table
+$2000 - topctrl.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$2800 - framedef.s (animation frames) (1200 + 200 + 450 + 192 = 2042 bytes)
+$3000 - seqtable.s (animation sequences)
+$3a00 - ctrl.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4500 - coll.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4c00 - gamebg.s, includes eq.s, gameeq.s
+$5400 - auto.s module, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$5e00 - redbufs (redraw buffers) (60 bytes unused then 250 bytes = 310 bytes total)
+$6000 - bgtab1 (max 9185 = $23e1 bytes)
+$6000 - chtab6 (princess in cutscenes) (overlaid)
+$8400 - bgtab2 (max 4593 = $11f1 bytes )
+$9600 - chtab4 (guard) (max 5281 = $14a1 bytes; top = $ab00)
+$9f00 - chtab7 (princess in cutscenes) (overlaid)
+$ac00 - imlists (image lists) (200x4 + 100x4 + 20x5 + 46x8 + 46x11 + 20x12 + 32x5 = 2574 bytes $a0e)
+$b600 - mobtables
+$b6f0 - savedgame
+$b700 - blueprnt (blue print) - $900 size (runs up to $c000)
+-----
+$C000 - $CFFF = 4K I/O DEVICES
+-----
+$d000 - ctrlsubs.s, includes eq.s, gameeq.s, movedata.s, seqdata.s, soundnames.s
+$d400 - msys (music system ii)
+$d900 - specialk.s, includes eq.s, gameeq.s, soundnames.s, movedata.s
+$dfd8 - version.s (text string = 28 bytes)
+$e000 - subs.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$ea00 - sound.s
+$ee00 - mover.s includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$f900 - misc.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+-----
+1k system + 23k game code & data + 19k sprites + 2k level + 3k buffers (48k aux mem) + 4k music + 12k more game code (aux l.c.) = 64k
+
+
+**-------------------------------
+*
+*  Calls to hires & master routines
+*
+*  Hires & master routines are in main lc & use main zp;
+*  rest of code uses aux lc, zp.
+*
+*-------------------------------
+
+Added complication - looks like Apple II can read/write from different banks?!
+Guess can read code & data from one bank but write to different one (screen?)
+
+Too much code for double buffering MODE 1 on Beeb
+Propose single buffer MODE1 or double-buffer MODE 5
+Use SHADOW RAM to hold all game code then switch to main RAM for render
+If double-buffered then use two 70 column MODE5 screens in same bank
+
+beeb mem
+-----
+&0000 - ZP
+&0100 - stack
+&0200 - vectors
+&0300 - system
+&0400 - buffers x 1k
+&0800 - sound
+&0900 - buffers x 1k
+&0D00 - NMI
+&0E00 - rendering code + buffers ($2200 below SHADOW, additional $1B80 x2 in MAIN + SHADOW = $3700 ~13.75k)
+&4B80 - screen
+-----
+&8000 - swram bank 1 - player sprites
+&8000 - swram bank 2 - player sprites
+&8000 - swram bank 3 - background + level
+&8000 - swram bank 4 - enemy sprites + ?
+-----
+&C000 - MOS
+-----
+shadow ram = 20K
+&3000 - &8000 = game code + data
+-----
+mos ram = 4K
+&8000 - &9000 = more game code?!
+-----
+
+
+Code structure
+Ideally build everything with one source file in BeebAsm
+Keep original Source folder
+Have a new Beeb source folder and move files across one at a time
+Put static rendering tables in main RAM under screen
+Could use 4k MOS ram above BANK 3 to give another ~15KB contiguous memory
+
+Assembler
+Find out which assembler was used and check documentation for syntax?
+Looks like each module is assembled separately at given address.
+Could do this to avoid clashing of local var names etc.
+But start by using BeebAsm top-level file?
+
+put = include
+org = org
+labels are any strings that are not operands or directives
+vars are just assigned with =
+db = equb byte
+hex = equb $ byte
+dfb = signed byte
+ds = skip
+dum / dend = declare variables starting from address dum
+
+
+Approach
+Setup top-level asm file to build everything
+Include data files in SWRAM bank files
+Create beeb bootstrap module to load swram banks, set screen mode etc.
+Port frameadv module starting with SURE fn
+    Depends on eq.s (495 lines), gameeq.s (675 lines), bgdata.s (199 lines)
+Use this to start to solidify memory map for rendering (no shadow)
+Use this to solidify labelling convention & patterns for Beeb code vs Apple II code
+Continue to use jump tables or not?!  Could be useful for debugging?
+
+
+bgdata.s
+- defines (PIECE ID#)
+- ABCD mask data tables
+- various masks and special piece defines
+
+eq.s
+- addresses for buffers in l.c. slots
+- jump tables for main mem modules
+    master
+    hrtables - data tables
+    hires
+    unpack
+    grafix
+    redbufs
+    menudata (ed only)
+    frameadv
+    tables - data tables
+    blueprnt - data tables
+- main mem buffers
+    INFO (blueprint info)
+    imlists (image lists)
+    ZP
+    global vars
+    pages 2 & 3
+- misc constants
+
+gameeq.s
+- addresses for character and bg data
+- addresses for gameplay code modules
+- jump tables for gameplay modules aux mem
+    mobtables
+    savedgame
+    topctrlctrl
+    auto
+    col1
+    gamebg
+    specialk
+    mover
+    ctrlsubs
+    subs
+    sound
+    msys
+    seqtable
+    misc
+    debugs
+- aux mem vars
+    locals
+    game globals
+    pages 2 & 3
+- character data
+    Char
+    Op
+    Kid
+    Shad
+    FCharVars
+- misc data
+
+    
