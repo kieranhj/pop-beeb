@@ -122,3 +122,16 @@ blueprnt=*
 .GdStartSeqL skip 24
 .GdStartProg skip 24
 .GdStartSeqH skip 24
+
+redbufs=*
+
+ skip 60 ;unused - why?
+.halfbuf skip 30
+.redbuf skip 30
+.fredbuf skip 30
+.floorbuf skip 30
+.wipebuf skip 30
+.movebuf skip 30
+.objbuf skip 30
+.whitebuf skip 30
+.topbuf skip 10

@@ -32,7 +32,7 @@ grafix=*
 .dimchar BRK    ;jmp DIMCHAR
 .cvtx BRK       ;jmp CVTX
 .zeropeel jmp ZEROPEEL
-.zeropeels BRK  ;jmp ZEROPEELS ***
+.zeropeels jmp ZEROPEELS
 .pread BRK      ;jmp PREAD
 \
 .addpeel BRK    ;jmp ADDPEEL
@@ -87,7 +87,7 @@ grafix=*
 .addmsg BRK     ;jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
-.zerolsts BRK   ;jmp ZEROLSTS ***
+.zerolsts jmp ZEROLSTS
 \
 .screendump BRK ;jmp SCREENDUMP
 .minit BRK      ;jmp MINIT
@@ -99,7 +99,7 @@ grafix=*
 .normspeed BRK  ;jmp NORMSPEED
 .addmidezo BRK  ;jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
-.zerored BRK    ;jmp ZERORED ***
+.zerored jmp ZERORED
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS
@@ -988,15 +988,18 @@ CVTX
  bne :negative
  beq :ok
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  Z E R O L I S T S
-*
-*  Zero image lists (except peel lists)
-*
-*-------------------------------
-ZEROLSTS lda #0
+\*-------------------------------
+\*
+\*  Z E R O L I S T S
+\*
+\*  Zero image lists (except peel lists)
+\*
+\*-------------------------------
+.ZEROLSTS
+{
+ lda #0
  sta genCLS
  sta wipeX
  sta bgX
@@ -1005,18 +1008,20 @@ ZEROLSTS lda #0
  sta fgX
  sta msgX
  rts
+}
 
-*-------------------------------
-*
-*  Zero both peel lists
-*
-*-------------------------------
-ZEROPEELS
+\*-------------------------------
+\*
+\*  Zero both peel lists
+\*
+\*-------------------------------
+.ZEROPEELS
+{
  lda #0
  sta peelX
  sta peelX+maxpeel
-return rts
-ENDIF
+.return rts
+}
 
 \*-------------------------------
 \*
@@ -1839,18 +1844,18 @@ IF EditorDisk
 }
 ENDIF
 
-IF _TODO
-*-------------------------------
-*
-*  Z E R O   R E D
-*
-*  zero redraw buffers
-*
-*-------------------------------
-ZERORED
+\*-------------------------------
+\*
+\*  Z E R O   R E D
+\*
+\*  zero redraw buffers
+\*
+\*-------------------------------
+.ZERORED
+{
  lda #0
  ldy #29
-:loop sta redbuf,y
+.loop sta redbuf,y
  sta fredbuf,y
  sta floorbuf,y
  sta halfbuf,y
@@ -1858,15 +1863,17 @@ ZERORED
  sta movebuf,y
  sta objbuf,y
  dey
- bpl :loop
+ bpl loop
 
  ldy #9
-:loop2 sta topbuf,y
+.loop2 sta topbuf,y
  dey
- bpl :loop2
+ bpl loop2
 
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Routines to interface with MSYS (Music System II)

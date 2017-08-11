@@ -23,7 +23,7 @@ master = $f880
 \grafix = $400                  ; location determined by assembler
 \tables = $e00                  ; location determined by assembler
 \frameadv = $1290               ; location determined by assembler
-redbufs = $5e00
+\redbufs = $5e00                ; location determined by assembler
 menudata = $960f ;ed only
 \imlists = $ac00                ; location determined by assembler
 endimspace = $b600
@@ -130,20 +130,8 @@ ENDIF
 \dum grafix
 \ jump tables moved to grafix.asm
 
-IF _TODO
- dum redbufs
-
- ds 60 ;unused
-halfbuf ds 30
-redbuf ds 30
-fredbuf ds 30
-floorbuf ds 30
-wipebuf ds 30
-movebuf ds 30
-objbuf ds 30
-whitebuf ds 30
-topbuf ds 10
-ENDIF
+\dum redbufs
+\ redbufs moved to eq.asm
 
 IF EditorDisk
  dum menudata ;ed only
