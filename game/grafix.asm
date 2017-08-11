@@ -1761,8 +1761,10 @@ ENDIF
 \*-------------------------------
 .CALCBLUE
 {
+IF EditorDisk
  cmp #0
  beq calcmenu
+ENDIF
 
  sec
  sbc #1 ;reduce to 0-23
@@ -1771,7 +1773,7 @@ ENDIF
 
  lda Mult30,x
  clc
- adc #blueprnt
+ adc #LO(blueprnt)
  sta BlueType
 
  lda Mult30+1,x
@@ -1790,6 +1792,7 @@ ENDIF
 .return rts
 }
 
+IF EditorDisk
 .calcmenu
 {
  lda #LO(menutype)
@@ -1803,6 +1806,7 @@ ENDIF
  sta BlueSpec+1
  rts
 }
+ENDIF
 
 IF _TODO
 *-------------------------------
