@@ -41,9 +41,9 @@ grafix=*
 .rnd BRK        ;jmp RND
 .cls BRK        ;jmp CLS
 \
-.lay BRK        ;jmp LAY
-.fastlay BRK    ;jmp FASTLAY
-.layrsave BRK   ;jmp LAYRSAVE
+.lay BRK        ;jmp LAY        ***
+.fastlay BRK    ;jmp FASTLAY    ***
+.layrsave BRK   ;jmp LAYRSAVE   ***
 .lrcls BRK      ;jmp LRCLS
 .fastmask BRK   ;jmp FASTMASK
 \
@@ -732,7 +732,7 @@ ENDIF
  cmp #2
  beq local_layrsave
 
-.local_Done ldx index
+.Done ldx index
  inx
  cpx midX
  bcc loop
@@ -746,7 +746,7 @@ ENDIF
 
 .local_fastlay
  jsr fastlay
- jmp local_Done
+ jmp Done
 
 .local_layrsave
  jsr setaddl ;set additional params for lay
@@ -754,13 +754,13 @@ ENDIF
  jsr layrsave ;save underlayer in peel buffer
  jsr ADDPEEL ;& add to peel list
 
- jsr local_lay ;then lay down image
+ jsr lay ;then lay down image
 
- jmp local_Done
+ jmp Done
 
 .local_lay jsr setaddl
- jsr local_lay
- jmp local_Done
+ jsr lay
+ jmp Done
 
 .setaddl lda midOFF,x
  sta OFFSET
