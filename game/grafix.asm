@@ -18,7 +18,7 @@ grafix=*
 \ org org
 \
 .gr BRK         ;jmp GR
-.drawall BRK    ;jmp DRAWALL
+.drawall jmp DRAWALL
 .controller BRK ;jmp CONTROLLER
 \ jmp dispversion
 .saveblue BRK   ;jmp SAVEBLUE
@@ -31,8 +31,8 @@ grafix=*
 \
 .dimchar BRK    ;jmp DIMCHAR
 .cvtx BRK       ;jmp CVTX
-.zeropeel BRK   ;jmp ZEROPEEL
-.zeropeels BRK  ;jmp ZEROPEELS
+.zeropeel jmp ZEROPEEL
+.zeropeels BRK  ;jmp ZEROPEELS ***
 .pread BRK      ;jmp PREAD
 \
 .addpeel BRK    ;jmp ADDPEEL
@@ -87,7 +87,7 @@ grafix=*
 .addmsg BRK     ;jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
-.zerolists BRK  ;jmp ZEROLSTS
+.zerolsts BRK   ;jmp ZEROLSTS ***
 \
 .screendump BRK ;jmp SCREENDUMP
 .minit BRK      ;jmp MINIT
@@ -99,7 +99,7 @@ grafix=*
 .normspeed BRK  ;jmp NORMSPEED
 .addmidezo BRK  ;jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
-.zerored BRK    ;jmp ZERORED
+.zerored BRK    ;jmp ZERORED ***
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS
@@ -185,12 +185,12 @@ cwidthy = 15 ;21
 \*  Addresses of character image tables
 \*  (Bank: 2 = main, 3 = aux)
 
-\chtabbank db 2,2,2,3,2,3,3
-\
-\chtablist db #>chtable1,#>chtable2,#>chtable3,#>chtable4
-\ db #>chtable5,#>chtable6,#>chtable7
+.chtabbank EQUB 2,2,2,3,2,3,3
 
-\dummy db maxpeel,maxpeel
+.chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
+ EQUB HI(chtable5),HI(chtable6),HI(chtable7)
+
+.dummy EQUB maxpeel,maxpeel
 
 IF _TODO
 *-------------------------------
@@ -429,20 +429,23 @@ ADDMIDEZO
 
  stx midX
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  A D D P E E L
-*
-*  (Call immediately after layrsave)
-*  Add newly generated image to peel list
-*
-*-------------------------------
-ADDPEEL lda PEELIMG+1
+\*-------------------------------
+\*
+\*  A D D P E E L
+\*
+\*  (Call immediately after layrsave)
+\*  Add newly generated image to peel list
+\*
+\*-------------------------------
+.ADDPEEL
+{
+ lda PEELIMG+1
  beq return ;0 is layersave's signal to skip it
 
  lda PAGE
- beq :1
+ beq label_1
 
 IF CopyProtect
  ldx purpleflag ;should be 1!
@@ -451,7 +454,7 @@ ELSE
  lda #maxpeel
 ENDIF
 
-:1 sta :sm+1 ;self-mod
+.label_1 sta sm+1 ;self-mod
 
  tax
  lda peelX,x ;# of images in peel list
@@ -461,7 +464,7 @@ ENDIF
  bcs return
  sta peelX,x
  clc
-:sm adc #0 ;0/maxpeel
+.sm adc #0 ;0/maxpeel
  tax
 
  lda PEELXCO
@@ -474,28 +477,30 @@ ENDIF
  lda PEELIMG+1
  sta peelIMGH,x ;2-byte image address (in peel buffer)
 
-return rts
+.return rts
+}
 
-*-------------------------------
-*
-*  D R A W A L L
-*
-*  Draw everything in image lists
-*
-*  This is the only routine that calls HIRES routines.
-*
-*-------------------------------
-DRAWALL
+\*-------------------------------
+\*
+\*  D R A W A L L
+\*
+\*  Draw everything in image lists
+\*
+\*  This is the only routine that calls HIRES routines.
+\*
+\*-------------------------------
+.DRAWALL
+{
  jsr DOGEN ;Do general stuff like cls
 
  lda blackflag ;TEMP
- bne :1 ;
+ bne label_1 ;
 
  jsr SNGPEEL ;"Peel off" characters
 ;(using the peel list we
 ;set up 2 frames ago)
 
-:1 jsr ZEROPEEL ;Zero just-used peel list
+.label_1 jsr ZEROPEEL ;Zero just-used peel list
 
  jsr DRAWWIPE ;Draw wipes
 
@@ -507,42 +512,46 @@ DRAWALL
  jsr DRAWFORE ;Draw foreground plane images
 
  jmp DRAWMSG ;Draw messages
+}
 
-*-------------------------------
-*
-*  D O  G E N
-*
-*  Do general stuff like clear screen
-*
-*-------------------------------
-DOGEN
+\*-------------------------------
+\*
+\*  D O  G E N
+\*
+\*  Do general stuff like clear screen
+\*
+\*-------------------------------
+.DOGEN
+{
  lda genCLS
- beq :1
+ beq label_1
  jsr cls
 
-* purple copy-protection
+\* purple copy-protection
 
-:1 ldx BGset1
+.label_1 ldx BGset1
  cpx #1
  bne return
  lda #0
  sta dummy-1,x
 
-return rts
+.return rts
+}
 
-*-------------------------------
-*
-*  D R A W W I P E
-*
-*  Draw wipe list (using "fastblack")
-*
-*-------------------------------
-DRAWWIPE
+\*-------------------------------
+\*
+\*  D R A W W I P E
+\*
+\*  Draw wipe list (using "fastblack")
+\*
+\*-------------------------------
+.DRAWWIPE
+{
  lda wipeX ;# of images in list
  beq return ;list is empty
 
  lda #1 ;start with image #1
-:loop pha
+.loop pha
  tax
 
  lda wipeH,x
@@ -561,22 +570,25 @@ DRAWWIPE
  clc
  adc #1
  cmp wipeX
- bcc :loop
- beq :loop
-return rts
+ bcc loop
+ beq loop
+.return rts
+}
 
-*-------------------------------
-*
-*  D R A W B A C K
-*
-*  Draw b.g. list (using fastlay)
-*
-*-------------------------------
-DRAWBACK lda bgX ;# of images in list
+\*-------------------------------
+\*
+\*  D R A W B A C K
+\*
+\*  Draw b.g. list (using fastlay)
+\*
+\*-------------------------------
+.DRAWBACK
+{
+ lda bgX ;# of images in list
  beq return
 
  ldx #1
-:loop stx index
+.loop stx index
 
  lda bgIMG,x
  sta IMAGE ;coded image #
@@ -593,22 +605,25 @@ DRAWBACK lda bgX ;# of images in list
  ldx index
  inx
  cpx bgX
- bcc :loop
- beq :loop
-return rts
+ bcc loop
+ beq loop
+.return rts
+}
 
-*-------------------------------
-*
-*  D R A W F O R E
-*
-*  Draw foreground list (using fastmask/fastlay)
-*
-*-------------------------------
-DRAWFORE lda fgX
+\*-------------------------------
+\*
+\*  D R A W F O R E
+\*
+\*  Draw foreground list (using fastmask/fastlay)
+\*
+\*-------------------------------
+.DRAWFORE
+{
+ lda fgX
  beq return
 
  ldx #1
-:loop stx index
+.loop stx index
 
  lda fgIMG,x
  sta IMAGE
@@ -620,39 +635,41 @@ DRAWFORE lda fgX
  sta YCO
 
  lda fgOP,x ;opacity
- cmp #mask
- bne :1
+ cmp #enum_mask
+ bne label_1
  jsr fastmask
- jmp :cont
+ jmp cont
 
-:1 sta OPACITY ;fastlay for everything else
+.label_1 sta OPACITY ;fastlay for everything else
  jsr fastlay
 
-:cont ldx index
+.cont ldx index
  inx
  cpx fgX
- bcc :loop
- beq :loop
-return rts
+ bcc loop
+ beq loop
+.return rts
+}
 
-*-------------------------------
-*
-*  S N G   P E E L
-*
-*  Draw peel list (in reverse order) using "peel" (fastlay)
-*
-*-------------------------------
-SNGPEEL
+\*-------------------------------
+\*
+\*  S N G   P E E L
+\*
+\*  Draw peel list (in reverse order) using "peel" (fastlay)
+\*
+\*-------------------------------
+.SNGPEEL
+{
  ldx PAGE
- beq :1
+ beq label_1
  ldx #maxpeel
-:1 stx :sm+1
+.label_1 stx sm+1
  lda peelX,x ;# of images in list
  beq return
 
-:loop pha
+.loop pha
  clc
-:sm adc #0 ;self-mod: 0 or maxpeel
+.sm adc #0 ;self-mod: 0 or maxpeel
  tax
 
  lda peelIMGL,x
@@ -663,29 +680,31 @@ SNGPEEL
  sta XCO
  lda peelY,x
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jsr peel
 
  pla
  sec
  sbc #1
- bne :loop
-return rts
+ bne loop
+.return rts
+}
 
-*-------------------------------
-*
-*  D R A W M I D
-*
-*  Draw middle list (floorpieces & characters)
-*
-*-------------------------------
-DRAWMID
+\*-------------------------------
+\*
+\*  D R A W M I D
+\*
+\*  Draw middle list (floorpieces & characters)
+\*
+\*-------------------------------
+.DRAWMID
+{
  lda midX ;# of images in list
  beq return
 
  ldx #1
-:loop stx index
+.loop stx index
 
  lda midIMG,x
  sta IMAGE
@@ -699,51 +718,51 @@ DRAWMID
  sta OPACITY
 
  lda midTYP,x ;+ use bg tables
- bmi :UseChar ;- use char tables
+ bmi UseChar ;- use char tables
  jsr setbgimg ;protects A,X
- jmp :GotTable
+ jmp GotTable
 
-:UseChar jsr setcharimg ;protects A,X
+.UseChar jsr setcharimg ;protects A,X
 
-:GotTable ;A = midTYP,x
+.GotTable ;A = midTYP,x
  and #$7f ;low 7 bits: 0 = fastlay, 1 = lay, 2 = layrsave
- beq :fastlay
+ beq local_fastlay
  cmp #1
- beq :lay
+ beq local_lay
  cmp #2
- beq :layrsave
+ beq local_layrsave
 
-:Done ldx index
+.local_Done ldx index
  inx
  cpx midX
- bcc :loop
- beq :loop
-return rts
+ bcc loop
+ beq loop
+.return rts
 
-* midTYP values:
-*    0 = use fastlay (normal for floorpieces)
-*    1 = use lay alone
-*    2 = use lay with layrsave (normal for characters)
+\* midTYP values:
+\*    0 = use fastlay (normal for floorpieces)
+\*    1 = use lay alone
+\*    2 = use lay with layrsave (normal for characters)
 
-:fastlay
+.local_fastlay
  jsr fastlay
- jmp :Done
+ jmp local_Done
 
-:layrsave
- jsr :setaddl ;set additional params for lay
+.local_layrsave
+ jsr setaddl ;set additional params for lay
 
  jsr layrsave ;save underlayer in peel buffer
  jsr ADDPEEL ;& add to peel list
 
- jsr lay ;then lay down image
+ jsr local_lay ;then lay down image
 
- jmp :Done
+ jmp local_Done
 
-:lay jsr :setaddl
- jsr lay
- jmp :Done
+.local_lay jsr setaddl
+ jsr local_lay
+ jmp local_Done
 
-:setaddl lda midOFF,x
+.setaddl lda midOFF,x
  sta OFFSET
  lda midCL,x
  sta LEFTCUT
@@ -754,22 +773,24 @@ return rts
  lda midCD,x
  sta BOTCUT
  rts
+}
 
-*-------------------------------
-*
-*  D R A W M S G
-*
-*  Draw message list (using bg tables & lay)
-*
-*  OPACITY bit 6: 1 = layrsave, 0 = no layrsave
-*
-*-------------------------------
-DRAWMSG
+\*-------------------------------
+\*
+\*  D R A W M S G
+\*
+\*  Draw message list (using bg tables & lay)
+\*
+\*  OPACITY bit 6: 1 = layrsave, 0 = no layrsave
+\*
+\*-------------------------------
+.DRAWMSG
+{
  lda msgX
  beq return
 
  ldx #1
-:loop stx index
+.loop stx index
 
  lda msgIMG,x
  sta IMAGE
@@ -793,7 +814,7 @@ DRAWMSG
  lda msgOP,x
  sta OPACITY
  and #%01000000
- beq :1
+ beq label_1
  lda OPACITY
  and #%10111111 ;bit 6 set: use layrsave
  sta OPACITY
@@ -801,26 +822,28 @@ DRAWMSG
  jsr layrsave
  jsr ADDPEEL
 
-:1 jsr lay
+.label_1 jsr lay
 
  ldx index
  inx
  cpx msgX
- bcc :loop
- beq :loop
-return rts
+ bcc loop
+ beq loop
+.return rts
+}
 
-*-------------------------------
-*
-*  S E T   B  G   I M A G E
-*
-*  In: IMAGE = coded image #
-*  Out: BANK, TABLE, IMAGE set for hires call
-*
-*  Protect A,X
-*
-*-------------------------------
-setbgimg
+\*-------------------------------
+\*
+\*  S E T   B  G   I M A G E
+\*
+\*  In: IMAGE = coded image #
+\*  Out: BANK, TABLE, IMAGE set for hires call
+\*
+\*  Protect A,X
+\*
+\*-------------------------------
+.setbgimg
+{
  tay
 
  lda #3 ;auxmem
@@ -830,31 +853,33 @@ setbgimg
  sta TABLE
 
  lda IMAGE ;Bit 7: 0 = bgtable1, 1 = bgtable2
- bpl :bg1
+ bpl bg1
 
  and #$7f
  sta IMAGE
 
- lda #>bgtable2
- bne :ok
+ lda #HI(bgtable2)
+ bne ok
 
-:bg1 lda #>bgtable1
-:ok sta TABLE+1
+.bg1 lda #HI(bgtable1)
+.ok sta TABLE+1
 
  tya
  rts
+}
 
-*-------------------------------
-*
-*  S E T   C H A R   I M A G E
-*
-*  In: TABLE = chtable # (0-7)
-*  Out: BANK, TABLE set for hires call
-*
-*  Protect A,X
-*
-*-------------------------------
-setcharimg
+\*-------------------------------
+\*
+\*  S E T   C H A R   I M A G E
+\*
+\*  In: TABLE = chtable # (0-7)
+\*  Out: BANK, TABLE set for hires call
+\*
+\*  Protect A,X
+\*
+\*-------------------------------
+.setcharimg
+{
  pha
 
  ldy TABLE
@@ -868,7 +893,9 @@ setcharimg
 
  pla
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  D I M C H A R
@@ -989,35 +1016,39 @@ ZEROPEELS
  sta peelX
  sta peelX+maxpeel
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  Z E R O P E E L
-*
-*  Zero peel list & buffer for whichever page we're on
-*
-*  (Point PEELBUF to beginning of appropriate peel buffer
-*  & set #-of-images byte to zero)
-*
-*-------------------------------
-ZEROPEEL
+\*-------------------------------
+\*
+\*  Z E R O P E E L
+\*
+\*  Zero peel list & buffer for whichever page we're on
+\*
+\*  (Point PEELBUF to beginning of appropriate peel buffer
+\*  & set #-of-images byte to zero)
+\*
+\*-------------------------------
+.ZEROPEEL
+{
  lda #0
  ldx PAGE
- beq :page1
-:page2 sta peelX+maxpeel
- lda #peelbuf2
+ beq page1
+.page2 sta peelX+maxpeel
+ lda #LO(peelbuf2)
  sta PEELBUF
- lda #>peelbuf2
+ lda #HI(peelbuf2)
  sta PEELBUF+1
  rts
 
-:page1 sta peelX
- lda #peelbuf1
+.page1 sta peelX
+ lda #LO(peelbuf1)
  sta PEELBUF
- lda #>peelbuf1
+ lda #HI(peelbuf1)
  sta PEELBUF+1
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Joystick/keyboard routines

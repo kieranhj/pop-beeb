@@ -3,7 +3,7 @@
 \ dum locals
 ORG locals
 
-\index ds 1
+.index skip 1
 .rowno skip 1
 .colno skip 1
 .yindex skip 1

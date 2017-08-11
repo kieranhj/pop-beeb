@@ -200,25 +200,25 @@ maxmsg = 32 ;x5
 \*-------------------------------
 ORG $00
 
-;.PAGE skip 1
+.PAGE skip 1
 .XCO skip 1
 .YCO skip 1
-;.OFFSET skip 1
+.OFFSET skip 1
 .IMAGE skip 2
 .OPACITY skip 1
-;.TABLE skip 2
-;.PEELBUF skip 2
-;.PEELIMG skip 2
-;.PEELXCO skip 1
-;.PEELYCO skip 1
-;.TOPCUT skip 1
-;.LEFTCUT skip 1
-;.RIGHTCUT skip 1
-;.BANK skip 1
-;.BOTCUT skip 1
+.TABLE skip 2
+.PEELBUF skip 2
+.PEELIMG skip 2
+.PEELXCO skip 1
+.PEELYCO skip 1
+.TOPCUT skip 1
+.LEFTCUT skip 1
+.RIGHTCUT skip 1
+.BANK skip 1
+.BOTCUT skip 1
 
-;height = IMAGE
-;width = IMAGE+1
+height = IMAGE
+width = IMAGE+1
 
 \*-------------------------------
 \*  $18-3f: Global vars
@@ -236,7 +236,7 @@ ORG $00
 ;.b0down skip 1
 ;.b1down skip 1
 ;.SINGSTEP skip 1
-;.blackflag skip 1
+.blackflag skip 1
 .SCRNUM skip 1
 .BlueType skip 2
 .BlueSpec skip 2

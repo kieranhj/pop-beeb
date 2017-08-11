@@ -390,7 +390,24 @@ locals = $e8
 ;ORG $40
 
 ;.Char skip $10
-.Kid skip $10
+
+.Kid
+.KidPosn skip 1
+.KidX skip 1
+.KidY skip 1
+.KidFace skip 1
+.KidBlockX skip 1
+.KidBlockY skip 1
+.KidAction skip 1
+.KidXVel skip 1
+.KidYVel skip 1
+.KidSeq skip 2
+.KidScrn skip 1
+.KidRepeat skip 1
+.KidID skip 1
+.KidSword skip 1
+.KidLife skip 1
+
 ;.Shad skip $10
 ;.FCharVars skip 12
 ;.yellowflag skip 1
@@ -467,7 +484,7 @@ locals = $e8
 ;.begrange skip 1
 ;.scrn skip 1
 ;.keybufptr skip 1
-;.VisScrn skip 1
+.VisScrn skip 1
 ;.OppStrength skip 1
 ;.jarabove skip 1
 ;.Kiskiptrength skip 1
@@ -565,24 +582,6 @@ OpID ds 1
 OpSword ds 1
 OpLife ds 1
 ENDIF
-
-CLEAR Kid, Kid+$10
-ORG Kid
-.KidPosn skip 1
-.KidX skip 1
-.KidY skip 1
-.KidFace skip 1
-.KidBlockX skip 1
-.KidBlockY skip 1
-.KidAction skip 1
-.KidXVel skip 1
-.KidYVel skip 1
-.KidSeq skip 2
-.KidScrn skip 1
-.KidRepeat skip 1
-.KidID skip 1
-.KidSword skip 1
-.KidLife skip 1
 
 IF _TODO
  dum Shad

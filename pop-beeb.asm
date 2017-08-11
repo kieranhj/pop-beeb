@@ -163,6 +163,29 @@ INCLUDE "lib/print.asm"
     RTS
 }
 
+\*-------------------------------
+\*
+\*  D O   S U R E
+\*
+\*  Clear screen and redraw entire b.g. from scratch
+\*
+\*-------------------------------
+.DoSure
+{
+ lda VisScrn
+ sta SCRNUM
+
+ jsr zerolsts ;zero image lists
+
+ jsr sure ;Assemble image lists
+
+ jsr zeropeels ;Zero peel buffers
+ jsr zerored ;and redraw buffers
+;(for next DoFast call)
+
+ jmp drawall ;Dump contents of image lists to screen
+}
+
 ; Beeb source
 
 INCLUDE "game/beeb-plot.asm"

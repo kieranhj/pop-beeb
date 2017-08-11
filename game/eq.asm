@@ -13,59 +13,57 @@ imlists=*
 
 .genCLS skip 1
 
-IF _TODO
-bgX ds maxback
-bgY ds maxback
-bgIMG ds maxback
-bgOP ds maxback
+.bgX skip maxback
+.bgY skip maxback
+.bgIMG skip maxback
+.bgOP skip maxback
 
-fgX ds maxfore
-fgY ds maxfore
-fgIMG ds maxfore
-fgOP ds maxfore
+.fgX skip maxfore
+.fgY skip maxfore
+.fgIMG skip maxfore
+.fgOP skip maxfore
 
-wipeX ds maxwipe
-wipeY ds maxwipe
-wipeH ds maxwipe
-wipeW ds maxwipe
-wipeCOL ds maxwipe
+.wipeX skip maxwipe
+.wipeY skip maxwipe
+.wipeH skip maxwipe
+.wipeW skip maxwipe
+.wipeCOL skip maxwipe
 
-peelX ds maxpeel*2
-peelY ds maxpeel*2
-peelIMGL ds maxpeel*2
-peelIMGH ds maxpeel*2
+.peelX skip maxpeel*2
+.peelY skip maxpeel*2
+.peelIMGL skip maxpeel*2
+.peelIMGH skip maxpeel*2
 
-midX ds maxmid
-midOFF ds maxmid
-midY ds maxmid
-midIMG ds maxmid
-midOP ds maxmid
-midTYP ds maxmid
-midCU ds maxmid
-midCD ds maxmid
-midCL ds maxmid
-midCR ds maxmid
-midTAB ds maxmid
+.midX skip maxmid
+.midOFF skip maxmid
+.midY skip maxmid
+.midIMG skip maxmid
+.midOP skip maxmid
+.midTYP skip maxmid
+.midCU skip maxmid
+.midCD skip maxmid
+.midCL skip maxmid
+.midCR skip maxmid
+.midTAB skip maxmid
 
-objINDX ds maxobj
-objX ds maxobj
-objOFF ds maxobj
-objY ds maxobj
-objIMG ds maxobj
-objFACE ds maxobj
-objTYP ds maxobj
-objCU ds maxobj
-objCD ds maxobj
-objCL ds maxobj
-objCR ds maxobj
-objTAB ds maxobj
+.objINDX skip maxobj
+.objX skip maxobj
+.objOFF skip maxobj
+.objY skip maxobj
+.objIMG skip maxobj
+.objFACE skip maxobj
+.objTYP skip maxobj
+.objCU skip maxobj
+.objCD skip maxobj
+.objCL skip maxobj
+.objCR skip maxobj
+.objTAB skip maxobj
 
-msgX ds maxmsg
-msgOFF ds maxmsg
-msgY ds maxmsg
-msgIMG ds maxmsg
-msgOP ds maxmsg
-ENDIF
+.msgX skip maxmsg
+.msgOFF skip maxmsg
+.msgY skip maxmsg
+.msgIMG skip maxmsg
+.msgOP skip maxmsg
 
 \*-------------------------------
 \*
