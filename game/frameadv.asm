@@ -5,7 +5,6 @@
 frameadv=*
 
 \* frameadv
-\EditorDisk = 0 ;1 = dunj, 2 = palace
 \org = $1290
 \ lst off
 \ tr on
@@ -331,13 +330,15 @@ IF _TODO
 
  jmp updatemeters
 }
+ENDIF
 
 \*-------------------------------
 \*
 \*  Redraw entire block
 \*
 \*-------------------------------
-RedBlockSure
+.RedBlockSure
+{
  jsr drawc ;C-section of piece below & to left
  jsr drawmc
 
@@ -353,20 +354,24 @@ RedBlockSure
  jmp drawfrnt ;A-section frontpiece
 ;(Note: This is necessary in case we do a
 ;layersave before we get to f.g. plane)
+}
 
-*-------------------------------
-*
-* Redraw entire D-section
-*
-*-------------------------------
-RedDSure
+\*-------------------------------
+\*
+\* Redraw entire D-section
+\*
+\*-------------------------------
+.RedDSure
+{
  jsr drawc
  jsr drawmc
  jsr drawb
  jsr drawd
  jsr drawmd
  jmp drawfrnt
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Partial block redraw (as specified by redraw buffers)
@@ -746,37 +751,39 @@ loadobj
 
  lda objTYP,x
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  D R A W   F R O N T
-*
-*-------------------------------
-drawfrnt
+\*-------------------------------
+\*
+\*  D R A W   F R O N T
+\*
+\*-------------------------------
+.drawfrnt
+{
  ldx PRECED
  cpx #gate
- bne :a
- jsr DrawGateBF? ;special case
+ bne label_a
+ jsr DrawGateBF ;special case
 
-:a ldx objid
+.label_a ldx objid
  cpx #slicer
- bne :11
+ bne label_11
  jmp drawslicerf
-:11 cpx #flask
- bne :1
+.label_11 cpx #flask
+ bne label_1
  lda state
  and #%11100000
  cmp #%10100000 ;5
- beq :1
+ beq label_1
  cmp #%01000000 ;2
- bcc :1
+ bcc label_1
  lda #specialflask
- bne :12
+ bne label_12
 
-:1 ldx objid
+.label_1 ldx objid
  lda fronti,x
- beq ]rts
-:12 sta IMAGE
+ beq return_1
+.label_12 sta IMAGE
 
  lda Ay
  clc
@@ -789,340 +796,386 @@ drawfrnt
  sta XCO
 
  cpx #archtop2
- bcs :sta
+ bcs label_sta
 
- do EditorDisk
+IF EditorDisk
  lda #EditorDisk
  cmp #2
  beq :ndunj
- fin
+ENDIF
 
  lda BGset1
  cmp #1 ;pal
- beq :ndunj
+ beq ndunj
 
  cpx #posts
- beq :sta ;for dungeon bg set
-:ndunj cpx #block
- beq :block
+ beq label_sta ;for dungeon bg set
+.ndunj cpx #block
+ beq local_block
 
  jmp maddfore
 
-* Special handling for block
+\* Special handling for block
 
-:block ldy state
+.local_block ldy state
  cpy #numblox
- bcc :2
+ bcc label_2
  ldy #0
-:2 lda blockfr,y
+.label_2 lda blockfr,y
  sta IMAGE
 
-* Pieces that go to byte boundaries can be STA'd w/o masking
+\* Pieces that go to byte boundaries can be STA'd w/o masking
 
-:sta ldx #sta
+.label_sta ldx #enum_sta
  stx OPACITY
  jmp addfore
+}
 
-*-------------------------------
-* Draw Gate B Front?
-* (only if kid is to the left of bars)
-*-------------------------------
-DrawGateBF?
+\*-------------------------------
+\* Draw Gate B Front?
+\* (only if kid is to the left of bars)
+\*-------------------------------
+.DrawGateBF
+{
  lda rowno
  cmp KidBlockY
- bne ]rts
+ bne return_1
 
  ldx colno
  dex
  cpx KidBlockX ;is kid in gate block?
- bne ]rts
+ bne return_1
  lda scrnRight
  cmp KidScrn
- beq ]rts
+ beq return_1
 
  jmp drawgatebf ;draw gate bars over char
+}
 
-*-------------------------------
-*
-*  D R A W   M O V A B L E   ' B '
-*
-*-------------------------------
-drawmb
+\*-------------------------------
+\*
+\*  D R A W   M O V A B L E   ' B '
+\*
+\*-------------------------------
+.drawmb
+{
  lda PRECED
 
  cmp #gate ;check for special cases
- bne :1
+ bne label_1
  jmp drawgateb ;draw B-section of moving gate
 
-:1 cmp #spikes
- bne :2
+.label_1 cmp #spikes
+ bne label_2
  jmp drawspikeb
 
-:2 cmp #loose
- bne :3
+.label_2 cmp #loose
+ bne label_3
  jmp drawlooseb
 
-:3 cmp #torch
- bne :4
+.label_3 cmp #torch
+ bne label_4
  jmp drawtorchb
-:4
-:5 cmp #exit
- bne :6
+.label_4
+.label_5 cmp #exit
+ bne label_6
  jmp drawexitb
 
-:6
-]rts rts
+.label_6
+}
+return_1=*
+ rts
 
-*-------------------------------
-*
-*  D R A W  M O V A B L E  ' C '
-*
-*-------------------------------
-drawmc
+
+\*-------------------------------
+\*
+\*  D R A W  M O V A B L E  ' C '
+\*
+\*-------------------------------
+.drawmc
+{
  lda objid ;is there a piece here?
  cmp #space
- beq :ok
+ beq ok
  cmp #panelwof
- beq :ok
+ beq ok
  cmp #pillartop
- beq :ok
+ beq ok
 
- bne ]rts ;if yes, its A-section will cover up
+ bne return_1 ;if yes, its A-section will cover up
 ;the C-section of the piece below
-:ok
+.ok
  ldx colno
  lda BELOW,x ;objid of piece below & to left
 
  cmp #gate
- bne ]rts
+ bne return_1
 
  ;That piece is a gate--
  jmp drawgatec ;special case (movable c)
+}
 
-*-------------------------------
-*
-*  Draw C-section (if visible)
-*
-*-------------------------------
-drawc
+\*-------------------------------
+\*
+\*  Draw C-section (if visible)
+\*
+\*-------------------------------
+.drawc
+{
  jsr checkc
- bcc ]rts
+ bcc return_1
  jsr dodrawc ;OR C-section of piece below & to left
  jmp domaskb ;Mask B-section of piece to left
+}
 
-*-------------------------------
-*
-*  Return cs if C-section is visible, cc if hidden
-*
-*-------------------------------
-checkc
+\*-------------------------------
+\*
+\*  Return cs if C-section is visible, cc if hidden
+\*
+\*-------------------------------
+.checkc
+{
  lda objid ;Does this space contain solid floorpiece?
- beq :vis
+ beq vis
  cmp #pillartop
- beq :vis
+ beq vis
  cmp #panelwof
- beq :vis
+ beq vis
  cmp #archtop1
- bcs :vis
- bcc ]rts ;C-section is hidden
-:vis sec ;C-section is visible
-]rts rts
+ bcs vis
+ bcc return_2 ;C-section is hidden
+.vis sec ;C-section is visible
+}
+return_2=*
+ rts
 
-*-------------------------------
-*
-*  Draw C-section of piece below & to left
-*
-*-------------------------------
-dodrawc
+\*-------------------------------
+\*
+\*  Draw C-section of piece below & to left
+\*
+\*-------------------------------
+.dodrawc
+{
  ldx colno
  lda BELOW,x ;objid of piece below & to left
  tax
  cpx #block
- beq :block
+ beq local_block
  lda piecec,x
- beq ]rts ;piece has no c-section
+ beq return_2 ;piece has no c-section
  cmp #panelc0
- beq :panel ;special panel handling
-:cont sta IMAGE
+ beq panel ;special panel handling
+.cont sta IMAGE
  lda blockxco
  sta XCO
  lda Dy
  sta YCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
 
-* Special panel handling
+\* Special panel handling
 
-:panel ldx colno
+.panel ldx colno
  lda SBELOW,x
  tay
  cpy #numpans ;# of different panels
- bcs ]rts
+ bcs return_2
  lda panelc,y
- bne :cont
+ bne cont
  rts
 
-:block ldx colno
+.local_block ldx colno
  lda SBELOW,x
  tay
  cpy #numblox
- bcc :1
+ bcc label_1
  ldy #0
-:1 lda blockc,y
- bne :cont
-]rts rts
+.label_1 lda blockc,y
+ bne cont
+}
+return_3=*
+ rts
 
-*-------------------------------
-*
-*  Mask B-section of piece to left
-*
-*-------------------------------
-domaskb
+
+\*-------------------------------
+\*
+\*  Mask B-section of piece to left
+\*
+\*-------------------------------
+.domaskb
+{
  ldx PRECED
  lda maskb,x
- beq ]rts
+ beq return_3
  sta IMAGE
 
  lda Dy
  sta YCO
- lda #and
+ lda #enum_and
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*
-*  Draw B-section of piece to left
-*
-*-------------------------------
-drawb
+\*-------------------------------
+\*
+\*  Draw B-section of piece to left
+\*
+\*-------------------------------
+.drawb
+{
  lda objid
  cmp #block
- beq ]rts ;B-section hidden by solid block
+ beq return_3 ;B-section hidden by solid block
 
  ldx PRECED
  cpx #space
- beq :space
+ beq drawb_space
  cpx #floor
- beq :floor
+ beq drawb_floor
  cpx #block
- beq :block
+ beq drawb_block
  lda pieceb,x
- beq :stripe
+ beq stripe
  cmp #panelb0
- beq :panel ;special panel handling
+ beq panel ;special panel handling
 
-* draw regular B-section
+\* draw regular B-section
 
- jsr :cont1
+ jsr drawb_cont1
 
-* Add stripe (palace bg set only)
+\* Add stripe (palace bg set only)
 
-:stripe do EditorDisk
+.stripe
+IF EditorDisk
  lda #EditorDisk
  cmp #2
  beq :stripe
- fin
+ENDIF
 
  lda BGset1
  cmp #1 ;pal
- bne ]rts
+ bne return_4
 
-:str1 ldx PRECED
+.str1 ldx PRECED
  lda bstripe,x
- beq ]rts
+ beq return_4
  sta IMAGE
  lda Ay
  sec
  sbc #32
- jmp :cont2
+ jmp drawb_cont2
 
-* Special panel handling
+\* Special panel handling
 
-:panel ldy spreced
+.panel ldy spreced
  cpy #numpans
- bcs ]rts
+ bcs return_4
  lda panelb,y
- bne :cont1
-]rts rts
+ bne drawb_cont1
+}
+return_4=*
+ rts
 
-:block ldy spreced
+.drawb_block
+{
+ ldy spreced
  cpy #numblox
- bcc :1
+ bcc label_1
  ldy #0
-:1 lda blockb,y
- bne :cont1
-
-:floor ldy spreced
+.label_1 lda blockb,y
+ bne drawb_cont1
+}
+.drawb_floor
+{
+ ldy spreced
  cpy #numbpans+1
- bcc :3
+ bcc label_3
  ldy #0
-:3 lda floorb,y
- beq ]rts
+.label_3 lda floorb,y
+ beq return_4
  sta IMAGE
  lda floorby,y
- jmp :cont
-
-:space ldy spreced
+ jmp drawb_cont
+}
+.drawb_space
+{
+ ldy spreced
  cpy #numbpans+1
- bcs ]rts
+ bcs return_4
  lda spaceb,y
- beq ]rts
+ beq return_4
  sta IMAGE
  lda spaceby,y
- jmp :cont
+ jmp drawb_cont
+}
+\* Draw regular B-section
 
-* Draw regular B-section
-
-:cont1 sta IMAGE
+.drawb_cont1
+{
+ sta IMAGE
  lda pieceby,x
-:cont clc
+}
+.drawb_cont
+{
+ clc
  adc Ay
-:cont2 sta YCO
+}
+.drawb_cont2
+{
+ sta YCO
  lda blockxco
  sta XCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*
-*  Draw D-section
-*
-*-------------------------------
-redrawd jsr drawd
- beq ]rts
+\*-------------------------------
+\*
+\*  Draw D-section
+\*
+\*-------------------------------
+.redrawd
+{
+ jsr drawd
+ beq return_4
  jmp addfore
+}
 
-drawd lda #sta
+.drawd
+{
+ lda #enum_sta
  sta OPACITY
  ldx objid
  cpx #block
- beq :block
+ beq local_block
  cpx #panelwof ;Do we need to mask this D-section?
- bne :cont ;no
-:mask lda #ora
+ bne cont ;no
+.mask lda #enum_ora
  sta OPACITY
-:cont lda pieced,x
- beq ]rts
-:cont1 sta IMAGE
+.cont lda pieced,x
+ beq return_5
+.cont1 sta IMAGE
  lda blockxco
  sta XCO
  lda Dy
  sta YCO
  jsr add
  lda #$ff
-]rts rts
+return_5=*
+ rts
 
-* Block handling
+\* Block handling
 
-:block ldy state
+.local_block
+ ldy state
  cpy #numblox
- bcc :1
+ bcc label_1
  ldy #0
-:1 lda blockd,y
- bne :cont1
-ENDIF
+.label_1 lda blockd,y
+ bne cont1
+}
 
 \*-------------------------------
 \*
@@ -1180,82 +1233,101 @@ ENDIF
  sta add+1
  lda #HI(addmidezfast)
  sta add+2
-return_label=*
- rts
 }
+return_6=*
+ rts
 
-IF _TODO
-maddfore ldx #mask
+.maddfore
+{
+ ldx #enum_mask
  stx OPACITY
  jsr addfore
- ldx #ora
+ ldx #enum_ora
  stx OPACITY
  jmp addfore
+}
 
-addamask ldx objid
+.addamask
+{
+ ldx objid
  lda maska,x
- beq ]rts
+ beq return_6
  sta IMAGE
  lda blockxco
  sta XCO
  lda Ay
  sta YCO
- lda #and
+ lda #enum_and
  sta OPACITY
  jmp add
+}
 
-adda ldx objid
+.adda
+{
+ ldx objid
  jsr getpiecea
- beq ]rts ;nothing here
-adda1 sta IMAGE
+ beq return_6 ;nothing here
+}
+.adda1
+{
+ sta IMAGE
  lda blockxco
  sta XCO
  lda Ay
  clc
  adc pieceay,x
  sta YCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*
-*  D R A W   M O V A B L E   ' A '
-*
-*-------------------------------
-drawma
+\*-------------------------------
+\*
+\*  D R A W   M O V A B L E   ' A '
+\*
+\*-------------------------------
+.drawma
+{
  lda objid
  cmp #spikes
- bne :2
+ bne label_2
  jmp drawspikea
 
-:2 cmp #slicer
- bne :3
+.label_2 cmp #slicer
+ bne label_3
  jmp drawslicera
 
-:3 cmp #flask
- bne :4
+.label_3 cmp #flask
+ bne label_4
  jmp drawflaska
 
-:4 cmp #sword
- bne :5
+.label_4 cmp #sword
+ bne label_5
  jmp drawsworda
-:5
-]rts rts
+.label_5
+return_7=*
+ rts
+}
 
-*-------------------------------
-*
-* D R A W   M O V A B L E  ' D '
-*
-*-------------------------------
-drawmd
+\*-------------------------------
+\*
+\* D R A W   M O V A B L E  ' D '
+\*
+\*-------------------------------
+.drawmd
+{
  lda objid
  cmp #loose
- bne :1
+ bne label_1
  jmp drawloosed
 
-:1
-]rts rts
+.label_1
+return_8=*
+ rts
+}
+
+IF _TODO
 *-------------------------------
 *
 *  D R A W   F L O O R
@@ -1309,7 +1381,7 @@ drawhalf
 :flr jsr :sub
  lda #CUpiece
 :cont sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jsr add
  jmp drawd
@@ -1324,7 +1396,7 @@ drawhalf
  cpx #dpressplate
  bne :1
  inc YCO ;quick trick for dpressplate
-:1 lda #and
+:1 lda #enum_and
  sta OPACITY
  jmp add
 
@@ -1370,16 +1442,18 @@ wiped
 
  lda #3
  jmp ]wipe
+ENDIF
 
-*-------------------------------
-*  D R A W  L O O S E  F L O O R  " D "
-*-------------------------------
-drawloosed
+\*-------------------------------
+\*  D R A W  L O O S E  F L O O R  " D "
+\*-------------------------------
+.drawloosed
+{
  lda state
  jsr getloosey
 
  lda loosed,y
- beq :rts
+ beq return
  sta IMAGE
 
  lda blockxco
@@ -1387,17 +1461,19 @@ drawloosed
  lda Dy
  sta YCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  jmp add
-]rts
-:rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*  D R A W  L O O S E  F L O O R  " B "
-*-------------------------------
-drawlooseb
+\*-------------------------------
+\*  D R A W  L O O S E  F L O O R  " B "
+\*-------------------------------
+.drawlooseb
+{
  lda spreced
  jsr getloosey
 
@@ -1409,65 +1485,72 @@ drawlooseb
  adc looseby,y
  sta YCO
 
- lda #ora
+ lda #enum_ora
  sta OPACITY
 
  jmp add
+}
 
-*-------------------------------
-*
-* Get piece "A"
-*
-* In: state; X = objid
-* Out: A = A-section image #
-*
-*-------------------------------
-getpiecea
+\*-------------------------------
+\*
+\* Get piece "A"
+\*
+\* In: state; X = objid
+\* Out: A = A-section image #
+\*
+\*-------------------------------
+.getpiecea
+{
  cpx #loose
- beq :loose
+ beq local_loose
 
  lda piecea,x
-]rts rts
+ rts
 
-:loose lda state
+.local_loose lda state
  jsr getloosey
  lda loosea,y
  rts
+}
 
-*-------------------------------
-*
-* Get loose floor index
-*
-* In: A = state
-* Out: Y = index
-*
-*-------------------------------
-getloosey
- do EditorDisk
+\*-------------------------------
+\*
+\* Get loose floor index
+\*
+\* In: A = state
+\* Out: Y = index
+\*
+\*-------------------------------
+.getloosey
+{
+IF EditorDisk
  ldy inbuilder
- beq :1
+ beq label_1
  ldy #1
  rts
- fin
+ENDIF
 
-:1 tay ;state
- bpl ]rts
+.label_1 tay ;state
+ bpl return_11
  and #$7f
  cmp #Ffalling+1
- bcc :ok
+ bcc ok
  lda #1
-:ok tay
-]rts rts
+.ok tay
+}
+return_11=*
+ rts
 
-*-------------------------------
-*  Draw spikes A
-*-------------------------------
-drawspikea
+\*-------------------------------
+\*  Draw spikes A
+\*-------------------------------
+.drawspikea
+{
  ldx state
- bpl :1 ;hibit clear --> frame #
+ bpl label_1 ;hibit clear --> frame #
  ldx #spikeExt ;hibit set --> spikes extended
-:1 lda spikea,x
- beq ]rts
+.label_1 lda spikea,x
+ beq return_11
  sta IMAGE
  lda blockxco
  sta XCO
@@ -1475,19 +1558,21 @@ drawspikea
  sec
  sbc #1
  sta YCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*  Draw spikes B
-*-------------------------------
-drawspikeb
+\*-------------------------------
+\*  Draw spikes B
+\*-------------------------------
+.drawspikeb
+{
  ldx spreced
- bpl :1 ;hibit clear --> frame #
+ bpl label_1 ;hibit clear --> frame #
  ldx #spikeExt ;hibit set --> spikes extended
-:1 lda spikeb,x
- beq ]rts
+.label_1 lda spikeb,x
+ beq return_11
  sta IMAGE
  lda blockxco
  sta XCO
@@ -1495,37 +1580,41 @@ drawspikeb
  sec
  sbc #1
  sta YCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*  Draw torch B (flame)
-*-------------------------------
-drawtorchb
- do EditorDisk
+\*-------------------------------
+\*  Draw torch B (flame)
+\*-------------------------------
+.drawtorchb
+{
+IF EditorDisk
  lda inbuilder
- bne ]rts
- fin
+ bne return
+ENDIF
 
  lda blockxco
- beq ]rts ;no flame on leftmost torch
+ beq return ;no flame on leftmost torch
  sta XCO
  lda Ay
  sta YCO
  ldx spreced
  jsr setupflame ;in gamebg
  jmp addback
-]rts rts
+.return rts
+}
 
-*-------------------------------
-*  Draw flask A (bubbles)
-*-------------------------------
-drawflaska
- do EditorDisk
+\*-------------------------------
+\*  Draw flask A (bubbles)
+\*-------------------------------
+.drawflaska
+{
+IF EditorDisk
  lda inbuilder
  bne ]rts
- fin
+ENDIF
 
  lda blockxco
  sta XCO
@@ -1535,36 +1624,40 @@ drawflaska
  jsr setupflask
  lda #UseLay
  jmp addmidezo
+}
 
-*-------------------------------
-*  Draw sword A
-*-------------------------------
-drawsworda
+\*-------------------------------
+\*  Draw sword A
+\*-------------------------------
+.drawsworda
+{
  lda #swordgleam0
  ldx state
  cpx #1
- bne :0
+ bne label_0
  lda #swordgleam1
-:0 sta IMAGE
+.label_0 sta IMAGE
  lda blockxco
  sta XCO
  lda Ay
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*  Draw slicer A
-*-------------------------------
-drawslicera
+\*-------------------------------
+\*  Draw slicer A
+\*-------------------------------
+.drawslicera
+{
  lda state
  and #$7f
  tax
  cpx #slicerRet
- bcc :1
+ bcc label_1
  ldx #slicerRet ;fully retracted
-:1 lda slicerseq,x
+.label_1 lda slicerseq,x
  tax
  dex
  stx xsave
@@ -1574,39 +1667,41 @@ drawslicera
  lda Ay
  sta YCO
  lda state ;hibit set = smeared
- bpl :clean
+ bpl clean
  lda slicerbot2,x
- bne :3
-:clean lda slicerbot,x
- beq :2
-:3 sta IMAGE
- lda #ora
+ bne label_3
+.clean lda slicerbot,x
+ beq label_2
+.label_3 sta IMAGE
+ lda #enum_ora
  sta OPACITY
  jsr add
  ldx xsave
 
-:2 lda slicertop,x
- beq ]rts
+.label_2 lda slicertop,x
+ beq return_9
  sta IMAGE
  lda Ay
  sec
  sbc slicergap,x
  sta YCO
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-* Draw slicer front
-*-------------------------------
-drawslicerf
+\*-------------------------------
+\* Draw slicer front
+\*-------------------------------
+.drawslicerf
+{
  lda state
  and #$7f
  tax
  cpx #slicerRet
- bcc :1
+ bcc label_1
  ldx #slicerRet ;fully retracted
-:1 lda slicerseq,x
+.label_1 lda slicerseq,x
  tax
  dex
  stx xsave
@@ -1616,16 +1711,20 @@ drawslicerf
  lda Ay
  sta YCO
  lda slicerfrnt,x
- beq :2
+ beq label_2
  sta IMAGE
  jmp maddfore
-:2
-]rts rts
+.label_2
+}
+return_9=*
+ rts
 
-*-------------------------------
-* Draw exit "b" (stairs)
-*-------------------------------
-drawexitb
+
+\*-------------------------------
+\* Draw exit "b" (stairs)
+\*-------------------------------
+.drawexitb
+{
  lda #stairs
  sta IMAGE
 
@@ -1636,32 +1735,32 @@ drawexitb
 
  lda blockxco
  cmp #36
- bcs ]rts ;can't protrude off R
+ bcs return ;can't protrude off R
  clc
  adc #1
  sta XCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  lda SCRNUM
  cmp KidStartScrn
- beq :nostairs ;assume it's an entrance
+ beq nostairs ;assume it's an entrance
  jsr add
-:nostairs
+.nostairs
 
-* draw door, bottom to top
+\* draw door, bottom to top
 
  lda Dy
  sec
  sbc #67
  cmp #192
- bcs ]rts
+ bcs return
  sta blockthr ;topmost usable line
 
  lda spreced
- lsr
- lsr
+ lsr A
+ lsr A
  sta gateposn ;gateposn := spreced/4
 
  lda Ay
@@ -1669,17 +1768,17 @@ drawexitb
  sbc #14
  sbc gateposn
  sta doortop ;for CROPCHAR
-:loop sta YCO
+.loop sta YCO
 
  lda #doormask
  sta IMAGE
- lda #and
+ lda #enum_and
  sta OPACITY
  jsr add
 
  lda #door
  sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jsr add
 
@@ -1687,45 +1786,47 @@ drawexitb
  sec
  sbc #4
  cmp blockthr
- bcs :loop
+ bcs loop
 
-* repair top
+\* repair top
 
  lda Ay
  sec
  sbc #64 ;Technically part of C-section
  cmp #192 ;but who cares
- bcs ]rts
+ bcs return
 
  sta YCO
 
  lda #toprepair
  sta IMAGE
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jmp add
 
-]rts rts
+.return rts
+}
 
-*-------------------------------
-*  D R A W   G A T E   " C "
-*-------------------------------
-drawgatec
+\*-------------------------------
+\*  D R A W   G A T E   " C "
+\*-------------------------------
+.drawgatec
+{
  lda Dy
  sta YCO
  lda #gatecmask
  sta IMAGE
- lda #and
+ lda #enum_and
  sta OPACITY
  jsr add ;mask out triangular area
 
  ldx colno
  lda SBELOW,x ;gate state
  cmp #gmaxval
- bcc :1
+ bcc label_1
  lda #gmaxval
-:1 lsr
- lsr
+.label_1 lsr A
+ lsr A
  sta gateposn
  and #$f8
  eor #$ff
@@ -1737,21 +1838,23 @@ drawgatec
  lda gate8c,y
  sta IMAGE
 
- lda #ora
+ lda #enum_ora
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*
-*  D R A W   G A T E   " B "
-*
-*  Lay down (STA) the gate in sections, bottom
-*  to top.  The bottom piece has two blank lines that
-*  erase its trail as the gate rises.
-*  Topmost section has 8 separate shapes, 1-8 pixels high.
-*
-*-------------------------------
-setupdgb
+\*-------------------------------
+\*
+\*  D R A W   G A T E   " B "
+\*
+\*  Lay down (STA) the gate in sections, bottom
+\*  to top.  The bottom piece has two blank lines that
+\*  erase its trail as the gate rises.
+\*  Topmost section has 8 separate shapes, 1-8 pixels high.
+\*
+\*-------------------------------
+.setupdgb
+{
  lda Dy
  sec
  sbc #62
@@ -1759,10 +1862,10 @@ setupdgb
 
  lda spreced
  cmp #gmaxval
- bcc :1
+ bcc label_1
  lda #gmaxval
-:1 lsr
- lsr
+.label_1 lsr A
+ lsr A
  clc
  adc #1
  sta gateposn ;gateposn:= state/4 + 1
@@ -1771,15 +1874,18 @@ setupdgb
  sec
  sbc gateposn
  sta gatebot ;gatebottom YCO
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-drawgatebf
+\*-------------------------------
+.drawgatebf
+{
  jsr setupdgb
 
-* Gate bottom
+\* Gate bottom
 
- lda #ora
+ lda #enum_ora
  sta OPACITY
 
  lda gatebot
@@ -1792,9 +1898,9 @@ drawgatebf
 
  jsr addfore
 
-* Middle pieces
+\* Middle pieces
 
-:cont
+.cont
  lda #gateB1
  sta IMAGE
 
@@ -1802,41 +1908,44 @@ drawgatebf
  sec
  sbc #12
 
-:loop sta YCO
+.loop sta YCO
  cmp #192
- bcs ]rts
+ bcs return
 
  sec
  sbc #7 ;grill mid piece is 8 lines high--
- bcc :done ;will it stick up out of block area?
+ bcc done ;will it stick up out of block area?
  cmp blockthr
- bcc :done
+ bcc done
 ;no, we're still safe--keep going
  jsr addfore
 
  lda YCO
  sec
  sbc #8
- bne :loop
-:done
+ bne loop
+.done
  ;Skip top piece to save a little time
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-drawgateb
+\*-------------------------------
+.drawgateb
+{
  jsr setupdgb
 
-*  First, draw bottom piece
+\*  First, draw bottom piece
 
  clc
  adc #12
  cmp Ay ;over floor/wall boundary?
- bcc :storit
+ bcc storit
 
-* Bottom piece is partly below floor line -- STA won't work.
-* We need to redraw b.g., then OR gate bottom on top.
+\* Bottom piece is partly below floor line -- STA won't work.
+\* We need to redraw b.g., then OR gate bottom on top.
 
-:orit
+.orit
  jsr restorebot
 
  lda gatebot
@@ -1847,31 +1956,31 @@ drawgateb
  lda #gatebotORA
  sta IMAGE
 
- lda #ora
+ lda #enum_ora
  sta OPACITY
 
  jsr addback
 
- jmp :cont
+ jmp cont
 
-*  Gate is above floor line -- STA it
+\*  Gate is above floor line -- STA it
 
-:storit lda gatebot
+.storit lda gatebot
  sta YCO
 
  lda #gatebotSTA
  sta IMAGE
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  jsr addback
 
-*  Next, draw as many middle pieces as we need to make
-*  up rest of grill
+\*  Next, draw as many middle pieces as we need to make
+\*  up rest of grill
 
-:cont
- lda #sta
+.cont
+ lda #enum_sta
  sta OPACITY
 
  lda #gateB1
@@ -1881,34 +1990,34 @@ drawgateb
  sec
  sbc #12
 
-:loop sta YCO
+.loop sta YCO
  cmp #192
- bcs :rts
+ bcs return
 
  sec
  sbc #7 ;grill mid piece is 8 lines high--
- bcc :done ;will it stick up out of block area?
+ bcc done ;will it stick up out of block area?
  cmp blockthr
- bcc :done
+ bcc done
 ;no, we're still safe--keep going
  jsr addback
 
  lda YCO
  sec
  sbc #8
- bne :loop
+ bne loop
 
-* now add final piece at top
+\* now add final piece at top
 
-:done lda YCO
+.done lda YCO
  sec
  sbc blockthr
  clc
  adc #1 ;desired height (0-8 pixels)
 
- beq :rts
+ beq return
  cmp #9
- bcs :rts
+ bcs return
 
  tay
  lda gate8b-1,y
@@ -1916,10 +2025,12 @@ drawgateb
 
  jsr addback
 
-:rts rts
+.return rts
+}
 
-*-------------------------------
-restorebot
+\*-------------------------------
+.restorebot
+{
  ldx #gate
  lda pieceb,x
  sta IMAGE
@@ -1929,15 +2040,17 @@ restorebot
  sta YCO
  lda blockxco
  sta XCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jsr add
 
  jsr checkc
- bcc :1
+ bcc label_1
  jsr dodrawc
-:1 jmp drawa
+.label_1 jmp drawa
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Draw object #x
@@ -1994,7 +2107,7 @@ DrawFF
  ldx #floor
  lda maska,x
  sta IMAGE
- lda #and
+ lda #enum_and
  sta OPACITY
  lda #UseLayrsave
  jsr addmid
@@ -2002,7 +2115,7 @@ DrawFF
  ldx FCharImage
  lda loosea,x
  sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
  lda #UseLay
  jsr addmid
@@ -2014,7 +2127,7 @@ DrawFF
  sta IMAGE
  lda FCharY
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  lda #UseLayrsave
  jsr addmid
@@ -2033,34 +2146,36 @@ DrawFF
 
  lda #looseb
  sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
  lda #UseLayrsave
  jmp addmid
+ENDIF
 
-*-------------------------------
-*
-*  Get objid & state
-*
-*  In: BlueType/Spec,Y
-*
-*  Out: A = objid
-*       state = state
-*
-*  Preserves X & Y
-*
-*-------------------------------
-getobjid
+\*-------------------------------
+\*
+\*  Get objid & state
+\*
+\*  In: BlueType/Spec,Y
+\*
+\*  Out: A = objid
+\*       state = state
+\*
+\*  Preserves X & Y
+\*
+\*-------------------------------
+.getobjid
  lda SCRNUM
  beq GOnull ;null scrn has no blueprint
 
-* Use getobjid1 for screen #s other than SCRNUM
+\* Use getobjid1 for screen #s other than SCRNUM
 
-getobjid1
- do EditorDisk
+.getobjid1
+{
+ IF EditorDisk
  lda inbuilder
  bne getobjbldr
- fin
+ ENDIF
 
  lda (BlueSpec),y
  sta state
@@ -2069,57 +2184,61 @@ getobjid1
  and #idmask
 
  cmp #pressplate
- beq :plate
+ beq plate
 
  cmp #upressplate
- beq :upp
+ beq upp
 
  rts
 
-* Handle depressed pressplate
+\* Handle depressed pressplate
 
-:plate lda state ;LINKLOC index
+.plate lda state ;LINKLOC index
  tax
  lda LINKMAP,x
 
  and #%00011111 ;bits 0-4
  cmp #2
- bcc :up
+ bcc up
 
  lda #dpressplate ;plate depressed
  rts
 
-:up lda #pressplate ;plate up
+.up lda #pressplate ;plate up
  rts
 
-* Handle depressed upressplate
+\* Handle depressed upressplate
 
-:upp lda state
+.upp lda state
  tax
  lda LINKMAP,x
  and #%00011111
  cmp #2
- bcc :up1
+ bcc up1
 
  lda #0
  sta state
  lda #floor ;depressed upp looks just like floor
  rts
 
-:up1 lda #upressplate
+.up1 lda #upressplate
  rts
+}
 
-* Null screen is black
+\* Null screen is black
 
-GOnull
- do EditorDisk
+.GOnull
+{
+ IF EditorDisk
  lda inmenu
  bne getobjbldr
- fin
+ ENDIF
 
  lda #space
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * In builder: BlueSpec contains initial gadget settings

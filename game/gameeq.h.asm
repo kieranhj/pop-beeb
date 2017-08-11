@@ -24,7 +24,7 @@ seqtable = $2800
 seqtab = $3000
 ctrl = $3a00
 coll = $4500
-gamebg = $4c00
+\gamebg = $4c00                  ; location determined by assembler
 auto = $5400
 
 mobtables = $b600
@@ -139,42 +139,8 @@ checkgate ds 3
 enemycoll ds 3
 ENDIF
 
-IF _TODO
- dum gamebg
-
-updatemeters ds 3
-DrawKidMeter ds 3
-DrawSword ds 3
-DrawKid ds 3
-DrawShad ds 3
-
-setupflame ds 3
-continuemsg ds 3
-addcharobj ds 3
-setobjindx ds 3
-printlevel ds 3
-
-DrawOppMeter ds 3
-flipdiskmsg ds 3
-timeleftmsg ds 3
-DrawGuard ds 3
-DrawGuard2 ds 3
-
-setupflask ds 3
-setupcomix ds 3
-psetupflame ds 3
-drawpost ds 3
-drawglass ds 3
-
-initlay ds 3
-twinkle ds 3
-flow ds 3
-pmask ds 3
-yellow ds 3
-
-setrecheck0 ds 3
-recheckyel ds 3
-ENDIF
+\dum gamebg
+\ jump table moved to gamebg.asm
 
 IF _TODO
  dum specialk
@@ -424,7 +390,7 @@ locals = $e8
 ;ORG $40
 
 ;.Char skip $10
-;.Kid skip $10
+.Kid skip $10
 ;.Shad skip $10
 ;.FCharVars skip 12
 ;.yellowflag skip 1
@@ -537,50 +503,6 @@ locals = $e8
 \*-------------------------------
 
 IF _TODO
- dum $212
-
-milestone ds 1
-GlassState ds 1
-redrawglass ds 1
-doortop ds 1
-GuardColor ds 1
-shadowaction ds 1
-skipmessage ds 1
-savezp ds 32
-MSset ds 1
-rjumpflag ds 1
-redherring ds 1
-ENDIF
-
-IF _TODO
- dum $300
-
-MinLeft ds 1
-NextTimeMsg ds 1
-SecLeft ds 1
-BGset1 ds 1
-BGset2 ds 1
-CHset ds 1
-FrameCount ds 2
-SongCount ds 1
-PreRecPtr ds 1
-gotsword ds 1
-message ds 1
-SPEED ds 1
-nummob ds 1
-clrSEL ds 5
-clrDESEL ds 5
-vibes ds 1
-SongCue ds 1
-musicon ds 1
-redkidmeter ds 1
-NextLevel ds 1
-scrncolor ds 1
-redoppmeter ds 1
-timerequest ds 1
-ENDIF
-
-IF _TODO
  dum $320
 
 CDthisframe ds $10
@@ -644,24 +566,23 @@ OpSword ds 1
 OpLife ds 1
 ENDIF
 
-IF _TODO
- dum Kid
-KidPosn ds 1
-KidX ds 1
-KidY ds 1
-KidFace ds 1
-KidBlockX ds 1
-KidBlockY ds 1
-KidAction ds 1
-KidXVel ds 1
-KidYVel ds 1
-KidSeq ds 2
-KidScrn ds 1
-KidRepeat ds 1
-KidID ds 1
-KidSword ds 1
-KidLife ds 1
-ENDIF
+CLEAR Kid, Kid+$10
+ORG Kid
+.KidPosn skip 1
+.KidX skip 1
+.KidY skip 1
+.KidFace skip 1
+.KidBlockX skip 1
+.KidBlockY skip 1
+.KidAction skip 1
+.KidXVel skip 1
+.KidYVel skip 1
+.KidSeq skip 2
+.KidScrn skip 1
+.KidRepeat skip 1
+.KidID skip 1
+.KidSword skip 1
+.KidLife skip 1
 
 IF _TODO
  dum Shad

@@ -27,7 +27,7 @@ redbufs = $5e00
 menudata = $960f ;ed only
 \imlists = $ac00                ; location determined by assembler
 endimspace = $b600
-blueprnt = $b700
+\blueprnt = $b700                ; location determined by assembler
 
 \*  Aux l.c.
 
@@ -59,7 +59,7 @@ _loadaltset ds 3
  ds 3 ;_screendump
 ENDIF
 
-IF _EDITOR
+IF EditorDisk
  dum master ;ed
 
  ds 15
@@ -127,107 +127,8 @@ loadsuper ds 3
 fadeout ds 3
 ENDIF
 
-IF _TODO
- dum grafix
-
-gr ds 3
-drawall ds 3
-controller ds 3
- ds 3
-saveblue ds 3
-
-reloadblue ds 3
-movemem ds 3
-buttons ds 3
-gtone ds 3
-setcenter ds 3
-
-dimchar ds 3
-cvtx ds 3
-zeropeel ds 3
-zeropeels ds 3
-pread ds 3
-
-addpeel ds 3
-copyscrn ds 3
-sngpeel ds 3
-rnd ds 3
-cls ds 3
-
-lay ds 3
-fastlay ds 3
-layrsave ds 3
-lrcls ds 3
-fastmask ds 3
-
-fastblack ds 3
-peel ds 3
-getwidth ds 3
-copy2000 ds 3
-copy2000ma ds 3
-
-setfastaux ds 3
-setfastmain ds 3
-loadlevel ds 3
-attractmode ds 3
-xminit ds 3
-
-xmplay ds 3
-cutprincess ds 3
-xtitle ds 3
-copy2000am ds 3
-reload ds 3
-
-loadstage2 ds 3
- ds 3
-getselect ds 3
-getdesel ds 3
-edreboot ds 3 ;ed
-
-gobuild ds 3 ;ed
-gogame ds 3 ;ed
-writedir ds 3 ;ed
-readdir ds 3 ;ed
-savelevel ds 3 ;ed
-
-savelevelg ds 3 ;ed
-addback ds 3
-addfore ds 3
-addmid ds 3
-addmidez ds 3
-
-addwipe ds 3
-addmsg ds 3
-savegame ds 3
-loadgame ds 3
-zerolsts ds 3
-
-screendump ds 3
-minit ds 3
-mplay ds 3
-savebinfo ds 3
-reloadbinfo ds 3
-
-inverty ds 3
-normspeed ds 3
-addmidezo ds 3
-calcblue ds 3
-zerored ds 3
-
-xplaycut ds 3
-checkIIGS ds 3
-fastspeed ds 3
-musickeys ds 3
-dostartgame ds 3
-
-epilog ds 3
-loadaltset ds 3
-xmovemusic ds 3
-whoop ds 3
-vblank ds 3
-
-vbli ds 3
-ENDIF
+\dum grafix
+\ jump tables moved to grafix.asm
 
 IF _TODO
  dum redbufs
@@ -244,7 +145,7 @@ whitebuf ds 30
 topbuf ds 10
 ENDIF
 
-IF _EDITOR
+IF EditorDisk
  dum menudata ;ed only
 
 menutype ds 30
@@ -252,28 +153,17 @@ menuspec ds 30
 menubspec ds 30
 ENDIF
 
-IF _TODO
- dum frameadv
+\dum frameadv
+\ jump table moved to frameadv.asm
 
-sure ds 3
-fast ds 3
-getinitobj ds 3
-ENDIF
 
 \dum tables
 \ tables moved to eq.asm
 
 
-IF _TODO
- dum blueprnt
+\dum blueprnt
+\ definition moved to eq.asm
 
-BLUETYPE ds 24*30
-BLUESPEC ds 24*30
-LINKLOC ds 256
-LINKMAP ds 256
-MAP ds 24*4
-INFO ds 256
-ENDIF
 
 \*-------------------------------
 \*
@@ -281,24 +171,9 @@ ENDIF
 \*
 \*-------------------------------
  
- IF _TODO
- dum INFO
+ \dum INFO
+ \ Definition moved to eq.asm
 
- ds 64
-KidStartScrn ds 1
-KidStartBlock ds 1
-KidStartFace ds 1
- ds 1
-SwStartScrn ds 1
-SwStartBlock ds 1
- ds 1
-GdStartBlock ds 24
-GdStartFace ds 24
-GdStartX ds 24
-GdStartSeqL ds 24
-GdStartProg ds 24
-GdStartSeqH ds 24
-ENDIF
 
 \*-------------------------------
 \*
@@ -327,10 +202,10 @@ ORG $00
 
 ;.PAGE skip 1
 .XCO skip 1
-;.YCO skip 1
+.YCO skip 1
 ;.OFFSET skip 1
-;.IMAGE skip 2
-;.OPACITY skip 1
+.IMAGE skip 2
+.OPACITY skip 1
 ;.TABLE skip 2
 ;.PEELBUF skip 2
 ;.PEELIMG skip 2
@@ -363,18 +238,18 @@ ORG $00
 ;.SINGSTEP skip 1
 ;.blackflag skip 1
 .SCRNUM skip 1
-;.BlueType skip 2
-;.BlueSpec skip 2
+.BlueType skip 2
+.BlueSpec skip 2
 ;.CUTTIMER skip 1
 .PRECED skip 1
 .spreced skip 1
 .PREV skip 3
 .sprev skip 3
-;.scrnLeft skip 1
-;.scrnRight skip 1
-;.scrnAbove skip 1
-;.scrnBelow skip 1
-;.scrnBelowL skip 1
+.scrnLeft skip 1
+.scrnRight skip 1
+.scrnAbove skip 1
+.scrnBelow skip 1
+.scrnBelowL skip 1
 ;.scrnAboveL skip 1
 ;.scrnAboveR skip 1
 ;.scrnBelowR skip 1
@@ -411,30 +286,6 @@ develment ds 1
 keypress ds 1
 keydown ds 1
 IIGS ds 1
-ENDIF
-
-IF _TODO
- dum $3c0
-
-sortX ds $10
-BELOW ds $10
-SBELOW ds $10
-ENDIF
-
-IF _TODO
- dum $3f0
-
-bluepTRK ds 1
-bluepREG ds 1
-binfoTRK ds 1
-binfoREG ds 1
-level ds 1
-BBundID ds 1
-redherring2 ds 1
-pausetemp ds 1
-recheck0 ds 1
-
- dend
 ENDIF
 
 \*-------------------------------

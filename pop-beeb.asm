@@ -7,8 +7,12 @@
 ; Defines
 
 _DEBUG = FALSE
-_EDITOR = FALSE
 _TODO = FALSE
+
+; Original PoP global defines
+
+EditorDisk = 0 ;1 = dunj, 2 = palace
+CopyProtect = 0
 
 ; Platform includes
 
@@ -159,10 +163,17 @@ INCLUDE "lib/print.asm"
     RTS
 }
 
+; Beeb source
+
 INCLUDE "game/beeb-plot.asm"
+
+; PoP source
+
 INCLUDE "game/frameadv.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/tables.asm"
+INCLUDE "game/bgdata.asm"
+INCLUDE "game/gamebg.asm"
 
 .pop_beeb_end
 
@@ -171,7 +182,7 @@ SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
 ; Run time initalised data
 
 INCLUDE "game/eq.asm"
-
+INCLUDE "game/gameeq.asm"
 
 ; Construct SHADOW RAM
 

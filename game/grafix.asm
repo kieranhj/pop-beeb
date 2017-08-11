@@ -5,8 +5,6 @@
 grafix=*
 
 \* grafix
-\CopyProtect = 1
-\EditorDisk = 0
 \org = $400
 \ tr on
 \ lst off
@@ -127,10 +125,10 @@ grafix=*
 \ lst off
 \*-------------------------------
 \ dum locals
-\]temp
-\]dest ds 2
-\]source ds 2
-\]endsourc ds 2
+\grafix_temp
+\grafix_dest ds 2
+\grafix_source ds 2
+\grafix_endsourc ds 2
 \index ds 1
 \
 \ dend
@@ -228,7 +226,7 @@ ADDBACK ldx bgX ;# images already in list
 
  stx bgX
 :rts
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -242,14 +240,14 @@ ADDBACK ldx bgX ;# images already in list
 ADDFORE ldx fgX
  inx
  cpx #maxfore
- bcs ]rts
+ bcs return
 
  lda XCO
  sta fgX,X
 
  lda YCO
  cmp #192
- bcs ]rts
+ bcs return
  sta fgY,X
 
  lda IMAGE
@@ -259,7 +257,7 @@ ADDFORE ldx fgX
  sta fgOP,X
 
  stx fgX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -273,7 +271,7 @@ ADDFORE ldx fgX
 ADDMSG ldx msgX
  inx
  cpx #maxmsg
- bcs ]rts
+ bcs return
 
  lda XCO
  sta msgX,X
@@ -290,7 +288,7 @@ ADDMSG ldx msgX
  sta msgOP,X
 
  stx msgX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -304,7 +302,7 @@ ADDMSG ldx msgX
 ADDWIPE ldx wipeX
  inx
  cpx #maxwipe
- bcs ]rts
+ bcs return
 
  sta wipeCOL,x
  lda blackflag ;TEMP
@@ -323,7 +321,7 @@ ADDWIPE ldx wipeX
  sta wipeW,x
 
  stx wipeX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -348,7 +346,7 @@ ADDWIPE ldx wipeX
 ADDMID ldx midX
  inx
  cpx #maxmid
- bcs ]rts
+ bcs return
 
  sta midTYP,x
 
@@ -382,7 +380,7 @@ ADDMID ldx midX
  sta midCR,x
 
  stx midX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -400,7 +398,7 @@ ADDMIDEZO
  ldx midX
  inx
  cpx #maxmid
- bcs ]rts
+ bcs return
 
  sta midTYP,x
 
@@ -430,7 +428,7 @@ ADDMIDEZO
  sta midCD,x
 
  stx midX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -441,18 +439,17 @@ ADDMIDEZO
 *
 *-------------------------------
 ADDPEEL lda PEELIMG+1
- beq ]rts ;0 is layersave's signal to skip it
+ beq return ;0 is layersave's signal to skip it
 
  lda PAGE
  beq :1
 
-\ do CopyProtect
-\ ldx purpleflag ;should be 1!
-\ lda dummy,x
-\
-\ else
+IF CopyProtect
+ ldx purpleflag ;should be 1!
+ lda dummy,x
+ELSE
  lda #maxpeel
-\ fin
+ENDIF
 
 :1 sta :sm+1 ;self-mod
 
@@ -461,7 +458,7 @@ ADDPEEL lda PEELIMG+1
  clc
  adc #1
  cmp #maxpeel
- bcs ]rts
+ bcs return
  sta peelX,x
  clc
 :sm adc #0 ;0/maxpeel
@@ -477,7 +474,7 @@ ADDPEEL lda PEELIMG+1
  lda PEELIMG+1
  sta peelIMGH,x ;2-byte image address (in peel buffer)
 
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -527,11 +524,11 @@ DOGEN
 
 :1 ldx BGset1
  cpx #1
- bne ]rts
+ bne return
  lda #0
  sta dummy-1,x
 
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -542,7 +539,7 @@ DOGEN
 *-------------------------------
 DRAWWIPE
  lda wipeX ;# of images in list
- beq ]rts ;list is empty
+ beq return ;list is empty
 
  lda #1 ;start with image #1
 :loop pha
@@ -566,7 +563,7 @@ DRAWWIPE
  cmp wipeX
  bcc :loop
  beq :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -576,7 +573,7 @@ DRAWWIPE
 *
 *-------------------------------
 DRAWBACK lda bgX ;# of images in list
- beq ]rts
+ beq return
 
  ldx #1
 :loop stx index
@@ -598,7 +595,7 @@ DRAWBACK lda bgX ;# of images in list
  cpx bgX
  bcc :loop
  beq :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -608,7 +605,7 @@ DRAWBACK lda bgX ;# of images in list
 *
 *-------------------------------
 DRAWFORE lda fgX
- beq ]rts
+ beq return
 
  ldx #1
 :loop stx index
@@ -636,7 +633,7 @@ DRAWFORE lda fgX
  cpx fgX
  bcc :loop
  beq :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -651,7 +648,7 @@ SNGPEEL
  ldx #maxpeel
 :1 stx :sm+1
  lda peelX,x ;# of images in list
- beq ]rts
+ beq return
 
 :loop pha
  clc
@@ -674,7 +671,7 @@ SNGPEEL
  sec
  sbc #1
  bne :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -685,7 +682,7 @@ SNGPEEL
 *-------------------------------
 DRAWMID
  lda midX ;# of images in list
- beq ]rts
+ beq return
 
  ldx #1
 :loop stx index
@@ -721,7 +718,7 @@ DRAWMID
  cpx midX
  bcc :loop
  beq :loop
-]rts rts
+return rts
 
 * midTYP values:
 *    0 = use fastlay (normal for floorpieces)
@@ -769,7 +766,7 @@ DRAWMID
 *-------------------------------
 DRAWMSG
  lda msgX
- beq ]rts
+ beq return
 
  ldx #1
 :loop stx index
@@ -811,7 +808,7 @@ DRAWMSG
  cpx msgX
  bcc :loop
  beq :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -915,16 +912,16 @@ range = 36*7 ;largest multiple of 7 under 256
 
 CVTX
  lda #0
- sta ]temp
+ sta grafix_temp
 
  lda ]XH
  bmi :negative ;X < 0
  beq :ok ;0 <= X <= 255
 
-:loop lda ]temp
+:loop lda grafix_temp
  clc
  adc #36
- sta ]temp
+ sta grafix_temp
 
  lda ]XL
  sec
@@ -940,7 +937,7 @@ CVTX
 :ok ldy ]XL
  lda ByteTable,y
  clc
- adc ]temp
+ adc grafix_temp
  sta XCO
 
  lda OffsetTable,y
@@ -948,10 +945,10 @@ CVTX
  rts
 
 :negative
- lda ]temp
+ lda grafix_temp
  sec
  sbc #36
- sta ]temp
+ sta grafix_temp
 
  lda ]XL
  clc
@@ -963,7 +960,7 @@ CVTX
  sta ]XH
  bne :negative
  beq :ok
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -991,7 +988,7 @@ ZEROPEELS
  lda #0
  sta peelX
  sta peelX+maxpeel
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1066,7 +1063,7 @@ getkbd lda kbdX
  bmi :1
  ora BTN1
 :1 sta btn
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1092,7 +1089,7 @@ CONTROLLER
 *-------------------------------
 JREAD
  lda joyon
- beq ]rts
+ beq return
  jsr PREAD ;read game pots
 
  ldx #0
@@ -1113,13 +1110,13 @@ JREAD
 * Reverse joyX?
 
 :1 lda jhoriz
- beq ]rts
+ beq return
 
  lda #0
  sec
  sbc joyX
  sta joyX
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1168,12 +1165,12 @@ BUTTONS
  stx BUTT1
 
 :rdjup lda joyY
- bmi ]rts
+ bmi return
  lda #0
  sta JSTKUP ;jstk is not up--clear JSTKUP
  fin
 
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1194,7 +1191,7 @@ cvtpdl
  beq :3
 :2 lda #1
 :3 sta joyX,x
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1219,12 +1216,12 @@ PREAD
 
  lda $C064
  ora $C065
- bpl ]rts ;Both inputs low: we're done
+ bpl return ;Both inputs low: we're done
 
  lda joyX
  ora joyY
  bpl :loop ;Do it again
-]rts rts
+return rts
 
 :beat nop
  bpl :nextpdl ;Kill time
@@ -1274,7 +1271,7 @@ SETCENTER
 
 :nojoy lda #0
  sta joyon
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1283,27 +1280,27 @@ SETCENTER
 *  In: A < X.Y
 *
 *  20 < 40.60 means 2000 < 4000.5fffm
-*  WARNING: If x >= y, routine will wipe out 64k
+\*  WARNING: If x >= y, routine will wipe out 64k
 *
 *-------------------------------
-MOVEMEM sta ]dest+1
- stx ]source+1
- sty ]endsourc+1
+MOVEMEM sta grafix_dest+1
+ stx grafix_source+1
+ sty grafix_endsourc+1
 
  ldy #0
- sty ]dest
- sty ]source
- sty ]endsourc
+ sty grafix_dest
+ sty grafix_source
+ sty grafix_endsourc
 
-:loop lda (]source),y
- sta (]dest),y
+:loop lda (grafix_source),y
+ sta (grafix_dest),y
  iny
  bne :loop
 
- inc ]source+1
- inc ]dest+1
- lda ]source+1
- cmp ]endsourc+1
+ inc grafix_source+1
+ inc grafix_dest+1
+ lda grafix_source+1
+ cmp grafix_endsourc+1
  bne :loop
  rts
 
@@ -1337,7 +1334,7 @@ WHOOP
  bne :2
  dey
  bne :1
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1399,7 +1396,7 @@ RND
  clc
  adc #23
  sta RNDseed
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1469,52 +1466,52 @@ SCREENDUMP sta ALTZPoff
 \* Edmaster (editor disk only)
 \*
 \*-------------------------------
-\ do EditorDisk
-\
-\SAVELEVEL sta ALTZPoff
-\ jsr _savelevel
-\ sta ALTZPon
-\ rts
-\
-\SAVELEVELG sta ALTZPoff
-\ jsr _savelevelg
-\ sta ALTZPon
-\ rts
-\
-\READDIR sta ALTZPoff
-\ jsr _readdir
-\ sta ALTZPon
-\ rts
-\
-\WRITEDIR sta ALTZPoff
-\ jsr _writedir
-\ sta ALTZPon
-\ rts
-\
-\GOBUILD sta ALTZPoff
-\ jsr _gobuild
-\ sta ALTZPon
-\ rts
-\
-\GOGAME sta ALTZPoff
-\ jsr _gogame
-\ sta ALTZPon
-\ rts
-\
-\EDREBOOT sta ALTZPoff
-\ jsr _edreboot
-\ sta ALTZPon
-\ rts
-\
-\ else
-\SAVELEVEL
-\SAVELEVELG
-\READDIR
-\WRITEDIR
-\GOBUILD
-\GOGAME
-\EDREBOOT rts
-\ fin
+IF EditorDisk
+
+SAVELEVEL sta ALTZPoff
+ jsr _savelevel
+ sta ALTZPon
+ rts
+
+SAVELEVELG sta ALTZPoff
+ jsr _savelevelg
+ sta ALTZPon
+ rts
+
+READDIR sta ALTZPoff
+ jsr _readdir
+ sta ALTZPon
+ rts
+
+WRITEDIR sta ALTZPoff
+ jsr _writedir
+ sta ALTZPon
+ rts
+
+GOBUILD sta ALTZPoff
+ jsr _gobuild
+ sta ALTZPon
+ rts
+
+GOGAME sta ALTZPoff
+ jsr _gogame
+ sta ALTZPon
+ rts
+
+EDREBOOT sta ALTZPoff
+ jsr _edreboot
+ sta ALTZPon
+ rts
+
+ELSE
+.SAVELEVEL
+.SAVELEVELG
+.READDIR
+.WRITEDIR
+.GOBUILD
+.GOGAME
+.EDREBOOT rts
+ENDIF
 
 *-------------------------------
 *
@@ -1617,19 +1614,19 @@ INVERTY
 *  Exit with bank 2 switched in
 *
 *-------------------------------
-]bank1in bit RWBANK1
+grafix_bank1in bit RWBANK1
  bit RWBANK1
  rts
 
-MINIT jsr ]bank1in
+MINIT jsr grafix_bank1in
  jsr CALLMINIT
-]bank2in bit RWBANK2
+grafix_bank2in bit RWBANK2
  bit RWBANK2
  rts
 
-MPLAY jsr ]bank1in
+MPLAY jsr grafix_bank1in
  jsr CALLMPLAY
- jmp ]bank2in
+ jmp grafix_bank2in
 
 *-------------------------------
 *
@@ -1694,7 +1691,7 @@ posthr
  sta $00,x
  dex
  bpl :loop
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1702,20 +1699,20 @@ posthr
 *
 *-------------------------------
 SAVEBLUE
- jsr ]bank1in
+ jsr grafix_bank1in
  lda #>$d700
  ldx #>$b700
  ldy #>$b700+$900
  jsr movemem
- jmp ]bank2in
+ jmp grafix_bank2in
 
 SAVEBINFO
- jsr ]bank1in
+ jsr grafix_bank1in
  lda #>$d000
  ldx #>$a600
  ldy #>$a600+$600
  jsr movemem
- jmp ]bank2in
+ jmp grafix_bank2in
 
 *-------------------------------
 *
@@ -1723,20 +1720,20 @@ SAVEBINFO
 *
 *-------------------------------
 RELOADBLUE
- jsr ]bank1in
+ jsr grafix_bank1in
  lda #>$b700
  ldx #>$d700
  ldy #>$d700+$900
  jsr movemem
- jmp ]bank2in
+ jmp grafix_bank2in
 
 RELOADBINFO
- jsr ]bank1in
+ jsr grafix_bank1in
  lda #>$a600
  ldx #>$d000
  ldy #>$d000+$600
  jsr movemem
- jmp ]bank2in
+ jmp grafix_bank2in
 
 *-------------------------------
 *
@@ -1769,7 +1766,7 @@ ENDIF
 
  sec
  sbc #1 ;reduce to 0-23
- asl
+ asl A
  tax ;x2
 
  lda Mult30,x
@@ -1790,10 +1787,10 @@ ENDIF
  adc #HI(24*30)
  sta BlueSpec+1
 
-]rts rts
+.return rts
 }
 
-calcmenu
+.calcmenu
 {
  lda #LO(menutype)
  sta BlueType
@@ -1806,7 +1803,6 @@ calcmenu
  sta BlueSpec+1
  rts
 }
-ENDIF
 
 IF _TODO
 *-------------------------------
@@ -1891,7 +1887,7 @@ CALLMPLAY
  rts
 
 :silent lda #0
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1945,7 +1941,7 @@ MUSICKEYS
  ora $c062
  bpl :nobtn
  lda #$ff
-]rts rts
+return rts
 
 *===============================
 vblflag ds 1
@@ -1959,7 +1955,7 @@ VBLANK
  bpl :loop1
 :loop lda $c019
  bmi :loop ;wait for beginning of VBL interval
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -1999,7 +1995,7 @@ VBLI
 *-------------------------------
 InitVBLANK
  lda $FBC0
- bne ]rts ;not a IIc--use VBLANK
+ bne return ;not a IIc--use VBLANK
 
  sta RAMWRTaux
 
@@ -2013,7 +2009,7 @@ InitVBLANK
  sta $c05b ;enable VBL int
  sta $c078 ;disable IOU access
 
-]rts rts
+return rts
 
 \*-------------------------------
 \*
@@ -2026,31 +2022,28 @@ InitVBLANK
 \*  Also initializes VBLANK routine
 \*
 \*-------------------------------
-\CHECKIIGS
-\ do EditorDisk
-\ else
-\
-\ bit USEROM
-\ bit USEROM
-\
-\ lda $FBB3
-\ cmp #6
-\ bne * ;II/II+/III--we shouldn't even be here
-\ sec
-\ jsr $FE1F
-\ bcs :notGS
-\
-\ lda #1
-\ bne :set
-\
-\:notGS lda #0
-\:set sta IIGS
-\
-\ jsr InitVBLANK
-\
-\ bit RWBANK2
-\ bit RWBANK2
-\]rts rts
+CHECKIIGS
+ bit USEROM
+ bit USEROM
+
+ lda $FBB3
+ cmp #6
+ bne * ;II/II+/III--we shouldn't even be here
+ sec
+ jsr $FE1F
+ bcs :notGS
+
+ lda #1
+ bne :set
+
+:notGS lda #0
+:set sta IIGS
+
+ jsr InitVBLANK
+
+ bit RWBANK2
+ bit RWBANK2
+return rts
 
 *-------------------------------
 *
@@ -2060,11 +2053,11 @@ InitVBLANK
  xc
 FASTSPEED
  lda IIGS
- beq ]rts
+ beq return
 
  lda #$80
  tsb $C036 ;fast speed
-]rts rts
+return rts
 
 *-------------------------------
 *
@@ -2073,7 +2066,7 @@ FASTSPEED
 *-------------------------------
 NORMSPEED
  lda IIGS
- beq ]rts
+ beq return
 
  xc
  lda $c034
@@ -2101,7 +2094,7 @@ NORMSPEED
  xc
 getparam
  lda IIGS
- beq ]rts
+ beq return
 
  clc
  xce
