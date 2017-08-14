@@ -18,9 +18,15 @@ hrtables=*
 \*
 \*-------------------------------
 
+\\ Needs to be changed for Beeb screen addressing!
+
+\\ Apple II hi-res
+\\ For Scanline y address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+
 .YLO
 FOR y,0,191,1
-EQUB LO($2000 + n * 40)         \\ Need to check Apple II screen addressing
+address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+EQUB LO(address)
 NEXT
 \ hex 00000000000000008080808080808080
 \ hex 00000000000000008080808080808080
@@ -39,7 +45,8 @@ NEXT
 
 .YHI
 FOR y,0,191,1
-EQUB HI($2000 + n * 40)         \\ Plus needs to be changed to Beeb screen addressing anyway!
+address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+EQUB HI(address)
 NEXT
 \ hex 2024282C3034383C2024282C3034383C
 \ hex 2125292D3135393D2125292D3135393D
