@@ -1864,74 +1864,76 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Still more streamlined version of FASTLAY (STA only)
-*
-*-------------------------------
-fastlaySTA
+\*-------------------------------
+\*
+\*  Still more streamlined version of FASTLAY (STA only)
+\*
+\*-------------------------------
+.fastlaySTA
+{
  lda PAGE
- sta :smPAGE+1
+ sta smPAGE+1
 
  lda XCO
- sta  :smXCO+1
+ sta smXCO+1
 
  ldy #0
  lda (IMAGE),y
- sta :smWIDTH+1
+ sta smWIDTH+1
 
  sec
  sbc #1
- sta :smSTART+1
+ sta smSTART+1
 
  lda YCO
  tax
  iny
  sbc (IMAGE),y
- bcs :ok
- lda #-1 ;limited Y-clipping
-:ok sta  :smTOP+1
+ bcs ok
+ lda #LO(-1) ;limited Y-clipping
+.ok sta  smTOP+1
 
  lda IMAGE
  clc
  adc #2
  sta IMAGE
- bcc :1
+ bcc label_1
  inc IMAGE+1
-:1
+.label_1
 
-:outloop
+.outloop
  lda YLO,x
  clc
-:smXCO adc #0
- sta :smod+1
+.smXCO adc #0
+ sta smod+1
 
  lda YHI,x
-:smPAGE adc #$20
- sta :smod+2
+.smPAGE adc #$20
+ sta smod+2
 
-:smSTART ldy #3
+.smSTART ldy #3
 
-:inloop
+.inloop
  lda (IMAGE),y
-:smod sta $2000,y ;BASE
+.smod sta $2000,y ;BASE
 
  dey
- bpl :inloop
+ bpl inloop
 
-:smWIDTH lda #4
+.smWIDTH lda #4
  adc IMAGE ;cc
  sta IMAGE
- bcc :2
+ bcc label_2
  inc IMAGE+1
-:2
+.label_2
  dex
-:smTOP cpx #$ff
- bne :outloop
+.smTOP cpx #$ff
+ bne outloop
 
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  F A S T M A S K
