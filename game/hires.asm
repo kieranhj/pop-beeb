@@ -237,30 +237,31 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  L O - R E S   C L S
-*
-*  Clear lo-res/text screen (page 1)
-*
-*  In: A = color
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  L O - R E S   C L S
+\*
+\*  Clear lo-res/text screen (page 1)
+\*
+\*  In: A = color
+\*
+\*-------------------------------
 
-LRCLS LDY #$F7
-:2 STA $400,Y
+.hires_LRCLS
+{
+ LDY #$F7
+.label_2 STA $400,Y
  STA $500,Y
  STA $600,Y
  STA $700,Y
  DEY
  CPY #$7F
- BNE :3
+ BNE label_3
  LDY #$77
-:3 CPY #$FF
- BNE :2
+.label_3 CPY #$FF
+ BNE label_2
  RTS
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -289,20 +290,20 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   W I D T H
-*
-*  In: BANK, TABLE, IMAGE
-*  Out: A = width, X = height
-*
-*-------------------------------
-GETWIDTH
+\*-------------------------------
+\*
+\*  G E T   W I D T H
+\*
+\*  In: BANK, TABLE, IMAGE
+\*  Out: A = width, X = height
+\*
+\*-------------------------------
+.hires_GETWIDTH
+{
  lda BANK
- sta :RAMRD+1
+ sta RAMRD+1
 
-:RAMRD sta $c003
+.RAMRD sta $c003
 
  jsr setimage
 
@@ -313,7 +314,7 @@ GETWIDTH
  dey
  lda (IMAGE),y ;width
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -523,25 +524,25 @@ ENDIF
 .return rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Shift offset 1 bit right or left
-* (for special XOR)
-*
-* In/out: X = offset
-*
-*-------------------------------
-shiftoffset
+\*-------------------------------
+\*
+\* Shift offset 1 bit right or left
+\* (for special XOR)
+\*
+\* In/out: X = offset
+\*
+\*-------------------------------
+.shiftoffset
+{
  cpx #6
- bcs :left
+ bcs left
 
  inx
  rts
 
-:left dex
-]rts rts
-ENDIF
+.left dex
+.return rts
+}
 
 \*-------------------------------
 \*
@@ -727,10 +728,12 @@ ENDIF
  STA label_90+2
  STA label_92+2
 
+.testme
+
  LDA AMASKS,X
- STA AMASK+1
+ STA label_AMASK+1
  LDA BMASKS,X
- STA BMASK+1
+ STA label_BMASK+1
 
  LDX OPACITY
  LDA OPCODE,X
@@ -785,7 +788,7 @@ ENDIF
 \* Take initial carry byte from screen
 
 .label_2 LDA (BASE),Y
-.AMASK AND #0
+.label_AMASK AND #0
  STA CARRY
 
 \* Lay line down left-to-right fast as you can
@@ -816,7 +819,7 @@ ENDIF
 
 .label_4 LDA (BASE),Y
 
-.BMASK AND #0
+.label_BMASK AND #0
  ORA CARRY
 .label_81 STA (BASE),Y
  STA (BASE),Y
@@ -897,10 +900,10 @@ ENDIF
  sta label_96+2
 
  LDA AMASKS,X
- STA AMASK+1
+ STA label_AMASK+1
 
  LDA BMASKS,X
- STA BMASK+1
+ STA label_BMASK+1
 
  LDY YCO
 
@@ -955,7 +958,7 @@ ENDIF
 \* Take initial carry byte from screen
 
 .label_2
-.AMASK lda #0 ;AMASK
+.label_AMASK lda #0 ;AMASK
  sta CARRY
 
  and (BASE),y
@@ -1002,7 +1005,7 @@ ENDIF
  bne label_5 ;Rightmost byte is offscreen
 
 .label_4
-.BMASK lda #0 ;BMASK
+.label_BMASK lda #0 ;BMASK
  ora CARRY
 .masksm2 and (BASE),y
  ora carryim
@@ -1076,7 +1079,7 @@ ENDIF
  sta c2+2
 
  LDA AMASKS,X
- STA AMASK+1
+ STA label_AMASK+1
 
 \* Omit opcode setting
 
@@ -1128,7 +1131,7 @@ ENDIF
 \* Start a new line at left edge
 
 .label_2 lda (BASE),y
-.AMASK and #0 ;AMASK
+.label_AMASK and #0 ;AMASK
  sta CARRY
 
  lda #0 ;0 XOR X == X
@@ -1218,7 +1221,7 @@ ENDIF
 .MLAY ;A = OPACITY
 {
  cmp #enum_eor
- bne label1
+ bne label_1
  jmp MLayXOR
 
 .label_1 cmp #enum_mask
@@ -1255,7 +1258,7 @@ ENDIF
  LDA SHIFTL,X
  STA label_91+1
  LDA SHIFTH,X
- STA v91+2
+ STA label_91+2
 
  LDA CARRYL,X
  STA label_90+1
@@ -1434,9 +1437,9 @@ ENDIF
  sta label_96+2
 
  LDA AMASKS,X
- STA AMASK+1
+ STA label_AMASK+1
  LDA BMASKS,X
- STA BMASK+1
+ STA label_BMASK+1
 
 \* Lay on
 
@@ -1484,7 +1487,7 @@ ENDIF
 \* Start a new line at left edge
 
 .label_2 LDY XCO
-.AMASK lda #0 ;AMASK
+.label_AMASK lda #0 ;AMASK
  sta CARRY
 
  and (BASE),y
@@ -1545,7 +1548,7 @@ ENDIF
 .label_4 LDY XCO
  LDA (BASE),Y
 
-.BMASK AND #0 ;BMASK
+.label_BMASK AND #0 ;BMASK
  ORA CARRY
 .masksm2 and (BASE),y
  ora carryim
@@ -1622,7 +1625,7 @@ ENDIF
  sta c2+2
 
  LDA AMASKS,X
- STA AMASK+1
+ STA label_AMASK+1
 
 \* Lay on
 
@@ -1666,7 +1669,7 @@ ENDIF
 \* Start a new line at left edge
 
 .label_2 ldy XCO
-.AMASK lda #0 ;AMASK
+.label_AMASK lda #0 ;AMASK
  and (BASE),y
  sta CARRY
 
@@ -1753,18 +1756,18 @@ ENDIF
 .done JMP DONE
 }
 
-IF _TODO
-*-------------------------------
-*
-* Peel
-*
-*-------------------------------
-PEEL
+\*-------------------------------
+\*
+\* Peel
+\*
+\*-------------------------------
+.hires_PEEL
+{
  sta $c004
-]ramrd1 sta $c003
+.ramrd1 sta $c003
 
  jmp fastlaySTA
-ENDIF
+}
 
 \*-------------------------------
 \*
