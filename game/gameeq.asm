@@ -52,7 +52,9 @@ SongCue ds 1
 musicon ds 1
 redkidmeter ds 1
 NextLevel ds 1
-scrncolor ds 1
+ENDIF
+.scrncolor skip 1
+IF _TODO
 redoppmeter ds 1
 timerequest ds 1
 ENDIF

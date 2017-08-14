@@ -39,11 +39,11 @@ grafix=*
 .copyscrn BRK   ;jmp COPYSCRN
 .sngpeel BRK    ;jmp SNGPEEL
 .rnd BRK        ;jmp RND
-.cls BRK        ;jmp CLS
+.cls jmp CLS
 \
-.lay BRK        ;jmp LAY        ***
-.fastlay BRK    ;jmp FASTLAY    ***
-.layrsave BRK   ;jmp LAYRSAVE   ***
+.lay jmp LAY
+.fastlay jmp FASTLAY
+.layrsave jmp LAYRSAVE
 .lrcls BRK      ;jmp LRCLS
 .fastmask BRK   ;jmp FASTMASK
 \
@@ -1548,102 +1548,146 @@ ELSE
 .GOGAME
 .EDREBOOT rts
 ENDIF
+ENDIF
 
-*-------------------------------
-*
-*  Hires
-*
-*-------------------------------
-CLS jsr prehr
+\*-------------------------------
+\*
+\*  Hires
+\*
+\*-------------------------------
+.CLS
+{
+ jsr prehr
  sta ALTZPoff
  jsr _cls
  sta ALTZPon
  rts
+}
 
-LAY jsr prehr
+.LAY
+{
+ jsr prehr
  sta ALTZPoff
  jsr _lay
  sta ALTZPon
  rts
+}
 
-FASTLAY jsr prehr
+.FASTLAY
+{
+ jsr prehr
  sta ALTZPoff
  jsr _fastlay
  sta ALTZPon
  rts
+}
 
-LAYRSAVE jsr prehr
+.LAYRSAVE
+{
+ jsr prehr
  sta ALTZPoff
  jsr _layrsave
  sta ALTZPon
  jmp posthr
+}
 
-LRCLS sta scrncolor ;In: A = screen color
+.LRCLS
+{
+ sta scrncolor ;In: A = screen color
  sta ALTZPoff
  jsr _lrcls
  sta ALTZPon
  rts
+}
 
-FASTMASK jsr prehr
+.FASTMASK
+{
+ jsr prehr
  sta ALTZPoff
  jsr _fastmask
  sta ALTZPon
  rts
+}
 
-FASTBLACK jsr prehr
+.FASTBLACK
+{
+ jsr prehr
  sta ALTZPoff
  jsr _fastblack
  sta ALTZPon
  rts
+}
 
-PEEL jsr prehr
+.PEEL
+{
+ jsr prehr
  sta ALTZPoff
  jsr _peel
  sta ALTZPon
  rts
+}
 
-GETWIDTH jsr prehr
+.GETWIDTH
+{
+ jsr prehr
  sta ALTZPoff
  jsr _getwidth
  sta ALTZPon
  rts
+}
 
-COPY2000 jsr prehr
+.COPY2000
+{
+ jsr prehr
  sta ALTZPoff
  jsr _copy2000
  sta ALTZPon
  rts
+}
 
-COPY2000AM jsr prehr
+.COPY2000AM
+{
+ jsr prehr
  sta ALTZPoff
  jsr _copy2000am
  sta ALTZPon
  rts
+}
 
-COPY2000MA jsr prehr
+.COPY2000MA
+{
+ jsr prehr
  sta ALTZPoff
  jsr _copy2000ma
  sta ALTZPon
  rts
+}
 
-SETFASTAUX
+.SETFASTAUX
+{
  sta ALTZPoff
  jsr _setfastaux
  sta ALTZPon
  rts
+}
 
-SETFASTMAIN
+.SETFASTMAIN
+{
  sta ALTZPoff
  jsr _setfastmain
  sta ALTZPon
  rts
+}
 
-INVERTY
+.INVERTY
+{
  sta ALTZPoff
  jsr _inverty
  sta ALTZPon
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Call sound routines (in aux l.c. bank 1)
@@ -1693,42 +1737,48 @@ XMOVEMUSIC sta ALTZPon
  jsr movemusic ;in misc
  sta ALTZPoff
  rts
+ENDIF
 
-*-------------------------------
-*
-* Copy hires params from aux to main z.p.
-*
-* (Enter & exit w/ ALTZP on)
-*
-*-------------------------------
-prehr
+\*-------------------------------
+\*
+\* Copy hires params from aux to main z.p.
+\*
+\* (Enter & exit w/ ALTZP on)
+\*
+\*-------------------------------
+.prehr
+{
  ldx #$17
-:loop sta ALTZPon ;aux zp
+.loop sta ALTZPon ;aux zp
  lda $00,x
  sta ALTZPoff ;main zp
  sta $00,x
  dex
- bpl :loop
+ bpl loop
  sta ALTZPon
  rts
+}
 
-*-------------------------------
-*
-* Copy hires params from main to aux z.p.
-*
-* (Enter & exit w/ ALTZP on)
-*
-*-------------------------------
-posthr
+\*-------------------------------
+\*
+\* Copy hires params from main to aux z.p.
+\*
+\* (Enter & exit w/ ALTZP on)
+\*
+\*-------------------------------
+.posthr
+{
  ldx #$17
-:loop sta ALTZPoff
+.loop sta ALTZPoff
  lda $00,x
  sta ALTZPon
  sta $00,x
  dex
- bpl :loop
-return rts
+ bpl loop
+.return rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Save master copy of blueprint in l.c. bank 1

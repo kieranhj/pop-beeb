@@ -13,9 +13,9 @@
 rw18 = $d000
 peelbuf1 = $d000
 peelbuf2 = $d800
-hrtables = $e000
+\hrtables = $e000               ; location determined by assembler
 unpack = $ea00 ;game only
-hires = $ee00
+\hires = $ee00                  ; location determined by assembler
 master = $f880
 
 \*  Auxmem
@@ -27,7 +27,7 @@ master = $f880
 menudata = $960f ;ed only
 \imlists = $ac00                ; location determined by assembler
 endimspace = $b600
-\blueprnt = $b700                ; location determined by assembler
+\blueprnt = $b700               ; location determined by assembler
 
 \*  Aux l.c.
 
@@ -82,29 +82,8 @@ YLO ds $c0
 YHI ds $c0
 ENDIF
 
-IF _TODO
- dum hires
-
-_boot3 ds 3
-_cls ds 3
-_lay ds 3
-_fastlay ds 3
-_layrsave ds 3
-
-_lrcls ds 3
-_fastmask ds 3
-_fastblack ds 3
-_peel ds 3
-_getwidth ds 3
-
-_copy2000 ds 3
-_copy2000aux ds 3
-_setfastaux ds 3
-_setfastmain ds 3
-_copy2000ma ds 3
-
-_copy2000am ds 3
-ENDIF
+\dum hires
+\ jump tables moved to hires.asm
 
 IF _TODO
  dum unpack
@@ -186,6 +165,9 @@ maxmsg = 32 ;x5
 \*-------------------------------
 \*  $00-17: Hires parameters
 \*-------------------------------
+
+; NB these are shared between MAIN MEM & AUX MEM on Apple II
+
 ORG $00
 
 .PAGE skip 1

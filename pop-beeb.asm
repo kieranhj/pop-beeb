@@ -27,7 +27,11 @@ INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
 INCLUDE "game/beeb-plot.h.asm"
 
+; Locals
+
 INCLUDE "game/frameadv.h.asm"
+INCLUDE "game/hires.h.asm"
+INCLUDE "game/hrparams.h.asm"
 
 ; Main RAM
 
@@ -197,6 +201,8 @@ INCLUDE "game/grafix.asm"
 INCLUDE "game/tables.asm"
 INCLUDE "game/bgdata.asm"
 INCLUDE "game/gamebg.asm"
+INCLUDE "game/hires.asm"
+INCLUDE "game/hrtables.asm"
 
 .pop_beeb_end
 
