@@ -22,11 +22,11 @@ hires=*
 ._fastlay jmp hires_fastlay
 ._layrsave jmp hires_layrsave
 
-._lrcls BRK     ;jmp hires_lrcls
+._lrcls jmp hires_lrcls
 ._fastmask BRK  ;jmp hires_fastmask
 ._fastblack BRK ;jmp hires_fastblack
-._peel BRK      ;jmp hires_peel
-._getwidth BRK  ;jmp hires_getwidth
+._peel jmp hires_peel
+._getwidth jmp hires_getwidth
 
 ._copy2000 BRK  ;jmp copyscrnMM
 ._copy2000aux BRK   ;jmp copyscrnAA
@@ -95,11 +95,14 @@ hires=*
  jmp auxmem
 }
 
-IF _TODO
-lrcls jsr mainmem
- jsr LRCLS
+.hires_lrcls
+{
+ jsr mainmem
+ jsr hires_LRCLS
  jmp auxmem
+}
 
+IF _TODO
 fastmask
   jsr FASTMASK
  jmp auxmem
@@ -107,15 +110,22 @@ fastmask
 fastblack jsr mainmem
  jsr FASTBLACK
  jmp auxmem
+ENDIF
 
-peel
- jsr PEEL
+.hires_peel
+{
+ jsr hires_PEEL
  jmp auxmem
+}
 
-getwidth jsr mainmem
- jsr GETWIDTH
+.hires_getwidth
+{
+ jsr mainmem
+ jsr hires_GETWIDTH
  jmp auxmem
+}
 
+IF _TODO
 copyscrnMM
  jsr mainmem ;r/w main
 ]copyscrn jsr COPYSCRN
