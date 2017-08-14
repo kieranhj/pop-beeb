@@ -108,12 +108,27 @@ INCLUDE "lib/print.asm"
     JSR swr_select_slot
 
     \\ Relocate sprite data
-    LDA #LO(chtab1)
+    LDA #LO(bgtable1)
     STA beeb_readptr
-    LDA #HI(chtab1)
+    LDA #HI(bgtable1)
     STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
     JSR pop_relocate_chtab
 
+    LDA #LO(bgtable2)
+    STA beeb_readptr
+    LDA #HI(bgtable2)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR pop_relocate_chtab
+
+IF 0
     LDX #0
 
     .plot_loop
@@ -134,7 +149,16 @@ INCLUDE "lib/print.asm"
     INX
     CPX beeb_numimages
     BCC plot_loop
+ELSE
 
+    LDA #0
+    STA blackflag
+
+    LDA #1
+    STA VisScrn
+    JSR DoSure
+
+ENDIF
     .return
     RTS
 }
@@ -150,13 +174,15 @@ INCLUDE "lib/print.asm"
     .loop
     INY
     CLC
-    LDA (beeb_readptr), Y
-    ADC #LO(chtab1)
-    STA (beeb_readptr), Y
+\    LDA (beeb_readptr), Y
+\    ADC #LO(bgtable1)
+\    STA (beeb_readptr), Y
 
     INY
     LDA (beeb_readptr), Y
-    ADC #LO(HI(chtab1) - &60)
+    SEC
+    SBC beeb_writeptr+1
+    ADC beeb_readptr+1
     STA (beeb_readptr), Y
 
     INX
@@ -227,15 +253,43 @@ CLEAR 0, &FFFF
 
 CLEAR 0, &FFFF
 ORG &8000
+GUARD &BFFF
 
 .bank0_start
-.chtab1
-INCBIN "Images/IMG.CHTAB1.bin"
+.bgtable1
+INCBIN "Images/IMG.BGTAB1.DUN.bin"
+ALIGN &100
+.bgtable2
+INCBIN "Images/IMG.BGTAB2.DUN.bin"
+ALIGN &100
+.blueprnt
+INCBIN "Levels/Level1"
 .bank0_end
 
 SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
 
-
 ; Construct overlay files
 
 CLEAR 0, &FFFF
+
+ORG blueprnt
+.BLUETYPE skip 24*30
+.BLUESPEC skip 24*30
+.LINKLOC skip 256
+.LINKMAP skip 256
+.MAP skip 24*4
+.INFO
+ skip 64                ; not sure why this is skipped, unused?
+.KidStartScrn skip 1
+.KidStartBlock skip 1
+.KidStartFace skip 1
+ skip 1
+.SwStartScrn skip 1
+.SwStartBlock skip 1
+ skip 1
+.GdStartBlock skip 24
+.GdStartFace skip 24
+.GdStartX skip 24
+.GdStartSeqL skip 24
+.GdStartProg skip 24
+.GdStartSeqH skip 24

@@ -71,7 +71,7 @@ hires=*
 .hires_cls
 {
  jsr mainmem
- jsr hires_CLS
+ jsr beeb_CLS
  jmp auxmem
 }
 
@@ -149,7 +149,7 @@ ENDIF
 \*-------------------------------
 .mainmem
 {
-\ Different memory model for Beeb
+\ NOT BEEB
 \sta $c004 ;RAMWRT off
 \sta $c002 ;RAMRD off
  rts
@@ -157,7 +157,7 @@ ENDIF
 
 .auxmem
 {
-\ Different memory model for Beeb
+\ NOT BEEB
 \sta $c005 ;RAMWRT on
 \sta $c003 ;RAMRD on
  rts
@@ -216,8 +216,7 @@ ENDIF
 \*
 \*-------------------------------
 
-\\ BEEB IMPLEMENTATION REQUIRED!!
-
+IF 0
 .hires_CLS
 {
  lda PAGE ;00 = page 1; 20 = page 2
@@ -246,6 +245,27 @@ ENDIF
 
  rts
 }
+ELSE
+.beeb_CLS
+{
+\\ Ignore PAGE as no page flipping yet
+\\ Fixed to MODE 1 screen address for now &3000 - &8000
+
+  ldx #&50
+  lda #&30
+  sta loop+2
+  lda #0
+  ldy #0
+  .loop
+  sta &3000,Y
+  iny
+  bne loop
+  inc loop+2
+  dex
+  bne loop
+  rts
+}
+ENDIF
 
 \*-------------------------------
 \*
@@ -310,10 +330,11 @@ ENDIF
 \*-------------------------------
 .hires_GETWIDTH
 {
- lda BANK
- sta RAMRD+1
-
-.RAMRD sta $c003
+\ NOT BEEB
+\ lda BANK
+\ sta RAMRD+1
+\
+\.RAMRD sta $c003
 
  jsr setimage
 
@@ -347,10 +368,11 @@ ENDIF
 
 \* Get image data start address
 
- lda BANK
- sta RAMRD+1
-
-.RAMRD sta $c003
+\ NOT BEEB
+\ lda BANK
+\ sta RAMRD+1
+\
+\.RAMRD sta $c003
 
  jsr setimage
 
@@ -371,7 +393,9 @@ ENDIF
  BCC label_3
  INC IMAGE+1
 
-.label_3 sta $c002 ;RAMRD off (read mainmem)
+.label_3
+\ NOT BEEB
+\ sta $c002 ;RAMRD off (read mainmem)
 
 .return rts
 }

@@ -9,8 +9,7 @@
 \*
 \*-------------------------------
 
-imlists=*
-
+.imlists
 .genCLS skip 1
 
 .bgX skip maxback
@@ -101,7 +100,8 @@ ENDIF
 \*
 \*-------------------------------
 
-blueprnt=*
+IF 0 \\ TEMP
+.blueprnt
 .BLUETYPE skip 24*30
 .BLUESPEC skip 24*30
 .LINKLOC skip 256
@@ -122,9 +122,9 @@ blueprnt=*
 .GdStartSeqL skip 24
 .GdStartProg skip 24
 .GdStartSeqH skip 24
+ENDIF
 
-redbufs=*
-
+.redbufs
  skip 60 ;unused - why?
 .halfbuf skip 30
 .redbuf skip 30

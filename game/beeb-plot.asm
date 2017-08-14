@@ -132,9 +132,9 @@ IF BEEB_SCREEN_MODE == 1
 {
     ASL A
     TAX
-    LDA chtab1+1, X
+    LDA bgtable1+1, X           \ WRONG
     STA beeb_readptr
-    LDA chtab1+2, X
+    LDA bgtable1+2, X           \ WRONG
     STA beeb_readptr+1
 
     LDY #0

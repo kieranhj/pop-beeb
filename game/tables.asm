@@ -22,15 +22,13 @@ ByteTable ds $100
 OffsetTable ds $100
 BlockTable ds $100
 PixelTable ds $100
-Mult10 ds $10
-Mult7 ds $10
-Mult30 ds $40
+\Mult10 ds $10
+\Mult7 ds $10
+\Mult30 ds $40
 
 BlockEdge ds 20
 BlockTop ds 5
-ENDIF
-.BlockBot skip 5
-IF _TODO
+BlockBot skip 5
 FloorY ds 5
 BlockAy ds 5
 
@@ -42,7 +40,7 @@ ENDIF
 \*-------------------------------
 \ScrnLeft = 58
 \ScrnTop = 0
-\ScrnBot = 191
+ScrnBot = 191
 
 tables_VertDist = 10 ;from bottom of block to center plane
 BlockHeight = 63
@@ -179,50 +177,50 @@ IF _TODO
  db ]byte
 ]byte = ]byte+14
  --^
-
-*-------------------------------
-* BlockTop, BlockBot, FloorY
-*
-* Index:  Block Y (-1 to 3) + 1
-
- ds BlockTop-*
-
- db ScrnBot+1-Blox4
- db ScrnBot+1-Blox3
- db ScrnBot+1-Blox2
- db ScrnBot+1-Blox1
- db ScrnBot+1
-
-*-------------------------------
- ds BlockBot-*
-
- db ScrnBot-Blox3
- db ScrnBot-Blox2
- db ScrnBot-Blox1
- db ScrnBot
- db ScrnBot+Blox1
-
-*-------------------------------
- ds FloorY-*
-
- db ScrnBot-Blox3-tables_VertDist
- db ScrnBot-Blox2-tables_VertDist
- db ScrnBot-Blox1-tables_VertDist
- db ScrnBot-tables_VertDist
- db ScrnBot+Blox1-tables_VertDist
-
-*-------------------------------
- ds BlockAy-*
-
- db ScrnBot-Blox3-DHeight
- db ScrnBot-Blox2-DHeight
- db ScrnBot-Blox1-DHeight
- db ScrnBot-DHeight
- db ScrnBot+Blox1-DHeight
-
-*-------------------------------
- lst
-eof ds 1
- usr $a9,3,$000,*-org
- lst off
 ENDIF
+
+\*-------------------------------
+\* BlockTop, BlockBot, FloorY
+\*
+\* Index:  Block Y (-1 to 3) + 1
+
+ .BlockTop
+
+ EQUB ScrnBot+1-Blox4
+ EQUB ScrnBot+1-Blox3
+ EQUB ScrnBot+1-Blox2
+ EQUB ScrnBot+1-Blox1
+ EQUB ScrnBot+1
+
+\*-------------------------------
+ .BlockBot
+
+ EQUB ScrnBot-Blox3
+ EQUB ScrnBot-Blox2
+ EQUB ScrnBot-Blox1
+ EQUB ScrnBot
+ EQUB ScrnBot+Blox1
+
+\*-------------------------------
+ .FloorY
+
+ EQUB ScrnBot-Blox3-tables_VertDist
+ EQUB ScrnBot-Blox2-tables_VertDist
+ EQUB ScrnBot-Blox1-tables_VertDist
+ EQUB ScrnBot-tables_VertDist
+ EQUB ScrnBot+Blox1-tables_VertDist
+
+\*-------------------------------
+ .BlockAy
+
+ EQUB ScrnBot-Blox3-DHeight
+ EQUB ScrnBot-Blox2-DHeight
+ EQUB ScrnBot-Blox1-DHeight
+ EQUB ScrnBot-DHeight
+ EQUB ScrnBot+Blox1-DHeight
+
+\*-------------------------------
+\ lst
+\eof ds 1
+\ usr $a9,3,$000,*-org
+\ lst off

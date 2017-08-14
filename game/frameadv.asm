@@ -2,7 +2,7 @@
 ; Originally FRAMEADV.S
 ; Draw the screen
 
-frameadv=*
+.frameadv
 
 \* frameadv
 \org = $1290
@@ -164,7 +164,7 @@ frameadv=*
  sta scrnBelowL
  pla
  sta scrnBelow
-rts_label=*
+.return
  rts
 }
 

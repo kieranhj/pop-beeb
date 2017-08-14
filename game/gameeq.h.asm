@@ -16,8 +16,8 @@ chtable5 = $a800
 chtable6 = $6000
 chtable7 = $9f00
 
-bgtable1 = $6000
-bgtable2 = $8400
+\bgtable1 = $6000
+\bgtable2 = $8400
 
 topctrl = $2000
 seqtable = $2800
