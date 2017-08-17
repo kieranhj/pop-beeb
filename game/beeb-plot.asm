@@ -4,33 +4,72 @@
 
 ; need to know where we're locating this code!
 
+\*-------------------------------
+\*
+\*  Parameters passed to hires routines:
+\*
+\*  PAGE        $00 = hires page 1, $20 = hires page 2          - NOT BEEB
+\*  XCO         Screen X-coord (0=left, 39=right)
+\*  YCO         Screen Y-coord (0=top, 191=bottom)
+\*  OFFSET      # of bits to shift image right (0-6)
+\*  IMAGE       Image # in table (1-127)
+\*  TABLE       Starting address of image table (2 bytes)
+\*  BANK        Memory bank of table (2 = main, 3 = aux)        - NOT BEEB (YET - WILL BE SWRAM BANK)
+\*  OPACITY     Bits 0-6:
+\*                0    AND
+\*                1    OR
+\*                2    STA
+\*                3    special XOR (OR/shift/XOR)
+\*                4    mask/OR
+\*              Bit 7: 0 = normal, 1 = mirror
+\*  LEFTCUT     Left edge of usable screen area
+\*                (0 for full screen)
+\*  RIGHTCUT    Right edge +1 of usable screen area
+\*                (40 for full screen)
+\*  TOPCUT      Top edge of usable screen area
+\*                (0 for full screen)
+\*  BOTCUT      Bottom edge +1 of usable screen area
+\*                (192 for full screen)
+\*
+\*-------------------------------
+\*
+\*  Image table format:
+\*
+\*  Byte 0:    width (# of bytes)
+\*  Byte 1:    height (# of lines)
+\*  Byte 2-n:  image bytes (read left-right, top-bottom)
+\*
+\*-------------------------------
+
 .beeb_plot_start
 
 IF BEEB_SCREEN_MODE == 4
 .beeb_plot_apple_mode_4
 {
-    ASL A
-    TAX
-    LDA bgtable1+1, X
-    STA beeb_readptr
-    LDA bgtable1+2, X
-    STA beeb_readptr+1
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
 
-    LDY #0
-    LDA (beeb_readptr), Y
-    STA beeb_width
-    INY
-    LDA (beeb_readptr), Y
-    STA beeb_height
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
 
+    \ XCO & YCO have coordinates
+
+    LDY YCO
+    LDX XCO
     CLC
-    LDA beeb_readptr
-    ADC #2
-    STA sprite_addr + 1
-    LDA beeb_readptr+1
-    ADC #0
-    STA sprite_addr + 2
+    LDA Mult8_LO,X
+    ADC YLO, Y
+    STA beeb_writeptr
+    LDA Mult8_HI,X
+    ADC YHI, Y
+    STA beeb_writeptr+1
 
+    LDA HEIGHT
+    STA beeb_height
 
     LDX #0          ; data index
     LDY #7          ; yoffset
@@ -38,7 +77,7 @@ IF BEEB_SCREEN_MODE == 4
     .yloop
     STY beeb_yoffset
 
-    LDA beeb_width
+    LDA WIDTH
     STA beeb_apple_count
 
     LDA #0
@@ -327,5 +366,14 @@ EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
 
 NEXT
 ENDIF
+
+.Mult8_LO
+FOR n,0,39,1
+EQUB LO(n*8)
+NEXT
+.Mult8_HI
+FOR n,0,39,1
+EQUB HI(n*8)
+NEXT
 
 .beeb_plot_end

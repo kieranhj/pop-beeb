@@ -16,19 +16,19 @@ hires=*
 \*-------------------------------
  \org org
 
-._boot3 BRK     ;jmp boot3
+._boot3 BRK         ;jmp boot3
 ._cls jmp hires_cls
 ._lay jmp hires_lay
 ._fastlay jmp hires_fastlay
 ._layrsave jmp hires_layrsave
 
-._lrcls jmp hires_lrcls
+._lrcls brk         ;jmp hires_lrcls    \ is implemented but not safe to call!
 ._fastmask jmp hires_fastmask
-._fastblack BRK ;jmp hires_fastblack
+._fastblack BRK     ;jmp hires_fastblack
 ._peel jmp hires_peel
 ._getwidth jmp hires_getwidth
 
-._copy2000 BRK  ;jmp copyscrnMM
+._copy2000 BRK      ;jmp copyscrnMM
 ._copy2000aux BRK   ;jmp copyscrnAA
 ._setfastaux BRK    ;jmp hires_SETFASTAUX
 ._setfastmain BRK   ;jmp hires_SETFASTMAIN
@@ -84,7 +84,8 @@ hires=*
 
 .hires_fastlay
 {
- jsr hires_FASTLAY
+ jmp beeb_plot_apple_mode_4
+\ jsr hires_FASTLAY
  jmp auxmem
 }
 

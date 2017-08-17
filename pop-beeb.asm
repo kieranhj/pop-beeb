@@ -129,26 +129,35 @@ INCLUDE "lib/print.asm"
     JSR pop_relocate_chtab
 
 IF 0
-    LDX #0
+    LDX #1
 
     .plot_loop
     STX beeb_sprite_no
     
     \\ Sprite plot
-    LDA #LO(&4A00)
-    STA beeb_writeptr
-    LDA #HI(&4A00)
-    STA beeb_writeptr+1
+    STX IMAGE
 
-    TXA
-    JSR beeb_plot_apple_mode_1
+    LDA #LO(bgtable2)
+    STA TABLE
+    LDA #HI(bgtable2)
+    STA TABLE+1
+    LDA #0
+    STA XCO
+    LDA #64
+    STA YCO
+
+    \\ Select slot 0
+    LDA #0
+    JSR swr_select_slot
+
+    JSR beeb_plot_apple_mode_4
 
     ldx#10:ldy#0:lda#&81:jsr osbyte	
 
     LDX beeb_sprite_no
     INX
     CPX beeb_numimages
-    BCC plot_loop
+    BNE plot_loop
 ELSE
 
     LDA #0
@@ -182,6 +191,7 @@ ENDIF
     LDA (beeb_readptr), Y
     SEC
     SBC beeb_writeptr+1
+    CLC
     ADC beeb_readptr+1
     STA (beeb_readptr), Y
 
