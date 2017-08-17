@@ -51,11 +51,6 @@ IF BEEB_SCREEN_MODE == 4
     
     JSR PREPREP
 
-    LDA IMAGE
-    STA sprite_addr+1
-    LDA IMAGE+1
-    STA sprite_addr+2
-
     \ XCO & YCO have coordinates
 
     LDA YCO
@@ -77,6 +72,124 @@ IF BEEB_SCREEN_MODE == 4
 
     LDA HEIGHT
     STA beeb_height
+
+
+    ldx OPACITY ;hi bit off!
+    cpx #enum_sta
+    beq beeb_plot_apple_mode_4_sta
+
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+
+    lda OPCODE,x
+    sta  smod
+    sta  smod2
+
+
+    LDX #0          ; data index
+    LDY beeb_yoffset          ; yoffset
+
+    .yloop
+    STY beeb_yoffset
+
+    LDA WIDTH
+    STA beeb_apple_count
+
+    LDA #0
+    STA beeb_byte
+
+    LDA #8
+    STA beeb_count
+
+    .xloop
+
+    .sprite_addr
+    LDA &FFFF, X
+    STA beeb_apple_byte
+
+    LDA #7
+    STA beeb_bit_count
+
+    .bit_loop    
+    LSR beeb_apple_byte       ; rotate bottom bit into Carry
+    ROL beeb_byte        ; rotate carry into Beeb byte
+
+    DEC beeb_count
+    BNE next_bit
+
+    \\ Write byte to screen
+    LDA beeb_byte
+ .smod ora (beeb_writeptr),y
+   STA (beeb_writeptr), Y
+
+    \\ Next screen column
+    TYA
+    CLC
+    ADC #8
+    TAY
+
+    LDA #0
+    STA beeb_byte
+
+    LDA #8
+    STA beeb_count
+
+    .next_bit
+    DEC beeb_bit_count
+    BNE bit_loop
+
+    \\ Next apple byte
+
+    INX                 ; next apple byte
+    DEC beeb_apple_count
+    BNE xloop
+
+    \\ Flush Beeb byte to screen if needed
+    LDA beeb_count
+    CMP #8
+    BEQ done_row
+
+    .flushloop
+    ASL beeb_byte
+    DEC beeb_count
+    BNE flushloop
+
+    LDA beeb_byte
+ .smod2 ora (beeb_writeptr),y
+    STA (beeb_writeptr), Y
+    
+    .done_row
+    DEC beeb_height
+    BEQ done
+
+    LDY beeb_yoffset
+    DEY
+    BPL yloop
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(320)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(320)
+    STA beeb_writeptr+1
+
+    LDY #7
+    BNE yloop
+    .done
+
+    .return
+    RTS
+}
+
+.beeb_plot_apple_mode_4_sta
+{
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
 
     LDX #0          ; data index
     LDY beeb_yoffset          ; yoffset
