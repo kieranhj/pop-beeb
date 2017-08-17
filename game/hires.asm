@@ -105,7 +105,8 @@ hires=*
 
 .hires_fastmask
 {
- jsr hires_FASTMASK
+ jmp beeb_plot_apple_mode_4
+\ jsr hires_FASTMASK
  jmp auxmem
 }
 

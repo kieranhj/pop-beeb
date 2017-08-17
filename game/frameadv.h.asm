@@ -1,8 +1,8 @@
 ; frameadv.h.asm
 
 \ dum locals
-CLEAR 0,$ff
-ORG locals
+\CLEAR 0,$ff
+\ORG locals
 
 .index skip 1
 .rowno skip 1

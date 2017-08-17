@@ -5,8 +5,8 @@
 \locals = $f0
 \locals2 = $18
 
-CLEAR 0,$ff
-ORG $f0
+\CLEAR 0,$ff
+\ORG $f0
 
 .BASE skip 2
 .IMSAVE skip 2
@@ -20,7 +20,7 @@ ORG $f0
 .YREG skip 1
 .CARRY skip 1
 
-ORG $18
+\ORG $18
 .hires_index
 .ztemp
 .AMASK skip 1

@@ -58,7 +58,14 @@ IF BEEB_SCREEN_MODE == 4
 
     \ XCO & YCO have coordinates
 
-    LDY YCO
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+    
     LDX XCO
     CLC
     LDA Mult8_LO,X
@@ -72,7 +79,7 @@ IF BEEB_SCREEN_MODE == 4
     STA beeb_height
 
     LDX #0          ; data index
-    LDY #7          ; yoffset
+    LDY beeb_yoffset          ; yoffset
 
     .yloop
     STY beeb_yoffset

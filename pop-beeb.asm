@@ -141,9 +141,9 @@ IF 0
     STA TABLE
     LDA #HI(bgtable2)
     STA TABLE+1
-    LDA #0
+    LDA #10
     STA XCO
-    LDA #64
+    LDA #128
     STA YCO
 
     \\ Select slot 0
