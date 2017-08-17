@@ -45,7 +45,7 @@ grafix=*
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
 .lrcls BRK      ;jmp LRCLS
-.fastmask BRK   ;jmp FASTMASK
+.fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
 .peel BRK       ;jmp PEEL

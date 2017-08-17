@@ -25,7 +25,8 @@ hrtables=*
 
 .YLO
 FOR y,0,191,1
-address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+\address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+address = &5800 + ((y DIV 8) * 320) + (y MOD 8)
 EQUB LO(address)
 NEXT
 \ hex 00000000000000008080808080808080
@@ -45,7 +46,8 @@ NEXT
 
 .YHI
 FOR y,0,191,1
-address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+\address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+address = &5800 + ((y DIV 8) * 320) + (y MOD 8)
 EQUB HI(address)
 NEXT
 \ hex 2024282C3034383C2024282C3034383C

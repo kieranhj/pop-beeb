@@ -23,7 +23,7 @@ hires=*
 ._layrsave jmp hires_layrsave
 
 ._lrcls jmp hires_lrcls
-._fastmask BRK  ;jmp hires_fastmask
+._fastmask jmp hires_fastmask
 ._fastblack BRK ;jmp hires_fastblack
 ._peel jmp hires_peel
 ._getwidth jmp hires_getwidth
@@ -102,11 +102,13 @@ hires=*
  jmp auxmem
 }
 
-IF _TODO
-fastmask
-  jsr FASTMASK
+.hires_fastmask
+{
+ jsr hires_FASTMASK
  jmp auxmem
+}
 
+IF _TODO
 fastblack jsr mainmem
  jsr FASTBLACK
  jmp auxmem
@@ -248,6 +250,8 @@ IF 0
 ELSE
 .beeb_CLS
 {
+  RTS   ; TEMP
+
 \\ Ignore PAGE as no page flipping yet
 \\ Fixed to MODE 1 screen address for now &3000 - &8000
 
@@ -1967,68 +1971,71 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  F A S T M A S K
-*
-*-------------------------------
-FASTMASK
- sta $c004 ;RAMWRT main
-]ramrd4 sta $c003 ;RAMRD aux
+\*-------------------------------
+\*
+\*  F A S T M A S K
+\*
+\*-------------------------------
+.hires_FASTMASK
+{
+\ NOT BEEB
+\ sta $c004 ;RAMWRT main
+\]ramrd4 sta $c003 ;RAMRD aux
 
  jsr setimage
 
  lda PAGE
- sta :smPAGE+1
+ sta smPAGE+1
 
  lda XCO
- sta  :smXCO+1
+ sta smXCO+1
 
  ldy #0
  lda (IMAGE),y
- sta :smWIDTH+1
+ sta smWIDTH+1
 
  sec
  sbc #1
- sta :smSTART+1
+ sta smSTART+1
 
  lda YCO
  tax
  iny
  sbc (IMAGE),y
- bcs :ok
- lda #-1 ;limited Y-clipping
-:ok sta  :smTOP+1
+ bcs ok
+ lda #LO(-1) ;limited Y-clipping
+.ok sta  smTOP+1
 
  lda IMAGE
  clc
  adc #2
  sta IMAGE
- bcc :1
+ bcc label_1
  inc IMAGE+1
-:1
+.label_1
 
-:outloop
+.outloop
  stx hires_index
 
  lda YLO,x
  clc
-:smXCO adc #0
+.smXCO adc #0
  sta BASE
 
  lda YHI,x
-:smPAGE adc #$20
+.smPAGE adc #$20
  sta BASE+1
 
-:smSTART ldy #3
+.smSTART ldy #3
 
-:inloop
-]ramrd5 sta $c003 ;RAMRD aux
+.inloop
+\ NOT BEEB
+\]ramrd5 sta $c003 ;RAMRD aux
 
  lda (IMAGE),y
 
- sta $c002 ;RAMRD main
+\ NOT BEEB
+\ sta $c002 ;RAMRD main
 
  tax
  lda MASKTAB-$80,X
@@ -2037,21 +2044,23 @@ FASTMASK
  sta (BASE),y
 
  dey
- bpl :inloop
+ bpl inloop
 
-:smWIDTH lda #4
+.smWIDTH lda #4
  adc IMAGE ;cc
  sta IMAGE
- bcc :2
+ bcc label_2
  inc IMAGE+1
-:2
+.label_2
  ldx hires_index
  dex
-:smTOP cpx #$ff
- bne :outloop
+.smTOP cpx #$ff
+ bne outloop
 
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  S E T F A S T   M A I N / A U X
