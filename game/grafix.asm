@@ -78,10 +78,10 @@ grafix=*
 .svelevel BRK   ;jmp SAVELEVEL ;ed
 \
 .saavelevelg BRK;jmp SAVELEVELG ;ed
-.addback BRK    ;jmp ADDBACK
-.addfore BRK    ;jmp ADDFORE
+.addback jmp ADDBACK
+.addfore jmp ADDFORE
 .addmid BRK     ;jmp ADDMID
-.addmidez BRK   ;jmp ADDMIDEZ
+.addmidez jmp ADDMIDEZ
 \
 .addwipe BRK    ;jmp ADDWIPE
 .addmsg BRK     ;jmp ADDMSG
@@ -192,30 +192,31 @@ cwidthy = 15 ;21
 
 .dummy EQUB maxpeel,maxpeel
 
-IF _TODO
-*-------------------------------
-*
-*  A D D B A C K
-*
-*  Add an image to BACKGROUND image list
-*
-*  In: XCO, YCO, IMAGE (coded), OPACITY
-*
-*  IMAGE bit 7 specifies image table (0 = bgtable1,
-*  1 = bgtable2); low 6 bits = image # within table
-*
-*-------------------------------
-ADDBACK ldx bgX ;# images already in list
+\*-------------------------------
+\*
+\*  A D D B A C K
+\*
+\*  Add an image to BACKGROUND image list
+\*
+\*  In: XCO, YCO, IMAGE (coded), OPACITY
+\*
+\*  IMAGE bit 7 specifies image table (0 = bgtable1,
+\*  1 = bgtable2); low 6 bits = image # within table
+\*
+\*-------------------------------
+.ADDBACK
+{
+ ldx bgX ;# images already in list
  inx
  cpx #maxback
- bcs :rts ;list full (shouldn't happen)
+ bcs return ;list full (shouldn't happen)
 
  lda XCO
  sta bgX,x
 
  lda YCO
  cmp #192
- bcs :rts
+ bcs return
  sta bgY,X
 
  lda IMAGE
@@ -225,19 +226,21 @@ ADDBACK ldx bgX ;# images already in list
  sta bgOP,X
 
  stx bgX
-:rts
-return rts
+.return rts
+}
 
-*-------------------------------
-*
-*  A D D F O R E
-*
-*  Add an image to FOREGROUND image list
-*
-*  In: same as ADDBACK
-*
-*-------------------------------
-ADDFORE ldx fgX
+\*-------------------------------
+\*
+\*  A D D F O R E
+\*
+\*  Add an image to FOREGROUND image list
+\*
+\*  In: same as ADDBACK
+\*
+\*-------------------------------
+.ADDFORE
+{
+ ldx fgX
  inx
  cpx #maxfore
  bcs return
@@ -257,8 +260,10 @@ ADDFORE ldx fgX
  sta fgOP,X
 
  stx fgX
-return rts
+.return rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  A D D M S G
@@ -381,20 +386,23 @@ ADDMID ldx midX
 
  stx midX
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  ADDMID "E-Z" version
-*
-*  No offset, no mirroring, no cropping
-*
-*  In: XCO, YCO, IMAGE, TABLE, OPACITY
-*      A = midTYP
-*
-*-------------------------------
-ADDMIDEZ lda #0
+\*-------------------------------
+\*
+\*  ADDMID "E-Z" version
+\*
+\*  No offset, no mirroring, no cropping
+\*
+\*  In: XCO, YCO, IMAGE, TABLE, OPACITY
+\*      A = midTYP
+\*
+\*-------------------------------
+.ADDMIDEZ
+ lda #0
  sta OFFSET
-ADDMIDEZO
+.ADDMIDEZO
+{
  ldx midX
  inx
  cpx #maxmid
@@ -428,8 +436,8 @@ ADDMIDEZO
  sta midCD,x
 
  stx midX
-return rts
-ENDIF
+.return rts
+}
 
 \*-------------------------------
 \*

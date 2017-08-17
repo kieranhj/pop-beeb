@@ -11,23 +11,23 @@ IF BEEB_SCREEN_MODE == 4
 {
     ASL A
     TAX
-    LDA chtab1+1, X
-    STA readptr
-    LDA chtab1+2, X
-    STA readptr+1
+    LDA bgtable1+1, X
+    STA beeb_readptr
+    LDA bgtable1+2, X
+    STA beeb_readptr+1
 
     LDY #0
-    LDA (readptr), Y
-    STA width
+    LDA (beeb_readptr), Y
+    STA beeb_width
     INY
-    LDA (readptr), Y
-    STA height
+    LDA (beeb_readptr), Y
+    STA beeb_height
 
     CLC
-    LDA readptr
+    LDA beeb_readptr
     ADC #2
     STA sprite_addr + 1
-    LDA readptr+1
+    LDA beeb_readptr+1
     ADC #0
     STA sprite_addr + 2
 
@@ -36,10 +36,10 @@ IF BEEB_SCREEN_MODE == 4
     LDY #7          ; yoffset
 
     .yloop
-    STY yoffset
+    STY beeb_yoffset
 
-    LDA width
-    STA apple_count
+    LDA beeb_width
+    STA beeb_apple_count
 
     LDA #0
     STA beeb_byte
@@ -51,13 +51,13 @@ IF BEEB_SCREEN_MODE == 4
 
     .sprite_addr
     LDA &FFFF, X
-    STA apple_byte
+    STA beeb_apple_byte
 
     LDA #7
-    STA bit_count
+    STA beeb_bit_count
 
     .bit_loop    
-    LSR apple_byte       ; rotate bottom bit into Carry
+    LSR beeb_apple_byte       ; rotate bottom bit into Carry
     ROL beeb_byte        ; rotate carry into Beeb byte
 
     DEC beeb_count
@@ -65,7 +65,7 @@ IF BEEB_SCREEN_MODE == 4
 
     \\ Write byte to screen
     LDA beeb_byte
-    STA (writeptr), Y
+    STA (beeb_writeptr), Y
 
     \\ Next screen column
     TYA
@@ -80,13 +80,13 @@ IF BEEB_SCREEN_MODE == 4
     STA beeb_count
 
     .next_bit
-    DEC bit_count
+    DEC beeb_bit_count
     BNE bit_loop
 
     \\ Next apple byte
 
     INX                 ; next apple byte
-    DEC apple_count
+    DEC beeb_apple_count
     BNE xloop
 
     \\ Flush Beeb byte to screen if needed
@@ -100,23 +100,23 @@ IF BEEB_SCREEN_MODE == 4
     BNE flushloop
 
     LDA beeb_byte
-    STA (writeptr), Y
+    STA (beeb_writeptr), Y
     
     .done_row
-    DEC height
+    DEC beeb_height
     BEQ done
 
-    LDY yoffset
+    LDY beeb_yoffset
     DEY
     BPL yloop
 
     SEC
-    LDA writeptr
+    LDA beeb_writeptr
     SBC #LO(320)
-    STA writeptr
-    LDA writeptr+1
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
     SBC #HI(320)
-    STA writeptr+1
+    STA beeb_writeptr+1
 
     LDY #7
     BNE yloop
