@@ -36,7 +36,7 @@ ThreeFive = 0
 .DrawGaurd BRK      ; jmp DRAWGUARD
 .DrawGuard2 BRK     ; jmp DRAWGUARD
 
-.setupflask BRK     ; jmp SETUPFLASK
+.setupflask RTS     ; jmp SETUPFLASK - NOT IMPLEMENTED YET
 .setupcomix BRK     ; jmp SETUPCOMIX
 .psetupflame BRK    ; jmp PSETUPFLAME
 .drawpost BRK       ; jmp DRAWPOST

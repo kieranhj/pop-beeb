@@ -152,8 +152,6 @@ IF 0
 
     JSR beeb_plot_apple_mode_4
 
-    ldx#10:ldy#0:lda#&81:jsr osbyte	
-
     LDX beeb_sprite_no
     INX
     CPX beeb_numimages
@@ -165,7 +163,21 @@ ELSE
 
     LDA #1
     STA VisScrn
+
+    .scrn_loop
+    \\ Select slot 0
+    LDA #0
+    JSR swr_select_slot
+
     JSR DoSure
+
+    ldx#100:ldy#0:lda#&81:jsr osbyte	
+
+    LDX VisScrn
+    INX
+    CPX #25
+    STX VisScrn
+    BNE scrn_loop
 
 ENDIF
     .return

@@ -252,13 +252,16 @@ IF 0
 ELSE
 .beeb_CLS
 {
-  RTS   ; TEMP
-
 \\ Ignore PAGE as no page flipping yet
 \\ Fixed to MODE 1 screen address for now &3000 - &8000
 
+IF BEEB_SCREEN_MODE == 4
+  ldx #&28
+  lda #&58
+ELSE
   ldx #&50
   lda #&30
+ENDIF
   sta loop+2
   lda #0
   ldy #0

@@ -41,6 +41,10 @@
 \*
 \*-------------------------------
 
+\ BEEB TO DO
+\ Use original game ZP variables
+\ Implement offset and clipping etc.
+
 .beeb_plot_start
 
 IF BEEB_SCREEN_MODE == 4
@@ -51,16 +55,25 @@ IF BEEB_SCREEN_MODE == 4
     
     JSR PREPREP
 
-    \ XCO & YCO have coordinates
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Y offset into character row
 
     LDA YCO
     AND #&7
     STA beeb_yoffset
 
+    \ Mask off Y offset
+
     LDA YCO
     AND #&F8
     TAY    
     
+    \ Look up Beeb screen address
+
     LDX XCO
     CLC
     LDA Mult8_LO,X
@@ -70,23 +83,40 @@ IF BEEB_SCREEN_MODE == 4
     ADC YHI, Y
     STA beeb_writeptr+1
 
+    \ Look up Beeb shift start
+
+    LDA Mult8_REM,X
+    STA beeb_rem
+
+    \ Store height
+
     LDA HEIGHT
     STA beeb_height
 
+    \ Switch blend mode
 
     ldx OPACITY ;hi bit off!
     cpx #enum_sta
-    beq beeb_plot_apple_mode_4_sta
+    bne not_sta
+
+    \ Force hack ORA for MODE 4
+    ldx #enum_ora
+    .not_sta
+
+    \ Self-mod code
+
+    lda OPCODE,x
+    sta  smod
+    sta  smod2
+
+    \ Set sprite data address 
 
     LDA IMAGE
     STA sprite_addr+1
     LDA IMAGE+1
     STA sprite_addr+2
 
-    lda OPCODE,x
-    sta  smod
-    sta  smod2
-
+    \ Plot loop
 
     LDX #0          ; data index
     LDY beeb_yoffset          ; yoffset
@@ -100,7 +130,7 @@ IF BEEB_SCREEN_MODE == 4
     LDA #0
     STA beeb_byte
 
-    LDA #8
+    LDA beeb_rem
     STA beeb_count
 
     .xloop
@@ -184,6 +214,7 @@ IF BEEB_SCREEN_MODE == 4
     RTS
 }
 
+\\ TEMP - STA version just a straight copy of the main plot fn.
 .beeb_plot_apple_mode_4_sta
 {
     LDA IMAGE
@@ -203,7 +234,7 @@ IF BEEB_SCREEN_MODE == 4
     LDA #0
     STA beeb_byte
 
-    LDA #8
+    LDA beeb_rem
     STA beeb_count
 
     .xloop
@@ -489,11 +520,18 @@ ENDIF
 
 .Mult8_LO
 FOR n,0,39,1
-EQUB LO(n*8)
+x=(n * 7) DIV 8
+EQUB LO(x*8)
 NEXT
 .Mult8_HI
 FOR n,0,39,1
-EQUB HI(n*8)
+x=(n * 7) DIV 8
+EQUB HI(x*8)
+NEXT
+.Mult8_REM
+FOR n,0,39,1
+x=(n * 7) MOD 8
+EQUB 8 - x
 NEXT
 
 .beeb_plot_end

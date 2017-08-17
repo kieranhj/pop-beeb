@@ -22,6 +22,7 @@
 .beeb_pal_index  SKIP 1              ; lookup for screen byte
 
 .beeb_sprite_no  SKIP 1
+.beeb_rem        SKIP 1
 
 BEEB_SCREEN_MODE = 4
 BEEB_SCREEN_ROW_BYTES = 640

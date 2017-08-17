@@ -49,7 +49,7 @@ grafix=*
 \
 .fastblack BRK  ;jmp FASTBLACK
 .peel BRK       ;jmp PEEL
-.getwidth BRK   ;jmp GETWIDTH
+.getwidth jmp GETWIDTH
 .copy2000 BRK   ;jmp COPY2000
 .copy2000ma BRK ;jmp COPY2000MA
 
@@ -97,7 +97,7 @@ grafix=*
 \
 .inverty BRK    ;jmp INVERTY
 .normspeed BRK  ;jmp NORMSPEED
-.addmidezo BRK  ;jmp ADDMIDEZO
+.addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
 .zerored jmp ZERORED
 \
