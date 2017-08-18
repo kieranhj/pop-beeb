@@ -10,13 +10,13 @@
 \*-------------------------------
 \*  Main l.c.
 
-rw18 = $d000
+\rw18 = $d000                   ; NOT BEEB
 peelbuf1 = $d000
 peelbuf2 = $d800
 \hrtables = $e000               ; location determined by assembler
 unpack = $ea00 ;game only
 \hires = $ee00                  ; location determined by assembler
-master = $f880
+\master = $f880                 ; location determined by assembler
 
 \*  Auxmem
 
@@ -26,12 +26,12 @@ master = $f880
 \redbufs = $5e00                ; location determined by assembler
 menudata = $960f ;ed only
 \imlists = $ac00                ; location determined by assembler
-endimspace = $b600
+\endimspace = $b600             ; NOT USED?
 \blueprnt = $b700               ; location determined by assembler
 
 \*  Aux l.c.
 
-bluecopy = $d000 ;bank 1
+\bluecopy = $d000 ;bank 1       ; NOT USED?
 
 \*-------------------------------
 \*
@@ -39,25 +39,8 @@ bluecopy = $d000 ;bank 1
 \*
 \*-------------------------------
 
-IF _TODO
- dum master
-
-_firstboot ds 3
-_loadlevel ds 3
-_reload ds 3
-_loadstage2 ds 3
- ds 3
-
-_attractmode ds 3
-_cutprincess ds 3
-_savegame ds 3
-_loadgame ds 3
-_dostartgame ds 3
-
-_epilog ds 3
-_loadaltset ds 3
- ds 3 ;_screendump
-ENDIF
+\dum master
+\ jump tables moved to master.asm
 
 IF EditorDisk
  dum master ;ed

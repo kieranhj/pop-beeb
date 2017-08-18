@@ -5,7 +5,7 @@
 gamebg=*
 
 \* gamebg
-ThreeFive = 0
+\ThreeFive = 0
 \org = $4c00
 \ tr on
 \ lst off

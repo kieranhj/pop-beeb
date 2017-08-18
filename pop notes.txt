@@ -581,4 +581,41 @@ gameeq.s
     FCharVars
 - misc data
 
-    
+17/8/2017 Managed to get all level screens plotted in MODE 4
+Many, many things to do.  Some notes:
+
+- No attempt to place ZP variables, just letting assembler assign them
+- Need to figure out local ZP variable usage
+- Had to move to MODE 4 for memory purposes and simpler with pixel bit shifting
+- Seems to always assume there is a wall to the left-hand side of each screen so not looking up screen to left correctly - need to implement GETSCRNS from CTRLUBS.S
+- Consistent glitch in same place on certain screens - not sure what this is - might be flash or other object?
+- Need to move to smaller 280x192 screen
+- At some point need to move to MODE 1 screen for colour...
+
+What are the next steps?!
+- Get TopCtrl main loop assembled and move to this?
+- Create appropriate RAM banks for all sprite data
+- Ultimately get Kid animating under control and moving between screens...
+- Get MASTER.S ported as this controls boot and initialisation
+- Need to sort out the memory arrangement for game logic vs rendering code
+- Split out more of the Beeb support code
+
+*-------------------------------
+*
+* Notes:
+*
+* Game code sits in auxmem & aux l.c. and uses aux z.p.
+*
+* Routines in main l.c. (including MASTER and HIRES)
+* are called via intermediary routines in GRAFIX (in auxmem).
+*
+* RW18 sits in bank 1 of main language card;
+* driveon switches it in, driveoff switches it out.
+*
+
+Want all game logc code to be in SHADOW RAM
+There shouldn't be any direct access to rendering from game logic, all interfaced through GRAFIX
+GRAFIX can be located much lower down in main memory
+Can put HRTABLES in low part of SHADOW ram underneath the screen
+
+Don't need to port BOOT.S

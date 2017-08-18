@@ -13,6 +13,9 @@ _TODO = FALSE
 
 EditorDisk = 0 ;1 = dunj, 2 = palace
 CopyProtect = 0
+DemoDisk = 0
+FinalDisk = 1
+ThreeFive = 0 ;3.5" disk?
 
 ; Platform includes
 
@@ -251,6 +254,8 @@ INCLUDE "game/bgdata.asm"
 INCLUDE "game/gamebg.asm"
 INCLUDE "game/hires.asm"
 INCLUDE "game/hrtables.asm"
+INCLUDE "game/master.asm"
+INCLUDE "game/topctrl.asm"
 
 .pop_beeb_end
 
@@ -280,9 +285,11 @@ GUARD &BFFF
 .bank0_start
 .bgtable1
 INCBIN "Images/IMG.BGTAB1.DUN.bin"
+;INCBIN "Images/IMG.BGTAB1.PAL.bin"
 ALIGN &100
 .bgtable2
 INCBIN "Images/IMG.BGTAB2.DUN.bin"
+;INCBIN "Images/IMG.BGTAB2.PAL.bin"
 ALIGN &100
 .blueprnt
 INCBIN "Levels/Level1"
