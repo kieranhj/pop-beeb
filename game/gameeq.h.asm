@@ -19,7 +19,7 @@ chtable7 = $9f00
 \bgtable1 = $6000
 \bgtable2 = $8400
 
-topctrl = $2000
+\topctrl = $2000                  ; location determined by assembler
 seqtable = $2800
 seqtab = $3000
 ctrl = $3a00
@@ -442,7 +442,7 @@ locals = $e8
 ;.xdir skip 1
 ;.ydir skip 1
 ;.RNskipeed skip 1
-;.invert skip 1
+.invert skip 1
 ;.PlayCount skip 1
 ;.refract skip 1
 ;.backtolife skip 1

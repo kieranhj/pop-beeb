@@ -35,6 +35,7 @@ INCLUDE "game/beeb-plot.h.asm"
 INCLUDE "game/frameadv.h.asm"
 INCLUDE "game/hires.h.asm"
 INCLUDE "game/hrparams.h.asm"
+INCLUDE "game/soundnames.h.asm"
 
 ; Main RAM
 

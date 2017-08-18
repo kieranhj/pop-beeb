@@ -29,7 +29,7 @@
  ._cutprincess BRK  ;jmp CUTPRINCESS
  ._savegame BRK     ;jmp SAVEGAME
  ._loadgame BRK     ;jmp LOADGAME
- ._dostartgame BRK  ;jmp DOSTARTGAME
+ ._dostartgame jmp DOSTARTGAME
 
  ._epilog BRK       ;jmp EPILOG
  ._loadaltset BRK   ;jmp LOADALTSET
@@ -116,23 +116,7 @@ pacProom = $84
 
 \*-------------------------------
 \* Music song #s
-\* Set 1 (title)
-
-s_Presents = 1
-s_Byline = 2
-s_Title = 3
-s_Prolog = 4
-s_Sumup = 5
-s_Princess = 7
-s_Squeek = 8
-s_Vizier = 9
-s_Buildup = 10
-s_Magic = 11
-
-\* Set 2 (epilog)
-
-s_Epilog = 1
-s_Curtain = 2
+\ Moved to soundnames.h.asm
 
 \*-------------------------------
 \* Soft switches
@@ -183,45 +167,47 @@ kresume = 'l'-$60
 \* RW18 sits in bank 1 of main language card;
 \* driveon switches it in, driveoff switches it out.
 \*
+\*-------------------------------
+\*
+\*  F I R S T B O O T
+\*
+\*-------------------------------
+
 IF _TODO
-*-------------------------------
-*
-*  F I R S T B O O T
-*
-*-------------------------------
+.FIRSTBOOT
+{
+\ NOT BEEB
+\ lda MIXEDoff
+\ jsr setaux
 
-FIRSTBOOT
- lda MIXEDoff
- jsr setaux
+\* Set BBund ID byte
 
-* Set BBund ID byte
+\ lda #POPside1
+\ sta BBundID
 
- lda #POPside1
- sta BBundID
+\* Load hires tables & add'l hires routines
 
-* Load hires tables & add'l hires routines
+\ sta RAMWRTmain
+\ lda #2
+\ sta track
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex e0,e1,e2,e3,e4,e5,e6,e7,e8
+\ hex e9,ea,eb,ec,ed,00,00,00,00
 
- sta RAMWRTmain
- lda #2
- sta track
- jsr rw18
- db RdGrp.Inc
- hex e0,e1,e2,e3,e4,e5,e6,e7,e8
- hex e9,ea,eb,ec,ed,00,00,00,00
+\* Load as much of Stage 3 as we can keep
 
-* Load as much of Stage 3 as we can keep
+\ jsr loadperm
 
- jsr loadperm
+\* Turn off drive
 
-* Turn off drive
+\ jsr driveoff
 
- jsr driveoff
+\* Check for IIGS
 
-* Check for IIGS
+\ jsr checkIIGS ;returns IIGS
 
- jsr checkIIGS ;returns IIGS
-
-* Start attract loop
+\* Start attract loop
 
  jsr initsystem ;in topctrl
 
@@ -232,6 +218,7 @@ FIRSTBOOT
  sta soundon ;Sound on
 
  jmp AttractLoop
+}
 
 *-------------------------------
 *
@@ -348,19 +335,27 @@ driveoff jsr rw18
  sta $c010 ;clr kbd
 
  jmp setaux ;& set auxmem
+ENDIF
 
-*-------------------------------
-*
-*  Set first level/demo level
-*
-*-------------------------------
-set1stlevel
+\*-------------------------------
+\*
+\*  Set first level/demo level
+\*
+\*-------------------------------
+.set1stlevel
+{
  lda firstlevel
  ldx firstlevel+1
-SetLevel sta params
+}
+\\ Fall through!
+.SetLevel
+{
+ sta params
  stx params+1
-]rts rts
+ rts
+}
 
+IF _TODO
 setdemolevel
  lda demolevel
  ldx demolevel+1
@@ -596,32 +591,52 @@ rdch4 ldx newCHset
  hex a8,a9,aa,ab,ac,ad,00,00,00
  hex 00,00,00,00,00,00,00,00,00
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* read blueprint
-*
-*-------------------------------
-rdbluep
- jsr setbluep
- bne :reg1
+\*-------------------------------
+\*
+\* read blueprint
+\*
+\*-------------------------------
+\rdbluep
+\ jsr setbluep
+\ bne :reg1
+\
+\:reg0 jsr rw18
+\ db RdGrpErr
+\ hex b7,b8,b9,ba,bb,bc,bd,be,bf
+\ hex 00,00,00,00,00,00,00,00,00
+\ bcc ]rts
+\ jsr error
+\ jmp :reg0
+\
+\:reg1 jsr rw18
+\ db RdGrpErr
+\ hex 00,00,00,00,00,00,00,00,00
+\ hex b7,b8,b9,ba,bb,bc,bd,be,bf
+\ bcc ]rts
+\ jsr error
+\ jmp :reg1
+.beeb_level_filename   EQUS "Level0 $"
 
-:reg0 jsr rw18
- db RdGrpErr
- hex b7,b8,b9,ba,bb,bc,bd,be,bf
- hex 00,00,00,00,00,00,00,00,00
- bcc ]rts
- jsr error
- jmp :reg0
+.rdbluep
+{
+    clc
+    adc #'0'
+    sta beeb_level_filename+5
 
-:reg1 jsr rw18
- db RdGrpErr
- hex 00,00,00,00,00,00,00,00,00
- hex b7,b8,b9,ba,bb,bc,bd,be,bf
- bcc ]rts
- jsr error
- jmp :reg1
+    \ Need to define slot numbers for different data block
+    lda #0
+    jsr swr_select_slot
+    lda #HI(blueprnt)
+    ldx #LO(bank_file0)
+    ldy #HI(bank_file0)
+    jsr disksys_load_file
+    
+    rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Copy one DHires page to another
@@ -1019,29 +1034,34 @@ StartGame?
  bne :3
  jmp AttractLoop
 :3 ;fall thru to DOSTARTGAME
-*-------------------------------
-*
-*  Start a game
-*
-*-------------------------------
-DOSTARTGAME
+ENDIF
+
+\*-------------------------------
+\*
+\*  Start a game
+\*
+\*-------------------------------
+.DOSTARTGAME
+{
  jsr blackout
 
-* Turn on drive & load Stage 3 routines
+\* Turn on drive & load Stage 3 routines
 
-:1 jsr LoadStage3
+\ NOT BEEB
+\:1 jsr LoadStage3
 
-* Load 1st level
+\* Load 1st level
 
  jsr set1stlevel
 
  jsr rdbluep
 
-* Turn off drive & set aux
+\* Turn off drive & set aux
 
- jsr driveoff
+\ NOT BEEB
+\ jsr driveoff
 
-* Go to TOPCTRL
+\* Go to TOPCTRL
 
  lda #1
  sta musicon
@@ -1051,21 +1071,23 @@ DOSTARTGAME
 
  lda keypress
  cmp #kresume
- bne :newgame
+ bne newgame
 
-* Resume old game
+\* Resume old game
 
  lda #4 ;arbitrary
  jmp startresume
 
  ENDIF
 
-* Start new game
+\* Start new game
 
-:newgame
+.newgame
  lda #1
  jmp start
+}
 
+IF _TODO
 *-------------------------------
 *
 * Load permanent code & data
@@ -1453,3 +1475,15 @@ error
 \ usr $a9,1,$a80,*-org
 \ lst off
 ENDIF
+
+\ BEEB MOVED FROM UNPACK.S
+
+\*-------------------------------
+\*
+\* Show black screen (text page 1)
+\*
+\*-------------------------------
+.blackout
+{
+    RTS
+}

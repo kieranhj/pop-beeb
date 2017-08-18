@@ -219,27 +219,7 @@ width = IMAGE+1
 \*
 \*-------------------------------
 
-IF _TODO
- dum $200
-
-inmenu ds 1
-inbuilder ds 1
-ineditor ds 1
-soundon ds 1
-jctr ds 2
-jthres1x ds 1
-jthres1y ds 1
-jthres2x ds 1
-jthres2y ds 1
-jvert ds 1
-jhoriz ds 1
-jbtns ds 1
-joyon ds 1
-develment ds 1
-keypress ds 1
-keydown ds 1
-IIGS ds 1
-ENDIF
+\ Moved to eq.asm
 
 \*-------------------------------
 \*

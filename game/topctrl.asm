@@ -19,8 +19,8 @@
 \*-------------------------------
 \ org org
 
-.start BRK        ; jmp START
-.restart BRK      ; jmp RESTART
+.start jmp START
+.restart jmp RESTART
 .startresume BRK  ; jmp STARTRESUME
 .initsystem BRK   ; jmp INITSYSTEM
 \ jmp showpage
@@ -94,19 +94,21 @@ mirscrn = 4
 mirx = 4
 miry = 0
 
-IF _TODO
-*-------------------------------
-*
-*  Start a new game
-*
-*  In: A = level # (0 for demo, 1 for game)
-*
-*-------------------------------
-START
+\*-------------------------------
+\*
+\*  Start a new game
+\*
+\*  In: A = level # (0 for demo, 1 for game)
+\*
+\*-------------------------------
+.START
+{
  sta ALTZPon
  jsr StartGame
  jmp RESTART
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Resume saved game
@@ -143,31 +145,35 @@ INITSYSTEM
 
  sta ALTZPoff
  rts
+ENDIF
 
-*-------------------------------
-*
-*  Start a game
-*
-*  In: A = level # (0 for demo, 1 for new game, >1 for
-*      resumed game)
-*
-*-------------------------------
-StartGame
+\*-------------------------------
+\*
+\*  Start a game
+\*
+\*  In: A = level # (0 for demo, 1 for new game, >1 for
+\*      resumed game)
+\*
+\*-------------------------------
+.StartGame
+{
  sta level
  sta NextLevel
 
  cmp #1
- bne :notfirst
+ bne notfirst
  lda #s_Danger
  ldx #25
  jsr cuesong ;Cue "Danger" theme if level 1
-:notfirst
+.notfirst
 
  lda #initmaxstr
  sta origstrength ;set initial strength
 
  jmp initgame
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Resume saved game
@@ -253,21 +259,24 @@ initgame
  lda #1 ;no delay
  sta SPEED
  rts
+ ENDIF
 
-*-------------------------------
-*
-*  Restart current level
-*
-*-------------------------------
-RESTART
- sta ALTZPon
- sta $c010 ;clr kbd strobe
+\*-------------------------------
+\*
+\*  Restart current level
+\*
+\*-------------------------------
+.RESTART
+{
+\ NOT BEEB
+\ sta ALTZPon
+\ sta $c010 ;clr kbd strobe
 
  IF EditorDisk
  jsr reloadblue
  ELSE
 
- lda #" "
+ lda #' '
  jsr lrcls
  jsr vblank
  lda PAGE2off
@@ -281,7 +290,7 @@ RESTART
 
  jsr initialguards ;& guards
 
-* Zero a lot of vars & tables
+\* Zero a lot of vars & tables
 
  lda #0
  sta SINGSTEP
@@ -305,9 +314,9 @@ RESTART
 
  ldx SongCue
  cpx #s_Danger
- beq :1st
+ beq label_1st
  sta SongCue
-:1st
+.label_1st
 
  jsr zerosound
 
@@ -320,7 +329,7 @@ RESTART
  lda #1
  sta gotsword
 
- lda #-1
+ lda #LO(-1)
  sta cutorder
 
  lda #2
@@ -335,35 +344,37 @@ RESTART
 
  lda level
  cmp #1
- bne :gotswd
+ bne gotswd
  lda #0
  sta gotsword ;Start Level 1 w/o sword
-:gotswd
+.gotswd
  ENDIF
 
  lda level
- beq :nomsg
+ beq nomsg
  cmp #14
- beq :nomsg ;don't announce level 0 or 14
+ beq nomsg ;don't announce level 0 or 14
  cmp #13
- bne :1
+ bne label_1
  lda skipmessage
- beq :1
+ beq label_1
  lda #0
  sta skipmessage
- beq :nomsg ;skip level 13 message 1st time
-:1 lda #LevelMsg
+ beq nomsg ;skip level 13 message 1st time
+.label_1 lda #LevelMsg
  sta message
  lda #leveltimer
  sta msgtimer
-:nomsg
+.nomsg
 
  jsr entrance ;entrance slams shut
 
  jsr FirstFrame ;Generate & display first frame
 
  jmp MainLoop
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Main loop

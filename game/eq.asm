@@ -70,6 +70,32 @@
 \*
 \*-------------------------------
 
+\ dum $200
+
+IF _TODO
+inmenu ds 1
+inbuilder ds 1
+ineditor ds 1
+ENDIF
+.soundon skip 1
+IF _TODO
+jctr ds 2
+jthres1x ds 1
+jthres1y ds 1
+jthres2x ds 1
+jthres2y ds 1
+jvert ds 1
+jhoriz ds 1
+jbtns ds 1
+joyon ds 1
+develment ds 1
+ENDIF
+.keypress skip 1
+IF _TODO
+keydown ds 1
+IIGS ds 1
+ENDIF
+
 \dum $3c0
 
 IF _TODO
