@@ -35,6 +35,9 @@
  ._loadaltset BRK   ;jmp LOADALTSET
 \_screendump
 
+\ BEEB - MOVED FROM MISC.S
+.LoadLevelX jmp LOADLEVELX
+
 \*-------------------------------
 \ lst
 \ put eq
@@ -75,28 +78,20 @@
 \*-------------------------------
 \* Local vars
 
-\ dum locals
-\
-\]dest ds 2
-\]source ds 2
-\]endsourc ds 2
-\
-\newBGset1 ds 1
-\newBGset2 ds 1
-\newCHset ds 1
-\
-\ dend
+\dum locals
+\ Now defined in master.h.asm
 
 \*-------------------------------
 \* Passed params
 
-params = $3f0
+\ NOT BEEB
+\params = $3f0
 
 \*-------------------------------
 \* Coordinates of default load-in level
 
-.demolevel EQUB 33,0
-.firstlevel EQUB 33,1
+.demolevel EQUB 0       ; BEEB CAN LOAD THESE AS FILES
+.firstlevel EQUB 1      ; BEEB CAN LOAD THESE AS FILES
 
 \*-------------------------------
 \* Hi bytes of crunch data
@@ -150,9 +145,11 @@ pacProom = $84
 \RWBANK1 = $c08b
 
 \*-------------------------------
+IF FinalDisk==0
 kprincess = 'p'-$60 ;temp!
 kdemo = 'd'-$60 ;temp!
 krestart = 'r'-$60
+ENDIF
 kresume = 'l'-$60
 
 \*-------------------------------
@@ -344,21 +341,22 @@ ENDIF
 \*-------------------------------
 .set1stlevel
 {
- lda firstlevel
- ldx firstlevel+1
+ ldx firstlevel
+\ ldx firstlevel+1
 }
 \\ Fall through!
 .SetLevel
 {
- sta params
- stx params+1
+\ NOT BEEB
+\ sta params
+\ stx params+1
  rts
 }
 
 IF _TODO
 setdemolevel
- lda demolevel
- ldx demolevel+1
+ ldx demolevel
+\ ldx demolevel+1
  jmp SetLevel
 
 *-------------------------------
@@ -449,46 +447,55 @@ LOADALTSET
  jsr rdch4
 
  jmp driveoff
+ENDIF
 
-*-------------------------------
-*
-* L O A D   L E V E L
-*
-* In: bluepTRK, bluepREG
-*       TRK = track # (1-33)
-*       REG = region on track (0-1)
-*     A = BGset1; X = BGset2; Y = CHset4
-*
-* Load level into "working blueprint" buffer in auxmem;
-* game code will make a "backup copy" into aux l.c.
-* (which we can't reach from here).
-*
-* If bg & char sets in memory aren't right, load them in
-*
-*-------------------------------
-LOADLEVEL
+\*-------------------------------
+\*
+\* L O A D   L E V E L
+\*
+\* In: bluepTRK, bluepREG
+\*       TRK = track # (1-33)
+\*       REG = region on track (0-1)
+\*     A = BGset1; X = BGset2; Y = CHset4
+\*
+\* Load level into "working blueprint" buffer in auxmem;
+\* game code will make a "backup copy" into aux l.c.
+\* (which we can't reach from here).
+\*
+\* If bg & char sets in memory aren't right, load them in
+\*
+\*-------------------------------
+.LOADLEVEL
+{
  sta newBGset1
- stx newBGset2
+\ BEEB X STAYS AS LEVEL
+ sta newBGset2
  sty newCHset
 
- jsr driveon
+\ NOT BEEB
+\ jsr driveon
 
  jsr rdbluep ;blueprint
  jsr rdbg1 ;bg set 1
  jsr rdbg2 ;bg set 2
  jsr rdch4 ;char set 4
 
- jsr vidstuff
+\ NOT BEEB - don't know what this is yet!
+\ jsr vidstuff
 
- jmp driveoff
+\ NOT BEEB
+\ jmp driveoff
+}
 
-*-------------------------------
-setbluep
- lda bluepTRK
- sta track
- lda bluepREG
-]rts rts
+\*-------------------------------
+\ NOT BEEB
+\setbluep
+\ lda bluepTRK
+\ sta track
+\ lda bluepREG
+\]rts rts
 
+IF _TODO
 *-------------------------------
 vidstuff
  lda BBundID
@@ -517,81 +524,187 @@ vidstuff
  jsr driveoff
  jsr setmain
  jmp $c00
-
-*-------------------------------
-* Track data for alt bg/char sets
-*
-* Set #:        0  1  2  3  4  5  6
-
-bg1trk hex 05,00,07
-bg2trk hex 12,02,09
-ch4trk hex 0d,03,04,05,0a,0b
-ch4off hex 0c,00,06,0c,00,06
-
-*-------------------------------
-rdbg1 ldx newBGset1
- cpx BGset1 ;already in memory?
- beq :rts ;yes--no need to load
- stx BGset1
- lda bg1trk,x
- sta track
- jsr rw18
- db RdSeq.Inc,$60
- jsr rw18
- db RdSeq.Inc,$72
-]rts
-:rts rts
-
-rdbg2 ldx newBGset2
- cpx BGset2
- beq ]rts
- stx BGset2
- lda bg2trk,x
- sta track
- jsr rw18
- db RdSeq.Inc,$84
- rts
-
-rdch4 ldx newCHset
- cpx CHset
- beq ]rts
- stx CHset
- lda ch4trk,x
- sta track
- lda ch4off,x
- beq :off0
- cmp #6
- beq :off6
- cmp #12
- beq :off12
- rts
-
-:off12 jsr rw18
- db RdGrp.Inc
- hex 00,00,00,00,00,00,00,00,00
- hex 00,00,00,96,97,98,99,9a,9b
- jsr rw18
- db RdSeq.Inc,$9c
- rts
-
-:off6 jsr rw18
- db RdGrp.Inc
- hex 00,00,00,00,00,00,96,97,98
- hex 99,9a,9b,9c,9d,9e,9f,a0,a1
- jsr rw18
- db RdGrp.Inc
- hex a2,a3,a4,a5,a6,a7,a8,a9,aa
- hex ab,ac,ad,00,00,00,00,00,00
- rts
-
-:off0 jsr rw18
- db RdSeq.Inc,$96
- jsr rw18
- db RdGrp.Inc
- hex a8,a9,aa,ab,ac,ad,00,00,00
- hex 00,00,00,00,00,00,00,00,00
-]rts rts
 ENDIF
+
+\*-------------------------------
+\* Track data for alt bg/char sets
+\*
+\* Set #:    0  1  2  3  4  5  6
+\
+\bg1trk hex 05,00,07
+\bg2trk hex 12,02,09
+\ch4trk hex 0d,03,04,05,0a,0b
+\ch4off hex 0c,00,06,0c,00,06
+
+\ Not sure what's going on here - suggests 3x sets of bg tiles
+\ As these are loaded by track/sector and not filename, presume
+\ The bg tiles are part loaded into memory location for bg
+
+\*-------------------------------
+\rdbg1 ldx newBGset1
+\ cpx BGset1 ;already in memory?
+\ beq :rts ;yes--no need to load
+\ stx BGset1
+\ lda bg1trk,x
+\ sta track
+\ jsr rw18
+\ db RdSeq.Inc,$60
+\ jsr rw18
+\ db RdSeq.Inc,$72
+\]rts
+\:rts rts
+
+.bgset1_to_name
+EQUS "DUN1   $"
+EQUS "PAL1   $"
+EQUS "DUN1   $"
+
+.rdbg1
+{
+    ldx newBGset1
+    cpx BGset1
+    beq return
+    stx BGset1
+
+    \ index into table for filename
+    txa
+    lsr a:lsr a:lsr a       ; x8
+    clc
+    adc #LO(bgset1_to_name)
+    tax
+    lda #HI(bgset1_to_name)
+    adc #0
+    tay
+
+    \ Need to define slot numbers for different data block
+    lda #0
+    jsr swr_select_slot
+
+    lda #HI(bgtable1)
+    jsr disksys_load_file
+
+    .return
+    rts
+}
+
+\rdbg2 ldx newBGset2
+\ cpx BGset2
+\ beq ]rts
+\ stx BGset2
+\ lda bg2trk,x
+\ sta track
+\ jsr rw18
+\ db RdSeq.Inc,$84
+\ rts
+
+.bgset2_to_name
+EQUS "DUN2   $"
+EQUS "PAL2   $"
+EQUS "DUN2   $"
+
+.rdbg2
+{
+    ldx newBGset2
+    cpx BGset2
+    beq return
+    stx BGset2
+
+    \ index into table for filename
+    txa
+    lsr a:lsr a:lsr a       ; x8
+    clc
+    adc #LO(bgset2_to_name)
+    tax
+    lda #HI(bgset2_to_name)
+    adc #0
+    tay
+
+    \ Need to define slot numbers for different data block
+    lda #0
+    jsr swr_select_slot
+
+    lda #HI(bgtable2)
+    jsr disksys_load_file
+
+    .return
+    rts
+}
+
+\rdch4 ldx newCHset
+\ cpx CHset
+\ beq ]rts
+\ stx CHset
+\ lda ch4trk,x
+\ sta track
+\ lda ch4off,x
+\ beq :off0
+\ cmp #6
+\ beq :off6
+\ cmp #12
+\ beq :off12
+\ rts
+\
+\:off12 jsr rw18
+\ db RdGrp.Inc
+\ hex 00,00,00,00,00,00,00,00,00
+\ hex 00,00,00,96,97,98,99,9a,9b
+\ jsr rw18
+\ db RdSeq.Inc,$9c
+\ rts
+\
+\:off6 jsr rw18
+\ db RdGrp.Inc
+\ hex 00,00,00,00,00,00,96,97,98
+\ hex 99,9a,9b,9c,9d,9e,9f,a0,a1
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex a2,a3,a4,a5,a6,a7,a8,a9,aa
+\ hex ab,ac,ad,00,00,00,00,00,00
+\ rts
+\
+\:off0 jsr rw18
+\ db RdSeq.Inc,$96
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex a8,a9,aa,ab,ac,ad,00,00,00
+\ hex 00,00,00,00,00,00,00,00,00
+\]rts rts
+
+.chset_to_name
+EQUS "GD     $"
+EQUS "SKEL   $"
+EQUS "GD     $"
+EQUS "FAT    $"
+EQUS "SHAD   $"
+EQUS "VIZ    $"
+
+.rdch4
+{
+    ldx newCHset
+    cpx CHset
+    beq return
+    stx CHset
+
+    \ index into table for filename
+    txa
+    lsr a:lsr a:lsr a       ; x8
+    clc
+    adc #LO(chset_to_name)
+    tax
+    lda #HI(chset_to_name)
+    adc #0
+    tay
+
+    \ Need to define slot numbers for different data block
+    lda #0
+    jsr swr_select_slot
+
+    lda #HI(bgtable2)
+    jsr disksys_load_file
+
+    .return
+    rts
+}
 
 \*-------------------------------
 \*
@@ -621,13 +734,30 @@ ENDIF
 
 .rdbluep
 {
+    cpx #10
+    bcs double_digit
+
+    txa
     clc
     adc #'0'
     sta beeb_level_filename+5
+    lda #' '
+    sta beeb_level_filename+6
+    bne do_load
 
+    .double_digit
+    txa
+    clc
+    adc #'0'-10
+    sta beeb_level_filename+6
+    lda #'0'
+    sta beeb_level_filename+5
+
+    .do_load
     \ Need to define slot numbers for different data block
     lda #0
     jsr swr_select_slot
+
     lda #HI(blueprnt)
     ldx #LO(bank_file0)
     ldy #HI(bank_file0)
@@ -1485,5 +1615,42 @@ ENDIF
 \*-------------------------------
 .blackout
 {
+    \\ BEEB TO BE IMPLEMENTED
     RTS
+}
+
+\ BEEB MOVED FROM MISC.S
+
+\*-------------------------------
+\* alt bg & char set list
+\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
+.bgset1 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
+\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
+.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
+
+\*-------------------------------
+\*
+\* Load level from disk
+\* In: X = level # (0-14)
+\*
+\*-------------------------------
+.LOADLEVELX
+{
+\ Just keep X as level#
+
+\ lda bluepTRKlst,x
+\ sta bluepTRK
+\ lda bluepREGlst,x
+\ sta bluepREG
+
+ lda bgset1,x ;A
+\ pha
+\ lda bgset2,x ;X
+ ldy chset,x ;Y
+\ tax
+\ pla
+
+ jmp _loadlevel ;in MASTER
+ rts
 }

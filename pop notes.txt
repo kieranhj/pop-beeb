@@ -77,10 +77,10 @@ Image files in main source directory follow format on page 22
 ...
 <address first free>
 
-address 1
+;address 1
 <width in bytes><height in bytes>
 <data>
-address 2
+;address 2
 <width in bytes><height in bytes>
 <data>
 etc.

@@ -2,11 +2,10 @@
 
 \* Local vars
 \
-\locals = $f0
-\locals2 = $18
 
-\CLEAR 0,$ff
-\ORG $f0
+CLEAR locals, locals_top
+ORG locals
+GUARD locals_top
 
 .BASE skip 2
 .IMSAVE skip 2

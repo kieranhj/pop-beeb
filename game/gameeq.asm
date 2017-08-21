@@ -9,54 +9,42 @@
 \*
 \*-------------------------------
 
-IF _TODO
- dum $212
+\ dum $212
 
-milestone ds 1
-GlassState ds 1
-redrawglass ds 1
-ENDIF
+.milestone skip 1
+;GlassState ds 1
+;redrawglass ds 1
 .doortop skip 1
-IF _TODO
-GuardColor ds 1
-shadowaction ds 1
-skipmessage ds 1
-savezp ds 32
-MSset ds 1
-rjumpflag ds 1
-redherring ds 1
-ENDIF
+;GuardColor ds 1
+;shadowaction ds 1
+;skipmessage ds 1
+;savezp ds 32
+;MSset ds 1
+;rjumpflag ds 1
+;redherring ds 1
 
-IF _TODO
- dum $300
+\dum $300
 
-MinLeft ds 1
-NextTimeMsg ds 1
-SecLeft ds 1
-ENDIF
+.MinLeft skip 1
+.NextTimeMsg skip 1
+.SecLeft skip 1
 .BGset1 skip 1
-IF _TODO
-BGset2 ds 1
-CHset ds 1
-FrameCount ds 2
-SongCount ds 1
-PreRecPtr ds 1
-gotsword ds 1
-message ds 1
-SPEED ds 1
-nummob ds 1
-clrSEL ds 5
-clrDESEL ds 5
-vibes ds 1
-SongCue ds 1
-ENDIF
+.BGset2 skip 1
+.CHset skip 1
+.FrameCount skip 2
+;SongCount ds 1
+;PreRecPtr ds 1
+;gotsword ds 1
+;message ds 1
+.SPEED skip 1
+;nummob ds 1
+;clrSEL ds 5
+;clrDESEL ds 5
+.vibes skip 1
+.SongCue skip 1
 .musicon skip 1
-IF _TODO
-redkidmeter ds 1
-ENDIF
+;redkidmeter ds 1
 .NextLevel skip 1
 .scrncolor skip 1
-IF _TODO
-redoppmeter ds 1
-timerequest ds 1
-ENDIF
+;redoppmeter ds 1
+.timerequest skip 1

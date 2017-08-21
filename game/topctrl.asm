@@ -229,13 +229,15 @@ ResumeGame
  jmp RESTART
 
  ENDIF
+ENDIF
 
-*-------------------------------
-*
-* Initialize vars before starting game
-*
-*-------------------------------
-initgame
+\*-------------------------------
+\*
+\* Initialize vars before starting game
+\*
+\*-------------------------------
+.initgame
+{
  lda #0
  sta blackflag
  sta redrawflg
@@ -259,7 +261,7 @@ initgame
  lda #1 ;no delay
  sta SPEED
  rts
- ENDIF
+}
 
 \*-------------------------------
 \*

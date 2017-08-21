@@ -166,7 +166,7 @@ USEROM = $c082
 
 \*-------------------------------
 \*  Key equates
-
+\ Should be in specialk.asm
 CTRL = $60
 ESC = $9b
 DELETE = $7f

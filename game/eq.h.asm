@@ -151,8 +151,6 @@ maxmsg = 32 ;x5
 
 ; NB these are shared between MAIN MEM & AUX MEM on Apple II
 
-ORG $00
-
 .PAGE skip 1
 .XCO skip 1
 .YCO skip 1
@@ -188,7 +186,7 @@ width = IMAGE+1
 ;.JSTKUP skip 1
 ;.b0down skip 1
 ;.b1down skip 1
-;.SINGSTEP skip 1
+.SINGSTEP skip 1
 .blackflag skip 1
 .SCRNUM skip 1
 .BlueType skip 2

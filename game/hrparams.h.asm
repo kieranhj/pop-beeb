@@ -12,9 +12,9 @@ hrparams=*
 \*-------------------------------
 \ hrtables defined in hrtables.asm
 
-IF _TODO
 *-------------------------------
- dum hrparams
+\ dum hrparams
+
 
 PAGE ds 1
 XCO ds 1

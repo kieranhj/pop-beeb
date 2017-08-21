@@ -72,9 +72,9 @@
 
 \ dum $200
 
+.inmenu skip 1
+.inbuilder skip 1
 IF _TODO
-inmenu ds 1
-inbuilder ds 1
 ineditor ds 1
 ENDIF
 .soundon skip 1
@@ -117,8 +117,8 @@ IF _TODO
 BBundID ds 1
 redherring2 ds 1
 pausetemp ds 1
-recheck0 ds 1
 ENDIF
+.recheck0 skip 1
 
 \*-------------------------------
 \*

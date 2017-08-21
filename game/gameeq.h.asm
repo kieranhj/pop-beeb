@@ -8,13 +8,15 @@
 \*  Equates
 \*
 \*-------------------------------
-chtable1 = $6000
-chtable2 = $8400
-chtable3 = $0800
-chtable4 = $9600
-chtable5 = $a800
-chtable6 = $6000
-chtable7 = $9f00
+
+\ BEEB DEFINED IN pop-beeb.asm AS SWRAM BANKS
+\chtable1 = $6000
+\chtable2 = $8400
+\chtable3 = $0800
+\chtable4 = $9600
+\chtable5 = $a800
+\chtable6 = $6000
+\chtable7 = $9f00
 
 \bgtable1 = $6000
 \bgtable2 = $8400
@@ -32,7 +34,7 @@ savedgame = $b6f0
 
 msys = $d400
 ctrlsubs = $d000
-specialk = $d900
+\specialk = $d900               ; location determined by assembler
 textline = $dfd8
 subs = $e000
 sound = $ea00
@@ -142,36 +144,8 @@ ENDIF
 \dum gamebg
 \ jump table moved to gamebg.asm
 
-IF _TODO
- dum specialk
-
-keys ds 3
-clrjstk ds 3
-zerosound ds 3
-addsound ds 3
-facejstk ds 3
-
-SaveSelect ds 3
-LoadSelect ds 3
-SaveDesel ds 3
-LoadDesel ds 3
-initinput ds 3
-
-demokeys ds 3
-listtorches ds 3
-burn ds 3
-getminleft ds 3
-keeptime ds 3
-
-shortentime ds 3
-cuesong ds 3
- ds 3
- ds 3
- ds 3
-
-dloop ds 3
-strobe ds 3
-ENDIF
+\dum specialk
+\ jump table moved to specialk.asm
 
 IF _TODO
  dum mover
@@ -382,12 +356,13 @@ ENDIF
 \*  Zero page
 \*
 \*-------------------------------
-locals = $e8
 
 \*-------------------------------
 \*  $40-e7: Game globals
 \*-------------------------------
-;ORG $40
+
+\ BEEB let assembler assign ZP addresses
+\ORG $40
 
 ;.Char skip $10
 
@@ -436,7 +411,7 @@ locals = $e8
 ;.tempid skip 1
 ;.numtrans skip 1
 ;.tempnt skip 1
-;.redrawflg skip 1
+.redrawflg skip 1
 ;.xdiff skip 2
 ;.ydiff skip 2
 ;.xdir skip 1
@@ -503,10 +478,10 @@ locals = $e8
 ;.msgtimer skip 1
 ;.MaxOppStr skip 1
 ;.guardprog skip 1
-;.ManCtrl skip 1
+.ManCtrl skip 1
 ;.mergetimer skip 1
 ;.lastpotion skip 1
-;.origstrength skip 1
+.origstrength skip 1
 ;.jmpaddr skip 2
 ;.alertguard skip 1
 ;.createshad skip 1

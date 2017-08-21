@@ -6,7 +6,6 @@
 
 ; Defines
 
-_DEBUG = FALSE
 _TODO = FALSE
 
 ; Original PoP global defines
@@ -24,18 +23,24 @@ INCLUDE "lib/bbc_utils.h.asm"
 
 ; POP includes
 
+locals = $dc
+locals_top = $ef
+
 ORG &0
-GUARD &100
+GUARD locals
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
+INCLUDE "game/soundnames.h.asm"
+
 INCLUDE "game/beeb-plot.h.asm"
 
-; Locals
+; Local ZP variables only
 
 INCLUDE "game/frameadv.h.asm"
 INCLUDE "game/hires.h.asm"
-INCLUDE "game/hrparams.h.asm"
-INCLUDE "game/soundnames.h.asm"
+\ Not required
+\INCLUDE "game/hrparams.h.asm"
+INCLUDE "game/master.h.asm"
 
 ; Main RAM
 
@@ -257,6 +262,7 @@ INCLUDE "game/hires.asm"
 INCLUDE "game/hrtables.asm"
 INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
+INCLUDE "game/specialk.asm"
 
 .pop_beeb_end
 
@@ -283,20 +289,70 @@ CLEAR 0, &FFFF
 ORG &8000
 GUARD &BFFF
 
+BEEB_SWRAM_SLOT_LEVELBG = 0
+BEEB_SWRAM_SLOT_CHTAB13 = 1
+BEEB_SWRAM_SLOT_CHTAB25 = 2
+BEEB_SWRAM_SLOT_CHTAB4 = 3
+
 .bank0_start
 .bgtable1
-INCBIN "Images/IMG.BGTAB1.DUN.bin"
+SKIP 9185           ; max size of IMG.BGTAB1.XXX
+;INCBIN "Images/IMG.BGTAB1.DUN.bin"
 ;INCBIN "Images/IMG.BGTAB1.PAL.bin"
 ALIGN &100
 .bgtable2
-INCBIN "Images/IMG.BGTAB2.DUN.bin"
+SKIP 4593           ; max size of IMG.BGTAB2.XXX
+;INCBIN "Images/IMG.BGTAB2.DUN.bin"
 ;INCBIN "Images/IMG.BGTAB2.PAL.bin"
 ALIGN &100
 .blueprnt
-INCBIN "Levels/Level1"
+SKIP &900           ; all blueprints same size
+;INCBIN "Levels/Level1"
 .bank0_end
 
-SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
+;SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &BFFF
+
+.bank1_start
+.chtable1
+SKIP 9165           ; size of IMG.CHTAB1
+ALIGN &100
+.chtable3
+SKIP 5985           ; size of IMG.CHTAB3
+ALIGN &100
+.bank1_end
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &BFFF
+
+.bank2_start
+.chtable2
+SKIP 9189           ; size of IMG.CHTAB2
+ALIGN &100
+.chtable5
+SKIP 6134           ; size of IMG.CHTAB5
+ALIGN &100
+.bank2_end
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &BFFF
+
+.bank3_start
+.chtable4
+SKIP 5281           ; size of largest IMG.CHTAB4.X internal file pointer - file size 8999b?
+ALIGN &100
+.chtable6
+SKIP 9201           ; size of largest IMG.CHTAB6.X
+ALIGN &100
+.chtable7
+SKIP 1155           ; size of IMG.CHTAB7
+ALIGN &100
+.bank3_end
 
 ; Construct overlay files
 
