@@ -1150,96 +1150,96 @@ ENDIF
  jmp epilog ;Play epilog (& hang)
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Control player
-*
-*  In/out: Char vars
-*
-*-------------------------------
-ctrlplayer
+\*-------------------------------
+\*
+\*  Control player
+\*
+\*  In/out: Char vars
+\*
+\*-------------------------------
+.ctrlplayer
+{
  jsr kill0 ;If char is on screen 0, kill him off
 
  jsr PlayerCtrl ;Control player
 
  lda CharLife
- bmi ]rts ;If char is still alive, return
+ bmi return ;If char is still alive, return
 
-* When player dies, CharLife is set to 0.
-* Inc CharLife until = #deadenough; then put up message
+\* When player dies, CharLife is set to 0.
+\* Inc CharLife until = #deadenough; then put up message
 
-:dead lda CharPosn
- jsr cold?
- bne ]rts ;wait till char has stopped moving
+.dead lda CharPosn
+ jsr cold
+ bne return ;wait till char has stopped moving
 
  lda CharLife
- bne :inc
+ bne label_inc
  jsr deathsong ;cue death music
 
-:inc lda CharLife
+.label_inc lda CharLife
  cmp #deadenough
- bcs :deadenough
+ bcs label_deadenough
  inc CharLife
-]rts rts
+.return rts
 
-:deadenough
+.label_deadenough
  lda level
- beq :gameover ;Your death ends demo
+ beq gameover ;Your death ends demo
 
  lda SongCue
- bne ]rts ;wait for song to finish before putting up msg
+ bne return ;wait for song to finish before putting up msg
 
  lda MinLeft
  ora SecLeft
- bne :timeleft
+ bne timeleft
  jmp YouLose ;if you die with time = 0, you lose
 
-* Otherwise: "Press Button to Continue"
+\* Otherwise: "Press Button to Continue"
 
-:timeleft
+.timeleft
  lda message
  cmp #ContMsg
- bne :1
+ bne label_1
  lda msgtimer
- bne :ok
+ bne ok
 
-:1 lda #ContMsg
+.label_1 lda #ContMsg
  sta message
  lda #255
  sta msgtimer ;Put up continue message
 
-:ok cmp #1
- beq :gameover ;End game when msgtimer = 1
+.ok cmp #1
+ beq gameover ;End game when msgtimer = 1
 
  IF FinalDisk
  ELSE
 
  lda develment
- beq :nodevel
+ beq nodevel
  lda keypress
  cmp #kresurrect
- beq :raise ;TEMP!
-:nodevel
+ beq raise ;TEMP!
+.nodevel
  ENDIF
 
  lda BTN0
  ora BTN1
- bpl ]rts
+ bpl return
  jmp RESTART ;Button press restarts level
 
-:gameover
+.gameover
  IF EditorDisk
  jmp RESTART
  ELSE
  jmp GOATTRACT
  ENDIF
 
-* Raise kid from the dead (TEMP!)
+\* Raise kid from the dead (TEMP!)
 
  IF FinalDisk
  ELSE
-:raise
+.raise
  lda #0
  sta msgtimer
  sta SongCue
@@ -1257,7 +1257,9 @@ ctrlplayer
  jmp startkid1
 
  ENDIF
+}
 
+IF _TODO
 *-------------------------------
 *
 * Play death song

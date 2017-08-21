@@ -242,6 +242,8 @@ INCLUDE "game/subs.asm"
 INCLUDE "game/mover.asm"
 INCLUDE "game/misc.asm"
 INCLUDE "game/auto.asm"
+INCLUDE "game/ctrlsubs.asm"
+INCLUDE "game/ctrl.asm"
 
 .pop_beeb_end
 

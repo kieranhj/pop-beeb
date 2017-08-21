@@ -21,13 +21,13 @@
 \bgtable1 = $6000
 \bgtable2 = $8400
 
-\topctrl = $2000                  ; location determined by assembler
+\topctrl = $2000                ; location determined by assembler
 seqtable = $2800
 seqtab = $3000
 ctrl = $3a00
 coll = $4500
-\gamebg = $4c00                  ; location determined by assembler
-auto = $5400
+\gamebg = $4c00                 ; location determined by assembler
+\auto = $5400                   ; location determined by assembler
 
 mobtables = $b600
 savedgame = $b6f0
@@ -38,8 +38,8 @@ ctrlsubs = $d000
 textline = $dfd8
 subs = $e000
 sound = $ea00
-mover = $ee00
-misc = $f900
+\mover = $ee00                  ; location determined by assembler
+\misc = $f900                   ; location determined by assembler
 debugs = $fc00
 
 \*-------------------------------
@@ -95,22 +95,11 @@ docrosscut ds 3
 goattract ds 3
 ENDIF
 
-IF _TODO
- dum ctrl
-
-PlayerCtrl ds 3
-checkfloor ds 3
-ShadCtrl ds 3
-rereadblocks ds 3
-checkpress ds 3
-
-DoImpale ds 3
-GenCtrl ds 3
-checkimpale ds 3
-ENDIF
+\dum ctrl
+\ jump table moved to ctrl.asm
 
 \dum auto
-\ Moved to auto.asm
+\ jump table moved to auto.asm
 
 IF _TODO
  dum coll
@@ -136,152 +125,14 @@ ENDIF
 \dum specialk
 \ jump table moved to specialk.asm
 
-IF _TODO
- dum mover
+\dum mover
+\ jump table moved to mover.asm
 
-animtrans ds 3
-trigspikes ds 3
-pushpp ds 3
-breakloose1 ds 3
-breakloose ds 3
+\dum ctrlsubs
+\ jump table moved to ctrlsubs.asm
 
-animmobs ds 3
-addmobs ds 3
-closeexit ds 3
-getspikes ds 3
-shakem ds 3
-
-trigslicer ds 3
-trigtorch ds 3
-getflameframe ds 3
-smashmirror ds 3
-jamspikes ds 3
-
-trigflask ds 3
-getflaskframe ds 3
-trigsword ds 3
-jampp ds 3
-ENDIF
-
-IF _TODO
- dum ctrlsubs
-
-getframe ds 3
-getseq ds 3
-getbasex ds 3
-getblockx ds 3
-getblockxp ds 3
-
-getblocky ds 3
-getblockej ds 3
-addcharx ds 3
-getdist ds 3
-getdist1 ds 3
-
-getabovebeh ds 3
-rdblock ds 3
-rdblock1 ds 3
-setupsword ds 3
-getscrns ds 3
-
-addguardobj ds 3
-opjumpseq ds 3
-getedges ds 3
-indexchar ds 3
-quickfg ds 3
-
-cropchar ds 3
-getleft ds 3
-getright ds 3
-getup ds 3
-getdown ds 3
-
-cmpspace ds 3
-cmpbarr ds 3
-addkidobj ds 3
-addshadobj ds 3
-addreflobj ds 3
-
-LoadKid ds 3
-LoadShad ds 3
-SaveKid ds 3
-SaveShad ds 3
-setupchar ds 3
-
-GetFrameInfo ds 3
-indexblock ds 3
-markred ds 3
-markfred ds 3
-markwipe ds 3
-
-markmove ds 3
-markfloor ds 3
-unindex ds 3
-quickfloor ds 3
-unevenfloor ds 3
-
-markhalf ds 3
-addswordobj ds 3
-getblocky1 ds 3
-checkledge ds 3
-get2infront ds 3
-
-checkspikes ds 3
-rechargemeter ds 3
-addfcharx ds 3
-facedx ds 3
-jumpseq ds 3
-
-GetBaseBlock ds 3
-LoadKidwOp ds 3
-SaveKidwOp ds 3
-getopdist ds 3
-LoadShadwOp ds 3
-
-SaveShadwOp ds 3
-boostmeter ds 3
-getunderft ds 3
-getinfront ds 3
-getbehind ds 3
-
-getabove ds 3
-getaboveinf ds 3
-cmpwall ds 3
-ENDIF
-
-IF _TODO
- dum subs
-
-addtorches ds 3
-doflashon ds 3
-PageFlip ds 3
-demo ds 3
-showtime ds 3
-
-doflashoff ds 3
-lrclse ds 3
- ds 3
- ds 3
- ds 3
-
-addslicers ds 3
-pause ds 3
- ds 3
-deadenemy ds 3
-playcut ds 3
-
-addlowersound ds 3
-RemoveObj ds 3
-addfall ds 3
-setinitials ds 3
-startkid ds 3
-
-startkid1 ds 3
-gravity ds 3
-initialguards ds 3
-mirappear ds 3
-crumble ds 3
-ENDIF
+\dum subs
+\ jump table moved to subs.asm
 
 IF _TODO
  dum sound
