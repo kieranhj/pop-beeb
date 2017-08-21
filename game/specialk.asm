@@ -69,10 +69,10 @@ initAMtimer = 10 ;antimatter cheat key timer
 \FirstSideB = 3
 
 \*-------------------------------
-min = 725 ;# frames per "minute"
+game_time_min = 725 ;# frames per "minute"
   ;(actual frame rate approx. 11 fps)
-sec = min/60
-t = 60 ;game time limit
+game_time_sec = game_time_min/60
+game_time_limit = 60 ;game time limit
 
 \*-------------------------------
 \*  Key equates

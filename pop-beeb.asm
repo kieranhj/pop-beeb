@@ -38,8 +38,6 @@ INCLUDE "game/beeb-plot.h.asm"
 
 INCLUDE "game/frameadv.h.asm"
 INCLUDE "game/hires.h.asm"
-\ Not required
-\INCLUDE "game/hrparams.h.asm"
 INCLUDE "game/master.h.asm"
 
 ; Main RAM
@@ -263,6 +261,7 @@ INCLUDE "game/hrtables.asm"
 INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
 INCLUDE "game/specialk.asm"
+INCLUDE "game/subs.asm"
 
 .pop_beeb_end
 

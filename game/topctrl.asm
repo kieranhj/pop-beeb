@@ -48,7 +48,7 @@
 \POPside2 = $ad
 \
 \FirstSideB = 3 ;1st level on Side B
-\LastSideB = 14 ;& last
+LastSideB = 14 ;& last
 \
 \*-------------------------------
 \* Soft switches
@@ -376,13 +376,13 @@ ENDIF
  jmp MainLoop
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Main loop
-*
-*-------------------------------
-MainLoop
+\*-------------------------------
+\*
+\*  Main loop
+\*
+\*-------------------------------
+.MainLoop
+{
  jsr rnd
 
  lda #0
@@ -392,10 +392,10 @@ MainLoop
  jsr strobe ;Strobe kbd & jstk
 
  jsr demokeys
- bpl :4
+ bpl label_4
  lda #1
  jmp START ;During demo, press any key to play
-:4
+.label_4
  jsr misctimers
 
  jsr NextFrame ;Determine what next frame should look like
@@ -404,39 +404,44 @@ MainLoop
 
  jsr FrameAdv ;Draw next frame & show it
 
- jsr playback ;Play sounds
+\ BEEB TEMP comment out
+\ jsr playback ;Play sounds
  jsr zerosound ;& zero sound table
 
  jsr flashoff
 
- jsr songcues ;Play music
+\ BEEB TEMP comment out
+\ jsr songcues ;Play music
 
  lda NextLevel
  cmp level
  beq MainLoop ;Continue until we change levels
 
- jsr yellowcheck ;copy protect!
+\ NOT BEEB
+\ jsr yellowcheck ;copy protect!
 
  jmp LoadNextLevel
+}
 
-*-------------------------------
-*
-* Load next level
-*
-* In: NextLevel = # of next level
-*     level = # of current level
-*
-* Out: level = NextLevel
-*
-*-------------------------------
-LoadNextLevel
+\*-------------------------------
+\*
+\* Load next level
+\*
+\* In: NextLevel = # of next level
+\*     level = # of current level
+\*
+\* Out: level = NextLevel
+\*
+\*-------------------------------
+.LoadNextLevel
+{
  lda NextLevel
  cmp #14
  beq LoadNext1
  lda #1
  sta timerequest ;show time remaining
 
-LoadNext1
+.LoadNext1
  lda MaxKidStr
  sta origstrength ;save new strength level
  lda #0
@@ -448,78 +453,82 @@ LoadNext1
  jmp RESTART
  ENDIF
 
-* NextLevel must be in range 1 - LastSideB
+\* NextLevel must be in range 1 - LastSideB
 
  lda NextLevel
  cmp #LastSideB+1
- bcs :illegal
+ bcs illegal
  cmp #1
- bcs :2
-:illegal lda level ;Illegal value--restart current level
+ bcs label_2
+.illegal lda level ;Illegal value--restart current level
  sta NextLevel
  jmp RESTART
 
-* Load from correct side of disk
+\* Load from correct side of disk
 
-:2 ldx #POPside2
- cmp #FirstSideB
- bcs :1
- ldx #POPside1
-:1 cpx BBundID ;do we need to flip disk?
- beq :ok ;no
- stx BBundID ;yes
- jsr flipdisk
+\ NOT BEEB
+.label_2
+\ ldx #POPside2
+\ cmp #FirstSideB
+\ bcs label_1
+\ ldx #POPside1
+\.label_1 cpx BBundID ;do we need to flip disk?
+\ beq ok ;no
+\ stx BBundID ;yes
+\ jsr flipdisk
 
-:ok lda NextLevel
+.ok lda NextLevel
  sta level ;set new level
  cmp #2
- beq :cut1
+ beq cut1
  cmp #4
- beq :cut2
+ beq cut2
  cmp #6
- beq :cut3
+ beq cut3
  cmp #8
- beq :cut8
+ beq cut8
  cmp #9
- beq :cut4
+ beq cut4
  cmp #12
- beq :cut5 ;Princess cuts before certain levels
+ beq cut5 ;Princess cuts before certain levels
 
-:cont jmp RESTART ;Start new level
+.cont jmp RESTART ;Start new level
 
-* Princess cuts before certain levels
+\* Princess cuts before certain levels
 
-:cut1 lda #1
-]pcut pha
-:repeat jsr cutprincess ;cut to princess's room...
+.cut1 lda #1
+.label_pcut pha
+.repeat jsr cutprincess ;cut to princess's room...
  jsr setrecheck0
  jsr recheckyel ;if wrong-disk error, recheck track 0
- bne :repeat ;& repeat
+ bne repeat ;& repeat
  pla
  jsr playcut ;& play cut #1
- jmp :cont
+ jmp cont
 
-:cut2 lda #2
- bne ]pcut
-:cut3 lda #3
- bne ]pcut
-:cut4 lda #4
- bne ]pcut
-:cut5 lda #5
- bne ]pcut
-:cut8 lda #8
- bne ]pcut
+.cut2 lda #2
+ bne label_pcut
+.cut3 lda #3
+ bne label_pcut
+.cut4 lda #4
+ bne label_pcut
+.cut5 lda #5
+ bne label_pcut
+.cut8 lda #8
+ bne label_pcut
+}
 
-*-------------------------------
-*
-*  N E X T   F R A M E
-*
-*  Determine what next frame should look like
-*
-*  In: All data reflects last (currently displayed) frame.
-*
-*-------------------------------
-NextFrame
+\*-------------------------------
+\*
+\*  N E X T   F R A M E
+\*
+\*  Determine what next frame should look like
+\*
+\*  In: All data reflects last (currently displayed) frame.
+\*
+\*-------------------------------
+.NextFrame
+{
  jsr animmobs ;Update mobile objects (MOBs)
 
  jsr animtrans ;Update transitional objects (TROBs)
@@ -534,7 +543,7 @@ NextFrame
 
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
-:1
+.label_1
  jsr addsfx ;Add additional sound fx
 
  jsr chgmeters ;Change strength meters
@@ -548,42 +557,42 @@ NextFrame
  rts
  ENDIF
 
-* Level 0 (Demo): When kid exits screen 24, end demo
+\* Level 0 (Demo): When kid exits screen 24, end demo
 
  lda level
- bne :no0
+ bne no0
  lda KidScrn
  cmp #24
- bne :cont
+ bne cont
  jmp GOATTRACT
 
-* Level 6: When kid falls off screen 1, cut to next level
+\* Level 6: When kid falls off screen 1, cut to next level
 
-:no0
+.no0
  IF DemoDisk
  ELSE
 
  lda level
  cmp #6
- bne :no6
+ bne no6
  lda KidScrn
  cmp #1
- bne :cont
+ bne cont
  lda KidY
  cmp #20
- bcs :cont
- lda #-1
+ bcs cont
+ lda #LO(-1)
  sta KidY
  inc NextLevel
- jmp :cont
+ jmp cont
 
-* Level 12: When kid exits screen 23, cut to next level
+\* Level 12: When kid exits screen 23, cut to next level
 
-:no6 cmp #12
- bne :cont
+.no6 cmp #12
+ bne cont
  lda KidScrn
  cmp #23
- bne :cont
+ bne cont
  inc NextLevel
  lda #1
  sta skipmessage ;but don't announce level #
@@ -591,62 +600,68 @@ NextFrame
 
  ENDIF
 
-* Continue...
+\* Continue...
 
-:cont lda level
+.cont lda level
  cmp #14
- bcs :stopped
+ bcs stopped
  cmp #13
- bcc :ticking
+ bcc ticking
  lda exitopen
- bne :stopped ;Timer stops when you kill Vizier on level 13
+ bne stopped ;Timer stops when you kill Vizier on level 13
 
-:ticking jsr keeptime
+.ticking jsr keeptime
 
-:stopped jsr showtime ;if timerequest <> 0
+.stopped jsr showtime ;if timerequest <> 0
 
  lda level
  cmp #13
- bcs :safe ;You have one chance to finish Level 13
+ bcs safe ;You have one chance to finish Level 13
 ;after time runs out
  lda MinLeft
  ora SecLeft
- bne :safe
+ bne safe
  jmp YouLose ;time's up--you lose
-:safe
-]rts rts
+.safe
+ rts
+}
 
-*-------------------------------
-*
-*  F R A M E   A D V A N C E
-*
-*  Draw new frame (on hidden hi-res page) & show it
-*
-*-------------------------------
-FrameAdv
+\*-------------------------------
+\*
+\*  F R A M E   A D V A N C E
+\*
+\*  Draw new frame (on hidden hi-res page) & show it
+\*
+\*-------------------------------
+.FrameAdv
+{
  lda cutplan ;set by PrepCut
- bne :cut
+ bne cut
 
  jsr DoFast
  jmp PageFlip ;Update current screen...
 
-:cut jmp DoCleanCut ;or draw new screen from scratch
+.cut jmp DoCleanCut ;or draw new screen from scratch
+}
 
-*-------------------------------
-*
-*  F I R S T   F R A M E
-*
-*  Generate & display first frame
-*
-*-------------------------------
-FirstFrame
+\*-------------------------------
+\*
+\*  F I R S T   F R A M E
+\*
+\*  Generate & display first frame
+\*
+\*-------------------------------
+.FirstFrame
+{
  lda KidScrn
  sta cutscrn
 
  jsr PrepCut
 
  jmp DoCleanCut
+}
 
+IF _TODO
 *-------------------------------
 *
 *  D O   K I D
@@ -1000,51 +1015,60 @@ DoFast
  jsr dispmsg ;Superimpose message (if any)
 :1
  jmp drawall ;Dump contents of image lists to screen
-]rts rts
+}
+ENDIF
+.return_12 rts
 
-*-------------------------------
-*
-*  Lightning flashes
-*
-*-------------------------------
-flashon
+\*-------------------------------
+\*
+\*  Lightning flashes
+\*
+\*-------------------------------
+.flashon
+{
  lda lightning
- beq :1
+ beq label_1
  lda lightcolor
- bne :2
-:1 lda ChgKidStr
- bpl ]rts
+ bne label_2
+.label_1 lda ChgKidStr
+ bpl return_12
  lda #$11 ;Flash red if kid's been hurt
-:2 jmp doflashon
+.label_2 jmp doflashon
+}
 
-flashoff
+.flashoff
+{
  lda lightning
- beq :1
+ beq label_1
  dec lightning
- bpl :2
+ bpl label_2
 
-:1 lda ChgKidStr
- bpl ]rts
-:2 jmp doflashoff
+.label_1 lda ChgKidStr
+ bpl return_12
+.label_2 jmp doflashoff
+}
 
-*-------------------------------
-*
-*  Initialize collision detection buffers
-*
-*-------------------------------
-initCDbuf
+\*-------------------------------
+\*
+\*  Initialize collision detection buffers
+\*
+\*-------------------------------
+.initCDbuf
+{
  ldx #9
  lda #$ff
-:zloop sta SNlastframe,x
+.zloop sta SNlastframe,x
  sta SNthisframe,x
  sta SNbelow,x
  sta SNabove,x
  dex
- bpl :zloop
+ bpl zloop
 
  sta BlockYlast
-]rts rts
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Prepare to cut?
@@ -1372,31 +1396,35 @@ chgmeters
 
 :ok2 sta OppStrength
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* Slam player's entrance shut (add it to trans list)
-*
-*-------------------------------
-entrance
+\*-------------------------------
+\*
+\* Slam player's entrance shut (add it to trans list)
+\*
+\*-------------------------------
+.entrance
+{
  lda KidScrn
  jsr calcblue
 
  ldy #29
 
-:loop lda (BlueType),y
+.loop lda (BlueType),y
  and #idmask
  cmp #exit
- bne :cont ;find player's entrance
+ bne cont ;find player's entrance
 
  lda KidScrn
  jmp closeexit ;& return
 
-:cont dey
- bpl :loop
+.cont dey
+ bpl loop
 
-]rts rts
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Play song cues
@@ -1663,40 +1691,44 @@ clearjoy
  sta clrU
  sta clrD
  jmp SaveSelect
+ENDIF
 
-*-------------------------------
-*
-*  Misc. timers (Call every cycle)
-*
-*-------------------------------
-misctimers
+\*-------------------------------
+\*
+\*  Misc. timers (Call every cycle)
+\*
+\*-------------------------------
+.misctimers
+{
  lda mergetimer
- beq :3
- bmi :3
+ beq label_3
+ bmi label_3
  dec mergetimer
- bne :3
+ bne label_3
  dec mergetimer ;goes from 1 to -1
-:3
+.label_3
 
-* Level 8: When you've spent a certain amount of time on
-* screen 16 once exit is open, mouse rescues you
+\* Level 8: When you've spent a certain amount of time on
+\* screen 16 once exit is open, mouse rescues you
 
  lda level
  cmp #8 ;mouse level
- bne :12
+ bne label_12
  lda CharScrn
  cmp #16
- bne :12
+ bne label_12
  lda exitopen
- beq :12
+ beq label_12
  cmp #mousetimer
- bcc :11
- bne :12
-:10 jsr mouserescue
-:11 inc exitopen
-:12
-]rts rts
+ bcc label_11
+ bne label_12
+.label_10 jsr mouserescue
+.label_11 inc exitopen
+.label_12
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Screen flashes towards end of weightlessness period

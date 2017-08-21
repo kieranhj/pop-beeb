@@ -383,7 +383,23 @@ ENDIF
 .KidSword skip 1
 .KidLife skip 1
 
-;.Shad skip $10
+.Shad
+.ShadPosn skip 1
+.ShadX skip 1
+.ShadY skip 1
+.ShadFace skip 1
+.ShadBlockX skip 1
+.ShadBlockY skip 1
+.ShadAction skip 1
+.ShadXVel skip 1
+.ShadYVel skip 1
+.ShadSeq skip 2
+.ShadScrn skip 1
+.ShadRepeat skip 1
+.ShadID skip 1
+.ShadSword skip 1
+.ShadLife skip 1
+
 ;.FCharVars skip 12
 ;.yellowflag skip 1
 ;.timebomb skip 1
@@ -394,9 +410,9 @@ ENDIF
 ;.Fdx skip 1
 ;.Fdy skip 1
 ;.Fcheck skip 1
-;.exitopen skip 1
+.exitopen skip 1
 ;.collX skip 1
-;.lightning skip 1
+.lightning skip 1
 ;.lightcolor skip 1
 ;.offguard skip 1
 ;.blockid skip 1
@@ -409,7 +425,7 @@ ENDIF
 ;.tempblocky skip 1
 ;.tempscrn skip 1
 ;.tempid skip 1
-;.numtrans skip 1
+.numtrans skip 1
 ;.tempnt skip 1
 .redrawflg skip 1
 ;.xdiff skip 2
@@ -418,7 +434,7 @@ ENDIF
 ;.ydir skip 1
 ;.RNskipeed skip 1
 .invert skip 1
-;.PlayCount skip 1
+.PlayCount skip 1
 ;.refract skip 1
 ;.backtolife skip 1
 ;.cutplan skip 1
@@ -454,20 +470,20 @@ ENDIF
 ;.collideL skip 1
 ;.collideR skip 1
 ;.weightless skip 1
-;.cutorder skip 1
-;.AMtimer skip 1
+.cutorder skip 1
+.AMtimer skip 1
 ;.begrange skip 1
 ;.scrn skip 1
 ;.keybufptr skip 1
 .VisScrn skip 1
-;.OppStrength skip 1
+.OppStrength skip 1
 ;.jarabove skip 1
 ;.Kiskiptrength skip 1
-;.ChgKiskiptr skip 1
-;.MaxKiskiptr skip 1
-;.EnemyAlert skip 1
-;.ChgOppStr skip 1
-;.heroic skip 1
+.ChgKidStr skip 1
+.MaxKidStr skip 1
+.EnemyAlert skip 1
+.ChgOppStr skip 1
+.heroic skip 1
 ;.clrF skip 1
 ;.clrB skip 1
 ;.clrU skip 1
@@ -475,17 +491,17 @@ ENDIF
 ;.clrbtn skip 1
 ;.Fsword skip 1
 ;.purpleflag skip 1 ;$da
-;.msgtimer skip 1
+.msgtimer skip 1
 ;.MaxOppStr skip 1
 ;.guardprog skip 1
 .ManCtrl skip 1
-;.mergetimer skip 1
+.mergetimer skip 1
 ;.lastpotion skip 1
 .origstrength skip 1
 ;.jmpaddr skip 2
 ;.alertguard skip 1
-;.createshad skip 1
-;.stunned skip 1
+.createshad skip 1
+.stunned skip 1
 ;.droppedout skip 1
 
 \*-------------------------------
