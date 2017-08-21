@@ -109,19 +109,8 @@ GenCtrl ds 3
 checkimpale ds 3
 ENDIF
 
-IF _TODO
- dum auto
-
-AutoCtrl ds 3
-checkstrike ds 3
-checkstab ds 3
-AutoPlayback ds 3
-cutcheck ds 3
-
-cutguard ds 3
-addguard ds 3
-cut ds 3
-ENDIF
+\dum auto
+\ Moved to auto.asm
 
 IF _TODO
  dum coll
@@ -316,31 +305,8 @@ altset2 ds 450
 swordtab ds 192
 ENDIF
 
-IF _TODO
- dum misc
-
-VanishChar ds 3
-movemusic ds 3
-moveauxlc ds 3
-firstguard ds 3
-markmeters ds 3
-
-potioneffect ds 3
-mouserescue ds 3
-StabChar ds 3
-unholy ds 3
-reflection ds 3
-
-MarkKidMeter ds 3
-MarkOppMeter ds 3
-bonesrise ds 3
-decstr ds 3
-DoSaveGame ds 3
-
-LoadLevelX ds 3
-checkalert ds 3
-dispversion ds 3
-ENDIF
+\dum misc
+\ Moved to misc.asm
 
 IF _TODO
  dum debugs
@@ -437,10 +403,10 @@ ENDIF
 .PlayCount skip 1
 ;.refract skip 1
 ;.backtolife skip 1
-;.cutplan skip 1
+.cutplan skip 1
 ;.lastcmd skip 1
 ;.distfallen skip 1
-;.cutscrn skip 1
+.cutscrn skip 1
 ;.waitingtojump skip 1
 ;.trigppabove skip 1
 ;.direcpp skip 1

@@ -440,8 +440,10 @@ ENDIF
  beq LoadNext1
  lda #1
  sta timerequest ;show time remaining
-
+}
+\ Fall through!
 .LoadNext1
+{
  lda MaxKidStr
  sta origstrength ;save new strength level
  lda #0
@@ -544,9 +546,11 @@ ENDIF
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
 .label_1
- jsr addsfx ;Add additional sound fx
+\ BEEB TEMP comment out
+\ jsr addsfx ;Add additional sound fx
 
- jsr chgmeters ;Change strength meters
+\ BEEB TEMP comment out
+\ jsr chgmeters ;Change strength meters
 
  jsr cutcheck ;Has kid moved offscreen?
  jsr PrepCut ;If so, prepare to cut to new screen
@@ -661,15 +665,15 @@ ENDIF
  jmp DoCleanCut
 }
 
-IF _TODO
-*-------------------------------
-*
-*  D O   K I D
-*
-*  Update kid
-*
-*-------------------------------
-DoKid
+\*-------------------------------
+\*
+\*  D O   K I D
+\*
+\*  Update kid
+\*
+\*-------------------------------
+.DoKid
+{
  jsr LoadKidwOp ;Load kid as character (w/opponent)
 
  jsr rereadblocks
@@ -679,19 +683,19 @@ DoKid
  jsr ctrlplayer ;Detect & act on commands from player
 
  lda invert
- beq :3
+ beq label_3
  lda CharLife
- bmi :3
+ bmi label_3
  lda #2
  sta redrawflg
  lda #0
  sta invert
  jmp inverty ;Screen flips back rightside up when you're dead
-:3
+.label_3
  jsr wtlessflash
 
  lda CharScrn
- beq :skip ;Skip all this if kid is on null screen:
+ beq skip ;Skip all this if kid is on null screen:
 
  jsr animchar ;Get next frame from sequence table
 
@@ -720,23 +724,25 @@ DoKid
 
  jsr checkimpale ;impaled by spikes?
  jsr checkslice ;sliced by slicer?
-:1
+.label_1
  jsr shakeloose ;shake loose floors
 
-:skip jsr SaveKid ;Save all changes to char data
-]rts rts
+.skip jsr SaveKid ;Save all changes to char data
+ rts
+}
 
-*-------------------------------
-*
-*  D O   S H A D
-*
-*  Update shadowman (or other opponent)
-*
-*-------------------------------
-DoShad
+\*-------------------------------
+\*
+\*  D O   S H A D
+\*
+\*  Update shadowman (or other opponent)
+\*
+\*-------------------------------
+.DoShad
+{
  lda ShadFace
  cmp #86
- beq ]rts ;"no character" code
+ beq return ;"no character" code
 
  jsr LoadShadwOp
  jsr rereadblocks
@@ -747,15 +753,15 @@ DoShad
 
  lda CharScrn
  cmp VisScrn
- bne :os
+ bne os
 
  jsr animchar
 
  lda CharX
  cmp #ScrnLeft-14
- bcc :os
+ bcc os
  cmp #ScrnRight+14
- bcs :os ;Skip all this if char is offscreen
+ bcs os ;Skip all this if char is offscreen
 
  jsr gravity
  jsr addfall
@@ -772,8 +778,10 @@ DoShad
  jsr checkimpale
   jsr checkslice2
 
-:os jmp SaveShad
+.os jmp SaveShad
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Add all visible characters to object table
@@ -893,20 +901,22 @@ setupshad
 :2 jmp addshadobj
 
 :1 jmp addguardobj
+ENDIF
 
-*-------------------------------
-*
-*  Cut to new screen
-*
-*  DoQuickCut: Show bg before adding characters
-*  DoCleanCut: Show frame only when complete
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  Cut to new screen
+\*
+\*  DoQuickCut: Show bg before adding characters
+\*  DoCleanCut: Show frame only when complete
+\*
+\*-------------------------------
 UseQuick = 0
 
- IF UseQuick
+IF UseQuick
 
-DoQuickCut
+.DoQuickCut
+{
  jsr fastspeed ;IIGS
 
  lda #0
@@ -920,10 +930,11 @@ DoQuickCut
 
  jsr PageFlip ;show complete frame
  jmp normspeed
+}
+ELSE
 
- ELSE
-
-DoCleanCut
+.DoCleanCut
+{
  jsr fastspeed ;IIGS
 
  lda #$20
@@ -939,9 +950,10 @@ DoCleanCut
 ;jsr vblank2
  jsr PageFlip
  jmp normspeed
+}
+ENDIF
 
- ENDIF
-
+IF _TODO
 *-------------------------------
 *
 *  D R A W   B G
@@ -966,15 +978,17 @@ drawbg
  jsr DoSure ;draw b.g. w/o chars
 
  jmp markmeters ;mark strength meters
+ENDIF
 
-*-------------------------------
-*
-*  D O   S U R E
-*
-*  Clear screen and redraw entire b.g. from scratch
-*
-*-------------------------------
-DoSure
+\*-------------------------------
+\*
+\*  D O   S U R E
+\*
+\*  Clear screen and redraw entire b.g. from scratch
+\*
+\*-------------------------------
+.DoSure
+{
  lda VisScrn
  sta SCRNUM
 
@@ -987,16 +1001,18 @@ DoSure
 ;(for next DoFast call)
 
  jmp drawall ;Dump contents of image lists to screen
+}
 
-*-------------------------------
-*
-*  D O  F A S T
-*
-*  Do a fast screen update
-*  (Redraw objects and as little of b.g. as possible)
-*
-*-------------------------------
-DoFast
+\*-------------------------------
+\*
+\*  D O  F A S T
+\*
+\*  Do a fast screen update
+\*  (Redraw objects and as little of b.g. as possible)
+\*
+\*-------------------------------
+.DoFast
+{
  jsr zerolsts ;zero image lists
 
  lda VisScrn
@@ -1013,10 +1029,9 @@ DoFast
 ;from obj list and necessary portions of bg)
 
  jsr dispmsg ;Superimpose message (if any)
-:1
+.label_1
  jmp drawall ;Dump contents of image lists to screen
 }
-ENDIF
 .return_12 rts
 
 \*-------------------------------
@@ -1068,34 +1083,34 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Prepare to cut?
-*
-*  In: VisScrn = current screen
-*      cutscrn = screen we want to be on
-*
-*  If cutscrn <> VisScrn, make necessary preparations
-*  & return cutplan = 1
-*
-*-------------------------------
-PrepCut
+\*-------------------------------
+\*
+\*  Prepare to cut?
+\*
+\*  In: VisScrn = current screen
+\*      cutscrn = screen we want to be on
+\*
+\*  If cutscrn <> VisScrn, make necessary preparations
+\*  & return cutplan = 1
+\*
+\*-------------------------------
+.PrepCut
+{
  lda cutscrn
- beq ]rts ;never cut to screen 0
+ beq return ;never cut to screen 0
  cmp VisScrn
- beq ]rts ;If cutscrn = VisScrn, we don't need to cut
+ beq return ;If cutscrn = VisScrn, we don't need to cut
 
  lda cutscrn
  sta VisScrn
  cmp #5
- bne :1
+ bne label_1
  lda level
  cmp #14
- bne :1
+ bne label_1
  jmp YouWin ;Level 14, screen 5 is princess's room--you win!
 
-:1 lda #1
+.label_1 lda #1
  sta cutplan
 
  jsr getscrns ;Get neighboring screen #s
@@ -1106,29 +1121,36 @@ PrepCut
  jsr crumble ;Activate slicers, torches, etc.
 
  jmp addguard ;Add guard (if any)
+}
 
-*-------------------------------
-*
-*  Time's up--you lose
-*
-*-------------------------------
-YouLose
+\*-------------------------------
+\*
+\*  Time's up--you lose
+\*
+\*-------------------------------
+.YouLose
+{
  jsr cutprincess ;cut to princess's room...
  lda #6
  jsr playcut ;& play cut #6
 
  jmp GOATTRACT ;go to title sequence
+}
 
-*-------------------------------
-*
-*  You win
-*
-*-------------------------------
-YouWin jsr cutprincess
+\*-------------------------------
+\*
+\*  You win
+\*
+\*-------------------------------
+.YouWin
+{
+ jsr cutprincess
  lda #7
  jsr playcut ;Play cut #7
  jmp epilog ;Play epilog (& hang)
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Control player
@@ -1276,37 +1298,43 @@ kill0
  lda #185
  sta CharPosn
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* Go to attract mode
-*
-*-------------------------------
-GOATTRACT
- IF DemoDisk
- ELSE
+\*-------------------------------
+\*
+\* Go to attract mode
+\*
+\*-------------------------------
+.GOATTRACT
+{
+IF DemoDisk
+ELSE
 
- lda BBundID
- cmp #POPside1 ;does he need to flip disk?
- beq :ok ;no
+\ NOT BEEB
+\ lda BBundID
+\ cmp #POPside1 ;does he need to flip disk?
+\ beq :ok ;no
 
- IF ThreeFive
- ELSE
- lda BGset1
- bpl :flip
- ldx #4
- jsr LoadLevelX ;get "FLIP DISK" msg into memory
- ENDIF
+\ IF ThreeFive
+\ ELSE
+\ lda BGset1
+\ bpl :flip
+\ ldx #4
+\ jsr LoadLevelX ;get "FLIP DISK" msg into memory
+\ ENDIF
 
-:flip jsr flipdisk ;ask him to flip disk
+\:flip jsr flipdisk ;ask him to flip disk
+\
+ENDIF
 
- ENDIF
+\ lda #POPside1
+\ sta BBundID
 
- lda #POPside1
- sta BBundID
+\:ok
+ jmp attractmode
+}
 
-:ok jmp attractmode
-
+IF _TODO
 *-------------------------------
 *
 *  Shake loose floors when character jumps

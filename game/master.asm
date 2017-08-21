@@ -35,9 +35,6 @@
  ._loadaltset BRK   ;jmp LOADALTSET
 \_screendump
 
-\ BEEB - MOVED FROM MISC.S
-.LoadLevelX jmp LOADLEVELX
-
 \*-------------------------------
 \ lst
 \ put eq
@@ -1620,37 +1617,3 @@ ENDIF
 }
 
 \ BEEB MOVED FROM MISC.S
-
-\*-------------------------------
-\* alt bg & char set list
-\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-
-.bgset1 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
-\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
-.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
-
-\*-------------------------------
-\*
-\* Load level from disk
-\* In: X = level # (0-14)
-\*
-\*-------------------------------
-.LOADLEVELX
-{
-\ Just keep X as level#
-
-\ lda bluepTRKlst,x
-\ sta bluepTRK
-\ lda bluepREGlst,x
-\ sta bluepREG
-
- lda bgset1,x ;A
-\ pha
-\ lda bgset2,x ;X
- ldy chset,x ;Y
-\ tax
-\ pla
-
- jmp _loadlevel ;in MASTER
- rts
-}
