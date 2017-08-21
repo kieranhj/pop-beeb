@@ -1,7 +1,7 @@
 ; hrtables.asm
 ; Originally HRTABLES.S
 
-hrtables=*
+.hrtables
 
 \* hires tables
 \org = $e000

@@ -347,8 +347,8 @@ music in aux l.c. somewhere?
 
 main l.c. (language card)
 $d000 - rw18 (something to do with disc loader)
-$d000 - peelbuf1 (presume size = $600)
-$d600 - peelbuf2 (presume size = $600)
+$d000 - peelbuf1 (presume size = $800)
+$d800 - peelbuf2 (presume size = $800)
 $e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes)
 $ea00 - unpack.s module, includes gameeq.s, eq.s
 $ee00 - hires.s module, includes hrparams.s
@@ -393,8 +393,8 @@ $a800 - chtab5 (kid) - main (6134 = $17f6 bytes)
 $C000 - $CFFF = 4K I/O DEVICES
 -----
 $d000 - rw18 (something to do with disc loader)
-$d000 - peelbuf1 (presume size = $600)
-$d600 - peelbuf2 (presume size = $600)
+$d000 - peelbuf1 (presume size = $800)
+$d800 - peelbuf2 (presume size = $800)
 $e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes $8f0)
 $ea00 - unpack.s module, includes gameeq.s, eq.s
 $ee00 - hires.s module, includes hrparams.s

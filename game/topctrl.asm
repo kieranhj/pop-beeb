@@ -549,7 +549,7 @@ ENDIF
  jsr chgmeters ;Change strength meters
 
  jsr cutcheck ;Has kid moved offscreen?
-  jsr PrepCut ;If so, prepare to cut to new screen
+ jsr PrepCut ;If so, prepare to cut to new screen
 
  jsr cutguard ;If guard has fallen offscreen, vanish him
 

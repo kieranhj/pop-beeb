@@ -11,10 +11,10 @@
 \*  Main l.c.
 
 \rw18 = $d000                   ; NOT BEEB
-peelbuf1 = $d000
-peelbuf2 = $d800
+\peelbuf1 = $d000
+\peelbuf2 = $d800               ; defined in pop-beeb.asm
 \hrtables = $e000               ; location determined by assembler
-unpack = $ea00 ;game only
+;unpack = $ea00 ;game only
 \hires = $ee00                  ; location determined by assembler
 \master = $f880                 ; location determined by assembler
 
@@ -24,7 +24,7 @@ unpack = $ea00 ;game only
 \tables = $e00                  ; location determined by assembler
 \frameadv = $1290               ; location determined by assembler
 \redbufs = $5e00                ; location determined by assembler
-menudata = $960f ;ed only
+;menudata = $960f ;ed only
 \imlists = $ac00                ; location determined by assembler
 \endimspace = $b600             ; NOT USED?
 \blueprnt = $b700               ; location determined by assembler
@@ -58,12 +58,8 @@ _savelevelg ds 3
 _screendump ds 3
 ENDIF
 
-IF _TODO
- dum hrtables
-
-YLO ds $c0
-YHI ds $c0
-ENDIF
+\dum hrtables
+\ moved to hrtables.asm
 
 \dum hires
 \ jump tables moved to hires.asm
@@ -174,8 +170,6 @@ width = IMAGE+1
 \*-------------------------------
 \*  $18-3f: Global vars
 \*-------------------------------
-; not sure why this is being explitly set
-;ORG $18
 
 ;.JSTKX skip 1
 ;.JSTKY skip 1

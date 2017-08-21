@@ -126,7 +126,7 @@ ENDIF
 \*
 \*-------------------------------
 
-IF 0 \\ TEMP
+IF 0 \\ BEEB TEMP
 .blueprnt
 .BLUETYPE skip 24*30
 .BLUESPEC skip 24*30

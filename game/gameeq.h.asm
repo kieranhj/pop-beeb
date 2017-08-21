@@ -48,12 +48,12 @@ debugs = $fc00
 \*
 \*-------------------------------
 
-IF _TODO
- dum mobtables
-
 trobspace = $20
 mobspace = $10
 maxsfx = $20
+
+IF _TODO
+ dum mobtables
 
 trloc ds trobspace
 trscrn ds trobspace

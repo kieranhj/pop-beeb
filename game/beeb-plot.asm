@@ -214,7 +214,7 @@ IF BEEB_SCREEN_MODE == 4
     RTS
 }
 
-\\ TEMP - STA version just a straight copy of the main plot fn.
+\\ BEEB TEMP - STA version just a straight copy of the main plot fn.
 .beeb_plot_apple_mode_4_sta
 {
     LDA IMAGE

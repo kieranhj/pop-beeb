@@ -23,8 +23,8 @@ INCLUDE "lib/bbc_utils.h.asm"
 
 ; POP includes
 
-locals = $dc
-locals_top = $ef
+locals = $d0                    ; VDU workspace
+locals_top = $e3
 
 ORG &0
 GUARD locals
@@ -262,6 +262,7 @@ INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
 INCLUDE "game/specialk.asm"
 INCLUDE "game/subs.asm"
+INCLUDE "game/mover.asm"
 
 .pop_beeb_end
 
@@ -280,13 +281,20 @@ CLEAR 0, &FFFF
 ; Construct MOS RAM
 
 CLEAR 0, &FFFF
-
+ORG &8000
+GUARD &9000
+.peelbuf1
+SKIP &800
+.peelbuf2
+SKIP &800
 
 ; Construct ROMS
 
 CLEAR 0, &FFFF
 ORG &8000
-GUARD &BFFF
+GUARD &C000
+
+BEEB_BUFFER_RAM_SOCKET = &80            ; 4K MOS RAM used for buffers
 
 BEEB_SWRAM_SLOT_LEVELBG = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
@@ -313,7 +321,7 @@ SKIP &900           ; all blueprints same size
 
 CLEAR 0, &FFFF
 ORG &8000
-GUARD &BFFF
+GUARD &C000
 
 .bank1_start
 .chtable1
@@ -326,7 +334,7 @@ ALIGN &100
 
 CLEAR 0, &FFFF
 ORG &8000
-GUARD &BFFF
+GUARD &C000
 
 .bank2_start
 .chtable2
@@ -339,7 +347,7 @@ ALIGN &100
 
 CLEAR 0, &FFFF
 ORG &8000
-GUARD &BFFF
+GUARD &C000
 
 .bank3_start
 .chtable4

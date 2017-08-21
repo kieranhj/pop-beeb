@@ -604,6 +604,12 @@ ENDIF
 
 .hires_LAYRSAVE
 {
+\ BEEB TO DO
+\ Switch in MOS 4K RAM
+\ Sort out whether we need two buffers if screen not double-buffered?
+\ LDA #BEEB_BUFFER_RAM_SOCKET
+\ STA &FE34
+
  jsr PREPREP
 
  lda OPACITY
