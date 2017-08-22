@@ -2,7 +2,7 @@
 ; Originally MASTER.S
 ; First boot code, system init, attract loop, level load etc.
 
-\* master 3.5
+.master
 \ Moved to pop-beeb,asm
 \DemoDisk = 0
 \FinalDisk = 1

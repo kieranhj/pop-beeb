@@ -2,9 +2,7 @@
 ; Originally HIRES.S
 ; Low-level Apple II rendering functions
 
-hires=*
-
-\* hires
+.hires
 \org = $ee00
 \ tr on
 \ lst off

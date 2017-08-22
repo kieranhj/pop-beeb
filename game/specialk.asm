@@ -2,7 +2,7 @@
 ; Originally SPECIALK.S
 ; Keyboard handling
 
-\* specialk
+.specialk
 \EditorDisk = 0
 NoCheatKeys = 0 ;removes all cheat keys
 DebugKeys = 0

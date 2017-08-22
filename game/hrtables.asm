@@ -1,9 +1,8 @@
 ; hrtables.asm
 ; Originally HRTABLES.S
+; Hires Tables
 
 .hrtables
-
-\* hires tables
 \org = $e000
 \ tr on
 \ lst off

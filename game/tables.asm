@@ -2,9 +2,7 @@
 ; Originally TABLES.S
 ; All precalculated tables
 
-tables=*
-
-\* tables
+.tables
 \org = $e00
 \ tr on
 \ lst off

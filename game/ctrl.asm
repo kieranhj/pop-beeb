@@ -2,7 +2,7 @@
 ; Originally CTRL.S
 ; Player character control
 
-\* ctrl
+.ctrl
 \org = $3a00
 \ tr on
 \ lst off

@@ -30,7 +30,13 @@ ORG &0
 GUARD locals
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
+
+; POP defines
+
 INCLUDE "game/soundnames.h.asm"
+INCLUDE "game/seqdata.h.asm"
+
+; BEEB headers
 
 INCLUDE "game/beeb-plot.h.asm"
 
@@ -39,11 +45,13 @@ INCLUDE "game/beeb-plot.h.asm"
 INCLUDE "game/frameadv.h.asm"
 INCLUDE "game/hires.h.asm"
 INCLUDE "game/master.h.asm"
+INCLUDE "game/mover.h.asm"
 
 ; Main RAM
 
 ORG &E00
-GUARD &4B80
+;GUARD &4B80            ; eventually shrunk MODE 1
+GUARD &5800             ; currently in full MODE 4
 
 .pop_beeb_start
 
@@ -244,6 +252,7 @@ INCLUDE "game/misc.asm"
 INCLUDE "game/auto.asm"
 INCLUDE "game/ctrlsubs.asm"
 INCLUDE "game/ctrl.asm"
+INCLUDE "game/coll.asm"
 
 .pop_beeb_end
 

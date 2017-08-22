@@ -24,19 +24,19 @@
 \topctrl = $2000                ; location determined by assembler
 seqtable = $2800
 seqtab = $3000
-ctrl = $3a00
-coll = $4500
+\ctrl = $3a00                   ; location determined by assembler
+\coll = $4500                   ; location determined by assembler
 \gamebg = $4c00                 ; location determined by assembler
 \auto = $5400                   ; location determined by assembler
 
-mobtables = $b600
+\mobtables = $b600              ; location determined by assembler
 savedgame = $b6f0
 
 msys = $d400
-ctrlsubs = $d000
+\ctrlsubs = $d000               ; location determined by assembler
 \specialk = $d900               ; location determined by assembler
-textline = $dfd8
-subs = $e000
+textline = $dfd8                ; location determined by assembler
+\subs = $e000
 sound = $ea00
 \mover = $ee00                  ; location determined by assembler
 \misc = $f900                   ; location determined by assembler
@@ -51,25 +51,6 @@ debugs = $fc00
 trobspace = $20
 mobspace = $10
 maxsfx = $20
-
-IF _TODO
- dum mobtables
-
-trloc ds trobspace
-trscrn ds trobspace
-trdirec ds trobspace
-
-mobx ds mobspace
-moby ds mobspace
-mobscrn ds mobspace
-mobvel ds mobspace
-mobtype ds mobspace
-moblevel ds mobspace
-
-soundtable ds maxsfx
-
-trobcount ds 1
-ENDIF
 
 IF _TODO
  dum savedgame
@@ -174,14 +155,31 @@ ENDIF
 \*
 \*-------------------------------
 
-\*-------------------------------
-\*  $40-e7: Game globals
-\*-------------------------------
-
 \ BEEB let assembler assign ZP addresses
 \ORG $40
 
-;.Char skip $10
+\*-------------------------------
+\*
+\*  Character data
+\*
+\*-------------------------------
+
+.Char
+.CharPosn skip 1
+.CharX skip 1
+.CharY skip 1
+.CharFace skip 1
+.CharBlockX skip 1
+.CharBlockY skip 1
+.CharAction skip 1
+.CharXVel skip 1
+.CharYVel skip 1
+.CharSeq skip 2
+.CharScrn skip 1
+.CharRepeat skip 1
+.CharID skip 1
+.CharSword skip 1
+.CharLife skip 1
 
 .Kid
 .KidPosn skip 1
@@ -217,7 +215,22 @@ ENDIF
 .ShadSword skip 1
 .ShadLife skip 1
 
-;.FCharVars skip 12
+.FCharVars
+.FCharImage skip 1
+.FCharX skip 2
+.FCharY skip 1
+.FCharFace skip 1
+.FCharIndex skip 1
+.FCharCU skip 1
+.FCharCD skip 1
+.FCharCL skip 1
+.FCharCR skip 1
+.FCharTable skip 1
+
+\*-------------------------------
+\*  $40-e7: Game globals
+\*-------------------------------
+
 ;.yellowflag skip 1
 ;.timebomb skip 1
 ;.justblocked skip 1
@@ -230,7 +243,7 @@ ENDIF
 .exitopen skip 1
 ;.collX skip 1
 .lightning skip 1
-;.lightcolor skip 1
+.lightcolor skip 1
 ;.offguard skip 1
 ;.blockid skip 1
 ;.blockx skip 1
@@ -238,12 +251,12 @@ ENDIF
 ;.infrontx skip 1
 ;.behindx skip 1
 ;.abovey skip 1
-;.tempblockx skip 1
-;.tempblocky skip 1
-;.tempscrn skip 1
+.tempblockx skip 1
+.tempblocky skip 1
+.tempscrn skip 1
 ;.tempid skip 1
 .numtrans skip 1
-;.tempnt skip 1
+.tempnt skip 1
 .redrawflg skip 1
 ;.xdiff skip 2
 ;.ydiff skip 2
@@ -286,7 +299,7 @@ ENDIF
 ;.blockedge skip 1
 ;.collideL skip 1
 ;.collideR skip 1
-;.weightless skip 1
+.weightless skip 1
 .cutorder skip 1
 .AMtimer skip 1
 ;.begrange skip 1
@@ -323,54 +336,9 @@ ENDIF
 
 \*-------------------------------
 \*
-\*  Page 2-3 - AUX MEM
-\*
-\*-------------------------------
-
-IF _TODO
- dum $320
-
-CDthisframe ds $10
-CDlastframe ds $10
-CDbelow ds $10
-CDabove ds $10
-SNthisframe ds $10
-SNlastframe ds $10
-SNbelow ds $10
-SNabove ds 10
-BlockYthis ds 1
-BlockYlast ds 1
-
-Op ds $10
-
-keybuflen = 10
-keybuf ds keybuflen
-ENDIF
-
-\*-------------------------------
-\*
 \*  Character data
 \*
 \*-------------------------------
-
-IF _TODO
- dum Char
-CharPosn ds 1
-CharX ds 1
-CharY ds 1
-CharFace ds 1
-CharBlockX ds 1
-CharBlockY ds 1
-CharAction ds 1
-CharXVel ds 1
-CharYVel ds 1
-CharSeq ds 2
-CharScrn ds 1
-CharRepeat ds 1
-CharID ds 1
-CharSword ds 1
-CharLife ds 1
-ENDIF
 
 IF _TODO
  dum Op
@@ -391,46 +359,12 @@ OpSword ds 1
 OpLife ds 1
 ENDIF
 
-IF _TODO
- dum Shad
-ShadPosn ds 1
-ShadX ds 1
-ShadY ds 1
-ShadFace ds 1
-ShadBlockX ds 1
-ShadBlockY ds 1
-ShadAction ds 1
-ShadXVel ds 1
-ShadYVel ds 1
-ShadSeq ds 2
-ShadScrn ds 1
-ShadRepeat ds 1
-ShadID ds 1
-ShadSword ds 1
-ShadLife ds 1
-ENDIF
-
-IF _TODO
- dum FCharVars
-FCharImage ds 1
-FCharX ds 2
-FCharY ds 1
-FCharFace ds 1
-FCharIndex ds 1
-FCharCU ds 1
-FCharCD ds 1
-FCharCL ds 1
-FCharCR ds 1
-FCharTable ds 1
-
- dend
-ENDIF
-
 \*-------------------------------
 \*
 \*  Misc. data
 \*
 \*-------------------------------
+
 Fcheckmark = %01000000
 Fthinmark = %00100000
 Ffootmark = %00011111

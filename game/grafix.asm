@@ -2,9 +2,7 @@
 ; Originally GRAFIX.S
 ; All Apple II hi-res graphics functions
 
-grafix=*
-
-\* grafix
+.grafix
 \org = $400
 \ tr on
 \ lst off

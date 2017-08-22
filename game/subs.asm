@@ -2,7 +2,7 @@
 ; Originally SUBS.S
 ; Subsystems of master
 
-\* subs
+.subs
 \DemoDisk = 0
 \EditorDisk = 0
 CheckTimer = 0
@@ -1435,42 +1435,48 @@ REMOVEOBJ
  clc
  jsr markwipe
  jmp markred
+ENDIF
 
-*-------------------------------
-*
-*  S E T  I N I T I A L S
-*
-*  Set initial states of gadgets
-*
-*-------------------------------
-SETINITIALS
+\*-------------------------------
+\*
+\*  S E T  I N I T I A L S
+\*
+\*  Set initial states of gadgets
+\*
+\*-------------------------------
+.SETINITIALS
+{
  lda INFO ;number of screens +1
  sec
  sbc #1
  sta SCRNUM
 
-:loop jsr DoScrn ;for every screen
+.loop jsr DoScrn ;for every screen
 
  dec SCRNUM
- bne :loop
+ bne loop
  rts
+}
 
-*-------------------------------
-DoScrn
+\*-------------------------------
+.DoScrn
+{
  lda SCRNUM
  jsr calcblue
 
  ldy #29
 
-:loop jsr getinitobj
- bcc :skip
+.loop jsr getinitobj
+ bcc skip
  sta (BlueSpec),y
 
-:skip dey
- bpl :loop
+.skip dey
+ bpl loop
 
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  S T A R T   K I D

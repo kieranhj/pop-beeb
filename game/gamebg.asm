@@ -2,9 +2,7 @@
 ; Originally GAMEBG.S
 ; Draw all special case game objects
 
-gamebg=*
-
-\* gamebg
+.gamebg
 \ThreeFive = 0
 \org = $4c00
 \ tr on

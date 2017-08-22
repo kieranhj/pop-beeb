@@ -23,6 +23,12 @@
 ;.rjumpflag skip 1
 ;.redherring skip 1
 
+\*-------------------------------
+\*
+\*  Page 2-3 - AUX MEM
+\*
+\*-------------------------------
+
 \dum $300
 
 .MinLeft skip 1
@@ -48,3 +54,50 @@
 .scrncolor skip 1
 ;.redoppmeter skip 1
 .timerequest skip 1
+
+\*-------------------------------
+\*
+\*  Page 2-3 - AUX MEM
+\*
+\*-------------------------------
+
+\dum $320
+
+;CDthisframe ds $10
+;CDlastframe ds $10
+;CDbelow ds $10
+;CDabove ds $10
+.SNthisframe skip $10
+.SNlastframe skip $10
+.SNbelow skip $10
+.SNabove skip 10
+;BlockYthis ds 1
+.BlockYlast skip 1
+
+;Op ds $10
+
+keybuflen = 10
+;keybuf ds keybuflen
+
+\*-------------------------------
+\*
+\*  MOBTABLES
+\*
+\*-------------------------------
+
+.mobtables
+
+.trloc skip trobspace
+.trscrn skip trobspace
+.trdirec skip trobspace
+
+.mobx skip mobspace
+.moby skip mobspace
+.mobscrn skip mobspace
+.mobvel skip mobspace
+.mobtype skip mobspace
+.moblevel skip mobspace
+
+;.soundtable ds maxsfx
+
+;.trobcount ds 1

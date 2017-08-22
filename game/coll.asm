@@ -2,7 +2,7 @@
 ; Originally COLL.S
 ; Collision detection functions
 
-\* coll
+.coll
 \org = $4500
 \ tr on
 \ lst off
@@ -13,19 +13,6 @@
 \*
 \*-------------------------------
 \ org org
-checkbarr ds 3
-collisions ds 3
-getfwddist ds 3
-checkcoll ds 3
-animchar ds 3
-
-checkslice ds 3
-checkslice2 ds 3
- ds 3
-checkgate ds 3
- ds 3
-
-enemycoll ds 3
 
 .checkbarr BRK      ; jmp CHECKBARR
 .collisions BRK     ; jmp COLLISIONS
@@ -33,13 +20,13 @@ enemycoll ds 3
 .checkcoll BRK      ; jmp CHECKCOLL
 .animchar BRK       ; jmp ANIMCHAR
 
-.checkslice BRK     ; jmp CHECKSLICE
+.checkslice BRK     ; jmp if
 .checkslice2 BRK    ; jmp CHECKSLICE2
 \ jmp markmeters ;temp
 .checkgate BRK      ; jmp CHECKGATE
 \ jmp firstguard ;temp
 
-\ jmp ENEMYCOLL
+.enemycoll BRK      ; jmp ENEMYCOLL
 
 \*-------------------------------
 \ lst
@@ -73,8 +60,8 @@ enemycoll ds 3
 \BarR db 0,0,9,11,0
 
 \*-------------------------------
-DeathVelocity = 33
-OofVelocity = 22
+\DeathVelocity = 33
+\OofVelocity = 22
 
 gatemargin = 6 ;higher = more generous
 
@@ -409,7 +396,7 @@ getrightbar
 *
 *  If a collision was detected, act on it
 *
-*  In: collideL/R: - if no coll, 0-9 refers to block in
+\*  In: collideL/R: - if no coll, 0-9 refers to block in
 *      which collision occurred
 *
 *  (CollideL is collision with LEFT EDGE of barrier
@@ -938,7 +925,7 @@ GETFWDDIST
 *
 * In: rdblock results; tempobjid
 *     Must have called setupchar/getedges
-* Out: A = distance to barrier (- if barr is behind char)
+\* Out: A = distance to barrier (- if barr is behind char)
 *
 *-------------------------------
 DBarr
@@ -1102,7 +1089,8 @@ ANIMCHAR
 
  jmp :next
 
-:no8 cmp #ifwtless
+:no8
+ cmp #ifwtless
  bne :no9
 
  lda weightless ;weightless?
@@ -1284,13 +1272,13 @@ CHECKSLICE
 *-------------------------------
 CHECKSLICE2
  jsr getunderft
- jsr :slice? ;return cs if sliced
+ jsr slice ;return cs if sliced
  bcs ]rts
 
  inc tempblockx
  jsr rdblock1
 
-:slice?
+.slice
  cmp #slicer
  bne :safe
  lda (BlueSpec),y
@@ -1329,7 +1317,7 @@ CHECKSLICE2
 
 *-------------------------------
 *
-* Special situation: If char is standing directly under closing
+\* Special situation: If char is standing directly under closing
 * gate, it knocks him aside when it shuts.
 *
 * In: Char data, CD data
@@ -1477,7 +1465,7 @@ ENEMYCOLL
 *
 * In: checkcoll results; tempobjid
 *     Must have called setupchar/getedges
-* Out: A = distance to barrier (- if barr is behind char)
+\* Out: A = distance to barrier (- if barr is behind char)
 *
 *-------------------------------
 DBarr2

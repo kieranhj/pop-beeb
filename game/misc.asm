@@ -2,7 +2,7 @@
 ; Originally MISC.S
 ; Miscellaneous game dunctions
 
-\* misc
+.misc
 \org = $f900
 \DemoDisk = 0
 \ tr on
@@ -13,7 +13,7 @@
 .VanishChar BRK     ; jmp VANISHCHAR
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
- bcc MOVEAUXLC ;relocatable
+BRK ; bcc MOVEAUXLC ;relocatable
 .firstguard BRK     ; jmp FIRSTGUARD
 .markmeters BRK     ; jmp MARKMETERS
 

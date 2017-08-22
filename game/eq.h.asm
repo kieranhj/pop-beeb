@@ -173,8 +173,8 @@ width = IMAGE+1
 
 ;.JSTKX skip 1
 ;.JSTKY skip 1
-;.BTN0 skip 1
-;.BTN1 skip 1
+.BTN0 skip 1
+.BTN1 skip 1
 ;.BUTT0 skip 1
 ;.BUTT1 skip 1
 ;.JSTKUP skip 1
@@ -185,7 +185,7 @@ width = IMAGE+1
 .SCRNUM skip 1
 .BlueType skip 2
 .BlueSpec skip 2
-;.CUTTIMER skip 1
+.CUTTIMER skip 1
 .PRECED skip 1
 .spreced skip 1
 .PREV skip 3

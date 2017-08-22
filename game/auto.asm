@@ -2,7 +2,7 @@
 ; Originally AUTO.S
 ; AI for guards
 
-\* auto
+.auto
 \DemoDisk = 0
 \org = $5400
 \ tr on

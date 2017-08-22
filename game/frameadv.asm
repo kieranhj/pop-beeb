@@ -3,8 +3,6 @@
 ; Draw the screen
 
 .frameadv
-
-\* frameadv
 \org = $1290
 \ lst off
 \ tr on
@@ -2199,12 +2197,12 @@ ENDIF
 
  and #%00011111 ;bits 0-4
  cmp #2
- bcc up
+ bcc local_up
 
  lda #dpressplate ;plate depressed
  rts
 
-.up lda #pressplate ;plate up
+.local_up lda #pressplate ;plate up
  rts
 
 \* Handle depressed upressplate

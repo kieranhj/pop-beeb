@@ -2,7 +2,7 @@
 ; Originally TOPCTRL.S
 ; Top level control routines, main loop, frame draw, load next level etc.
 
-\* topctrl
+.topctrl
 \org = $2000
 \ Defined elsewhere
 \EditorDisk = 0
@@ -728,8 +728,8 @@ ENDIF
  jsr shakeloose ;shake loose floors
 
 .skip jsr SaveKid ;Save all changes to char data
- rts
 }
+.return_13 rts
 
 \*-------------------------------
 \*
@@ -742,7 +742,7 @@ ENDIF
 {
  lda ShadFace
  cmp #86
- beq return ;"no character" code
+ beq return_13 ;"no character" code
 
  jsr LoadShadwOp
  jsr rereadblocks
@@ -781,78 +781,87 @@ ENDIF
 .os jmp SaveShad
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Add all visible characters to object table
-*
-*-------------------------------
-addchars
- jsr :reflection
- jsr :shadowman
- jsr :kid
+\*-------------------------------
+\*
+\*  Add all visible characters to object table
+\*
+\*-------------------------------
+.addchars
+{
+ jsr topctrl_reflection
+ jsr topctrl_shadowman
+ jsr topctrl_kid
 
  jsr checkmeters
+}
+.return_15
+ rts
 
-]rts rts
+\*-------------------------------
+\* Draw kid's reflection in mirror
 
-*-------------------------------
-* Draw kid's reflection in mirror
-
-:reflection
+.topctrl_reflection
+{
  jmp reflection
+}
 
-*-------------------------------
-* Draw shadowman or other opponent
+\*-------------------------------
+\* Draw shadowman or other opponent
 
-:shadowman
+.topctrl_shadowman
+{
  lda ShadFace
  cmp #86 ;Is there a shadowman?
- beq ]rts ;no
+ beq return_15 ;no
  lda ShadScrn
  cmp VisScrn ;Is he visible?
- bne ]rts ;no
+ bne return_15 ;no
 
  jsr setupshad ;Add shadowman to object table
 
  lda ChgOppStr
- bpl :s1
+ bpl s1
  jsr setupcomix ;Add impact star if he's been hurt
-:s1 jmp setupsword ;Add sword
+.s1 jmp setupsword ;Add sword
+}
 
-*-------------------------------
-* Draw kid
+\*-------------------------------
+\* Draw kid
 
-:kid lda KidScrn
- beq ]rts
+.topctrl_kid
+{
+ lda KidScrn
+ beq return_15
  cmp VisScrn
- bne ]rts
+ bne return_15
 
  jsr setupkid ;Add kid to obj table
 
  lda ChgKidStr
- bpl :s2
+ bpl s2
  jsr setupcomix ;Add impact star
-:s2 jmp setupsword ;Add sword
+.s2 jmp setupsword ;Add sword
+}
 
-*-------------------------------
-*
-*  S E T   U P   K I D
-*
-*  Add kid to object table
-*  Crop edges, index char, mark fredbuf/floorbuf
-*
-*-------------------------------
-setupkid
+\*-------------------------------
+\*
+\*  S E T   U P   K I D
+\*
+\*  Add kid to object table
+\*  Crop edges, index char, mark fredbuf/floorbuf
+\*
+\*-------------------------------
+.setupkid
+{
  jsr LoadKid
  jsr rereadblocks
 
  lda CharPosn
- bne :cont ;Delay loop if CharPosn = 0
+ bne cont ;Delay loop if CharPosn = 0
  lda #25
  jmp pause
 
-:cont jsr setupchar
+.cont jsr setupchar
  jsr unevenfloor
 
  jsr getedges
@@ -862,15 +871,17 @@ setupkid
  jsr cropchar
 
  jmp addkidobj ;add kid to obj table
+}
 
-*-------------------------------
-*
-*  S E T   U P   S H A D
-*
-*  Add shadowman to obj table
-*
-*-------------------------------
-setupshad
+\*-------------------------------
+\*
+\*  S E T   U P   S H A D
+\*
+\*  Add shadowman to obj table
+\*
+\*-------------------------------
+.setupshad
+{
  jsr LoadShad
  jsr rereadblocks
 
@@ -885,23 +896,23 @@ setupshad
 
  lda CharID
  cmp #1 ;Shadowman?
- bne :1 ;no
+ bne label_1 ;no
  lda level
  cmp #mirlevel
- bne :2
+ bne label_2
  lda CharScrn
  cmp #mirscrn
- bne :2
+ bne label_2
  lda #mirx ;Clip shadman at L as he jumps out of mirror
- asl
- asl
+ asl A
+ asl A
  clc
  adc #1
  sta FCharCL
-:2 jmp addshadobj
+.label_2 jmp addshadobj
 
-:1 jmp addguardobj
-ENDIF
+.label_1 jmp addguardobj
+}
 
 \*-------------------------------
 \*
@@ -953,23 +964,23 @@ ELSE
 }
 ENDIF
 
-IF _TODO
-*-------------------------------
-*
-*  D R A W   B G
-*
-*  Clear screen & draw background (on hidden hi-res page)
-*  Show black lo-res screen to cover transition
-*
-*-------------------------------
-drawbg
+\*-------------------------------
+\*
+\*  D R A W   B G
+\*
+\*  Clear screen & draw background (on hidden hi-res page)
+\*  Show black lo-res screen to cover transition
+\*
+\*-------------------------------
+.drawbg
+{
  lda #0
  sta cutplan
 
  lda #2
  sta CUTTIMER ;min # of frames between cuts
 
- lda #" "
+ lda #' '
  jsr lrclse
  jsr vblank
  lda PAGE2off
@@ -978,7 +989,7 @@ drawbg
  jsr DoSure ;draw b.g. w/o chars
 
  jmp markmeters ;mark strength meters
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1028,7 +1039,8 @@ ENDIF
  jsr fast ;Assemble image lists (including objects
 ;from obj list and necessary portions of bg)
 
- jsr dispmsg ;Superimpose message (if any)
+\ BEEB TEMP comment out
+\ jsr dispmsg ;Superimpose message (if any)
 .label_1
  jmp drawall ;Dump contents of image lists to screen
 }
@@ -1080,8 +1092,9 @@ ENDIF
  bpl zloop
 
  sta BlockYlast
- rts
 }
+.return_16
+ rts
 
 \*-------------------------------
 \*
@@ -1097,9 +1110,9 @@ ENDIF
 .PrepCut
 {
  lda cutscrn
- beq return ;never cut to screen 0
+ beq return_16 ;never cut to screen 0
  cmp VisScrn
- beq return ;If cutscrn = VisScrn, we don't need to cut
+ beq return_16 ;If cutscrn = VisScrn, we don't need to cut
 
  lda cutscrn
  sta VisScrn
@@ -1170,12 +1183,13 @@ ENDIF
 \* Inc CharLife until = #deadenough; then put up message
 
 .dead lda CharPosn
- jsr cold
+ jsr cold_query
  bne return ;wait till char has stopped moving
 
  lda CharLife
  bne label_inc
- jsr deathsong ;cue death music
+\ BEEB TEMP comment out
+\ jsr deathsong ;cue death music
 
 .label_inc lda CharLife
  cmp #deadenough
@@ -1279,17 +1293,19 @@ deathsong
 :2 ldx #255
  jmp cuesong
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* If char is on screen 0, kill him off
-*
-*-------------------------------
-kill0
+\*-------------------------------
+\*
+\* If char is on screen 0, kill him off
+\*
+\*-------------------------------
+.kill0
+{
  lda CharLife
- bpl ]rts
+ bpl return
  lda CharScrn
- bne ]rts
+ bne return
  lda #Splat
  jsr addsound
  lda #100
@@ -1299,8 +1315,9 @@ kill0
  sta CharLife
  lda #185
  sta CharPosn
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -1336,26 +1353,30 @@ ENDIF
  jmp attractmode
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Shake loose floors when character jumps
-*
-*-------------------------------
-shakeloose
+\*-------------------------------
+\*
+\*  Shake loose floors when character jumps
+\*
+\*-------------------------------
+.shakeloose
+{
  lda jarabove
- bmi :jarbelow
- bne :jarabove
-]rts rts
+ bmi jarbelow
+ bne jarabove
+}
+.return_17
+ rts
 
-:jarbelow
+.jarbelow
+{
  lda #0
  sta jarabove
 
  lda CharBlockY
  jmp shakem ;shake every loose floorboard on level
-
-:jarabove
+}
+.jarabove
+{
  lda #0
  sta jarabove
 
@@ -1363,22 +1384,26 @@ shakeloose
  sec
  sbc #1
  jmp shakem
+}
 
-*-------------------------------
-*
-* If strength meters have changed, mark affected
-* blocks for redraw
-*
-*-------------------------------
-checkmeters
+\*-------------------------------
+\*
+\* If strength meters have changed, mark affected
+\* blocks for redraw
+\*
+\*-------------------------------
+.checkmeters
+{
  lda ChgKidStr
- beq :1
+ beq label_1
  jsr MarkKidMeter
 
-:1 lda ChgOppStr
- beq ]rts
+.label_1 lda ChgOppStr
+ beq return_17
  jmp MarkOppMeter
+}
 
+IF _TODO
 *-------------------------------
 *
 * Change strength meters as specified
@@ -1674,40 +1699,49 @@ showtext jsr vblank
  lda PAGE2off
  lda TEXTon
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* Is character moving?
-*
-* In: A = CharPosn
-* Out: 0 if static, 1 if moving
-*
-*-------------------------------
-static?
+\*-------------------------------
+\*
+\* Is character moving?
+\*
+\* In: A = CharPosn
+\* Out: 0 if static, 1 if moving
+\*
+\*-------------------------------
+.static_query
+{
  cmp #0
- beq ]ok
+ beq ok_query
  cmp #15 ;stand
- beq ]ok
+ beq ok_query
  cmp #229 ;brandish sword
- beq ]ok
+ beq ok_query
  cmp #109 ;crouching
- beq ]ok
+ beq ok_query
  cmp #171 ;en garde
- beq ]ok
+ beq ok_query
  cmp #166 ;alert stand (for gd.)
- beq ]ok
-cold?
+ beq ok_query
+}
+.cold_query
+{
  cmp #185 ;dead
- beq ]ok
+ beq ok_query
  cmp #177 ;impaled
- beq ]ok
+ beq ok_query
  cmp #178 ;halves
- beq ]ok
+ beq ok_query
  lda #1
  rts
-]ok lda #0
-]rts rts
+}
+.ok_query
+{
+ lda #0
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Clear all jstk flags
@@ -1758,29 +1792,31 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Screen flashes towards end of weightlessness period
-*
-*-------------------------------
-wtlessflash
+\*-------------------------------
+\*
+\*  Screen flashes towards end of weightlessness period
+\*
+\*-------------------------------
+.wtlessflash
+{
  lda weightless
- beq ]rts
+ beq return_14
  ldx #0
  sec
  sbc #1
  sta weightless
- beq :3
+ beq label_3
  ldx #$ff
  cmp #wtlflash
- bcs :3
+ bcs label_3
  lda vibes
  eor #$ff
  tax
-:3 stx vibes ;Screen flashes as weightlessness ends
-]rts rts
+.label_3 stx vibes ;Screen flashes as weightlessness ends
+}
+.return_14 rts
 
+IF _TODO
 *-------------------------------
 * yellow copy protection
 * (call right before 1st princess cut)
@@ -1793,31 +1829,33 @@ yellowcheck
  ldx #10
  jmp yellow ;in gamebg
  ;sets yellowflag ($7c) hibit
+ENDIF
 
-*-------------------------------
-*
-*  Temp development patch for screen redraw
-*  (also used for invert Y)
-*
-*-------------------------------
-develpatch
+\*-------------------------------
+\*
+\*  Temp development patch for screen redraw
+\*  (also used for invert Y)
+\*
+\*-------------------------------
+.develpatch
+{
  IF 0
  lda blackflag ;blackout?
- beq :1
+ beq label_1
  lda #1
  sta genCLS
  ENDIF
 
-:1 lda redrawflg ;forced redraw?
- beq ]rts
+.label_1 lda redrawflg ;forced redraw?
+ beq return_14
  dec redrawflg
 
  jsr markmeters
  jmp sure
+}
 
 \*-------------------------------
 \ lst
 \ ds 1
 \ usr $a9,4,$a00,*-org
 \ lst off
-ENDIF

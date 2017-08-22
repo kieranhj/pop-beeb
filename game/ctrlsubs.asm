@@ -2,7 +2,7 @@
 ; Originally CTRLSUBS.S
 ; Misc. subroutines relating to character control & movement
 
-\* ctrlsubs
+.ctrlsubs
 \org = $d000
 \ tr on
 \ lst off

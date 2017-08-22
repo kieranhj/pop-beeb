@@ -2,7 +2,7 @@
 ; Originally BGDATA.S
 ; Backgroun piece definitions and lookups
 
-\* bgdata
+.bgdata
 \ tr on
 \*-------------------------------
 \* Indexed by PIECE ID#:

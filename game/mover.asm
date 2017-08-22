@@ -2,7 +2,7 @@
 ; Originally MOVER.S
 ; Moveable object code
 
-\* mover
+.mover
 \org = $ee00
 PalaceEditor = 0
 \ tr on
@@ -44,15 +44,6 @@ PalaceEditor = 0
 \ put movedata
 \ lst
 \ put soundnames
-
-\ dum locals
-\state ds 1
-\temp1 ds 2
-\linkindex ds 1
-\pptype ds 1
-\mobframe ds 1
-\underFF ds 1
-\ dend
 
 \*-------------------------------
 \gatevel db 0,0,0,20,40,60,80,100,120
@@ -98,50 +89,52 @@ emaxval = 43*4
 maxtr = trobspace-1
 maxmob = mobspace-1
 
-IF _TODO
-*-------------------------------
-*
-* Search trans list for object (trloc,trscrn)
-*
-* In: numtrans, trloc, trscrn
-* Out: X = index, 0 if not listed
-*
-*-------------------------------
-searchtrob
+\*-------------------------------
+\*
+\* Search trans list for object (trloc,trscrn)
+\*
+\* In: numtrans, trloc, trscrn
+\* Out: X = index, 0 if not listed
+\*
+\*-------------------------------
+.searchtrob
+{
  ldx numtrans
- beq :rts
+ beq return
 
-:loop lda trloc,x
+.loop lda trloc,x
  cmp trloc
- bne :next
+ bne next
  lda trscrn,x
  cmp trscrn
- beq :rts ;found it
+ beq return ;found it
 
-:next dex
- bne :loop
+.next dex
+ bne loop
 
-:rts rts
+.return rts
+}
 
-*-------------------------------
-*
-*  Add a new object to transition list
-*  If it's already listed, just change trdirec to new value
-*
-*  In: trdirec, trloc, trscrn
-*
-*-------------------------------
-addtrob
+\*-------------------------------
+\*
+\*  Add a new object to transition list
+\*  If it's already listed, just change trdirec to new value
+\*
+\*  In: trdirec, trloc, trscrn
+\*
+\*-------------------------------
+.addtrob
+{
  jsr searchtrob ;Is object already listed?
 
  cpx #0
- bne :chdir ;Yes--just change direc
+ bne chdir ;Yes--just change direc
 
-* It's not on the list - add it
+\* It's not on the list - add it
 
  ldx numtrans
  cpx #maxtr
- beq :rts ;too many objects--trigger fails
+ beq return ;too many objects--trigger fails
 
  inx
  stx numtrans
@@ -154,35 +147,39 @@ addtrob
  sta trscrn,x
  rts
 
-*  Object already listed - change direction
+\*  Object already listed - change direction
 
-:chdir lda trdirec
+.chdir lda trdirec
  sta trdirec,x
-:rts rts
+.return rts
+}
 
-*-------------------------------
-*
-*  Add a MOB to MOB list
-*
-*-------------------------------
-addamob
+\*-------------------------------
+\*
+\*  Add a MOB to MOB list
+\*
+\*-------------------------------
+.addamob
+{
  ldx nummob
  cpx #maxmob
- beq :rts
+ beq return
 
  inx
  stx nummob
 
  jmp savemob
 
-:rts rts
+.return rts
+}
 
-*-------------------------------
-*
-*  S A V E / L O A D   M O B
-*
-*-------------------------------
-savemob
+\*-------------------------------
+\*
+\*  S A V E / L O A D   M O B
+\*
+\*-------------------------------
+.savemob
+{
  lda mobx
  sta mobx,x
  lda moby
@@ -196,8 +193,10 @@ savemob
  lda moblevel
  sta moblevel,x
  rts
+}
 
-loadmob
+.loadmob
+{
  lda mobx,x
  sta mobx
  lda moby,x
@@ -210,8 +209,11 @@ loadmob
  sta mobtype
  lda moblevel,x
  sta moblevel
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Trigger slicer
@@ -1643,86 +1645,89 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*   Animate MOB #x
-*
-*-------------------------------
-animmob
+\*-------------------------------
+\*
+\*   Animate MOB #x
+\*
+\*-------------------------------
+.animmob
+{
  lda mobtype
- bne :done
+ bne done
  jsr mobfloor
-:done
+.done
  lda mobvel
- bpl ]rts ;is object stopping?
+ bpl return ;is object stopping?
  inc mobvel ;yes
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  Animate falling floor
-*
-*-------------------------------
-mobfloor
+\*-------------------------------
+\*
+\*  Animate falling floor
+\*
+\*-------------------------------
+.mobfloor
+{
  lda mobvel
- bmi ]rts
-:ok1
+ bmi return
+.ok1
  cmp #FFtermvel
- bcs :tv
+ bcs tv
  clc
  adc #FFaccel
  sta mobvel
 
-:tv clc
+.tv clc
  adc moby
  sta moby
 
-* check for collision w/floor
+\* check for collision w/floor
 
  ldx mobscrn ;on null screen?
- beq :null ;yes--fall on
+ beq null ;yes--fall on
 
- cmp #-30 ;negative?
- bcs :fallon ;yes--fall on
+ cmp #LO(-30) ;negative?
+ bcs fallon ;yes--fall on
 
  ldx moblevel
  cmp BlockAy+1,x
- bcc :fallon
+ bcc fallon
 
-* Passing thru floor plane--what to do?
-* First see what's there
+\* Passing thru floor plane--what to do?
+\* First see what's there
 
  ldx moblevel
  stx tempblocky
 
  lda mobx
- lsr
- lsr
+ lsr A
+ lsr A
  sta tempblockx
 
  lda mobscrn
  sta tempscrn
 
  jsr rdblock1 ;A = objid
- sta underFF ;under falling floor
+ sta mover_underFF ;under falling floor
 
  cmp #space
- beq :passthru
+ beq local_passthru
 
  cmp #loose
- bne :crash
+ bne crash
 
-* Lands on loose floor
-* Knock out loose floor & continue
+\* Lands on loose floor
+\* Knock out loose floor & continue
 
  jsr knockloose
 
- jmp :passthru
+ jmp local_passthru
 
-* Lands on solid floor
+\* Lands on solid floor
 
-:crash
+.crash
  lda #LooseCrash
  jsr addsound
 
@@ -1736,45 +1741,47 @@ mobfloor
  lda BlockAy+1,x
  sta moby
 
- lda #-crumbletime
+ lda #LO(-crumbletime)
  sta mobvel
 
  jmp makerubble
 
-* Passes thru floor plane
+\* Passes thru floor plane
 
-:passthru
+.local_passthru
  jsr passthru
-:fallon
-]rts rts
+.fallon
+.return rts
 
-* Falling on null screen
+\* Falling on null screen
 
-:null
+.null
  lda moby
  cmp #192+17
- bcc ]rts
+ bcc return
 ;MOB has fallen off null screen--delete it
- lda #-disappeartime
+ lda #LO(-disappeartime)
  sta mobvel
 
-]rts rts
+ rts
+}
 
-*-------------------------------
-* Knock out loose floor
-*-------------------------------
-knockloose
+\*-------------------------------
+\* Knock out loose floor
+\*-------------------------------
+.knockloose
+{
  jsr makespace
  sta (BlueSpec),y
 
  lda mobvel
- lsr
+ lsr A
  sta mobvel
 
  ldx tempnt
  jsr savemob ;save this MOB
 
-* Create new MOB (add'l falling floor)
+\* Create new MOB (add'l falling floor)
 
  lda moby
  clc
@@ -1785,18 +1792,21 @@ knockloose
 
  jsr addamob
 
-* Retrieve old MOB
+\* Retrieve old MOB
 
  ldx tempnt
  jsr loadmob
 
  jmp markmob
+}
 
-*-------------------------------
-* Make space
-* Return A = BlueSpec
-*-------------------------------
-makespace lda #space ;change objid to empty space
+\*-------------------------------
+\* Make space
+\* Return A = BlueSpec
+\*-------------------------------
+.makespace
+{
+ lda #space ;change objid to empty space
  sta (BlueType),y
 
  IF PalaceEditor
@@ -1807,22 +1817,24 @@ makespace lda #space ;change objid to empty space
  lda #0
  ldx BGset1
  cpx #1 ;pal?
- bne ]rts
+ bne return
  lda #1 ;stripe
-]rts rts
+.return rts
+}
 
-*-------------------------------
-* Pass thru floor plane
-*-------------------------------
-passthru
+\*-------------------------------
+\* Pass thru floor plane
+\*-------------------------------
+.passthru
+{
  inc moblevel
 
  lda moblevel
  cmp #3
- bcc ]rts
+ bcc return_19
 
-* ... and onto next screen
-* (NOTE: moby may be negative)
+\* ... and onto next screen
+\* (NOTE: moby may be negative)
 
  lda moby
  sec
@@ -1835,19 +1847,21 @@ passthru
  lda mobscrn
  jsr getdown
  sta mobscrn
-]rts rts
+}
+.return_19 rts
 
-*-------------------------------
-* Delete MOB & change objid of floorpiece it landed on
-* If pressplate, trigger before reducing it to rubble
-*-------------------------------
-makerubble
+\*-------------------------------
+\* Delete MOB & change objid of floorpiece it landed on
+\* If pressplate, trigger before reducing it to rubble
+\*-------------------------------
+.makerubble
+{
  lda moblevel
  sta tempblocky
 
  lda mobx
- lsr
- lsr
+ lsr A
+ lsr A
  sta tempblockx
 
  lda mobscrn
@@ -1856,36 +1870,38 @@ makerubble
  jsr rdblock1
 
  cmp #pressplate
- beq :pp
+ beq local_pp
  cmp #upressplate
- beq :jampp
+ beq local_jampp
  cmp #floor
- beq :notpp
+ beq local_notpp
  cmp #spikes
- beq :notpp
+ beq local_notpp
  cmp #flask
- beq :notpp
+ beq local_notpp
  cmp #torch
- beq :notpp
- bne ]rts ;can't transform this piece into rubble
+ beq local_notpp
+ bne return_19 ;can't transform this piece into rubble
 
-:jampp lda #rubble
+.local_jampp lda #rubble
  sta (BlueType),y
 
-:pp jsr PUSHPP ;block lands on pressplate--
+.local_pp jsr pushpp ;block lands on pressplate--
  jsr rdblock1 ;crush pp & jam open all gates
 
-:notpp lda #rubble
+.local_notpp lda #rubble
  sta (BlueType),y
  jmp markmob
+}
 
-*-------------------------------
-* Mark MOB
-*-------------------------------
-markmob
+\*-------------------------------
+\* Mark MOB
+\*-------------------------------
+.markmob
+{
  lda mobscrn
  cmp VisScrn
- bne ]rts
+ bne return
 
  lda #loosewipe
  sta height
@@ -1903,71 +1919,75 @@ markmob
  jsr markfred
  jmp markwipe
 
-]rts rts
+.return rts
+}
 
-*-------------------------------
-*
-*  Did falling floor crush anybody?
-*
-*-------------------------------
-checkcrush
+\*-------------------------------
+\*
+\*  Did falling floor crush anybody?
+\*
+\*-------------------------------
+.checkcrush
+{
  jsr LoadKid
  jsr chcrush1 ;return cs if crush
- bcc ]rts
+ bcc return_20
  jsr crushchar
  jmp SaveKid
 
-chcrush1
+.chcrush1
  lda mobscrn
  cmp CharScrn ;on same screen as char?
- bne :no
+ bne no
 
  lda mobx
- lsr
- lsr
+ lsr A
+ lsr A
  cmp CharBlockX ;same blockx?
- bne :no
+ bne no
 
  lda moby
  cmp CharY
- bcs :no ;mob is below char altogether
+ bcs no ;mob is below char altogether
 
  lda CharY
  sec
  sbc #CrushDist
  cmp moby
- bcs :no
+ bcs no
  sec ;crush!
  rts
 
-:no clc
-]rts rts
+.no clc
+}
+.return_20 rts
 
-*-------------------------------
-*
-*  Crush char with falling block
-*  (Ordered by ANIMMOB)
-*
-*-------------------------------
-crushchar
+\*-------------------------------
+\*
+\*  Crush char with falling block
+\*  (Ordered by ANIMMOB)
+\*
+\*-------------------------------
+.crushchar
+{
  lda level
  cmp #13
- beq :1
+ beq label_1
  lda CharPosn
  cmp #5
- bcc :1
+ bcc label_1
  cmp #15
- bcc ]rts ;running-->escape
+ bcc return_20 ;running-->escape
 
-:1 lda CharAction
+.label_1 lda CharAction
  cmp #2
- bcc :ground
+ bcc ground
  cmp #7
- bne ]rts
+ bne return_20
 
-* Action code 0,1,7 -- on ground
+\* Action code 0,1,7 -- on ground
 
-:ground
+.ground
  ldx CharBlockY
  inx
  lda FloorY,x
@@ -1975,17 +1995,19 @@ crushchar
 
  lda #1
  jsr decstr
- beq :kill
+ beq kill
 
  lda CharPosn
  cmp #109
- beq ]rts
+ beq return_20
  lda #crush
  jmp jumpseq
 
-:kill lda #hardland ;temp
+.kill lda #hardland ;temp
  jmp jumpseq
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Add all visible MOBs to object table (to be drawn later)
@@ -2136,33 +2158,36 @@ SHAKEM
 
  lda VisScrn
  sta tempscrn
+ENDIF
 
-SHAKEM1
+.SHAKEM1
+{
  ldx #9
-:loop txa
+.loop txa
  pha
  sta tempblockx
 
  jsr rdblock1
  cmp #loose
- bne :cont
+ bne cont
 
  jsr shakeit
 
-:cont pla
+.cont pla
  tax
  dex
- bpl :loop
+ bpl loop
+}
+.return_18 rts
 
-]rts rts
-
-*-------------------------------
-* Shake loose floor
-*-------------------------------
-shakeit
+\*-------------------------------
+\* Shake loose floor
+\*-------------------------------
+.shakeit
+{
  lda (BlueSpec),y
- bmi ]rts ;already wiggling
- bne ]rts ;active
+ bmi return_18 ;already wiggling
+ bne return_18 ;active
 
  lda #$80
  sta (BlueSpec),y
@@ -2176,7 +2201,7 @@ shakeit
  sta trdirec
 
  jmp addtrob ;add floor to trans list
-ENDIF
+}
 
 \*-------------------------------
 \ lst
