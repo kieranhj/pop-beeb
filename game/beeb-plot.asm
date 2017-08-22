@@ -464,6 +464,7 @@ IF BEEB_SCREEN_MODE == 1
     RTS
 }
 
+
 .beeb_plot_pal_table_6_to_4
 FOR n,0,63,1
 
@@ -517,6 +518,42 @@ EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
 
 NEXT
 ENDIF
+
+
+
+.beeb_plot_reloc_img
+{
+    LDY #0
+    LDA (beeb_readptr), Y
+    STA beeb_numimages
+
+    \\ Relocate pointers to image data
+    LDX #0
+    .loop
+    INY
+    CLC
+\    LDA (beeb_readptr), Y
+\    ADC #LO(bgtable1)
+\    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+    SEC
+    SBC beeb_writeptr+1
+    CLC
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    INX
+    CPX beeb_numimages
+    BCC loop
+
+    .return
+    RTS
+}
+
+
+
 
 .Mult8_LO
 FOR n,0,39,1

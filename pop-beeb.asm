@@ -101,7 +101,7 @@ INCLUDE "lib/print.asm"
     bne swr_print_loop
 
 	\\ load all SWR banks
-
+IF 0
     ; SWR 0
     MPRINT loading_bank_text  
     lda #0
@@ -111,6 +111,7 @@ INCLUDE "lib/print.asm"
     ldy #HI(bank_file0)
     jsr disksys_load_file
     MPRINT loading_bank_text2   
+ENDIF
 
     \\ MODE
     LDA #22
@@ -118,6 +119,7 @@ INCLUDE "lib/print.asm"
     LDA #BEEB_SCREEN_MODE
     JSR oswrch
 
+IF 0
     \\ Select slot 0
     LDA #0
     JSR swr_select_slot
@@ -142,6 +144,7 @@ INCLUDE "lib/print.asm"
     LDA #HI(&6000)
     STA beeb_writeptr+1
     JSR pop_relocate_chtab
+ENDIF
 
 IF 0
     LDX #1
@@ -173,15 +176,12 @@ IF 0
     BNE plot_loop
 ELSE
 
-    LDA #0
-    STA blackflag
-
-    LDA #1
-    STA VisScrn
+    LDX #1
+    JSR LoadLevelX
 
     .scrn_loop
     \\ Select slot 0
-    LDA #0
+    LDA #BEEB_SWRAM_SLOT_LEVELBG
     JSR swr_select_slot
 
     JSR DoSure
@@ -195,37 +195,6 @@ ELSE
     BNE scrn_loop
 
 ENDIF
-    .return
-    RTS
-}
-
-.pop_relocate_chtab
-{
-    LDY #0
-    LDA (beeb_readptr), Y
-    STA beeb_numimages
-
-    \\ Relocate pointers to image data
-    LDX #0
-    .loop
-    INY
-    CLC
-\    LDA (beeb_readptr), Y
-\    ADC #LO(bgtable1)
-\    STA (beeb_readptr), Y
-
-    INY
-    LDA (beeb_readptr), Y
-    SEC
-    SBC beeb_writeptr+1
-    CLC
-    ADC beeb_readptr+1
-    STA (beeb_readptr), Y
-
-    INX
-    CPX beeb_numimages
-    BCC loop
-
     .return
     RTS
 }
@@ -376,3 +345,37 @@ ORG blueprnt
 .GdStartSeqL skip 24
 .GdStartProg skip 24
 .GdStartSeqH skip 24
+
+; Put files on the disk
+
+PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
+PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
+PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
+PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
+PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
+PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
+PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
+PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
+PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
+PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
+PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
+PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
+PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
+PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
+PUTFILE "Images/IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+PUTFILE "Images/IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+PUTFILE "Images/IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
+PUTFILE "Images/IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
+PUTFILE "Images/IMG.CHTAB4.FAT.bin", "FAT", 0, 0
+PUTFILE "Images/IMG.CHTAB4.GD.bin", "GD", 0, 0
+PUTFILE "Images/IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
+PUTFILE "Images/IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
+PUTFILE "Images/IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+PUTFILE "Images/IMG.CHTAB1.bin", "CHTAB1", 0, 0
+PUTFILE "Images/IMG.CHTAB2.bin", "CHTAB2", 0, 0
+PUTFILE "Images/IMG.CHTAB3.bin", "CHTAB3", 0, 0
+PUTFILE "Images/IMG.CHTAB5.bin", "CHTAB4", 0, 0
+;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
+;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
+;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0

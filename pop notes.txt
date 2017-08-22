@@ -20,8 +20,8 @@ Background pieces are going to become 7x63 bytes = 441 bytes each
 / auto.s - AI for guard
 / bgdata.s - bg piece definitions and lookups, maps chtab entries to a/b/c/d in a piece (I think)
 X boot.s - entry, check machine type & memory
-- coll.s - collision detection, vertical barriers, left, right, slicer, gate
-crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
+/ coll.s - collision detection, vertical barriers, left, right, slicer, gate
+/ crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
 ctrlsubs.s - misc subroutines relating to character cotrol & movement
 / eq.s - global constants, zero page, global vars, jump tables, image lists, blueprint info
 / frameadv.s - draw screen, draw block, draw objects, load objects, piece drawing logic, object sorting
@@ -36,16 +36,16 @@ framedefs.s - animation tables, data for each animation frame
 / misc.s - player misc, potion fx, mouse, stab, shadow, reflection, skeletons, health, save game, load level, version
 movedata.s - moveable objects definitions
 / mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
-seqdata.s - animation state definitions
-seqtable.s - animation state tables
-sound.s - do sound effects
+/ seqdata.s - animation state definitions
+. seqtable.s - animation state tables
+. sound.s - do sound effects
 / soundnames.s - sound & music definitions
 / specialk.s - special keys, freeze, restart, sound, save game etc., development keys
 / subs.s - special cases for certain rooms, cutscenes, songs, demo player control, level start position, gravity, enemy start positions,  
 / tables.s - screen coordinate lookups, multiplication tables
 / topctrl.s - top level control, save game, resume save game, level restart, main loop, load next level, next frame (draw), player update, timers, game over check
-unpack.s - decrunch hi-res screens, disk prompt, fades, palettes
-version.s - version string
+. unpack.s - decrunch hi-res screens, disk prompt, fades, palettes
+. version.s - version string
 
 
 Levels folder (both same contents)
@@ -613,9 +613,10 @@ What are the next steps?!
 * driveon switches it in, driveoff switches it out.
 *
 
-Want all game logc code to be in SHADOW RAM
+Want all game logic code to be in SHADOW RAM
 There shouldn't be any direct access to rendering from game logic, all interfaced through GRAFIX
 GRAFIX can be located much lower down in main memory
 Can put HRTABLES in low part of SHADOW ram underneath the screen
 
 Don't need to port BOOT.S
+

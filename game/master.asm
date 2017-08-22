@@ -21,7 +21,7 @@
 \ org org
 
  ._firstboot BRK    ;jmp FIRSTBOOT
- ._loadlevel BRK    ;jmp LOADLEVEL
+ ._loadlevel jmp LOADLEVEL
  ._reload BRK       ;jmp RELOAD
  ._loadstage2 BRK   ;jmp LoadStage2
  
@@ -574,11 +574,22 @@ EQUS "DUN1   $"
     tay
 
     \ Need to define slot numbers for different data block
-    lda #0
+    lda #BEEB_SWRAM_SLOT_LEVELBG
     jsr swr_select_slot
 
     lda #HI(bgtable1)
     jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(bgtable1)
+    STA beeb_readptr
+    LDA #HI(bgtable1)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
 
     .return
     rts
@@ -617,11 +628,22 @@ EQUS "DUN2   $"
     tay
 
     \ Need to define slot numbers for different data block
-    lda #0
+    lda #BEEB_SWRAM_SLOT_LEVELBG
     jsr swr_select_slot
 
     lda #HI(bgtable2)
     jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(bgtable2)
+    STA beeb_readptr
+    LDA #HI(bgtable2)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
 
     .return
     rts
@@ -693,11 +715,22 @@ EQUS "VIZ    $"
     tay
 
     \ Need to define slot numbers for different data block
-    lda #0
+    lda #BEEB_SWRAM_SLOT_CHTAB4
     jsr swr_select_slot
 
-    lda #HI(bgtable2)
+    lda #HI(chtable4)
     jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable4)
+    STA beeb_readptr
+    LDA #HI(chtable4)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
 
     .return
     rts
@@ -752,7 +785,7 @@ EQUS "VIZ    $"
 
     .do_load
     \ Need to define slot numbers for different data block
-    lda #0
+    lda #BEEB_SWRAM_SLOT_LEVELBG
     jsr swr_select_slot
 
     lda #HI(blueprnt)
