@@ -525,7 +525,7 @@ ENDIF
 {
     LDY #0
     LDA (beeb_readptr), Y
-    STA beeb_numimages
+    STA beeb_numimages              \ can get rid of this var
 
     \\ Relocate pointers to image data
     LDX #0

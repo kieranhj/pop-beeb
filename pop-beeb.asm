@@ -177,7 +177,13 @@ IF 0
 ELSE
 
     LDX #1
+
+    .level_loop
+    STX level
     JSR LoadLevelX
+
+    LDX #1
+    STX VisScrn
 
     .scrn_loop
     \\ Select slot 0
@@ -193,6 +199,11 @@ ELSE
     CPX #25
     STX VisScrn
     BNE scrn_loop
+
+    LDX level
+    INX
+    CPX #15
+    BNE level_loop
 
 ENDIF
     .return

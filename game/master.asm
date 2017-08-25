@@ -482,6 +482,9 @@ ENDIF
 
 \ NOT BEEB
 \ jmp driveoff
+
+\ BEEB
+ RTS
 }
 
 \*-------------------------------
@@ -558,13 +561,19 @@ EQUS "DUN1   $"
 
 .rdbg1
 {
+\ BEEB TEMP comment out
     ldx newBGset1
-    cpx BGset1
-    beq return
+\    cpx BGset1
+\    beq return
     stx BGset1
 
+    \ Need to define slot numbers for different data block
+    lda #BEEB_SWRAM_SLOT_LEVELBG
+    jsr swr_select_slot
+
     \ index into table for filename
-    txa
+;    txa
+    LDA BGset1
     lsr a:lsr a:lsr a       ; x8
     clc
     adc #LO(bgset1_to_name)
@@ -572,10 +581,6 @@ EQUS "DUN1   $"
     lda #HI(bgset1_to_name)
     adc #0
     tay
-
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
 
     lda #HI(bgtable1)
     jsr disksys_load_file
@@ -612,13 +617,19 @@ EQUS "DUN2   $"
 
 .rdbg2
 {
+\ BEEB TEMP comment out
     ldx newBGset2
-    cpx BGset2
-    beq return
+\    cpx BGset2
+\    beq return
     stx BGset2
 
+    \ Need to define slot numbers for different data block
+    lda #BEEB_SWRAM_SLOT_LEVELBG
+    jsr swr_select_slot
+
     \ index into table for filename
-    txa
+    LDA BGset2
+;    txa
     lsr a:lsr a:lsr a       ; x8
     clc
     adc #LO(bgset2_to_name)
@@ -626,10 +637,6 @@ EQUS "DUN2   $"
     lda #HI(bgset2_to_name)
     adc #0
     tay
-
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
 
     lda #HI(bgtable2)
     jsr disksys_load_file
@@ -699,13 +706,19 @@ EQUS "VIZ    $"
 
 .rdch4
 {
+\ BEEB TEMP comment out
     ldx newCHset
-    cpx CHset
-    beq return
+\    cpx CHset
+\    beq return
     stx CHset
 
+    \ Need to define slot numbers for different data block
+    lda #BEEB_SWRAM_SLOT_CHTAB4
+    jsr swr_select_slot
+
     \ index into table for filename
-    txa
+;    txa
+    lda CHset
     lsr a:lsr a:lsr a       ; x8
     clc
     adc #LO(chset_to_name)
@@ -713,10 +726,6 @@ EQUS "VIZ    $"
     lda #HI(chset_to_name)
     adc #0
     tay
-
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_CHTAB4
-    jsr swr_select_slot
 
     lda #HI(chtable4)
     jsr disksys_load_file
@@ -760,7 +769,7 @@ EQUS "VIZ    $"
 \ bcc ]rts
 \ jsr error
 \ jmp :reg1
-.beeb_level_filename   EQUS "Level0 $"
+.beeb_level_filename   EQUS "LEVEL0 $"
 
 .rdbluep
 {
@@ -789,8 +798,8 @@ EQUS "VIZ    $"
     jsr swr_select_slot
 
     lda #HI(blueprnt)
-    ldx #LO(bank_file0)
-    ldy #HI(bank_file0)
+    ldx #LO(beeb_level_filename)
+    ldy #HI(beeb_level_filename)
     jsr disksys_load_file
     
     rts
