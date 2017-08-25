@@ -574,7 +574,7 @@ EQUS "DUN1   $"
     \ index into table for filename
 ;    txa
     LDA BGset1
-    lsr a:lsr a:lsr a       ; x8
+    asl a:asl a:asl a       ; x8
     clc
     adc #LO(bgset1_to_name)
     tax
@@ -630,7 +630,7 @@ EQUS "DUN2   $"
     \ index into table for filename
     LDA BGset2
 ;    txa
-    lsr a:lsr a:lsr a       ; x8
+    asl a:asl a:asl a       ; x8
     clc
     adc #LO(bgset2_to_name)
     tax
@@ -719,7 +719,7 @@ EQUS "VIZ    $"
     \ index into table for filename
 ;    txa
     lda CHset
-    lsr a:lsr a:lsr a       ; x8
+    asl a:asl a:asl a       ; x8
     clc
     adc #LO(chset_to_name)
     tax
@@ -789,7 +789,7 @@ EQUS "VIZ    $"
     clc
     adc #'0'-10
     sta beeb_level_filename+6
-    lda #'0'
+    lda #'1'
     sta beeb_level_filename+5
 
     .do_load

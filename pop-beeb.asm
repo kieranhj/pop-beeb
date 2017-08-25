@@ -119,63 +119,7 @@ ENDIF
     LDA #BEEB_SCREEN_MODE
     JSR oswrch
 
-IF 0
-    \\ Select slot 0
-    LDA #0
-    JSR swr_select_slot
-
-    \\ Relocate sprite data
-    LDA #LO(bgtable1)
-    STA beeb_readptr
-    LDA #HI(bgtable1)
-    STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
-    JSR pop_relocate_chtab
-
-    LDA #LO(bgtable2)
-    STA beeb_readptr
-    LDA #HI(bgtable2)
-    STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
-    JSR pop_relocate_chtab
-ENDIF
-
-IF 0
-    LDX #1
-
-    .plot_loop
-    STX beeb_sprite_no
-    
-    \\ Sprite plot
-    STX IMAGE
-
-    LDA #LO(bgtable2)
-    STA TABLE
-    LDA #HI(bgtable2)
-    STA TABLE+1
-    LDA #10
-    STA XCO
-    LDA #128
-    STA YCO
-
-    \\ Select slot 0
-    LDA #0
-    JSR swr_select_slot
-
-    JSR beeb_plot_apple_mode_4
-
-    LDX beeb_sprite_no
-    INX
-    CPX beeb_numimages
-    BNE plot_loop
-ELSE
-
+    \\ Level load & plot test
     LDX #1
 
     .level_loop
@@ -205,7 +149,6 @@ ELSE
     CPX #15
     BNE level_loop
 
-ENDIF
     .return
     RTS
 }
