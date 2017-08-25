@@ -62,26 +62,13 @@ INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
 
-; move all this to beeb-loader in due course
-
-; disk loader uses hacky filename format (same as catalogue) 
-; we use disk loader for SWR banks only
-.bank_file0   EQUS "Bank0  $"
-.bank_file1   EQUS "Bank1  $"
-.bank_file2   EQUS "Bank2  $"
-.bank_file3   EQUS "Bank3  $"
-
-.screen_file  EQUS "LOAD Page", 13
-
 .swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
 .swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
-.swr_bank_text2 EQUS " Bank %a", 13, 10, 0
-
-.loading_bank_text EQUS "Loading bank... ", 0
-.loading_bank_text2 EQUS "OK", 13, 10, 0
 
 .pop_beeb_main
 {
+    \\ Should be MASTER test and exit with nice message
+
     \\ SWRAM init
     jsr swr_init
     bne swr_ok
@@ -92,26 +79,8 @@ INCLUDE "lib/print.asm"
 .swr_ok
 
     MPRINT    swr_bank_text
-    ldx #0
-.swr_print_loop
-    lda swr_ram_banks,x
-    MPRINT    swr_bank_text2
-    inx
-    cpx swr_ram_banks_count
-    bne swr_print_loop
 
-	\\ load all SWR banks
-IF 0
-    ; SWR 0
-    MPRINT loading_bank_text  
-    lda #0
-    jsr swr_select_slot
-    lda #&80
-    ldx #LO(bank_file0)
-    ldy #HI(bank_file0)
-    jsr disksys_load_file
-    MPRINT loading_bank_text2   
-ENDIF
+    \\ Should be some sort of BEEB system init
 
     \\ MODE
     LDA #22
@@ -119,6 +88,7 @@ ENDIF
     LDA #BEEB_SCREEN_MODE
     JSR oswrch
 
+IF 0
     \\ Level load & plot test
     LDX #1
 
@@ -148,6 +118,17 @@ ENDIF
     INX
     CPX #15
     BNE level_loop
+ELSE
+    \\ Actual POP
+    \\ Would have been entered directly by the boot loader on Apple II
+
+    JSR _firstboot
+
+    \\ Not supposed to return but start our game directly
+
+    JSR _dostartgame
+
+ENDIF
 
     .return
     RTS
@@ -329,7 +310,7 @@ PUTFILE "Images/IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
 PUTFILE "Images/IMG.CHTAB1.bin", "CHTAB1", 0, 0
 PUTFILE "Images/IMG.CHTAB2.bin", "CHTAB2", 0, 0
 PUTFILE "Images/IMG.CHTAB3.bin", "CHTAB3", 0, 0
-PUTFILE "Images/IMG.CHTAB5.bin", "CHTAB4", 0, 0
+PUTFILE "Images/IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 ;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0

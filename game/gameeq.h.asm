@@ -244,7 +244,7 @@ ENDIF
 ;.collX skip 1
 .lightning skip 1
 .lightcolor skip 1
-;.offguard skip 1
+.offguard skip 1
 ;.blockid skip 1
 ;.blockx skip 1
 ;.blocky skip 1
@@ -271,7 +271,7 @@ ENDIF
 ;.lastcmd skip 1
 ;.distfallen skip 1
 .cutscrn skip 1
-;.waitingtojump skip 1
+.waitingtojump skip 1
 ;.trigppabove skip 1
 ;.direcpp skip 1
 ;.blockaddr skip 2
@@ -308,7 +308,7 @@ ENDIF
 .VisScrn skip 1
 .OppStrength skip 1
 ;.jarabove skip 1
-;.Kiskiptrength skip 1
+.KidStrength skip 1
 .ChgKidStr skip 1
 .MaxKidStr skip 1
 .EnemyAlert skip 1
@@ -332,7 +332,7 @@ ENDIF
 ;.alertguard skip 1
 .createshad skip 1
 .stunned skip 1
-;.droppedout skip 1
+.droppedout skip 1
 
 \*-------------------------------
 \*

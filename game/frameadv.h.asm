@@ -17,8 +17,8 @@ GUARD locals_top
 .gatebot skip 1
 .xsave skip 1
 .blockxco skip 1
-\switches ds 1
-\obj1 ds 1
-\obj2 ds 1
+.switches skip 1
+.obj1 skip 1
+.obj2 skip 1
 .blockthr skip 1
 \ dend

@@ -10,8 +10,8 @@
 \ org org
 \
 .sure jmp SURE
-.fast BRK           ;jmp FAST
-.getinitobj BRK     ;jmp GETINITOBJ
+.fast jmp FAST
+.getinitobj jmp GETINITOBJ
 \
 \*-------------------------------
 \ lst
@@ -22,9 +22,8 @@
 \ put bgdata
 \ lst off
 
-\initsettings
-\ db gmaxval,gminval
-\
+.initsettings
+ EQUB gmaxval,gminval
 
 \*-------------------------------
 \*
@@ -166,7 +165,6 @@
  rts
 }
 
-IF _TODO
 \*-------------------------------
 \*
 \*  Fast screen redraw
@@ -196,10 +194,10 @@ IF _TODO
  sta yindex
  jsr drawobjs ;Draw o.s. characters first
 
-*  Draw 3 rows of 10 blocks (L-R, T-B)
+\*  Draw 3 rows of 10 blocks (L-R, T-B)
 
  ldy #2
-:row sty rowno
+.row sty rowno
 
  lda BlockBot+1,y
  sta Dy
@@ -220,8 +218,8 @@ IF _TODO
  lda #0
  sta colno
 
-:loop asl
- asl
+.loop asl A
+ asl A
  sta XCO
  sta blockxco
 
@@ -241,24 +239,24 @@ IF _TODO
 
  lda colno
  cmp #10
- bcs :nextln
- jmp :loop
+ bcs nextln
+ jmp loop
 
-:nextln ldy rowno
- beq :cont
+.nextln ldy rowno
+ beq cont
  dey
- jmp :row
+ jmp row
 
-* Now draw bottom row of screen above (D-sections only)
+\* Now draw bottom row of screen above (D-sections only)
 
-:cont jsr setback
+.cont jsr setback
 
  ldy #2
  sty rowno
 
  lda #2
  sta Dy
- lda #-1
+ lda #LO(-1)
  sta Ay
 
  lda Mult10,y
@@ -280,14 +278,14 @@ IF _TODO
  jsr getbelow
 
  lda scrnAbove
- beq :done
+ beq done
  jsr calcblue
 
  lda #0
  sta colno
-:dloop
- asl
- asl
+.dloop
+ asl A
+ asl A
  sta blockxco
  sta XCO
 
@@ -307,28 +305,27 @@ IF _TODO
 
  lda colno
  cmp #10
- bcc :dloop
+ bcc dloop
 
-:done
+.done
  pla
  sta scrnBelowL
  pla
  sta scrnBelow
 
-* Now draw comix (impact stars) & strength meters
+\* Now draw comix (impact stars) & strength meters
 
  lda #$ff
  sta yindex
  jsr drawobjs ;draw comix (index = -1)
 
- do EditorDisk
+ IF EditorDisk
  lda inbuilder
- bne ]rts
- fin
+ bne return
+ ENDIF
 
  jmp updatemeters
 }
-ENDIF
 
 \*-------------------------------
 \*
@@ -369,15 +366,15 @@ ENDIF
  jmp drawfrnt
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Partial block redraw (as specified by redraw buffers)
-*
-*-------------------------------
-RedBlockFast
+\*-------------------------------
+\*
+\*  Partial block redraw (as specified by redraw buffers)
+\*
+\*-------------------------------
+.RedBlockFast
+{
  lda wipebuf,y ;is wipebuf marked?
- beq :skipwipe ;no--skip it
+ beq skipwipe ;no--skip it
  sec
  sbc #1
  sta wipebuf,y ;decrement wipebuf
@@ -386,9 +383,9 @@ RedBlockFast
 
  ldy yindex
 
-:skipwipe
+.skipwipe
  lda redbuf,y
- beq :skipred
+ beq skipred
  sec
  sbc #1
  sta redbuf,y
@@ -397,11 +394,11 @@ RedBlockFast
  jsr RedBlockSure
 
  ldy yindex
- bpl :skipmove
+ bpl skipmove
 
-:skipred
+.skipred
  lda movebuf,y
- beq :skipmove
+ beq skipmove
  sec
  sbc #1
  sta movebuf,y
@@ -413,9 +410,9 @@ RedBlockFast
 
  ldy yindex
 
-:skipmove
+.skipmove
  lda floorbuf,y
- beq :skipfloor
+ beq skipfloor
  sec
  sbc #1
  sta floorbuf,y
@@ -424,11 +421,11 @@ RedBlockFast
  jsr drawfloor
 
  ldy yindex
- bpl :skiphalf
+ bpl skiphalf
 
-:skipfloor
+.skipfloor
  lda halfbuf,y
- beq :skiphalf
+ beq skiphalf
  sec
  sbc #1
  sta halfbuf,y
@@ -438,9 +435,9 @@ RedBlockFast
 
  ldy yindex
 
-:skiphalf
+.skiphalf
  lda objbuf,y
- beq :skipobj
+ beq skipobj
 
  lda #0
  sta objbuf,y
@@ -452,9 +449,9 @@ RedBlockFast
 
  ldy yindex
 
-:skipobj
+.skipobj
  lda fredbuf,y
- beq :skipfred
+ beq skipfred
  sec
  sbc #1
  sta fredbuf,y
@@ -463,18 +460,20 @@ RedBlockFast
 
  ldy yindex
 
-:skipfred
-]rts rts
+.skipfred
+ rts
+}
 
-*-------------------------------
-*
-*  Partial D-section redraw
-*
-*-------------------------------
-RedDFast
+\*-------------------------------
+\*
+\*  Partial D-section redraw
+\*
+\*-------------------------------
+.RedDFast
+{
  ldy colno
  lda topbuf,y ;is topbuf marked?
- beq :skip ;no--skip it
+ beq skip ;no--skip it
  sec
  sbc #1
  sta topbuf,y
@@ -486,52 +485,53 @@ RedDFast
  jsr redrawd ;(both bg and fg)
  jsr drawmd
  jsr drawfrnt
-:skip
-]rts rts
+.skip
+ rts
+}
 
-*-------------------------------
-*
-*  Draw objects
-*
-*  Draw object/s with index # = yindex
-*  (Add appropriate images to mid list)
-*
-*-------------------------------
-drawobjs
-
-* Go through obj list looking for objINDX = yindex
+\*-------------------------------
+\*
+\*  Draw objects
+\*
+\*  Draw object/s with index # = yindex
+\*  (Add appropriate images to mid list)
+\*
+\*-------------------------------
+.drawobjs
+{
+\* Go through obj list looking for objINDX = yindex
 
  lda objX
- beq :rts
+ beq return
 
  ldy #0 ;y = sort list index
  ldx #1 ;x = object list index
 
-:loop lda objINDX,x
+.loop lda objINDX,x
  cmp yindex
- bne :next
+ bne next
 ;Found a match--add object to sort list
  txa
  iny
  sta sortX,y
 
-:next inx
+.next inx
  cpx objX
- bcc :loop
- beq :loop
+ bcc loop
+ beq loop
 
  cpy #0
- beq :rts
+ beq return
  sty sortX ;# of objects in sort list
 
-* Sort them into back-to-front order
+\* Sort them into back-to-front order
 
  jsr sortlist
 
-* Transfer sorted objects from obj list to mid list
+\* Transfer sorted objects from obj list to mid list
 
  ldx #1
-:loop2
+.loop2
  stx xsave
 
  lda sortX,x
@@ -542,11 +542,11 @@ drawobjs
  ldx xsave
  inx
  cpx sortX
- bcc :loop2
- beq :loop2
+ bcc loop2
+ beq loop2
 ;Done
-:rts rts
-ENDIF
+.return rts
+}
 
 \*-------------------------------
 \*
@@ -702,22 +702,22 @@ ENDIF
  bpl label_1
 }
 
-IF _TODO
-*-------------------------------
-*
-*  L O A D   O B J E C T
-*
-*  Load vars with object data
-*
-*  In:  x = object table index
-*       X, OFF, Y, IMG, FACE, TYP, CU, CD, CL, CR, TAB
-*
-*  Out: XCO, OFFSET, YCO, IMAGE, TABLE
-*       FCharFace, FCharCU-CD-CL-CR
-*       A = objTYP
-*
-*-------------------------------
-loadobj
+\*-------------------------------
+\*
+\*  L O A D   O B J E C T
+\*
+\*  Load vars with object data
+\*
+\*  In:  x = object table index
+\*       X, OFF, Y, IMG, FACE, TYP, CU, CD, CL, CR, TAB
+\*
+\*  Out: XCO, OFFSET, YCO, IMAGE, TABLE
+\*       FCharFace, FCharCU-CD-CL-CR
+\*       A = objTYP
+\*
+\*-------------------------------
+.loadobj
+{
  lda objX,x
  sta FCharX
  sta XCO
@@ -748,8 +748,9 @@ loadobj
  sta FCharCR
 
  lda objTYP,x
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -1321,70 +1322,72 @@ return_7=*
  jmp drawloosed
 
 .label_1
-return_8=*
- rts
 }
+.return_8
+ rts
 
-IF _TODO
-*-------------------------------
-*
-*  D R A W   F L O O R
-*
-*-------------------------------
-drawfloor
+\*-------------------------------
+\*
+\*  D R A W   F L O O R
+\*
+\*-------------------------------
+.drawfloor
  lda PRECED ;empty space to left?
- bne ]rts
-]drawflr
+ bne return_8
+.drawfloor_drawflr
+{
  jsr addamask
  jsr adda
  jsr drawma
  jmp drawd
+}
 
-*-------------------------------
-*
-*  D R A W   H A L F
-*
-*  Special version of "drawfloor" for climbup
-*
-*-------------------------------
-drawhalf
+\*-------------------------------
+\*
+\*  D R A W   H A L F
+\*
+\*  Special version of "drawfloor" for climbup
+\*
+\*-------------------------------
+.drawhalf
+{
  lda PRECED
- bne ]rts
+ bne return_8
 
-* empty space to left -- mask & draw "A" section
+\* empty space to left -- mask & draw "A" section
 
  ldx objid
  cpx #floor
- beq :flr
+ beq flr
  cpx #torch
- beq :flr
+ beq flr
  cpx #dpressplate
- beq :flr
+ beq flr
  cpx #exit
- beq :flr
+ beq flr
 
  lda BGset1
  cmp #1 ;pal?
- bne ]drawflr ;if there's no halfpiece for this objid,
+ bne drawfloor_drawflr ;if there's no halfpiece for this objid,
 ;redraw full floorpiece
  cpx #posts
- beq :post
+ beq post
  cpx #archbot
- bne ]drawflr
+ bne drawfloor_drawflr
 
-:post jsr :sub
+.post jsr sub
  lda #CUpost
- bne :cont
+ bne cont
 
-:flr jsr :sub
+.flr jsr sub
  lda #CUpiece
-:cont sta IMAGE
+.cont sta IMAGE
  lda #enum_ora
  sta OPACITY
  jsr add
  jmp drawd
 
-:sub lda #CUmask
+.sub lda #CUmask
  sta IMAGE
  lda blockxco
  sta XCO
@@ -1392,22 +1395,25 @@ drawhalf
  sta YCO
  ldx objid
  cpx #dpressplate
- bne :1
+ bne label_1
  inc YCO ;quick trick for dpressplate
-:1 lda #enum_and
+.label_1 lda #enum_and
  sta OPACITY
  jmp add
+}
 
-*-------------------------------
-*
-*  S H O R T   W I P E
-*
-*  In: Y = buffer index
-*
-*-------------------------------
-wipesq
+\*-------------------------------
+\*
+\*  S H O R T   W I P E
+\*
+\*  In: Y = buffer index
+\*
+\*-------------------------------
+.wipesq
  lda whitebuf,y
-]wipe sta height
+.wipesq_wipe
+{
+ sta height
 
  lda #4
  sta width
@@ -1420,27 +1426,30 @@ wipesq
 
  lda #$80
  jmp addwipe
-]rts rts
+}
+.return_21
+ rts
 
-*-------------------------------
-*
-* Wipe D-section
-*
-*-------------------------------
-wiped
+\*-------------------------------
+\*
+\* Wipe D-section
+\*
+\*-------------------------------
+.wiped
+{
  lda objid
  cmp #pillartop
- beq ]rts
+ beq return_21
  cmp #panelwif
- beq ]rts
+ beq return_21
  cmp #panelwof
- beq ]rts
+ beq return_21
  cmp #block
- beq ]rts
+ beq return_21
 
  lda #3
- jmp ]wipe
-ENDIF
+ jmp wipesq_wipe
+}
 
 \*-------------------------------
 \*  D R A W  L O O S E  F L O O R  " D "
@@ -2048,55 +2057,57 @@ return_9=*
 .label_1 jmp drawa
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Draw object #x
-*  (Add appropriate images to mid table)
-*
-*  In: x = object table index
-*
-*-------------------------------
-drawobjx
+\*-------------------------------
+\*
+\*  Draw object #x
+\*  (Add appropriate images to mid table)
+\*
+\*  In: x = object table index
+\*
+\*-------------------------------
+.drawobjx
+{
  jsr loadobj ;Load vars with object data
 ;A = object type
  cmp #TypeKid
- beq :kid
+ beq kid
  cmp #TypeReflect
- bne :1
-:kid jmp DrawKid
+ bne label_1
+.kid jmp DrawKid
 
-:1 cmp #TypeShad
- bne :2
+.label_1 cmp #TypeShad
+ bne label_2
  jmp DrawShad
 
-:2 cmp #TypeFF
- bne :3
+.label_2 cmp #TypeFF
+ bne label_3
  jmp DrawFF
 
-:3 cmp #TypeSword
- beq :5
+.label_3 cmp #TypeSword
+ beq label_5
  cmp #TypeComix
- bne :4
-:5 jmp DrawSword
+ bne label_4
+.label_5 jmp DrawSword
 
-:4 cmp #TypeGd
- bne :6
+.label_4 cmp #TypeGd
+ bne label_6
  jmp DrawGuard
-:6
-]rts rts
+.label_6
+ rts
+}
 
-*-------------------------------
-* Draw Falling Floor
-*-------------------------------
-DrawFF
- lda #-1 ;normal
+\*-------------------------------
+\* Draw Falling Floor
+\*-------------------------------
+.DrawFF
+{
+ lda #LO(-1) ;normal
  sta FCharFace
 
  lda IMAGE ;mobframe #
  sta FCharImage ;use as temp store
 
-* A-section
+\* A-section
 
  lda FCharY
  sec
@@ -2118,7 +2129,7 @@ DrawFF
  lda #UseLay
  jsr addmid
 
-* D-section
+\* D-section
 
  ldx FCharImage
  lda loosed,x
@@ -2130,7 +2141,7 @@ DrawFF
  lda #UseLayrsave
  jsr addmid
 
-* B-section
+\* B-section
 
  lda FCharX
  clc
@@ -2148,7 +2159,7 @@ DrawFF
  sta OPACITY
  lda #UseLayrsave
  jmp addmid
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -2254,23 +2265,24 @@ getobjbldr
  pla
  rts
  fin
+ENDIF
 
-*-------------------------------
-*
-*  Sort objects in sort list into back-to-front order
-*  (Foremost object should be at bottom of list)
-*
-*-------------------------------
-sortlist
-
-:newpass
+\*-------------------------------
+\*
+\*  Sort objects in sort list into back-to-front order
+\*  (Foremost object should be at bottom of list)
+\*
+\*-------------------------------
+.sortlist
+{
+.newpass
  lda #0
  sta switches ;no switches yet this pass
 
  ldx sortX ;start at bottom of list
 
-:loop cpx #1 ;at top of list?
- beq :attop ;yes--pass complated
+.loop cpx #1 ;at top of list?
+ beq attop ;yes--pass complated
 
  stx xsave
 
@@ -2278,7 +2290,7 @@ sortlist
 
  ldx xsave
 
- bcc :ok ;Yes--continue
+ bcc ok ;Yes--continue
 ;No--switch objects
  lda sortX,x
  pha
@@ -2287,28 +2299,30 @@ sortlist
  pla
  sta sortX-1,x ;switch [X] with [X-1]
 
-:ok dex
- bne :loop ;move up in list
+.ok dex
+ bne loop ;move up in list
 
-* At top of list--pass completed
+\* At top of list--pass completed
 
-:attop
+.attop
  lda switches ;Any switches this pass?
- bne :newpass ;Yes--do it again
+ bne newpass ;Yes--do it again
 
-* No switches made--objects are in order
+\* No switches made--objects are in order
 
-:rts rts
+.return rts
+}
 
-*-------------------------------
-*
-*  Compare object [xsave] with object [xsave-1]
-*
-*  If X is IN FRONT OF X-1, or if it doesn't matter, return cc;
-*  If X is BEHIND X-1, return cs (switch 'em).
-*
-*-------------------------------
-compare
+\*-------------------------------
+\*
+\*  Compare object [xsave] with object [xsave-1]
+\*
+\*  If X is IN FRONT OF X-1, or if it doesn't matter, return cc;
+\*  If X is BEHIND X-1, return cs (switch 'em).
+\*
+\*-------------------------------
+.compare
+{
  lda sortX,x
  sta obj1 ;obj index [X]
  lda sortX-1,x
@@ -2319,79 +2333,81 @@ compare
 
  lda objTYP,x
  cmp #TypeShad
- beq :xinfront ;enemy is always in front
+ beq xinfront ;enemy is always in front
 
  lda objY,x
  cmp objY,y
- beq :same
- bcc :xinfront
- bcs :yinfront
+ beq same
+ bcc xinfront
+ bcs yinfront
 
-:same
-:xinfront clc
+.same
+.xinfront clc
  rts
 
-:yinfront sec
+.yinfront sec
  rts
+}
 
-*-------------------------------
-*
-*  Get initial state of object
-*
-*  In: BlueType, BlueSpec, Y
-*
-*  Return cs if it matters, else cc
-*
-*-------------------------------
-GETINITOBJ
+\*-------------------------------
+\*
+\*  Get initial state of object
+\*
+\*  In: BlueType, BlueSpec, Y
+\*
+\*  Return cs if it matters, else cc
+\*
+\*-------------------------------
+.GETINITOBJ
  lda (BlueType),y
  and #idmask ;get objid
 
-getinitobj1
+.getinitobj1
+{
  cmp #gate
- beq :okgate
+ beq okgate
  cmp #loose
- beq :okloose
+ beq okloose
  cmp #flask
- beq :okflask
- bne :skip ;if it isn't a gadget, leave it alone
+ beq okflask
+ bne skip ;if it isn't a gadget, leave it alone
 
-:okgate lda (BlueSpec),y ;1=gate up, 2=gate down, etc.
+.okgate lda (BlueSpec),y ;1=gate up, 2=gate down, etc.
  tax
  lda initsettings-1,x
  sec
  rts
 
-:okloose lda #0 ;loose floor
+.okloose lda #0 ;loose floor
  rts
 
-:okflask lda (BlueSpec),y
- asl
- asl
- asl
- asl
- asl ;5x
+.okflask lda (BlueSpec),y
+ asl A
+ asl A
+ asl A
+ asl A
+ asl A;5x
  sec
  rts
 
-:skip clc
-]rts rts
+.skip clc
+.return rts
+}
 
-*-------------------------------
-metbufs3 jsr mbsub
+\*-------------------------------
+.metbufs3 jsr mbsub
  iny
-metbufs2 jsr mbsub
+.metbufs2 jsr mbsub
  iny
-mbsub ora redbuf,y
+.mbsub ora redbuf,y
  ora floorbuf,y
  ora halfbuf,y
  ora fredbuf,y
  ora wipebuf,y
  rts
 
-*-------------------------------
- lst
- ds 1
- usr $a9,3,$490,*-org
- lst off
-ENDIF
+\*-------------------------------
+\ lst
+\ ds 1
+\ usr $a9,3,$490,*-org
+\ lst off

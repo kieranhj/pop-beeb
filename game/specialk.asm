@@ -19,15 +19,15 @@ DebugKeys = 0
 
  .key BRK       ;jmp KEYS
  .clrjstk BRK   ;jmp CLRJSTK
- .zerosound BRK ;jmp ZEROSOUND
- .addsound BRK  ;jmp ADDSOUND
+ .zerosound RTS ;jmp ZEROSOUND          BEEB TO DO SOUND
+ .addsound RTS  ;jmp ADDSOUND           BEEB TO DO SOUND
  .facejstk BRK  ;jmp FACEJSTK
 
  .SaveSelect BRK  ;jmp SAVESELECT
  .LoadSelect BRK  ;jmp LOADSELECT
  .SaveDesel BRK   ;jmp SAVEDESEL
  .LoadDesel BRK   ;jmp LOADDESEL
- .initinput BRK   ;jmp INITINPUT
+ .initinput RTS   ;jmp INITINPUT        BEEB TO DO
 
  .demokeys BRK    ;jmp DEMOKEYS
  .listtorches BRK ;jmp LISTTORCHES
@@ -36,7 +36,7 @@ DebugKeys = 0
  .keeptime BRK    ;jmp KEEPTIME
 
  .shortentime BRK ;jmp SHORTENTIME
- .cuesong BRK     ;jmp CUESONG
+ .cuesong RTS     ;jmp CUESONG          BEEB TO DO
  \jmp DoSaveGame
  \jmp LoadLevelX
  \jmp decstr

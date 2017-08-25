@@ -18,7 +18,7 @@ CheckTimer = 0
 
 .addtorches BRK         ; jmp ADDTORCHES
 .doflashon BRK          ; jmp DOFLASHON
-.PageFlip BRK           ; jmp PAGEFLIP
+.PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT
 .demo BRK               ; jmp DEMO
 .showtime BRK           ; jmp SHOWTIME
 
@@ -38,11 +38,11 @@ CheckTimer = 0
 .RemoveObj BRK          ; jmp REMOVEOBJ
 .addfall BRK            ; jmp ADDFALL
 .setinitials jmp SETINITIALS
-.startkid BRK           ; jmp STARTKID
+.startkid jmp STARTKID
 
-.startkid1 BRK          ; jmp STARTKID1
+.startkid1 jmp STARTKID1
 .gravity BRK            ; jmp GRAVITY
-.initialguards BRK      ; jmp INITIALGUARDS
+.initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
 .mirappear BRK          ; jmp MIRAPPEAR
 .crumble BRK            ; jmp CRUMBLE
 
@@ -1476,25 +1476,25 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  S T A R T   K I D
-*
-*  Put kid in his starting position for this level
-*
-*-------------------------------
-STARTKID
+\*-------------------------------
+\*
+\*  S T A R T   K I D
+\*
+\*  Put kid in his starting position for this level
+\*
+\*-------------------------------
+.STARTKID
+{
  lda level
  cmp #3
- bne :nomile
+ bne nomile
 
-* Level 3 milestone?
+\* Level 3 milestone?
 
-:special3
+.special3
  lda milestone ;set to 1 when he gets past 1st gate
- beq :nomile
- lda #-1
+ beq nomile
+ lda #LO(-1)
  sta KidStartFace
  lda #2
  sta KidStartScrn
@@ -1508,7 +1508,7 @@ STARTKID
  lda #space
  sta (BlueType),y ;remove loose floor...
 ;& continue
-:nomile
+.nomile
  lda KidStartScrn ;in INFO
  sta CharScrn
 
@@ -1530,25 +1530,25 @@ STARTKID
 
  lda origstrength
  ldx level
- bne :notdemo
+ bne notdemo
  lda #4
-:notdemo sta MaxKidStr
+.notdemo sta MaxKidStr
  sta KidStrength
 
  IF EditorDisk
- jmp :normal
+ jmp normal
  ENDIF
 
  lda level
  cmp #1
- beq :special1
+ beq special1
  cmp #13
- beq :special13
- bne :normal
+ beq special13
+ bne normal
 
-* Special start for Level 1
+\* Special start for Level 1
 
-:special1
+.special1
  lda #5 ;scrn
  ldx #2 ;blockx
  ldy #0 ;blocky
@@ -1559,24 +1559,26 @@ STARTKID
  jsr jumpseq
  jmp STARTKID1
 
-* & for level 13
+\* & for level 13
 
-:special13
+.special13
  lda #running
  jsr jumpseq
  jmp STARTKID1
 
-* Normal start
+\* Normal start
 
-:normal lda #turn
+.normal lda #turn
  jsr jumpseq ;start in standing posn
+}
 
-STARTKID1
+.STARTKID1
+{
  ldx CharBlockY
  lda FloorY+1,x
  sta CharY
 
- lda #-1
+ lda #LO(-1)
  sta CharLife ;ff = alive
 
  lda #0 ;kid
@@ -1593,29 +1595,32 @@ STARTKID1
  sta CharSword
  sta offguard
 
-:done jsr animchar ;get next frame
+.done jsr animchar ;get next frame
 
-* WTLESS level only--kid falls into screen
+\* WTLESS level only--kid falls into screen
 
  lda level
  cmp #7 ;WTLESS level
- bne :notsp
+ bne notsp
 
- lda yellowflag ;should be -
- bmi :yelok
- lda #$40
- sta timebomb ;2nd level copy protection
-:yelok
+\ NOT BEEB
+\ lda yellowflag ;should be -
+\ bmi :yelok
+\ lda #$40
+\ sta timebomb ;2nd level copy protection
+\:yelok
  lda CharScrn
  cmp #17
- bne :notsp
+ bne notsp
  lda #3 ;down
  jsr cut
-:notsp
+.notsp
  jmp SaveKid ;save KidVars
+.return
+ rts
+}
 
-]rts rts
-
+IF _TODO
 *-------------------------------
 *
 *  G R A V I T Y

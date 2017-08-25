@@ -12,7 +12,7 @@ PalaceEditor = 0
 
 .animtrans BRK          ; jmp ANIMTRANS
 .trigspikes BRK         ; jmp TRIGSPIKES
-.pushpp BRK             ; jmp PUSHPP
+.pushpp RTS             ; jmp PUSHPP            BEEB TO DO
 .breakloose1 BRK        ; jmp BREAKLOOSE1
 .breakloose BRK         ; jmp BREAKLOOSE
 

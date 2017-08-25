@@ -49,10 +49,10 @@
 .vibes skip 1
 .SongCue skip 1
 .musicon skip 1
-;.redkidmeter skip 1
+.redkidmeter skip 1
 .NextLevel skip 1
 .scrncolor skip 1
-;.redoppmeter skip 1
+.redoppmeter skip 1
 .timerequest skip 1
 
 \*-------------------------------

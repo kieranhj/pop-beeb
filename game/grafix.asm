@@ -25,7 +25,7 @@
 .movemem BRK    ;jmp MOVEMEM
 .buttons BRK    ;jmp BUTTONS ;ed
 .gtone BRK      ;jmp GTONE
-.setcenter BRK  ;jmp SETCENTER
+.setcenter RTS  ;jmp SETCENTER      BEEB TO DO
 \
 .dimchar BRK    ;jmp DIMCHAR
 .cvtx BRK       ;jmp CVTX
@@ -42,7 +42,7 @@
 .lay jmp LAY
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
-.lrcls BRK      ;jmp LRCLS
+.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?
 .fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
@@ -109,7 +109,7 @@
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank BRK     ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vblank RTS     ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc       BEEB TO DO
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \

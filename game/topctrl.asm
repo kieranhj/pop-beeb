@@ -22,7 +22,7 @@
 .start jmp START
 .restart jmp RESTART
 .startresume BRK  ; jmp STARTRESUME
-.initsystem BRK   ; jmp INITSYSTEM
+.initsystem jmp INITSYSTEM
 \ jmp showpage
 
 .docrosscut BRK   ; jmp showpage
@@ -119,33 +119,39 @@ STARTRESUME
  lda #4 ;arbitrary value >1
  jsr StartGame
  jmp ResumeGame
+ENDIF
 
-*-------------------------------
-*
-*  Initialize system (Called from MASTER upon bootup)
-*
-*-------------------------------
-INITSYSTEM
- sta ALTZPon
+\*-------------------------------
+\*
+\*  Initialize system (Called from MASTER upon bootup)
+\*
+\*-------------------------------
+.INITSYSTEM
+{
+\ NOT BEEB
+\ sta ALTZPon
+
+ ldx #0
+ txa
+.loop sta $0,x
+ inx
+ cpx #locals_top      ; BEEB don't zero all ZP
+ bne loop
 
  jsr setcenter ;Center joystick
 
- jsr setfastaux ;bgtable in auxmem
+\ NOT BEEB
+\ jsr setfastaux ;bgtable in auxmem
 
- lda #FinalDisk!1
+ lda #FinalDisk EOR 1
  sta develment
 
  jsr initgame
 
- ldx #0
- txa
-:loop sta $0,x
- inx
- bne :loop
-
- sta ALTZPoff
+\ NOT BEEB
+\ sta ALTZPoff
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*

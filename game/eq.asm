@@ -88,8 +88,8 @@ jvert ds 1
 jhoriz ds 1
 jbtns ds 1
 joyon ds 1
-develment ds 1
 ENDIF
+.develment skip 1
 .keypress skip 1
 IF _TODO
 keydown ds 1
@@ -98,9 +98,7 @@ ENDIF
 
 \dum $3c0
 
-IF _TODO
-sortX ds $10
-ENDIF
+.sortX skip $10
 .BELOW skip $10
 .SBELOW skip $10
 

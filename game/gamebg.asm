@@ -31,7 +31,7 @@
 .DrawOppMeter BRK   ; jmp DRAWOPPMETER
 .flipdiskmsg BRK    ; jmp FLIPDISKMSG
 .timeleftmsg BRK    ; jmp TIMELEFTMSG
-.DrawGaurd BRK      ; jmp DRAWGUARD
+.DrawGuard BRK      ; jmp DRAWGUARD
 .DrawGuard2 BRK     ; jmp DRAWGUARD
 
 .setupflask RTS     ; jmp SETUPFLASK - NOT IMPLEMENTED YET

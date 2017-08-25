@@ -161,21 +161,23 @@ FOR n,0,31,1
 EQUW n * 30
 NEXT
 
-IF _TODO
-*-------------------------------
-* BlockEdge
-*
-* Index:  Block X (-5 to 14) + 5
-* Yields: Screen X-coord of left edge of block
-*-------------------------------
- ds BlockEdge-*
-
-]byte = -12
- lup 20
- db ]byte
-]byte = ]byte+14
- --^
-ENDIF
+\*-------------------------------
+\* BlockEdge
+\*
+\* Index:  Block X (-5 to 14) + 5
+\* Yields: Screen X-coord of left edge of block
+\*-------------------------------
+\ ds BlockEdge-*
+\
+\]byte = -12
+\ lup 20
+\ db ]byte
+\]byte = ]byte+14
+\ --^
+.BlockEdge
+FOR n,0,19,1
+EQUB LO(-12 + n * 14)
+NEXT
 
 \*-------------------------------
 \* BlockTop, BlockBot, FloorY

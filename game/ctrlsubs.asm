@@ -25,14 +25,14 @@
 .getblockxp BRK     ; jmp GETBLOCKXP
 
 .getblocky BRK      ; jmp GETBLOCKY
-.getblockej BRK     ; jmp GETBLOCKEJ
+.getblockej jmp GETBLOCKEJ
 .addcharx BRK       ; jmp ADDCHARX
 .getdist BRK        ; jmp GETDIST
 .getdist1 BRK       ; jmp GETDIST1
 
 .getabovebeh BRK    ; jmp GETABOVEBEH
-.rdblock BRK        ; jmp RDBLOCK
-.rdblock1 BRK       ; jmp RDBLOCK1
+.rdblock jmp RDBLOCK
+.rdblock1 jmp RDBLOCK1
 .setupsword BRK     ; jmp SETUPSWORD
 .getscrns BRK       ; jmp GETSCRNS
 
@@ -43,10 +43,10 @@
 .quickfg BRK        ; jmp QUICKFG
 
 .cropchar BRK       ; jmp CROPCHAR
-.getleft BRK        ; jmp GETLEFT
-.getright BRK       ; jmp GETRIGHT
-.getup BRK          ; jmp GETUP
-.getdown BRK        ; jmp GETDOWN
+.getleft jmp GETLEFT
+.getright jmp GETRIGHT
+.getup jmp GETUP
+.getdown jmp GETDOWN
 
 .cmpspace BRK       ; jmp CMPSPACE
 .cmpbarr BRK        ; jmp CMPBARR
@@ -68,7 +68,7 @@
 
 .markmove BRK           ; jmp MARKMOVE
 .markfloor BRK          ; jmp MARKFLOOR
-.unindex BRK            ; jmp UNINDEX
+.unindex jmp UNINDEX
 .quickfloor BRK         ; jmp QUICKFLOOR
 .unevenfloor BRK        ; jmp UNEVENFLOOR
 
@@ -123,45 +123,44 @@
 \
 \ dend
 
-IF _TODO
-
 \*-------------------------------
 \*  Misc. data
 
-plus1 db -1,1
-minus1 db 1,-1
+.plus1 EQUB LO(-1),1
+.minus1 EQUB 1,LO(-1)
 
 maxmaxstr = 10 ;strength meter maximum
 
 thinner = 3
 
-*-------------------------------
-*
-*  R E A D   B L O C K
-*
-*  In:  A = screen #
-*       X = block x (0-9 onscreen)
-*       Y = block y (0-2 onscreen)
-*
-*  Out: A,X = objid
-*       Y = block # (0-29)
-*       BlueType, BlueSpec set
-*       tempscrn,tempblockx,tempblocky = onscreen block coords
-*
-*  - Offscreen block values are traced to their home screen
-*  - Screen 0 is treated as a solid mass
-*
-*-------------------------------
-RDBLOCK
+\*-------------------------------
+\*
+\*  R E A D   B L O C K
+\*
+\*  In:  A = screen #
+\*       X = block x (0-9 onscreen)
+\*       Y = block y (0-2 onscreen)
+\*
+\*  Out: A,X = objid
+\*       Y = block # (0-29)
+\*       BlueType, BlueSpec set
+\*       tempscrn,tempblockx,tempblocky = onscreen block coords
+\*
+\*  - Offscreen block values are traced to their home screen
+\*  - Screen 0 is treated as a solid mass
+\*
+\*-------------------------------
+.RDBLOCK
  sta tempscrn
  stx tempblockx
  sty tempblocky
 
-RDBLOCK1
+.RDBLOCK1
+{
  jsr handler ;handle offscreen references
 
  lda tempscrn
- beq :nullscrn ;screen 0
+ beq nullscrn ;screen 0
  jsr calcblue ;returns BlueType/Spec
 
  ldy tempblocky
@@ -174,36 +173,36 @@ RDBLOCK1
  tax ;return result in X & A
  rts
 
-:nullscrn lda #block
+.nullscrn lda #block
  tax
  rts
 
-*-------------------------------
-*  Handle offscreen block references (recursive)
+\*-------------------------------
+\*  Handle offscreen block references (recursive)
 
-handler lda tempblockx
- bpl :1
+.handler lda tempblockx
+ bpl label_1
  jsr offleft
  jmp handler
 
-:1 cmp #10
- bcc :2
+.label_1 cmp #10
+ bcc label_2
  jsr offrt
  jmp handler
 
-:2 lda tempblocky
- bpl :3
+.label_2 lda tempblocky
+ bpl label_3
  jsr offtop
  jmp handler
 
-:3 cmp #3
- bcc :rts
+.label_3 cmp #3
+ bcc return
  jsr offbot
  jmp handler
 
-:rts rts
+.return rts
 
-offtop clc
+.offtop clc
  adc #3
  sta tempblocky
 
@@ -212,7 +211,7 @@ offtop clc
  sta tempscrn
  rts
 
-offbot sec
+.offbot sec
  sbc #3
  sta tempblocky
 
@@ -221,7 +220,7 @@ offbot sec
  sta tempscrn
  rts
 
-offleft clc
+.offleft clc
  adc #10
  sta tempblockx
 
@@ -230,55 +229,69 @@ offleft clc
  sta tempscrn
  rts
 
-offrt sec
+.offrt sec
  sbc #10
  sta tempblockx
 
  lda tempscrn
  jsr GETRIGHT
  sta tempscrn
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  Get adjacent screen numbers
-*
-*  In:  A = original screen #
-*  Out: A = adjacent screen #
-*
-*-------------------------------
-GETLEFT
- beq ]rts
- asl
- asl
+\*-------------------------------
+\*
+\*  Get adjacent screen numbers
+\*
+\*  In:  A = original screen #
+\*  Out: A = adjacent screen #
+\*
+\*-------------------------------
+.GETLEFT
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-4,x
-]rts rts
+.return
+ rts
+}
 
-GETRIGHT
- beq ]rts
- asl
- asl
+.GETRIGHT
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-3,x
+.return
  rts
+}
 
-GETUP
- beq ]rts
- asl
- asl
+.GETUP
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-2,x
+.return
  rts
+}
 
-GETDOWN
- beq ]rts
- asl
- asl
+.GETDOWN
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-1,x
+.return
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   S C R E E N S
@@ -532,22 +545,26 @@ GETDIST1
  sec
  sbc OFFSET
  rts
+ENDIF
 
-*-------------------------------
-*
-*  G E T   B L O C K   E D G E
-*
-*  In:  A = block # (-5 to 14)
-*  Out: A = screen X-coord of left edge
-*
-*-------------------------------
-GETBLOCKEJ
+\*-------------------------------
+\*
+\*  G E T   B L O C K   E D G E
+\*
+\*  In:  A = block # (-5 to 14)
+\*  Out: A = screen X-coord of left edge
+\*
+\*-------------------------------
+.GETBLOCKEJ
+{
  clc
  adc #5
  tax
  lda BlockEdge,x
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   B L O C K   X
@@ -642,25 +659,30 @@ INDEXBLOCK
 :above ldy tempblockx
  sec
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  U N I N D E X
-*
-*  In: A = block index (0-29)
-*  Out: A = blockx, X = blocky
-*
-*-------------------------------
-UNINDEX
+\*-------------------------------
+\*
+\*  U N I N D E X
+\*
+\*  In: A = block index (0-29)
+\*  Out: A = blockx, X = blocky
+\*
+\*-------------------------------
+.UNINDEX
+{
  ldx #0
-:loop cmp #10
- bcc ]rts
+.loop cmp #10
+ bcc return
  sec
  sbc #10
  inx
- bne :loop
-]rts rts
+ bne loop
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   B A S E   B L O C K
