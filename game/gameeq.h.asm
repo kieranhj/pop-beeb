@@ -329,7 +329,7 @@ ENDIF
 ;.lastpotion skip 1
 .origstrength skip 1
 ;.jmpaddr skip 2
-;.alertguard skip 1
+.alertguard skip 1
 .createshad skip 1
 .stunned skip 1
 .droppedout skip 1

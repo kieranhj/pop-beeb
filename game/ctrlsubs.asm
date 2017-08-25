@@ -19,7 +19,7 @@
 \ org org
 
 .getframe BRK       ; jmp GETFRAME
-.getseq BRK         ; jmp GETSEQ
+.getseq jmp GETSEQ
 .getbasex BRK       ; jmp GETBASEX
 .getblockx BRK      ; jmp GETBLOCKX
 .getblockxp BRK     ; jmp GETBLOCKXP
@@ -82,7 +82,7 @@
 .rechargemeter BRK      ; jmp RECHARGEMETER
 .addfcharx BRK          ; jmp ADDFCHARX
 .facedx BRK             ; jmp FACEDX
-.jumpseq BRK            ; jmp JUMPSEQ
+.jumpseq jmp JUMPSEQ
 
 .GetBaseBlock BRK       ; jmp GETBASEBLOCK
 .LoadKidwOp BRK         ; jmp LOADKIDWOP
@@ -715,20 +715,22 @@ FACEDX
  adc #1 ;negate
 
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  J U M P S E Q
-*
-*  Jump to some other point in sequence table
-*
-*  In: A = sequence # (1-127)
-*
-*-------------------------------
-JUMPSEQ
+\*-------------------------------
+\*
+\*  J U M P S E Q
+\*
+\*  Jump to some other point in sequence table
+\*
+\*  In: A = sequence # (1-127)
+\*
+\*-------------------------------
+.JUMPSEQ
+{
  sec
  sbc #1
- asl
+ asl A
  tax ;x = 2(a-1)
 
  lda seqtab,x
@@ -736,8 +738,11 @@ JUMPSEQ
 
  lda seqtab+1,x
  sta CharSeq+1
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Similar routine for Opponent
@@ -1645,27 +1650,31 @@ ADDGUARDOBJ
 ADDSWORDOBJ
  lda #TypeSword
  jmp addcharobj
+ENDIF
 
-*-------------------------------
-*
-*  G E T   S E Q
-*
-*  Get next byte from seqtable & advance CharSeq
-*  (2-byte pointer to sequence table)
-*
-*-------------------------------
-GETSEQ
+\*-------------------------------
+\*
+\*  G E T   S E Q
+\*
+\*  Get next byte from seqtable & advance CharSeq
+\*  (2-byte pointer to sequence table)
+\*
+\*-------------------------------
+.GETSEQ
+{
  ldy #0
  lda (CharSeq),y
  pha
 
  inc CharSeq
- bne :done
+ bne done
  inc CharSeq+1
 
-:done pla
+.done pla
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   F R A M E   I N F O

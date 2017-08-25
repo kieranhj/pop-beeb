@@ -116,20 +116,20 @@ Mraise = 114
 
 \* Sequence table instruction codes
 
-goto = -1
-aboutface = -2
-up = -3
-down = -4
-chx = -5
-chy = -6
-act = -7
-setfall = -8
-ifwtless = -9
-die = -10
-jaru = -11
-jard = -12
-effect = -13
-tap = -14
-nextlevel = -15
+goto = LO(-1)
+aboutface = LO(-2)
+up = LO(-3)
+down = LO(-4)
+chx = LO(-5)
+chy = LO(-6)
+act = LO(-7)
+setfall = LO(-8)
+ifwtless = LO(-9)
+die = LO(-10)
+jaru = LO(-11)
+jard = LO(-12)
+effect = LO(-13)
+tap = LO(-14)
+nextlevel = LO(-15)
 
 \ lst off
