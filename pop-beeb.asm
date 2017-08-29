@@ -1,38 +1,59 @@
 ; pop-beeb
+; Prince of Persia
+; Port to the BBC Master
+; Main build file
+
+
+; Defines
+
+_TODO = FALSE
+
+; Original PoP global defines
+
+EditorDisk = 0 ;1 = dunj, 2 = palace
+CopyProtect = 0
+DemoDisk = 0
+FinalDisk = 1
+ThreeFive = 0 ;3.5" disk?
+
+; Platform includes
 
 INCLUDE "lib/bbc.h.asm"
 INCLUDE "lib/bbc_utils.h.asm"
 
-ORG &70
-GUARD &8F
+; POP includes
 
-.readptr    SKIP 2
-.writeptr   SKIP 2
+locals = $d0                    ; VDU workspace
+locals_top = $e3
 
-.numimages  SKIP 1
-.width      SKIP 1
-.height     SKIP 1
+ORG &0
+GUARD locals
+INCLUDE "game/eq.h.asm"
+INCLUDE "game/gameeq.h.asm"
 
-.yoffset    SKIP 1
-.yindex     SKIP 1
+; POP defines
 
-.apple_count    SKIP 1          ; width
-.apple_byte     SKIP 1          ; sprite data
+INCLUDE "game/soundnames.h.asm"
+INCLUDE "game/seqdata.h.asm"
 
-.beeb_byte  SKIP 1              ; no lookup for screen byte
-.beeb_count SKIP 1              ; beeb bits (8/4)
+; BEEB headers
 
-.bit_count  SKIP 1              ; apple bits (7)
-.pal_index  SKIP 1              ; lookup for screen byte
+INCLUDE "game/beeb-plot.h.asm"
 
-.sprite_no  SKIP 1
+; Local ZP variables only
+
+INCLUDE "game/frameadv.h.asm"
+INCLUDE "game/hires.h.asm"
+INCLUDE "game/master.h.asm"
+INCLUDE "game/mover.h.asm"
+
+; Main RAM
 
 ORG &E00
-GUARD &3000
+;GUARD &4B80            ; eventually shrunk MODE 1
+GUARD &5800             ; currently in full MODE 4
 
-PLOT_MODE = 1
-
-.start
+.pop_beeb_start
 
 ; Master 128 PAGE is &0E00 since MOS uses other RAM buffers for DFS workspace
 SCRATCH_RAM_ADDR = &0400
@@ -40,6 +61,8 @@ SCRATCH_RAM_ADDR = &0400
 INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
+
+; move all this to beeb-loader in due course
 
 ; disk loader uses hacky filename format (same as catalogue) 
 ; we use disk loader for SWR banks only
@@ -57,7 +80,7 @@ INCLUDE "lib/print.asm"
 .loading_bank_text EQUS "Loading bank... ", 0
 .loading_bank_text2 EQUS "OK", 13, 10, 0
 
-.main
+.pop_beeb_main
 {
     \\ SWRAM init
     jsr swr_init
@@ -78,7 +101,7 @@ INCLUDE "lib/print.asm"
     bne swr_print_loop
 
 	\\ load all SWR banks
-
+IF 0
     ; SWR 0
     MPRINT loading_bank_text  
     lda #0
@@ -88,425 +111,225 @@ INCLUDE "lib/print.asm"
     ldy #HI(bank_file0)
     jsr disksys_load_file
     MPRINT loading_bank_text2   
+ENDIF
 
     \\ MODE
     LDA #22
-    JSR &ffee
-    LDA #PLOT_MODE
-    JSR &ffee
+    JSR oswrch
+    LDA #BEEB_SCREEN_MODE
+    JSR oswrch
 
+    \\ Level load & plot test
+    LDX #1
+
+    .level_loop
+    STX level
+    JSR LoadLevelX
+
+    LDX #1
+    STX VisScrn
+
+    .scrn_loop
     \\ Select slot 0
-    LDA #0
+    LDA #BEEB_SWRAM_SLOT_LEVELBG
     JSR swr_select_slot
 
-    \\ Relocate sprite data
-    LDA #LO(chtab1)
-    STA readptr
-    LDA #HI(chtab1)
-    STA readptr+1
-    JSR pop_relocate_chtab
+    JSR DoSure
 
-    LDX #0
+    ldx#100:ldy#0:lda#&81:jsr osbyte	
 
-    .plot_loop
-    STX sprite_no
-    
-IF PLOT_MODE=4
-    \\ Sprite plot
-    LDA #LO(&6500)
-    STA writeptr
-    LDA #HI(&6500)
-    STA writeptr+1
-
-    TXA
-    JSR apple_plot_mode_4
-ENDIF
-
-IF PLOT_MODE=1
-    \\ Sprite plot
-    LDA #LO(&4A00)
-    STA writeptr
-    LDA #HI(&4A00)
-    STA writeptr+1
-
-    TXA
-    JSR apple_plot_mode_1
-ENDIF
-
-    ldx#10:ldy#0:lda#&81:jsr osbyte	
-
-    LDX sprite_no
+    LDX VisScrn
     INX
-    CPX numimages
-    BCC plot_loop
+    CPX #25
+    STX VisScrn
+    BNE scrn_loop
 
-    .return
-    RTS
-}
-
-.pop_relocate_chtab
-{
-    LDY #0
-    LDA (readptr), Y
-    STA numimages
-
-    \\ Relocate pointers to image data
-    LDX #0
-    .loop
-    INY
-    CLC
-    LDA (readptr), Y
-    ADC #LO(chtab1)
-    STA (readptr), Y
-
-    INY
-    LDA (readptr), Y
-    ADC #LO(HI(chtab1) - &60)
-    STA (readptr), Y
-
+    LDX level
     INX
-    CPX numimages
-    BCC loop
+    CPX #15
+    BNE level_loop
 
     .return
     RTS
 }
 
-.apple_plot_mode_4
-{
-    ASL A
-    TAX
-    LDA chtab1+1, X
-    STA readptr
-    LDA chtab1+2, X
-    STA readptr+1
+; Beeb source
 
-    LDY #0
-    LDA (readptr), Y
-    STA width
-    INY
-    LDA (readptr), Y
-    STA height
+INCLUDE "game/beeb-plot.asm"
 
-    CLC
-    LDA readptr
-    ADC #2
-    STA sprite_addr + 1
-    LDA readptr+1
-    ADC #0
-    STA sprite_addr + 2
+; PoP source
 
+INCLUDE "game/frameadv.asm"
+INCLUDE "game/grafix.asm"
+INCLUDE "game/tables.asm"
+INCLUDE "game/bgdata.asm"
+INCLUDE "game/gamebg.asm"
+INCLUDE "game/hires.asm"
+INCLUDE "game/hrtables.asm"
+INCLUDE "game/master.asm"
+INCLUDE "game/topctrl.asm"
+INCLUDE "game/specialk.asm"
+INCLUDE "game/subs.asm"
+INCLUDE "game/mover.asm"
+INCLUDE "game/misc.asm"
+INCLUDE "game/auto.asm"
+INCLUDE "game/ctrlsubs.asm"
+INCLUDE "game/ctrl.asm"
+INCLUDE "game/coll.asm"
 
-    LDX #0          ; data index
-    LDY #7          ; yoffset
+.pop_beeb_end
 
-    .yloop
-    STY yoffset
+SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
 
-    LDA width
-    STA apple_count
+; Run time initalised data
 
-    LDA #0
-    STA beeb_byte
+INCLUDE "game/eq.asm"
+INCLUDE "game/gameeq.asm"
 
-    LDA #8
-    STA beeb_count
+; Construct SHADOW RAM
 
-    .xloop
+CLEAR 0, &FFFF
 
-    .sprite_addr
-    LDA &FFFF, X
-    STA apple_byte
 
-    LDA #7
-    STA bit_count
-
-    .bit_loop    
-    LSR apple_byte       ; rotate bottom bit into Carry
-    ROL beeb_byte        ; rotate carry into Beeb byte
-
-    DEC beeb_count
-    BNE next_bit
-
-    \\ Write byte to screen
-    LDA beeb_byte
-    STA (writeptr), Y
-
-    \\ Next screen column
-    TYA
-    CLC
-    ADC #8
-    TAY
-
-    LDA #0
-    STA beeb_byte
-
-    LDA #8
-    STA beeb_count
-
-    .next_bit
-    DEC bit_count
-    BNE bit_loop
-
-    \\ Next apple byte
-
-    INX                 ; next apple byte
-    DEC apple_count
-    BNE xloop
-
-    \\ Flush Beeb byte to screen if needed
-    LDA beeb_count
-    CMP #8
-    BEQ done_row
-
-    .flushloop
-    ASL beeb_byte
-    DEC beeb_count
-    BNE flushloop
-
-    LDA beeb_byte
-    STA (writeptr), Y
-    
-    .done_row
-    DEC height
-    BEQ done
-
-    LDY yoffset
-    DEY
-    BPL yloop
-
-    SEC
-    LDA writeptr
-    SBC #LO(320)
-    STA writeptr
-    LDA writeptr+1
-    SBC #HI(320)
-    STA writeptr+1
-
-    LDY #7
-    BNE yloop
-    .done
-
-    .return
-    RTS
-}
-
-.apple_plot_mode_1
-{
-    ASL A
-    TAX
-    LDA chtab1+1, X
-    STA readptr
-    LDA chtab1+2, X
-    STA readptr+1
-
-    LDY #0
-    LDA (readptr), Y
-    STA width
-    INY
-    LDA (readptr), Y
-    STA height
-
-    CLC
-    LDA readptr
-    ADC #2
-    STA init_addr + 1
-    STA sprite_addr + 1
-    LDA readptr+1
-    ADC #0
-    STA init_addr + 2
-    STA sprite_addr + 2
-
-
-    LDX #0          ; data index
-    LDY #7          ; yoffset
-
-    .yloop
-    STY yoffset
-    STY yindex
-
-    LDA width
-    STA apple_count
-
-    LDA #0
-    STA pal_index
-
-    LDA #4
-    STA beeb_count
-
-    \\ Initialise palindex
-    .init_addr
-    LDA &FFFF, X
-    STA apple_byte
-
-    LSR apple_byte
-    ROL pal_index
-
-    LDA #6              ; we just consumed one
-    STA bit_count
-
-    .xloop
-
-    .bit_loop    
-    LSR apple_byte       ; rotate bottom bit into Carry
-    ROL pal_index        ; rotate carry into palette index
-
-    DEC beeb_count
-    BNE next_bit
-
-    \\ Write byte to screen
-    LDA pal_index
-    AND #&3F
-    TAY
-    LDA pal_table_6_to_4, Y
-
-    LDY yindex
-    STA (writeptr), Y
-
-    \\ Next screen column
-    TYA
-    CLC
-    ADC #8
-    STA yindex
-
-    LDA #4
-    STA beeb_count
-
-    .next_bit
-    DEC bit_count
-    BNE bit_loop
-
-    \\ Next apple byte
-
-    INX                 ; next apple byte
-
-    .sprite_addr
-    LDA &FFFF, X
-    STA apple_byte
-
-    LDA #7
-    STA bit_count
-
-    DEC apple_count
-    BNE xloop
-
-    \\ Flush Beeb byte to screen if needed
-    LDA beeb_count
-    CMP #4
-    BEQ done_row
-
-    .flushloop
-    ASL pal_index        ; rotate zero into palette index
-
-    DEC beeb_count
-    BNE flushloop
-
-    LDA pal_index
-    AND #&3F
-    TAY
-    LDA pal_table_6_to_4, Y
-
-    LDY yindex
-    STA (writeptr), Y
-    
-    .done_row
-    DEC height
-    BEQ done
-
-    LDY yoffset
-    DEY
-    BPL jump_yloop
-    
-    \\ Next char row
-
-    SEC
-    LDA writeptr
-    SBC #LO(640)
-    STA writeptr
-    LDA writeptr+1
-    SBC #HI(640)
-    STA writeptr+1
-
-    LDY #7
-    .jump_yloop
-    JMP yloop
-
-    .done
-
-    .return
-    RTS
-}
-
-
-.pal_table_6_to_4
-FOR n,0,63,1
-
-abc=(n >> 3) AND 7
-bcd=(n >> 2) AND 7
-cde=(n >> 1) AND 7
-def=(n) AND 7
-
-\\ even3
-IF abc=3 OR abc=6 OR abc=7
-    pixel3=&88          ; white3
-ELIF abc=2
-    pixel3=&80          ; yellow3
-ELIF abc=5
-    pixel3=&08          ; red3
-ELSE
-    pixel3=0
-ENDIF
-
-IF bcd=3 OR bcd=6 OR bcd=7
-    pixel2=&44          ; white2
-ELIF bcd=5
-    pixel2=&40          ; yellow2
-ELIF bcd=2
-    pixel2=&04          ; red2
-ELSE
-    pixel2=0
-ENDIF
-
-IF cde=3 OR cde=6 OR cde=7
-    pixel1=&22          ; white1
-ELIF cde=2
-    pixel1=&20          ; yellow1
-ELIF cde=5
-    pixel1=&02          ; red1
-ELSE
-    pixel1=0
-ENDIF
-
-IF def=3 OR def=6 OR def=7
-    pixel0=&11          ; white0
-ELIF def=5
-    pixel0=&10          ; yellow0
-ELIF def=2
-    pixel0=&01          ; red0
-ELSE
-    pixel0=0
-ENDIF
-
-EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
-
-NEXT
-
-.chtab7
-INCBIN "Images/IMG.CHTAB7.bin"
-
-.end
-
-SAVE "Main", start, end, main
-
-
-; Construct roms
+; Construct MOS RAM
 
 CLEAR 0, &FFFF
 ORG &8000
+GUARD &9000
+.peelbuf1
+SKIP &800
+.peelbuf2
+SKIP &800
+
+; Construct ROMS
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &C000
+
+BEEB_BUFFER_RAM_SOCKET = &80            ; 4K MOS RAM used for buffers
+
+BEEB_SWRAM_SLOT_LEVELBG = 0
+BEEB_SWRAM_SLOT_CHTAB13 = 1
+BEEB_SWRAM_SLOT_CHTAB25 = 2
+BEEB_SWRAM_SLOT_CHTAB4 = 3
 
 .bank0_start
-.chtab1
-INCBIN "Images\IMG.CHTAB1.bin"
+.bgtable1
+SKIP 9185           ; max size of IMG.BGTAB1.XXX
+;INCBIN "Images/IMG.BGTAB1.DUN.bin"
+;INCBIN "Images/IMG.BGTAB1.PAL.bin"
+ALIGN &100
+.bgtable2
+SKIP 4593           ; max size of IMG.BGTAB2.XXX
+;INCBIN "Images/IMG.BGTAB2.DUN.bin"
+;INCBIN "Images/IMG.BGTAB2.PAL.bin"
+ALIGN &100
+.blueprnt
+SKIP &900           ; all blueprints same size
+;INCBIN "Levels/Level1"
 .bank0_end
 
-SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
+;SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &C000
+
+.bank1_start
+.chtable1
+SKIP 9165           ; size of IMG.CHTAB1
+ALIGN &100
+.chtable3
+SKIP 5985           ; size of IMG.CHTAB3
+ALIGN &100
+.bank1_end
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &C000
+
+.bank2_start
+.chtable2
+SKIP 9189           ; size of IMG.CHTAB2
+ALIGN &100
+.chtable5
+SKIP 6134           ; size of IMG.CHTAB5
+ALIGN &100
+.bank2_end
+
+CLEAR 0, &FFFF
+ORG &8000
+GUARD &C000
+
+.bank3_start
+.chtable4
+SKIP 5281           ; size of largest IMG.CHTAB4.X internal file pointer - file size 8999b?
+ALIGN &100
+.chtable6
+SKIP 9201           ; size of largest IMG.CHTAB6.X
+ALIGN &100
+.chtable7
+SKIP 1155           ; size of IMG.CHTAB7
+ALIGN &100
+.bank3_end
+
+; Construct overlay files
+
+CLEAR 0, &FFFF
+
+ORG blueprnt
+.BLUETYPE skip 24*30
+.BLUESPEC skip 24*30
+.LINKLOC skip 256
+.LINKMAP skip 256
+.MAP skip 24*4
+.INFO
+ skip 64                ; not sure why this is skipped, unused?
+.KidStartScrn skip 1
+.KidStartBlock skip 1
+.KidStartFace skip 1
+ skip 1
+.SwStartScrn skip 1
+.SwStartBlock skip 1
+ skip 1
+.GdStartBlock skip 24
+.GdStartFace skip 24
+.GdStartX skip 24
+.GdStartSeqL skip 24
+.GdStartProg skip 24
+.GdStartSeqH skip 24
+
+; Put files on the disk
+
+PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
+PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
+PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
+PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
+PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
+PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
+PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
+PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
+PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
+PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
+PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
+PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
+PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
+PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
+PUTFILE "Images/IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+PUTFILE "Images/IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+PUTFILE "Images/IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
+PUTFILE "Images/IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
+PUTFILE "Images/IMG.CHTAB4.FAT.bin", "FAT", 0, 0
+PUTFILE "Images/IMG.CHTAB4.GD.bin", "GD", 0, 0
+PUTFILE "Images/IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
+PUTFILE "Images/IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
+PUTFILE "Images/IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+PUTFILE "Images/IMG.CHTAB1.bin", "CHTAB1", 0, 0
+PUTFILE "Images/IMG.CHTAB2.bin", "CHTAB2", 0, 0
+PUTFILE "Images/IMG.CHTAB3.bin", "CHTAB3", 0, 0
+PUTFILE "Images/IMG.CHTAB5.bin", "CHTAB4", 0, 0
+;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
+;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
+;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0
