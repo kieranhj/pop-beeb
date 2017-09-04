@@ -34,7 +34,7 @@
 .pread BRK      ;jmp PREAD
 \
 .addpeel BRK    ;jmp ADDPEEL
-.copyscrn BRK   ;jmp COPYSCRN
+.copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel BRK    ;jmp SNGPEEL
 .rnd BRK        ;jmp RND
 .cls jmp CLS
@@ -101,7 +101,7 @@
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS
-.fastspeed BRK  ;jmp FASTSPEED
+.fastspeed RTS  ;jmp FASTSPEED                                          NOT BEEB
 .musickeys BRK  ;jmp MUSICKEYS
 .dostartgame BRK;jmp DOSTARTGAME
 \
@@ -183,7 +183,7 @@ cwidthy = 15 ;21
 \*  Addresses of character image tables
 \*  (Bank: 2 = main, 3 = aux)
 
-.chtabbank EQUB 2,2,2,3,2,3,3
+.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB67, BEEB_SWRAM_SLOT_CHTAB67
 
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
  EQUB HI(chtable5),HI(chtable6),HI(chtable7)
@@ -852,7 +852,8 @@ ENDIF
 {
  tay
 
- lda #3 ;auxmem
+\lda #3 ;auxmem
+ lda #BEEB_SWRAM_SLOT_LEVELBG       ; BEEB BACKGROUND SWRAM SLOT
  sta BANK
 
  lda #0

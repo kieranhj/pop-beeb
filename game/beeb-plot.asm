@@ -50,6 +50,14 @@
 IF BEEB_SCREEN_MODE == 4
 .beeb_plot_apple_mode_4
 {
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    CMP #4
+    BCC slot_set
+    BRK                 ; swram slot for sprite not set!
+    .slot_set
+    JSR swr_select_slot
+
     \ Turns TABLE & IMAGE# into IMAGE ptr
     \ Obtains WIDTH & HEIGHT
     

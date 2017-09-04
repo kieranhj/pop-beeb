@@ -51,7 +51,8 @@ INCLUDE "game/mover.h.asm"
 
 ORG &E00
 ;GUARD &4B80            ; eventually shrunk MODE 1
-GUARD &5800             ; currently in full MODE 4
+;GUARD &5800             ; currently in full MODE 4
+GUARD &8000
 
 .pop_beeb_start
 
@@ -167,6 +168,10 @@ SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
 INCLUDE "game/eq.asm"
 INCLUDE "game/gameeq.asm"
 
+ALIGN &100
+.blueprnt
+SKIP &900           ; all blueprints same size
+
 ; Construct SHADOW RAM
 
 CLEAR 0, &FFFF
@@ -194,6 +199,7 @@ BEEB_SWRAM_SLOT_LEVELBG = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 2
 BEEB_SWRAM_SLOT_CHTAB4 = 3
+BEEB_SWRAM_SLOT_CHTAB67 = 3             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
 
 .bank0_start
 .bgtable1
@@ -205,9 +211,6 @@ ALIGN &100
 SKIP 4593           ; max size of IMG.BGTAB2.XXX
 ;INCBIN "Images/IMG.BGTAB2.DUN.bin"
 ;INCBIN "Images/IMG.BGTAB2.PAL.bin"
-ALIGN &100
-.blueprnt
-SKIP &900           ; all blueprints same size
 ;INCBIN "Levels/Level1"
 .bank0_end
 

@@ -10,5 +10,5 @@ GUARD locals_top
 ;.mover_temp1 skip 2
 ;.mover_linkindex skip 1
 ;.mover_pptype skip 1
-;.mover_mobframe skip 1
+.mover_mobframe skip 1
 .mover_underFF skip 1

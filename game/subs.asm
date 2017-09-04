@@ -18,12 +18,12 @@ CheckTimer = 0
 
 .addtorches BRK         ; jmp ADDTORCHES
 .doflashon BRK          ; jmp DOFLASHON
-.PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT
+.PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
 .showtime BRK           ; jmp SHOWTIME
 
 .doflashoff BRK         ; jmp DOFLASHOFF
-.lrclse BRK             ; jmp LRCLSE
+.lrclse RTS             ; jmp LRCLSE                BEEB TO DO OR NOT NEEDED?
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection

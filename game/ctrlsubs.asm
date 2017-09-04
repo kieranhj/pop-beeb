@@ -54,9 +54,9 @@
 .addshadobj BRK     ; jmp ADDSHADOBJ
 .addreflobj BRK     ; jmp ADDREFLOBJ
 
-.LoadKid BRK        ; jmp LOADKID
+.LoadKid jmp LOADKID
 .LoadShad BRK       ; jmp LOADSHAD
-.SaveKid BRK        ; jmp SAVEKID
+.SaveKid jmp SAVEKID
 .SaveShad BRK       ; jmp SAVESHAD
 .setupchar BRK      ; jmp SETUPCHAR
 
@@ -1944,34 +1944,40 @@ sub sta tempblockx
 
  inc tempblocky
  jmp :loop ;check 1 level below
+ENDIF
 
-*===============================
-*
-*  Load/save kid/shad vars
-*
-*-------------------------------
+\*===============================
+\*
+\*  Load/save kid/shad vars
+\*
+\*-------------------------------
 numvars = 16
 
-LOADKID
+.LOADKID
+{
  ldx #numvars-1
 
-:loop lda Kid,x
+.loop lda Kid,x
  sta Char,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+ rts
+}
 
-SAVEKID
+.SAVEKID
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Kid,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+ rts
+}
 
+IF _TODO
 LOADSHAD
  ldx #numvars-1
 

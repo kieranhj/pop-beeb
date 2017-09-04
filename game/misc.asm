@@ -1,6 +1,6 @@
 ; misc.asm
 ; Originally MISC.S
-; Miscellaneous game dunctions
+; Miscellaneous game functions
 
 .misc
 \org = $f900
@@ -15,7 +15,7 @@
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
 .firstguard BRK     ; jmp FIRSTGUARD
-.markmeters BRK     ; jmp MARKMETERS
+.markmeters RTS     ; jmp MARKMETERS                    BEEB TO DO
 
 .potioneffect BRK   ; jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE

@@ -17,7 +17,7 @@ PalaceEditor = 0
 .breakloose BRK         ; jmp BREAKLOOSE
 
 .animmobs jmp ANIMMOBS
-.addmobs BRK            ; jmp ADDMOBS
+.addmobs jmp ADDMOBS
 .closeexit BRK          ; jmp CLOSEEXIT
 .getspikes BRK          ; jmp GETSPIKES
 .shakem BRK             ; jmp SHAKEM
@@ -2007,78 +2007,80 @@ ENDIF
  jmp jumpseq
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Add all visible MOBs to object table (to be drawn later)
-*
-*-------------------------------
-ADDMOBS
+\*-------------------------------
+\*
+\*  Add all visible MOBs to object table (to be drawn later)
+\*
+\*-------------------------------
+.ADDMOBS
+{
  ldx nummob ;# objs in motion (0-maxmob)
- beq :rts
+ beq return_22
 
-:loop stx tempnt
+.loop stx tempnt
  jsr loadmob
 
  lda mobtype
- bne :1
+ bne label_1
  jsr ATM ;Add this MOB
-:1
+.label_1
  ldx tempnt
  dex
- bne :loop
-:rts
-]rts rts
+ bne loop
+}
+.return_22
+ rts
 
-*-------------------------------
-*
-*  Add this MOB to obj table (if visible)
-*
-*-------------------------------
-ATM
 
-* Is floorpiece visible onscreen?
+\*-------------------------------
+\*
+\*  Add this MOB to obj table (if visible)
+\*
+\*-------------------------------
+.ATM
+{
+\* Is floorpiece visible onscreen?
 
  lda mobscrn
  cmp VisScrn
- bne :ok2
+ bne ok2
 
  lda moby
  cmp #192+17 ;17 is generous estimate of image height
- bcc :ok
+ bcc ok
  rts
-:ok2
+.ok2
  cmp scrnBelow
- bne ]rts ;not on screen below
+ bne return_22 ;not on screen below
 
  lda moby
- cmp #-17
- bcs :ok1
+ cmp #LO(-17)
+ bcs ok1
  cmp #17
- bcs ]rts
-:ok1
+ bcs return_22
+.ok1
  clc
  adc #192
  sta moby ;(this change won't be saved)
-:ok
+.ok
 
-* Get block #; index char
+\* Get block #; index char
 
  lda moby
  jsr getblocky ;return blocky (0-3)
  sta tempblocky
 
  lda mobx
- lsr
- lsr
+ lsr A
+ lsr A
  sta tempblockx
 
  jsr indexblock
  sty FCharIndex
 
-* Mark floorbuf & fredbuf of affected blocks to R
+\* Mark floorbuf & fredbuf of affected blocks to R
 
-:cont1
+.cont1
  inc tempblockx
  jsr indexblock  ;block to R
 
@@ -2091,7 +2093,7 @@ ATM
  sbc #FFheight
  jsr getblocky ;highest affected blocky
  cmp tempblocky
- beq :same
+ beq same
 
  sta tempblocky
  jsr indexblock ;block to U.R.
@@ -2099,23 +2101,25 @@ ATM
  lda #2
  jsr markfloor
  jsr markfred
-:same
+.same
 
-* Get frame #
+\* Get frame #
 
  lda #Ffalling
- sta mobframe
+ sta mover_mobframe
 
  jmp addmobobj ;add MOB to object table
+}
 
-*-------------------------------
-*
-*  Add MOB to object table
-*
-*  In: mob data
-*
-*-------------------------------
-addmobobj
+\*-------------------------------
+\*
+\*  Add MOB to object table
+\*
+\*  In: mob data
+\*
+\*-------------------------------
+.addmobobj
+{
  inc objX
  ldx objX
 
@@ -2131,7 +2135,7 @@ addmobobj
  lda moby
  sta objY,x
 
- lda mobframe
+ lda mover_mobframe
  sta objIMG,x
 
  lda #0
@@ -2141,7 +2145,10 @@ addmobobj
  sta objCR,x
 
  jmp setobjindx
-]rts rts
+ rts
+}
+
+IF _TODO
 *-------------------------------
 *
 * Shake floors
