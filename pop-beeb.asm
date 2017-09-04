@@ -84,10 +84,10 @@ INCLUDE "lib/print.asm"
     \\ Should be some sort of BEEB system init
 
     \\ MODE
-;    LDA #22
-;    JSR oswrch
-;    LDA #BEEB_SCREEN_MODE
-;    JSR oswrch
+    LDA #22
+    JSR oswrch
+    LDA #BEEB_SCREEN_MODE
+    JSR oswrch
 
     JSR beeb_set_screen_mode
 

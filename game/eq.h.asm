@@ -195,9 +195,9 @@ width = IMAGE+1
 .scrnAbove skip 1
 .scrnBelow skip 1
 .scrnBelowL skip 1
-;.scrnAboveL skip 1
-;.scrnAboveR skip 1
-;.scrnBelowR skip 1
+.scrnAboveL skip 1
+.scrnAboveR skip 1
+.scrnBelowR skip 1
 ;.kbdX skip 1
 ;.kbdY skip 1
 ;.joyX skip 1

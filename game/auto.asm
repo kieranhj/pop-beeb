@@ -22,7 +22,7 @@
 .cutcheck BRK           ; jmp CUTCHECK
 
 .cutguard BRK           ; jmp CUTGUARD
-.addguard BRK           ; jmp ADDGUARD
+.addguard RTS           ; jmp ADDGUARD              BEEB TO DO
 .cut BRK                ; jmp CUT
 
 \*-------------------------------

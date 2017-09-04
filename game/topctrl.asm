@@ -795,7 +795,8 @@ ENDIF
 .addchars
 {
  jsr topctrl_reflection
- jsr topctrl_shadowman
+\ BEEB TEMP comment out
+\ jsr topctrl_shadowman
  jsr topctrl_kid
 
  jsr checkmeters

@@ -16,7 +16,7 @@ CheckTimer = 0
 \*-------------------------------
 \ org org
 
-.addtorches BRK         ; jmp ADDTORCHES
+.addtorches RTS         ; jmp ADDTORCHES            BEEB TO DO
 .doflashon BRK          ; jmp DOFLASHON
 .PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
@@ -28,7 +28,7 @@ CheckTimer = 0
 \ jmp checkalert
 \ jmp reflection
 
-.addslicers BRK         ; jmp ADDSLICERS
+.addslicers RTS         ; jmp ADDSLICERS            BEEB TO DO
 .pause BRK              ; jmp PAUSE
 \ jmp bonesrise
 .deadenemy BRK          ; jmp DEADENEMY
@@ -44,7 +44,7 @@ CheckTimer = 0
 .gravity BRK            ; jmp GRAVITY
 .initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
 .mirappear BRK          ; jmp MIRAPPEAR
-.crumble BRK            ; jmp CRUMBLE
+.crumble RTS            ; jmp CRUMBLE               BEEB TO DO
 
 \*-------------------------------
 \ lst

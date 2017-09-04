@@ -21,7 +21,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .mouserescue BRK    ; jmp MOUSERESCUE
 .stabchar brk       ; jmp STABCHAR
 .unholy BRK         ; jmp UNHOLY
-.reflection BRK     ; jmp REFLECTION
+.reflection RTS     ; jmp REFLECTION                    BEEB TO DO
 
 .MarkKidMeter BRK   ; jmp MARKKIDMETER
 .MarkOppMeter BRK   ; jmp MARKOPPMETER

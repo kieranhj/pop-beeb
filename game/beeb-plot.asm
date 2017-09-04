@@ -208,10 +208,10 @@ IF BEEB_SCREEN_MODE == 4
 
     SEC
     LDA beeb_writeptr
-    SBC #LO(320)
+    SBC #LO(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(320)
+    SBC #HI(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr+1
 
     LDY #7
@@ -310,10 +310,10 @@ IF BEEB_SCREEN_MODE == 4
 
     SEC
     LDA beeb_writeptr
-    SBC #LO(320)
+    SBC #LO(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(320)
+    SBC #HI(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr+1
 
     LDY #7

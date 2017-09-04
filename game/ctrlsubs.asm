@@ -34,7 +34,7 @@
 .rdblock jmp RDBLOCK
 .rdblock1 jmp RDBLOCK1
 .setupsword BRK     ; jmp SETUPSWORD
-.getscrns BRK       ; jmp GETSCRNS
+.getscrns jmp GETSCRNS
 
 .addguardobj BRK    ; jmp ADDGUARDOBJ
 .opjumpseq BRK      ; jmp OPJUMPSEQ
@@ -291,16 +291,16 @@ thinner = 3
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   S C R E E N S
-*
-*  Get VisScrn's 8 surrounding screens from map
-*  (Store in scrnAbove, scrnBelow, etc.)
-*
-*-------------------------------
-GETSCRNS
+\*-------------------------------
+\*
+\*  G E T   S C R E E N S
+\*
+\*  Get VisScrn's 8 surrounding screens from map
+\*  (Store in scrnAbove, scrnBelow, etc.)
+\*
+\*-------------------------------
+.GETSCRNS
+{
  lda VisScrn
  jsr GETLEFT
  sta scrnLeft
@@ -317,7 +317,7 @@ GETSCRNS
  jsr GETDOWN
  sta scrnBelow
 
-* and diagonals
+\* and diagonals
 
  lda scrnBelow
  jsr GETLEFT
@@ -334,8 +334,10 @@ GETSCRNS
  lda scrnAbove
  jsr GETRIGHT
  sta scrnAboveR
-]rts rts
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   B A S E   X
