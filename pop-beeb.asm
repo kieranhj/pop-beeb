@@ -52,7 +52,7 @@ INCLUDE "game/mover.h.asm"
 ORG &E00
 ;GUARD &4B80            ; eventually shrunk MODE 1
 ;GUARD &5800             ; currently in full MODE 4
-GUARD &8000
+GUARD &65C0
 
 .pop_beeb_start
 
@@ -84,10 +84,12 @@ INCLUDE "lib/print.asm"
     \\ Should be some sort of BEEB system init
 
     \\ MODE
-    LDA #22
-    JSR oswrch
-    LDA #BEEB_SCREEN_MODE
-    JSR oswrch
+;    LDA #22
+;    JSR oswrch
+;    LDA #BEEB_SCREEN_MODE
+;    JSR oswrch
+
+    JSR beeb_set_screen_mode
 
 IF 0
     \\ Level load & plot test
@@ -132,6 +134,61 @@ ELSE
 ENDIF
 
     .return
+    RTS
+}
+
+BEEB_SCREEN_WIDTH=280
+BEEB_SCREEN_HEIGHT=192
+BEEB_SCREEN_CHARS=(BEEB_SCREEN_WIDTH/8)
+BEEB_SCREEN_ROWS=(BEEB_SCREEN_HEIGHT/8)
+beeb_screen_addr=&8000 - (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT) / 8
+
+.beeb_crtcregs
+{
+	EQUB 63 			; R0  horizontal total
+	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
+	EQUB 49				; R2  horizontal position
+	EQUB &24			; R3  sync width 40 = &28
+	EQUB 38				; R4  vertical total
+	EQUB 0				; R5  vertical total adjust
+	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
+	EQUB 34				; R7  vertical position; 35=top of screen
+	EQUB 0				; R8  interlace
+	EQUB 7				; R9  scanlines per row
+	EQUB 32				; R10 cursor start
+	EQUB 8				; R11 cursor end
+	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
+	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
+}
+
+.beeb_set_screen_mode
+{
+    \\ Set CRTC registers
+    LDX #13
+    .crtcloop
+    STX &FE00
+    LDA beeb_crtcregs, X
+    STA &FE01
+    DEX
+    BPL crtcloop
+
+    \\ Set ULA
+    LDA #&88            ; MODE 4
+    STA &FE20
+
+    \\ Set Palette
+    CLC
+    LDA #7              ; PAL_black
+    .palloop1
+    STA &FE21
+    ADC #&10
+    BPL palloop1  
+    EOR #7              ; PAL_white
+    .palloop2
+    STA &FE21
+    ADC #&10
+    BMI palloop2
+
     RTS
 }
 
