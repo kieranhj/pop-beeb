@@ -20,17 +20,17 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .potioneffect BRK   ; jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE
 .stabchar brk       ; jmp STABCHAR
-.unholy BRK         ; jmp UNHOLY
+.unholy RTS         ; jmp UNHOLY                        BEEB TO DO
 .reflection RTS     ; jmp REFLECTION                    BEEB TO DO
 
 .MarkKidMeter BRK   ; jmp MARKKIDMETER
 .MarkOppMeter BRK   ; jmp MARKOPPMETER
-.bonesrise BRK      ; jmp BONESRISE
+.bonesrise RTS      ; jmp BONESRISE                     BEEB TO DO
 .decstr BRK         ; jmp DECSTR
 .DoSaveGame BRK     ; jmp DOSAVEGAME
 
 .LoadLevelX jmp LOADLEVELX
-.checkalert BRK     ; jmp CHECKALERT
+.checkalert RTS     ; jmp CHECKALERT                    BEEB TO DO
 .dispversion BRK    ; jmp DISPVERSION
 
 \*-------------------------------

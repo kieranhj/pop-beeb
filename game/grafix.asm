@@ -36,7 +36,7 @@
 .addpeel BRK    ;jmp ADDPEEL
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel BRK    ;jmp SNGPEEL
-.rnd BRK        ;jmp RND
+.rnd jmp RND
 .cls jmp CLS
 \
 .lay jmp LAY
@@ -93,8 +93,8 @@
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty BRK    ;jmp INVERTY
-.normspeed BRK  ;jmp NORMSPEED
+.inverty RTS    ;jmp INVERTY                                            BEEB TO DO
+.normspeed RTS  ;jmp NORMSPEED                                          NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
 .zerored jmp ZERORED
@@ -1422,25 +1422,29 @@ COPYSCRN
  sta IMAGE ;org addr
 
  jmp copy2000
+ENDIF
 
-*-------------------------------
-*
-*  Generate random number
-*
-*  RNDseed := (5 * RNDseed + 23) mod 256
-*
-*-------------------------------
-RND
+\*-------------------------------
+\*
+\*  Generate random number
+\*
+\*  RNDseed := (5 * RNDseed + 23) mod 256
+\*
+\*-------------------------------
+.RND
+{
  lda RNDseed
- asl
- asl
+ asl A
+ asl A
  clc
  adc RNDseed
  clc
  adc #23
  sta RNDseed
-return rts
+.return rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Calls to hires & master routines

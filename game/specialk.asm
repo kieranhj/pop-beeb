@@ -29,7 +29,7 @@ DebugKeys = 0
  .LoadDesel BRK   ;jmp LOADDESEL
  .initinput RTS   ;jmp INITINPUT        BEEB TO DO
 
- .demokeys BRK    ;jmp DEMOKEYS
+ .demokeys RTS    ;jmp DEMOKEYS         BEEB TO DO
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
  .getminleft BRK  ;jmp GETMINLEFT
@@ -42,7 +42,7 @@ DebugKeys = 0
  \jmp decstr
 
  .dloop BRK       ;jmp DLOOP
- .strobe BRK      ;jmp STROBE
+ .strobe RTS      ;jmp STROBE           BEEB TO DO KEYS
 
 \*-------------------------------
 \ lst

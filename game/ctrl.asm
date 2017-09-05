@@ -12,7 +12,7 @@
 .PlayerCtrl BRK       ; jmp PLAYERCTRL
 .checkfloor BRK       ; jmp CHECKFLOOR
 .ShadCtrl BRK         ; jmp SHADCTRL
-.rereadblocks BRK     ; jmp REREADBLOCKS
+.rereadblocks jmp REREADBLOCKS
 .checkpress BRK       ; jmp CHECKPRESS
 
 .DoImpale BRK         ; jmp DOIMPALE
@@ -1927,14 +1927,18 @@ DoJumphigh
 :jumpup lda #jumpup
  jsr jumpseq ;touch ceiling
 ]rts rts ;& don't forget to crop top
+ENDIF
 
-*-------------------------------
-*  reread blocks
-*-------------------------------
-REREADBLOCKS
+\*-------------------------------
+\*  reread blocks
+\*-------------------------------
+.REREADBLOCKS
+{
  jsr GetFrameInfo
  jmp GetBaseBlock
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Is character stepping on a pressure plate?

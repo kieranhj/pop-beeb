@@ -18,11 +18,11 @@
 \*-------------------------------
 \ org org
 
-.getframe BRK       ; jmp GETFRAME
+.getframe jmp GETFRAME
 .getseq jmp GETSEQ
-.getbasex BRK       ; jmp GETBASEX
+.getbasex jmp GETBASEX
 .getblockx BRK      ; jmp GETBLOCKX
-.getblockxp BRK     ; jmp GETBLOCKXP
+.getblockxp jmp GETBLOCKXP
 
 .getblocky BRK      ; jmp GETBLOCKY
 .getblockej jmp GETBLOCKEJ
@@ -33,7 +33,7 @@
 .getabovebeh BRK    ; jmp GETABOVEBEH
 .rdblock jmp RDBLOCK
 .rdblock1 jmp RDBLOCK1
-.setupsword BRK     ; jmp SETUPSWORD
+.setupsword RTS     ; jmp SETUPSWORD                BEEB TO DO
 .getscrns jmp GETSCRNS
 
 .addguardobj BRK    ; jmp ADDGUARDOBJ
@@ -60,7 +60,7 @@
 .SaveShad BRK       ; jmp SAVESHAD
 .setupchar BRK      ; jmp SETUPCHAR
 
-.GetFrameInfo BRK       ; jmp GETFRAMEINFO
+.GetFrameInfo jmp GETFRAMEINFO
 .indexblock BRK         ; jmp INDEXBLOCK
 .markred BRK            ; jmp MARKRED
 .markfred BRK           ; jmp MARKFRED
@@ -81,11 +81,11 @@
 .checkspikes BRK        ; jmp CHECKSPIKES
 .rechargemeter BRK      ; jmp RECHARGEMETER
 .addfcharx BRK          ; jmp ADDFCHARX
-.facedx BRK             ; jmp FACEDX
+.facedx jmp FACEDX
 .jumpseq jmp JUMPSEQ
 
-.GetBaseBlock BRK       ; jmp GETBASEBLOCK
-.LoadKidwOp BRK         ; jmp LOADKIDWOP
+.GetBaseBlock jmp GETBASEBLOCK
+.LoadKidwOp jmp LOADKIDWOP
 .SaveKidwOp BRK         ; jmp SAVEKIDWOP
 .getopdist BRK          ; jmp GETOPDIST
 .LoadShadwOp BRK        ; jmp LOADSHADWOP
@@ -337,17 +337,17 @@ thinner = 3
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   B A S E   X
-*
-*  In: Char data; frame data
-*
-*  Out: A = character's base X-coord
-*
-*-------------------------------
-GETBASEX
+\*-------------------------------
+\*
+\*  G E T   B A S E   X
+\*
+\*  In: Char data; frame data
+\*
+\*  Out: A = character's base X-coord
+\*
+\*-------------------------------
+.GETBASEX
+{
  lda Fcheck
  and #Ffootmark
   ;# pixels to count in from left edge of image
@@ -359,42 +359,46 @@ GETBASEX
  adc Fdx ;Fdx (+ = fwd, - = bkwd)
 
  jmp ADDCHARX ;Add to CharX in direction char is facing
+}
 
-*-------------------------------
-*
-*  Add A to CharX in direction char is facing
-*
-*  In: A = # pixels to add (+ = fwd, - = bkwd)
-*      CharX = original char X-coord
-*      CharFace = direction char is facing
-*
-*  Out: A = new char X-coord
-*
-*-------------------------------
-ADDCHARX
+\*-------------------------------
+\*
+\*  Add A to CharX in direction char is facing
+\*
+\*  In: A = # pixels to add (+ = fwd, - = bkwd)
+\*      CharX = original char X-coord
+\*      CharFace = direction char is facing
+\*
+\*  Out: A = new char X-coord
+\*
+\*-------------------------------
+.ADDCHARX
+{
  bit CharFace ;-1 = left (normal)
- bpl :right ;0 = right (mirrored)
+ bpl right ;0 = right (mirrored)
 
  eor #$ff
  clc
  adc #1 ;A := -A
 
-:right clc
+.right clc
  adc CharX
  rts
+}
 
-*-------------------------------
-*
-* Add A to FCharX
-* (A range: -127 to 127)
-*
-* In: A; FChar data
-* Out: FCharX
-*
-*-------------------------------
-ADDFCHARX
+\*-------------------------------
+\*
+\* Add A to FCharX
+\* (A range: -127 to 127)
+\*
+\* In: A; FChar data
+\* Out: FCharX
+\*
+\*-------------------------------
+.ADDFCHARX
+{
  sta ztemp
- bpl :1 ;hibit clr
+ bpl label_1 ;hibit clr
 
  lda #0
  sec
@@ -402,8 +406,8 @@ ADDFCHARX
  sta ztemp ;make it posititve
 
  lda #$ff ;hibit set
-:1 eor FCharFace
- bmi :left
+.label_1 eor FCharFace
+ bmi left
 
  lda ztemp
  clc
@@ -415,7 +419,7 @@ ADDFCHARX
  sta FCharX+1
  rts
 
-:left lda FCharX
+.left lda FCharX
  sec
  sbc ztemp
  sta FCharX
@@ -424,7 +428,9 @@ ADDFCHARX
  sbc #0
  sta FCharX+1
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * In: CharFace,CharBlockX,CharBlockY,CharScrn
@@ -566,27 +572,27 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   B L O C K   X
-*
-*  In:  A = X-coord
-*
-*  Out: A = # of the 14-pixel-wide block within which
-*           this pixel falls (0-9 onscreen)
-*
-*       OFFSET = pixel within this block
-*
-*  - Use GETBLOCKXP for objects on center plane
-*  - Use GETBLOCKX for absolute X-coords & foreground plane
-*
-*-------------------------------
-GETBLOCKXP
+\*-------------------------------
+\*
+\*  G E T   B L O C K   X
+\*
+\*  In:  A = X-coord
+\*
+\*  Out: A = # of the 14-pixel-wide block within which
+\*           this pixel falls (0-9 onscreen)
+\*
+\*       OFFSET = pixel within this block
+\*
+\*  - Use GETBLOCKXP for objects on center plane
+\*  - Use GETBLOCKX for absolute X-coords & foreground plane
+\*
+\*-------------------------------
+.GETBLOCKXP
  sec
  sbc #angle
 
-GETBLOCKX
+.GETBLOCKX
+{
  tay
 
  lda PixelTable,y
@@ -594,7 +600,9 @@ GETBLOCKX
 
  lda BlockTable,y
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   B L O C K   Y
@@ -684,40 +692,43 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   B A S E   B L O C K
-*
-*  In: Char data
-*  Out: CharBlockX
-*
-*-------------------------------
-GETBASEBLOCK
+\*-------------------------------
+\*
+\*  G E T   B A S E   B L O C K
+\*
+\*  In: Char data
+\*  Out: CharBlockX
+\*
+\*-------------------------------
+.GETBASEBLOCK
+{
  jsr getbasex
  jsr getblockxp
  sta CharBlockX
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  F A C E   D X
-*
-*  In: CharFace; A = DX
-*
-*  Out: DX if char is facing right, -DX if facing left
-*
-*-------------------------------
-FACEDX
+\*-------------------------------
+\*
+\*  F A C E   D X
+\*
+\*  In: CharFace; A = DX
+\*
+\*  Out: DX if char is facing right, -DX if facing left
+\*
+\*-------------------------------
+.FACEDX
+{
  bit CharFace
- bmi ]rts
+ bmi return
 
  eor #$ff
  clc
  adc #1 ;negate
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -928,52 +939,60 @@ SETUPSWORD
  sta FCharY
 
  jmp ADDSWORDOBJ
+ENDIF
 
-*-------------------------------
-*
-*  G E T   F R A M E
-*
-*  In: A = frame # (1-192)
-*  Out: framepoint = 2-byte pointer to frame def table
-*
-*-------------------------------
-GETFRAME ;Kid uses main char set
+\*-------------------------------
+\*
+\*  G E T   F R A M E
+\*
+\*  In: A = frame # (1-192)
+\*  Out: framepoint = 2-byte pointer to frame def table
+\*
+\*-------------------------------
+.GETFRAME ;Kid uses main char set
+{
  jsr getfindex
  lda framepoint
  clc
- adc #Fdef
+ adc #LO(Fdef)
  sta framepoint
  lda framepoint+1
- adc #>Fdef
+ adc #HI(Fdef)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getaltframe1 ;Enemy uses alt set 1
+\*-------------------------------
+.getaltframe1 ;Enemy uses alt set 1
+{
  jsr getfindex
  lda framepoint
  clc
- adc #altset1
+ adc #LO(altset1)
  sta framepoint
  lda framepoint+1
- adc #>altset1
+ adc #HI(altset1)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getaltframe2 ;Princess & Vizier use alt set 2
+\*-------------------------------
+.getaltframe2 ;Princess & Vizier use alt set 2
+{
  jsr getfindex
  lda framepoint
  clc
- adc #altset2
+ adc #LO(altset2)
  sta framepoint
  lda framepoint+1
- adc #>altset2
+ adc #HI(altset2)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getfindex
+\*-------------------------------
+.getfindex
+{
  sec
  sbc #1
  sta ztemp
@@ -997,7 +1016,9 @@ getfindex
  adc ztemp+1
  sta framepoint+1 ;make it x5
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * getswordframe
@@ -1676,15 +1697,15 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   F R A M E   I N F O
-*
-*  Get frame info for char (based on CharPosn)
-*
-*-------------------------------
-GETFRAMEINFO
+\*-------------------------------
+\*
+\*  G E T   F R A M E   I N F O
+\*
+\*  Get frame info for char (based on CharPosn)
+\*
+\*-------------------------------
+.GETFRAMEINFO
+{
  lda CharPosn
  jsr GETFRAME ;set framepoint
 
@@ -1709,50 +1730,54 @@ GETFRAMEINFO
  iny
  lda (framepoint),y
  sta Fcheck
+}
+.return_23
+ rts
 
-]rts rts
-
-*-------------------------------
-*
-* Use alternate character image sets
-* (if appropriate)
-*
-* In: Char data; framepoint
-* Out: framepoint
-*
-*-------------------------------
-usealtsets
+\*-------------------------------
+\*
+\* Use alternate character image sets
+\* (if appropriate)
+\*
+\* In: Char data; framepoint
+\* Out: framepoint
+\*
+\*-------------------------------
+.usealtsets
+{
  ldx CharID
- beq ]rts ;kid uses main set, enemy uses alt set 1
+ beq return_23 ;kid uses main set, enemy uses alt set 1
  cpx #24
- beq ]rts ;mouse uses main set
+ beq return_23 ;mouse uses main set
  cpx #5
- bcs :usealt2 ;princess & vizier use alt set 2
+ bcs usealt2 ;princess & vizier use alt set 2
 
  lda CharPosn
  cpx #2
- bcc :1
+ bcc label_1
  cmp #102
- bcc ]rts
+ bcc return_23
  cmp #107
- bcs :1
+ bcs label_1
  ;frames 102-106 (falling): substitute 172-176 altset
  clc
  adc #70
 
-:1 cmp #150
- bcc ]rts
+.label_1 cmp #150
+ bcc return_23
  cmp #190
- bcs ]rts
+ bcs return_23
 ;frames 150-189: use altset
  sec
  sbc #149
  jmp getaltframe1
 
-:usealt2
+.usealt2
  lda CharPosn
  jmp getaltframe2
+}
 
+IF _TODO
 *===============================
 *
 *  M A R K
@@ -2000,35 +2025,41 @@ SAVESHAD
  dex
  bpl :loop
  rts
+ENDIF
 
-*  Load kid w/ opponent
+\*  Load kid w/ opponent
 
-LOADKIDWOP
+.LOADKIDWOP
+{
  ldx #numvars-1
 
-:loop lda Kid,x
+.loop lda Kid,x
  sta Char,x
 
  lda Shad,x
  sta Op,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-SAVEKIDWOP
+.SAVEKIDWOP
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Kid,x
 
  lda Op,x
  sta Shad,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
+IF _TODO
 * Load shadowman w/ opponent
 
 LOADSHADWOP

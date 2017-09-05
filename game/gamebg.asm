@@ -16,13 +16,13 @@
 \*-------------------------------
 \ org org
 
-.updatemeters BRK   ; jmp UPDATEMETERS
+.updatemeters RTS   ; jmp UPDATEMETERS          BEEB TO DO
 .DrawKidMeter BRK   ; jmp DRAWKIDMETER
 .DrawSword BRK      ; jmp DRAWSWORD
 .DrawKid BRK        ; jmp DRAWKID
 .DrawShad BRK       ; jmp DRAWSHAD
 
-.setupflame rts     ; jmp SETUPFLAME
+.setupflame RTS     ; jmp SETUPFLAME            BEEB TO DO
 .continuemsg BRK    ; jmp CONTINUEMSG
 .addcharobj BRK     ; jmp ADDCHAROBJ
 .setobjindx BRK     ; jmp SETOBJINDX
@@ -34,7 +34,7 @@
 .DrawGuard BRK      ; jmp DRAWGUARD
 .DrawGuard2 BRK     ; jmp DRAWGUARD
 
-.setupflask RTS     ; jmp SETUPFLASK - NOT IMPLEMENTED YET
+.setupflask RTS     ; jmp SETUPFLASK            BEEB TO DO
 .setupcomix BRK     ; jmp SETUPCOMIX
 .psetupflame BRK    ; jmp PSETUPFLAME
 .drawpost BRK       ; jmp DRAWPOST

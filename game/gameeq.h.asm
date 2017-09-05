@@ -235,11 +235,11 @@ ENDIF
 ;.timebomb skip 1
 ;.justblocked skip 1
 ;.gdtimer skip 1
-;.framepoint skip 2
-;.Fimage skip 1
-;.Fdx skip 1
-;.Fdy skip 1
-;.Fcheck skip 1
+.framepoint skip 2
+.Fimage skip 1
+.Fdx skip 1
+.Fdy skip 1
+.Fcheck skip 1
 .exitopen skip 1
 ;.collX skip 1
 .lightning skip 1
@@ -262,7 +262,7 @@ ENDIF
 ;.ydiff skip 2
 ;.xdir skip 1
 ;.ydir skip 1
-;.RNskipeed skip 1
+.RNDseed skip 1
 .invert skip 1
 .PlayCount skip 1
 ;.refract skip 1
@@ -319,7 +319,7 @@ ENDIF
 ;.clrU skip 1
 ;.clrD skip 1
 ;.clrbtn skip 1
-;.Fsword skip 1
+.Fsword skip 1
 ;.purpleflag skip 1 ;$da
 .msgtimer skip 1
 ;.MaxOppStr skip 1

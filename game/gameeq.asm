@@ -74,7 +74,7 @@
 ;BlockYthis ds 1
 .BlockYlast skip 1
 
-;Op ds $10
+.Op skip $10
 
 keybuflen = 10
 ;keybuf ds keybuflen
@@ -100,4 +100,4 @@ keybuflen = 10
 
 ;.soundtable ds maxsfx
 
-;.trobcount ds 1
+.trobcount skip 1

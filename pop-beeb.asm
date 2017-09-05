@@ -47,17 +47,38 @@ INCLUDE "game/hires.h.asm"
 INCLUDE "game/master.h.asm"
 INCLUDE "game/mover.h.asm"
 
+; BSS data in lower RAM
+
+ORG &300                ; VDU and language workspace
+GUARD &800              ; sound workspace
+
+\ imlists from eq.asm
+
+.bgX skip maxback
+.bgY skip maxback
+.bgIMG skip maxback
+.bgOP skip maxback
+
+.fgX skip maxfore
+.fgY skip maxfore
+.fgIMG skip maxfore
+.fgOP skip maxfore
+
+ORG &900                ; envelope / speech / CFS / soft key / char defs
+GUARD &D00              ; NMI workspace
+
 ; Main RAM
 
 ORG &E00
 ;GUARD &4B80            ; eventually shrunk MODE 1
-;GUARD &5800             ; currently in full MODE 4
-GUARD &65C0
+;GUARD &5800            ; currently in full MODE 4
+;GUARD &65C0             ; now in shrunk MODE 4!
+GUARD &8000             ; when testing high watermark
 
 .pop_beeb_start
 
 ; Master 128 PAGE is &0E00 since MOS uses other RAM buffers for DFS workspace
-SCRATCH_RAM_ADDR = &0400
+SCRATCH_RAM_ADDR = &7D00            ; top of screen memory for now
 
 INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
@@ -148,7 +169,7 @@ beeb_screen_addr=&8000 - (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT) / 8
 	EQUB 63 			; R0  horizontal total
 	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
 	EQUB 49				; R2  horizontal position
-	EQUB &24			; R3  sync width 40 = &28
+	EQUB &24			; R3  sync width
 	EQUB 38				; R4  vertical total
 	EQUB 0				; R5  vertical total adjust
 	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
@@ -215,8 +236,11 @@ INCLUDE "game/auto.asm"
 INCLUDE "game/ctrlsubs.asm"
 INCLUDE "game/ctrl.asm"
 INCLUDE "game/coll.asm"
+INCLUDE "game/framedefs.asm"
 
 .pop_beeb_end
+
+PRINT "Code & Data High Watermark = ", ~P%
 
 SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
 
@@ -228,6 +252,11 @@ INCLUDE "game/gameeq.asm"
 ALIGN &100
 .blueprnt
 SKIP &900           ; all blueprints same size
+
+; High watermark for main RAM
+
+PRINT "RAM High Watermark = ", ~P%
+PRINT "BSS Size = ", ~(P% - pop_beeb_end)
 
 ; Construct SHADOW RAM
 

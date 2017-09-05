@@ -17,19 +17,19 @@ CheckTimer = 0
 \ org org
 
 .addtorches RTS         ; jmp ADDTORCHES            BEEB TO DO
-.doflashon BRK          ; jmp DOFLASHON
+.doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
 .PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
 .showtime BRK           ; jmp SHOWTIME
 
-.doflashoff BRK         ; jmp DOFLASHOFF
+.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TO DO
 .lrclse RTS             ; jmp LRCLSE                BEEB TO DO OR NOT NEEDED?
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
 
 .addslicers RTS         ; jmp ADDSLICERS            BEEB TO DO
-.pause BRK              ; jmp PAUSE
+.pause jmp PAUSE
 \ jmp bonesrise
 .deadenemy BRK          ; jmp DEADENEMY
 .playcut BRK            ; jmp PLAYCUT
@@ -187,23 +187,28 @@ ADDTORCHES
  bpl :loop
 
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-* In: A = length of pause (1-256)
-*
-*-------------------------------
-PAUSE
-:outer pha
+\*-------------------------------
+\*
+\* In: A = length of pause (1-256)
+\*
+\*-------------------------------
+.PAUSE
+{
+.outer pha
  ldx #0
-:loop dex
- bne :loop
+.loop dex
+ bne loop
  pla
  sec
  sbc #1
- bne :outer
-]rts rts
+ bne outer
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  F L A S H
