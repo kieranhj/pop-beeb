@@ -46,6 +46,7 @@ INCLUDE "game/frameadv.h.asm"
 INCLUDE "game/hires.h.asm"
 INCLUDE "game/master.h.asm"
 INCLUDE "game/mover.h.asm"
+INCLUDE "game/ctrl.h.asm"
 
 ; BSS data in lower RAM
 
@@ -76,6 +77,7 @@ ORG &E00
 GUARD &8000             ; when testing high watermark
 
 .pop_beeb_start
+.pop_beeb_lib_start
 
 ; Master 128 PAGE is &0E00 since MOS uses other RAM buffers for DFS workspace
 SCRATCH_RAM_ADDR = &7D00            ; top of screen memory for now
@@ -83,6 +85,9 @@ SCRATCH_RAM_ADDR = &7D00            ; top of screen memory for now
 INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
+
+.pop_beeb_lib_end
+.pop_beeb_code_start
 
 .swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
 .swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
@@ -221,11 +226,9 @@ INCLUDE "game/beeb-plot.asm"
 
 INCLUDE "game/frameadv.asm"
 INCLUDE "game/grafix.asm"
-INCLUDE "game/tables.asm"
-INCLUDE "game/bgdata.asm"
 INCLUDE "game/gamebg.asm"
 INCLUDE "game/hires.asm"
-INCLUDE "game/hrtables.asm"
+INCLUDE "game/bgdata.asm"
 INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
 INCLUDE "game/specialk.asm"
@@ -236,15 +239,28 @@ INCLUDE "game/auto.asm"
 INCLUDE "game/ctrlsubs.asm"
 INCLUDE "game/ctrl.asm"
 INCLUDE "game/coll.asm"
+
+.pop_beeb_code_end
+.pop_beeb_data_start
+
+PRINT "Code high watermark = ", ~P%
+PRINT "Main code size = ", ~(pop_beeb_code_end-pop_beeb_code_start)
+
+INCLUDE "game/tables.asm"
+INCLUDE "game/hrtables.asm"
 INCLUDE "game/framedefs.asm"
 
+.pop_beeb_data_end
 .pop_beeb_end
 
-PRINT "Code & Data High Watermark = ", ~P%
+PRINT "Code & data high watermark = ", ~P%
+PRINT "Main data size = ", ~(pop_beeb_data_end-pop_beeb_data_start)
 
 SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
 
 ; Run time initalised data
+
+.pop_beeb_bss_start
 
 INCLUDE "game/eq.asm"
 INCLUDE "game/gameeq.asm"
@@ -253,10 +269,12 @@ ALIGN &100
 .blueprnt
 SKIP &900           ; all blueprints same size
 
+.pop_beeb_bss_end
+
 ; High watermark for main RAM
 
-PRINT "RAM High Watermark = ", ~P%
-PRINT "BSS Size = ", ~(P% - pop_beeb_end)
+PRINT "RAM high watermark = ", ~P%
+PRINT "BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
 
 ; Construct SHADOW RAM
 

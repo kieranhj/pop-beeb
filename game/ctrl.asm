@@ -9,7 +9,7 @@
 \*-------------------------------
 \ org org
 
-.PlayerCtrl BRK       ; jmp PLAYERCTRL
+.PlayerCtrl jmp PLAYERCTRL
 .checkfloor BRK       ; jmp CHECKFLOOR
 .ShadCtrl BRK         ; jmp SHADCTRL
 .rereadblocks jmp REREADBLOCKS
@@ -550,32 +550,34 @@ SHADCTRL
  jsr UserCtrl
 
  jmp SaveDesel
+ENDIF
 
-*-------------------------------
-*
-*  P L A Y E R   C O N T R O L
-*
-*-------------------------------
-PLAYERCTRL
+\*-------------------------------
+\*
+\*  P L A Y E R   C O N T R O L
+\*
+\*-------------------------------
+.PLAYERCTRL
+{
  lda CharLife
- bpl :cont1 ;dead
+ bpl cont1 ;dead
  lda KidStrength
- bne :cont1
+ bne cont1
  lda #0
  sta CharLife
-:cont1
+.cont1
  lda stunned
- beq :cont
+ beq cont
  dec stunned
 
-:cont lda level
- bne :game
-:demo jsr DemoCtrl
+.cont lda level
+ bne game
+.demo jsr DemoCtrl
  jmp GenCtrl
 
-* Character controlled by selected device
+\* Character controlled by selected device
 
-:game jsr LoadSelect ;load jstk-push flags for selected device
+.game jsr LoadSelect ;load jstk-push flags for selected device
 
  jsr getselect ;get current input from selected device
 
@@ -585,15 +587,17 @@ PLAYERCTRL
  jsr UserCtrl
 
  jmp SaveSelect ;save updated jstk-push flags
+}
 
-*-------------------------------
-* Player ctrl in demo
+\*-------------------------------
+\* Player ctrl in demo
 
-DemoCtrl
+.DemoCtrl
+{
  lda milestone
- bne :finish
+ bne finish
  lda CharSword
- beq :preprog
+ beq preprog
 
  lda #10
  sta guardprog
@@ -602,254 +606,270 @@ DemoCtrl
  sta guardprog
  rts
 
-:preprog jmp demo
+.preprog jmp demo
 
-:finish jsr clrall
+.finish jsr clrall
  sta clrbtn
- lda #-1
+ lda #LO(-1)
  sta clrF
  sta JSTKX ;run o.s.
-]rts rts
+ rts
+}
 
-*-------------------------------
-UserCtrl
+\*-------------------------------
+
+.UserCtrl
+{
  lda CharFace
- bpl :faceL
+ bpl faceL
 
  jmp GenCtrl
 
-* If char is facing right, reverse JSTK & clrF/clrB
+\* If char is facing right, reverse JSTK & clrF/clrB
 
-:faceL jsr facejstk
+.faceL jsr facejstk
 
  jsr GenCtrl
 
  jmp facejstk
+}
 
-*-------------------------------
-clrall
+\*-------------------------------
+.clrall
+{
  lda #0
  sta clrB
  sta clrF
  sta clrU
  sta clrD
  lda #1
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  G E N E R A L   C O N T R O L
-*
-*  In: Raw input
-*        JSTKX (- fwd, + back, 0 center)
-*        JSTKY (- up, + down, 0 center)
-*        btn (- down, + up)
-*      Smart input
-*        clrF-B-U-D-btn (- = fresh press)
-*
-*  Set clr = 1 after using a press
-*
-*-------------------------------
-GENCTRL
+\*-------------------------------
+\*
+\*  G E N E R A L   C O N T R O L
+\*
+\*  In: Raw input
+\*        JSTKX (- fwd, + back, 0 center)
+\*        JSTKY (- up, + down, 0 center)
+\*        btn (- down, + up)
+\*      Smart input
+\*        clrF-B-U-D-btn (- = fresh press)
+\*
+\*  Set clr = 1 after using a press
+\*
+\*-------------------------------
+.GENCTRL
+{
  lda CharLife
- bmi :alive
+ bmi alive
 
-* Dead character (If he's standing, collapse)
+\* Dead character (If he's standing, collapse)
 
-:dead lda CharPosn
+.dead lda CharPosn
  cmp #15
- beq :drop
+ beq drop
  cmp #166
- beq :drop
+ beq drop
  cmp #158
- beq :drop
+ beq drop
  cmp #171
- bne ]rts
-:drop lda #dropdead
+ bne return
+.drop lda #dropdead
  jmp jumpseq
 
-* Live character
+\* Live character
 
-:alive lda CharAction
+.alive lda CharAction
  cmp #5 ;is char in mid-bump?
- beq :clr
+ beq clr
  cmp #4 ;or falling?
- beq :clr
- bne :underctrl
-:clr
-]clr jmp clrall
+ beq clr
+ bne underctrl
+.clr
+ jmp clrall
 
-:underctrl
+.underctrl
  lda CharSword
  cmp #2 ;in fighting mode?
  beq FightCtrl ;yes
 
  lda CharID
  cmp #2 ;kid or shadowman?
- bcc :cont
+ bcc cont
  jmp GuardCtrl ;no
 
-* First question: what is char doing now?
+\* First question: what is char doing now?
 
-:cont ldx CharPosn ;previous frame #
+.cont ldx CharPosn ;previous frame #
 
  cpx #15
- beq :standing
+ beq GenCtrl_standing
 
  cpx #48
- beq :turning
+ beq GenCtrl_turning
 
  cpx #50
- bcc :0
+ bcc label_0
  cpx #53
- bcc :standing ;turn7-8-9/crouch
-:0
+ bcc GenCtrl_standing ;turn7-8-9/crouch
+.label_0
  cpx #4
- bcc :starting ;run4-5-6
+ bcc GenCtrl_starting ;run4-5-6
 
  cpx #67
- bcc :4
+ bcc label_4
  cpx #70
- bcc :stjumpup ;starting to jump up
+ bcc GenCtrl_stjumpup ;starting to jump up
 
-:4 cpx #15
- bcs :2
- jmp :running ;run8-17
+.label_4 cpx #15
+ bcs label_2
+ jmp GenCtrl_running ;run8-17
 
-:2 cpx #87
- bcc :1
+.label_2 cpx #87
+ bcc label_1
  cpx #100
- bcs :1
- jmp :hanging ;jumphang22-34
+ bcs label_1
+ jmp GenCtrl_hanging ;jumphang22-34
 
-:1 cpx #109 ;crouching?
- beq :crouching
-:3
-]rts rts
+.label_1 cpx #109 ;crouching?
+ beq GenCtrl_crouching
+.label_3
+.return
+ rts
+}
 
-:standing jmp standing
-:starting jmp starting
-:stjumpup jmp stjumpup
-:running jmp arunning
-:hanging jmp hanging
-:turning jmp turning
-:crouching jmp crouching
+.GenCtrl_standing jmp standing
+.GenCtrl_starting jmp starting
+.GenCtrl_stjumpup jmp stjumpup
+.GenCtrl_running jmp arunning
+.GenCtrl_hanging jmp hanging
+.GenCtrl_turning jmp turning
+.GenCtrl_crouching jmp crouching
 
-*-------------------------------
-* Similar routine for guard
+\*-------------------------------
+\* Similar routine for guard
 
-GuardCtrl
+.GuardCtrl
+{
  ldx CharPosn
  cpx #166 ;standing?
- beq :alert
-]rts rts
+ beq alert
+.return
+ rts
 
-:alert
+.alert
  lda clrD
- bpl ]rts
+ bpl return
  lda clrF
- bmi :engarde
- bpl :turn
+ bmi local_engarde
+ bpl local_turn
 
-:engarde jmp DoEngarde
+.local_engarde jmp DoEngarde
 
-:turn lda #1
+.local_turn lda #1
  sta clrD
  lda #alertturn
  jmp jumpseq
+}
 
-*-------------------------------
-* Char is en garde (CharSword = 2)
+\*-------------------------------
+\* Char is en garde (CharSword = 2)
 
-FightCtrl
+.FightCtrl
+{
  lda CharAction
  cmp #2
- bcs ]rts ;Must be on level ground (Action = 1)
+ bcs return ;Must be on level ground (Action = 1)
 
-* If Enemy Alert is over, put away your sword
+\* If Enemy Alert is over, put away your sword
 
  jsr getunderft
  cmp #loose
- beq :skip ;unless you're standing on loose floor
+ beq skip ;unless you're standing on loose floor
 
  lda EnemyAlert
  cmp #2
- bcc :dropgd
+ bcc dropgd
 
-* If opponent is behind you, turn to face him
+\* If opponent is behind you, turn to face him
 
-:skip jsr getopdist ;fwd distance to opponent
+.skip jsr getopdist ;fwd distance to opponent
  cmp #swordthres
- bcc :onalert
+ bcc onalert
  cmp #128
- bcc :dropgd
- cmp #-4
- bcs :onalert ;overlapping
+ bcc dropgd
+ cmp #LO(-4)
+ bcs onalert ;overlapping
  jmp DoTurnEng
 
-* Enemy out of range--drop your guard
-* (kid & shadman only)
+\* Enemy out of range--drop your guard
+\* (kid & shadman only)
 
-:dropgd lda CharID
- bne :1
+.dropgd lda CharID
+ bne label_1
  sta heroic
- beq :2
-:1 cmp #2
- bcs :onalert ;guard: remain en garde
-:2
+ beq label_2
+.label_1 cmp #2
+ bcs onalert ;guard: remain en garde
+.label_2
  ldx CharPosn
  cpx #171 ;wait for ready posn
- bne ]rts
+ bne return
 
  lda #0
  sta CharSword
 
  lda #resheathe
  jmp jumpseq
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* Remain en garde
+\*-------------------------------
+\* Remain en garde
 
-:onalert
+.onalert
+{
  ldx CharPosn ;prev frame #
  cpx #161 ;successful block?
- bne :nobloc
+ bne nobloc
  lda clrbtn ;yes--restrike or retreat?
- bmi :bts
+ bmi bts
  lda #retreat
  jmp jumpseq
 
-* Fresh button press to strike
+\* Fresh button press to strike
 
-:nobloc lda clrbtn
- bpl :10
-:bts
+.nobloc lda clrbtn
+ bpl label_10
+.bts
  lda CharID
- bne :11
+ bne label_11
  lda #gdpatience
  sta gdtimer
 
-:11 jsr DoStrike
+.label_11 jsr DoStrike
 
  lda clrbtn
  cmp #1
- beq ]rts ;struck
-:10 ;else didn't strike
+ beq return ;struck
+.label_10 ;else didn't strike
 
-* Down to lower your sword
+\* Down to lower your sword
 
  lda clrD
- bpl :nodrop
+ bpl nodrop
 
  ldx CharPosn
  cpx #158 ;ready
- beq :ready1
+ beq ready1
  cpx #170
- beq :ready1
+ beq ready1
  cpx #171
- bne ]rts
-:ready1
+ bne return
+.ready1
  lda #1
  sta clrD
 
@@ -857,14 +877,14 @@ FightCtrl
  sta CharSword
 
  lda CharID
- beq :drop ;for kid
+ beq drop ;for kid
  cmp #1
- beq :sstand ;for shadman
+ beq sstand ;for shadman
 
-:alert lda #goalertstand
+.alert lda #goalertstand
  jmp jumpseq ;for guard
 
-:drop lda #1
+.drop lda #1
  sta offguard
  lda #graceperiod
  sta refract
@@ -873,368 +893,398 @@ FightCtrl
  lda #fastsheathe
  jmp jumpseq
 
-:sstand lda #resheathe
+.sstand lda #resheathe
  jmp jumpseq
 
-* Fwd to advance, up to block, back to retreat
+\* Fwd to advance, up to block, back to retreat
 
-:nodrop
+.nodrop
  lda clrU
- bmi :up
+ bmi local_up
  lda clrF
- bmi :fwd
+ bmi local_fwd
  lda clrB
- bmi :back
+ bmi local_back
 
-]rts rts
+.return
+ rts
 
-:fwd jmp DoAdvance
-:up jmp DoBlock
-:back jmp DoRetreat
+.local_fwd jmp DoAdvance
+.local_up jmp DoBlock
+.local_back jmp DoRetreat
+}
 
-*-------------------------------
-DoTurnEng
+\*-------------------------------
+
+.DoTurnEng
+{
  lda #turnengarde
  jmp jumpseq
+}
 
-*-------------------------------
-DoBlock
+\*-------------------------------
+
+.DoBlock
+{
  ldx CharPosn
  cpx #158 ;ready
- beq :2
+ beq label_2
  cpx #170
- beq :2
+ beq label_2
  cpx #171
- beq :2
+ beq label_2
  cpx #168 ;guy-2
- beq :2
+ beq label_2
 
  cpx #165 ;adv
- beq :2
+ beq label_2
  cpx #167 ;blocked strike
- beq :3
+ beq label_3
 
-]rts rts
+.return
+ rts
 
-* From ready position: Block if appropriate
+\* From ready position: Block if appropriate
 
-:2 jsr getopdist
+.label_2 jsr getopdist
  cmp #blockthres
- bcs :blockmiss ;too far
+ bcs blockmiss ;too far
 
  lda #readyblock
  ldx CharID
- beq :kid
+ beq kid
  ldx OpPosn ;enemy sees kid 1 frame ahead
  cpx #152 ;guy4
- beq :doit
-]rts rts
+ beq doit
+ rts
 
-:kid ldx OpPosn
+.kid ldx OpPosn
  cpx #168 ;1 frame too early?
- beq ]rts  ;yes--wait 1 frame
+ beq return  ;yes--wait 1 frame
 
  cpx #151 ;guy3
- beq :doit
+ beq doit
  cpx #152 ;guy4
- beq :doit
+ beq doit
  cpx #162 ;guy22
- beq :doit
+ beq doit
 
  cpx #153 ;1 frame too late?
- bne :blockmiss
+ bne blockmiss
   ;yes--skip 1 frame
- jsr :doit
+ jsr doit
  jmp animchar
 
-* Strike-to-block
+\* Strike-to-block
 
-:3 lda #strikeblock
-:doit ldx #1
+.label_3 lda #strikeblock
+.doit ldx #1
  stx clrU
  jmp jumpseq
-:blockmiss
+.blockmiss
  lda CharID
  bne DoRetreat ;enemy doesn't waste blocks
  lda #readyblock
- bne :doit
+ bne doit
+}
 
-*-------------------------------
-DoStrike
+\*-------------------------------
+
+.DoStrike
+{
  cpx #157
- beq :1
+ beq label_1
  cpx #158
- beq :1
+ beq label_1
  cpx #170
- beq :1
+ beq label_1
  cpx #171
- beq :1 ;strike from ready posn
+ beq label_1 ;strike from ready posn
  cpx #165
- beq :1 ;from advance
+ beq label_1 ;from advance
  cpx #150
- beq :2 ;from missed block
+ beq label_2 ;from missed block
  cpx #161
- beq :2 ;from successful block
+ beq label_2 ;from successful block
 
-]rts rts
+.return
+ rts
 
-:1 lda CharID
- bne :slo ;kid is fast, others slow
+.label_1 lda CharID
+ bne slo ;kid is fast, others slow
 
  lda #faststrike
- bne :dostr
+ bne dostr
 
-:slo lda #strike
-:dostr ldx #1
+.slo lda #strike
+.dostr ldx #1
  stx clrbtn
  jmp jumpseq
 
-:2 lda #blocktostrike
- bne :dostr
+.label_2 lda #blocktostrike
+ bne dostr
+}
 
-*-------------------------------
-DoRetreat
+\*-------------------------------
+
+.DoRetreat
+{
  ldx CharPosn
  cpx #158
- beq :1 ;strike from ready posn
+ beq label_1 ;strike from ready posn
  cpx #170
- beq :1
+ beq label_1
  cpx #171
- beq :1
-]rts rts
+ beq label_1
+.return
+ rts
 
-:1 lda #retreat
+.label_1 lda #retreat
  ldx #1
  stx clrB
  jmp jumpseq
+}
 
-*-------------------------------
-DoAdvance
+\*-------------------------------
+
+.DoAdvance
+{
  ldx CharPosn
  cpx #158
- beq :1
+ beq label_1
  cpx #170
- beq :1
+ beq label_1
  cpx #171
- beq :1
-]rts rts
+ beq label_1
+.return
+ rts
 
-:1 lda CharID
- bne :slo ;kid is faster
+.label_1 lda CharID
+ bne slo ;kid is faster
  lda #fastadvance
- bne :doit
-:slo lda #advance
-:doit ldx #1
+ bne doit
+.slo lda #advance
+.doit ldx #1
  stx clrF
  jmp jumpseq
+}
 
-*-------------------------------
-*
-*  S T A N D I N G
-*
-*-------------------------------
-standing
+\*-------------------------------
+\*
+\*  S T A N D I N G
+\*
+\*-------------------------------
 
-* Fresh button click: pick up object?
+.standing
+{
+\* Fresh button click: pick up object?
 
  lda clrbtn
- bpl :noclick
+ bpl noclick
  lda btn
- bpl :noclick
- jsr TryPickup
- bne ]rts ;yes
-:noclick
+ bpl noclick
+\ BEEB TEMP comment out
+\ jsr TryPickup
+ bne return ;yes
 
-* Shadman only: down & fwd to go en garde
+.noclick
+
+\* Shadman only: down & fwd to go en garde
 
  lda CharID
- beq :kid
+ beq kid
  lda clrD
- bpl :1
+ bpl label_1
  lda clrF
- bpl :1
+ bpl label_1
  jmp DoEngarde
 
-* If opponent is within range, go en garde
-* (For kid only)
+\* If opponent is within range, go en garde
+\* (For kid only)
 
-:kid lda gotsword
- beq :1 ;no sword
+.kid lda gotsword
+ beq label_1 ;no sword
 
  lda offguard
- beq :notoffg
+ beq notoffg
  lda btn ;off guard--push btn to draw sword
- bpl :btnup
-:notoffg
+ bpl btnup
+.notoffg
  lda EnemyAlert
  cmp #2
- bcc :safe
+ bcc local_safe
  jsr getopdist ;fwd distance to opponent
- cmp #swordthresN
- bcs :danger
+ cmp #LO(swordthresN)
+ bcs danger
  cmp #swordthres
- bcs :safe
+ bcs local_safe
 
-:danger ldx #1
+.danger ldx #1
  stx heroic
- cmp #-6
- bcs :behindyou
+ cmp #LO(-6)
+ bcs local_behindyou
 
  lda OpID
  cmp #1
- bne :engarde
+ bne local_engarde
  lda OpAction
  cmp #3
- beq :safe
+ beq local_safe
  lda OpPosn
  cmp #107
- bcc :engarde
+ bcc local_engarde
  cmp #118
- bcc :safe ;let shadow land
-:engarde jmp DoEngarde
+ bcc local_safe ;let shadow land
+.local_engarde jmp DoEngarde
 
-:behindyou jmp DoTurn
+.local_behindyou jmp DoTurn
 
-:safe lda #0
+.local_safe lda #0
  sta offguard
 
-:1 lda btn
- bpl :btnup
+.label_1 lda btn
+ bpl btnup
 
-*-------------------------------
-* Standing, button down
+\*-------------------------------
+\* Standing, button down
 
-:2 lda clrB
- bmi :backB
+.label_2 lda clrB
+ bmi standing_backB
 
  lda clrU
- bmi :up
+ bmi standing_up
 
  lda clrD
- bmi :down
+ bmi standing_down
 
  lda JSTKX
- bpl :rts
+ bpl return
 
  lda clrF
- bmi :fwdB
-:rts
-]rts rts
+ bmi standing_fwdB
+.return
+ rts
+}
 
-*-------------------------------
-* Standing, button up
+\*-------------------------------
+\* Standing, button up
 
-:btnup
+.btnup
+{
  lda clrF
- bmi :fwd
+ bmi standing_fwd
  lda clrB
- bmi :back
+ bmi standing_back
  lda clrU
- bmi :up
+ bmi standing_up
  lda clrD
- bmi :down
+ bmi standing_down
 
  lda JSTKX
- bmi :fwd
+ bmi standing_fwd
 
-]rts rts
+.return
+ rts
+}
 
-:fwd jmp DoStartrun
-:fwdB jmp DoStepfwd
+.standing_fwd jmp DoStartrun
+.standing_fwdB jmp DoStepfwd
 
-:back jmp DoTurn
-:backB jmp DoTurn
+.standing_back jmp DoTurn
+.standing_backB jmp DoTurn
 
-:fwdup jmp DoStandjump
+.standing_fwdup jmp DoStandjump
 
-*-------------------------------
-* Standing, joystick up
+\*-------------------------------
+\* Standing, joystick up
 
-:up
-
-* In front of open stairs?
+.standing_up
+{
+\* In front of open stairs?
 
  jsr getunderft
  cmp #exit
- beq :stairs
+ beq local_stairs
  jsr getbehind
  cmp #exit
- beq :stairs
+ beq local_stairs
  jsr getinfront
  cmp #exit
- bne :nostairs
+ bne local_nostairs
 
-:stairs lda (BlueSpec),y
- lsr
- lsr
+.local_stairs lda (BlueSpec),y
+ lsr A
+ lsr A
  cmp #stairthres
- bcc :nostairs
+ bcc local_nostairs
 
  jmp Stairs
 
-* No -- normal control
+\* No -- normal control
 
-:nostairs
+.local_nostairs
  lda JSTKX
- bmi :fwdup
+ bmi standing_fwdup
 
-* Straight up...jump up & grab ledge if you can
+\* Straight up...jump up & grab ledge if you can
 
  jmp DoJumpup
+}
 
-*-------------------------------
-* Standing, joystick down
+\*-------------------------------
+\* Standing, joystick down
 
-:down
+.standing_down
+{
  lda #1
  sta clrD
 
-* If you're standing w/back to edge, down
-* means "climb down & hang from ledge"
+\* If you're standing w/back to edge, down
+\* means "climb down & hang from ledge"
 
-* If facing edge, "down" means "step off"
+\* If facing edge, "down" means "step off"
 
  jsr getinfront
  jsr cmpspace
- bne :notfwd ;no cliff in front of you
+ bne notfwd ;no cliff in front of you
 
  jsr getdist
  cmp #StepOffFwd
- bcs :notfwd ;not close enough to edge
+ bcs notfwd ;not close enough to edge
  lda #5
  jsr addcharx
  sta CharX
  jmp rereadblocks ;move fwd
 
-:notfwd jsr getbehind
+.notfwd jsr getbehind
  jsr cmpspace
- bne :no ;no cliff behind you
+ bne no ;no cliff behind you
 
  jsr getdist
  cmp #StepOffBack
- bcc :no ;not close enough to edge
+ bcc no ;not close enough to edge
 
-* Climb down & hang from ledge
+\* Climb down & hang from ledge
 
  jsr getbehind
  sta blockid
  jsr getunderft
  jsr checkledge
- beq :no
+ beq no
 
  ldx CharFace
- bpl :succeed
+ bpl succeed
  jsr getunderft
  cmp #gate
- bne :succeed
+ bne succeed
 
  lda (BlueSpec),y
- lsr
- lsr
+ lsr A
+ lsr A
  cmp #gclimbthres
- bcc :no
+ bcc no
 
-:succeed jsr getdist
+.succeed jsr getdist
  sec
  sbc #9
 
@@ -1244,373 +1294,410 @@ standing
  lda #climbdown
  jmp jumpseq
 
-* Otherwise "down" means "crouch"
+\* Otherwise "down" means "crouch"
 
-:no jmp DoCrouch
+.no jmp DoCrouch
+}
 
-*-------------------------------
-* Climb stairs
+\*-------------------------------
+\* Climb stairs
 
-Stairs
+.Stairs
+{
  lda tempblockx ;stairs block
  jsr getblockej
  clc
  adc #10
  sta CharX
- lda #-1
+ lda #LO(-1)
  sta CharFace
 
  lda #climbstairs
  jmp jumpseq
+}
+.return_24
+ rts
 
-]rts rts
+\*-------------------------------
+\*
+\*  C R O U C H I N G
+\*
+\*-------------------------------
 
-*-------------------------------
-*
-*  C R O U C H I N G
-*
-*-------------------------------
-crouching
-
-* Fresh button click?
+.crouching
+{
+\* Fresh button click?
 
  lda clrbtn
- bpl :noclick
+ bpl noclick
 
- jsr TryPickup
- bne ]rts
+\ BEEB TEMP comment out
+\ jsr TryPickup
+ bne return_24
 
-* Still crouching?
+\* Still crouching?
 
-:noclick
+.noclick
  lda JSTKY
  cmp #1
- beq :1
+ beq label_1
  lda #standup
  jmp jumpseq
 
-:1 lda clrF
- bpl ]rts
+.label_1 lda clrF
+ bpl return_24
  lda #1
  sta clrF
  lda #crawl
  jmp jumpseq
+}
 
-*-------------------------------
-*
-*  S T A R T I N G
-*
-*  First few frames of "startrun"
-*
-*-------------------------------
-starting
+\*-------------------------------
+\*
+\*  S T A R T I N G
+\*
+\*  First few frames of "startrun"
+\*
+\*-------------------------------
+
+.starting
+{
  lda JSTKY
- bmi :jump
-]rts rts
+ bmi jump
+.return
+ rts
 
-:jump
+.jump
  lda JSTKX
- bpl ]rts
+ bpl return
 
  jmp DoStandjump
+}
 
-*-------------------------------
-* First few frames of "jumpup"
+\*-------------------------------
+\* First few frames of "jumpup"
 
-stjumpup
+.stjumpup
+{
  lda JSTKX
- bmi :fwd
+ bmi fwd
  lda clrF
- bmi :fwd
-]rts rts
-:fwd jmp DoStandjump
+ bmi fwd
+.return
+ rts
+.fwd jmp DoStandjump
+}
 
-*-------------------------------
-*
-* T U R N I N G
-*
-*-------------------------------
-turning
+\*-------------------------------
+\*
+\* T U R N I N G
+\*
+\*-------------------------------
+
+.turning
+{
  lda btn
- bmi ]rts
+ bmi return_24
 
  lda JSTKX
- bpl ]rts
+ bpl return_24
 
  lda JSTKY
- bmi ]rts
+ bmi return_24
 
-* Jstk still fwd--convert turn to turnrun
+\* Jstk still fwd--convert turn to turnrun
 
  lda #turnrun
  jmp jumpseq
+}
 
-*-------------------------------
-*
-*  R U N N I N G
-*
-*-------------------------------
-arunning
+\*-------------------------------
+\*
+\*  R U N N I N G
+\*
+\*-------------------------------
+
+.arunning
+{
  lda JSTKX
- beq :runstop ;jstk centered...stop running
- bpl :runturn ;jstk back...turn around
+ beq local_runstop ;jstk centered...stop running
+ bpl local_runturn ;jstk back...turn around
 
-* Jstk is forward... keep running
-* & wait for signal to runjump or diveroll
+\* Jstk is forward... keep running
+\* & wait for signal to runjump or diveroll
 
  lda JSTKY
- bmi :runjump ;jstk up... take a running jump
+ bmi local_runjump ;jstk up... take a running jump
 
  lda clrD
- bmi :diveroll ;jstk down... running dive & roll
+ bmi local_diveroll ;jstk down... running dive & roll
 
-]rts rts
+.return
+ rts
 
-*  Running dive & roll
+\*  Running dive & roll
 
-:diveroll lda #1
+.local_diveroll lda #1
  sta clrD
 
  lda #rdiveroll
  jmp jumpseq
 
-*  Running jump
+\*  Running jump
 
-:runjump
+.local_runjump
  lda clrU
- bpl ]rts
+ bpl return
 
  jmp DoRunjump
 
-*  Stop running
+\*  Stop running
 
-:runstop lda CharPosn
+.local_runstop lda CharPosn
  cmp #7 ;run-10
- beq :rs
+ beq rs
  cmp #11 ;run-14
- bne ]rts
+ bne return
 
-:rs jsr ]clr
+.rs jsr clrall
  sta clrF
 
  lda #runstop
  jmp jumpseq
 
-*  Turn around & run the other way
+\*  Turn around & run the other way
 
-:runturn
- jsr ]clr
+.local_runturn
+ jsr clrall
  sta clrB
 
  lda #runturn
  jmp jumpseq
+}
 
-*-------------------------------
-*
-*  H A N G I N G
-*
-*-------------------------------
-hanging
+\*-------------------------------
+\*
+\*  H A N G I N G
+\*
+\*-------------------------------
+
+.hanging
+{
  lda stunned
- bne :9 ;can't climb up
+ bne label_9 ;can't climb up
 
  lda JSTKY
- bmi :climbup ;jstk up-->climb up
-:9
+ bmi local_climbup ;jstk up-->climb up
+.label_9
  lda btn
- bpl :drop
+ bpl local_drop
 
-* If hanging on right-hand side of a panel
-* or either side of block,
-* switch to "hangstraight"
+\* If hanging on right-hand side of a panel
+\* or either side of block,
+\* switch to "hangstraight"
 
  lda CharAction
  cmp #6
- beq :cont ;already hanging straight
+ beq cont ;already hanging straight
 
  jsr getunderft
  cmp #block
- beq :hangstrt
+ beq local_hangstrt
 
  ldx CharFace
- cpx #-1 ;left
- bne :cont
+ cpx #LO(-1) ;left
+ bne cont
 
  cmp #panelwif
- beq :hangstrt
+ beq local_hangstrt
  cmp #panelwof
- beq :hangstrt
+ beq local_hangstrt
 
-* If ledge crumbles away, fall with it
+\* If ledge crumbles away, fall with it
 
-:cont
+.cont
  jsr getabove
 
  jsr cmpspace ;still there?
- beq :drop ;no
+ beq local_drop ;no
 
-* just keep swinging
+\* just keep swinging
 
-:rts
-]rts rts
+.return
+ rts
 
-:hangstrt lda #hangstraight
+.local_hangstrt lda #hangstraight
  jmp jumpseq
 
-*-------------------------------
-* climb up (if you can)
+\*-------------------------------
+\* climb up (if you can)
 
-:climbup
- jsr ]clr
+.local_climbup
+ jsr clrall
  sta clrU
  sta clrbtn
 
  jsr getabove
 
  cmp #mirror
- beq :10
+ beq label_10
  cmp #slicer
- bne :1
+ bne label_1
 
-:10 ldx CharFace
- beq :fail
- bne :succeed ;can only mount mirror facing L
+.label_10 ldx CharFace
+ beq fail
+ bne succeed ;can only mount mirror facing L
 
-:1 cmp #gate
- bne :2
+.label_1 cmp #gate
+ bne label_2
 
  ldx CharFace
- beq :succeed
+ beq succeed
 ;can only mount closed gate facing R
  lda (BlueSpec),y
- lsr
- lsr
+ lsr A
+ lsr A
  cmp #gclimbthres
- bcc :fail
- bcs :succeed
+ bcc fail
+ bcs succeed
 
-:2
-:succeed lda #climbup
+.label_2
+.succeed lda #climbup
  jmp jumpseq
 
-:fail lda #climbfail
+.fail lda #climbfail
  jmp jumpseq
 
-
-*-------------------------------
-:drop
- jsr ]clr
+\*-------------------------------
+.local_drop
+ jsr clrall
  sta clrD ;clrD = 1, all others = 0
 
  jsr getbehind
  jsr cmpspace
- bne :hangdrop
+ bne local_hangdrop
 
  jsr getunderft
  jsr cmpspace
- beq :hangfall
+ beq local_hangfall
 
-:hangdrop
+.local_hangdrop
  jsr getunderft
  cmp #block
- beq :sheer
+ beq local_sheer
 
  ldx CharFace
- bpl :clear
+ bpl local_clear
  cmp #panelwof
- beq :sheer
+ beq local_sheer
  cmp #panelwif
- bne :clear
+ bne local_clear
 
-:sheer lda #-7
+.local_sheer lda #LO(-7)
  jsr addcharx
  sta CharX
 
-:clear lda #hangdrop
+.local_clear lda #hangdrop
  jmp jumpseq
 
-:hangfall
+.local_hangfall
  lda #hangfall
  jmp jumpseq
-]rts rts
+}
+.return_25
+ rts
 
-*-------------------------------
-*
-*  D o  S t a r t r u n
-*
-*-------------------------------
-DoStartrun
+\*-------------------------------
+\*
+\*  D o  S t a r t r u n
+\*
+\*-------------------------------
 
-* If very close to a barrier, do a Stepfwd instead
-* (Exceptions: slicer & open gate)
+.DoStartrun
+{
+\* If very close to a barrier, do a Stepfwd instead
+\* (Exceptions: slicer & open gate)
 
  jsr getfwddist
  cpx #1 ;barrier?
- bne :startrun ;no
+ bne local_startrun ;no
 
  cpy #slicer
- beq :startrun
+ beq local_startrun
 
-:solidbarr
+.solidbarr
  jsr getfwddist
  cmp #8
- bcs :startrun
+ bcs local_startrun
 
  lda clrF
- bpl ]rts
+ bpl return_25
 
  jmp DoStepfwd
 
-:startrun
+.local_startrun
  lda #startrun
  jmp jumpseq ;...start running
+}
 
-DoTurn jsr ]clr
+.DoTurn
+{
+ jsr clrall
  sta clrB
 ;if enemy is behind you, draw as you turn
  lda gotsword
- beq :1
+ beq label_1
  lda EnemyAlert
  cmp #2
- bcc :1
+ bcc label_1
  jsr getopdist
- bpl :1
+ bpl label_1
  jsr getdist ;to EOB
  cmp #2
- bcc :1
+ bcc label_1
 
  lda #2
  sta CharSword ;en garde
  lda #0
  sta offguard
  lda #turndraw
- bne :2
-:1 lda #turn
-:2 jmp jumpseq ;...turn around
+ bne label_2
+.label_1 lda #turn
+.label_2 jmp jumpseq ;...turn around
+}
 
-DoStandjump lda #1
+.DoStandjump
+{
+ lda #1
  sta clrU
  sta clrF
 
  lda #standjump
  jmp jumpseq ;...standing jump
+}
 
-DoSdiveroll lda #1
+.DoSdiveroll
+{
+ lda #1
  sta clrD
 
  lda #sdiveroll
  jmp jumpseq ;...standing dive & roll
+}
 
-DoCrouch
+.DoCrouch
+{
  lda #stoop
  jsr jumpseq
 
- jsr ]clr
+ jsr clrall
  sta clrD
  rts
+}
 
-DoEngarde
- jsr ]clr
+.DoEngarde
+{
+ jsr clrall
  sta clrF
  sta clrbtn
 
@@ -1618,25 +1705,28 @@ DoEngarde
  sta CharSword ;en garde
 
  lda CharID
- beq :1
+ beq label_1
  cmp #1
- beq :3 ;shad
+ beq label_3 ;shad
  lda #guardengarde
- bne :2
-:1 lda #0
+ bne label_2
+.label_1 lda #0
  sta offguard
-:3 lda #engarde
-:2 jmp jumpseq
+.label_3 lda #engarde
+.label_2 jmp jumpseq
+}
 
-*-------------------------------
-*
-*  D o  J u m p u p
-*
-*  & grab ledge if you can
-*
-*-------------------------------
-DoJumpup
- jsr ]clr
+\*-------------------------------
+\*
+\*  D o  J u m p u p
+\*
+\*  & grab ledge if you can
+\*
+\*-------------------------------
+
+.DoJumpup
+{
+ jsr clrall
  sta clrU
 
  jsr getabove
@@ -1654,23 +1744,23 @@ DoJumpup
  jsr getabove
 
  jsr checkledge ;could you do it if you were 1 space back?
- bne :jumpback ;yes--move back & do it
+ bne jumpback ;yes--move back & do it
 
-:jumphi jmp DoJumphigh
+.jumphi jmp DoJumphigh
 
-*-------------------------------
-* Jump up & back to grab block directly overhead
+\*-------------------------------
+\* Jump up & back to grab block directly overhead
 
-:jumpback
+.jumpback
  jsr getdist ;dist to front of block
  cmp #JumpBackThres
- bcc :jumphi ;too far to fudge
+ bcc jumphi ;too far to fudge
 
  jsr getbehind
  jsr cmpspace ;floor behind you?
  beq DoJumpedge ;no
 
-* "Jump back" to block behind you & then proceed as usual
+\* "Jump back" to block behind you & then proceed as usual
 
  jsr getdist
  sec
@@ -1681,14 +1771,16 @@ DoJumpup
  jsr rereadblocks
 
  jmp DoJumphang
+}
 
-*-------------------------------
-* Your back is to ledge -- so do a "jumpbackhang"
+\*-------------------------------
+\* Your back is to ledge -- so do a "jumpbackhang"
 
-DoJumpedge
+.DoJumpedge
+{
  jsr getabove
 
-* Get all the way back on this block
+\* Get all the way back on this block
 
  jsr getdist
  sec
@@ -1697,26 +1789,29 @@ DoJumpedge
  jsr addcharx
  sta CharX
 
-* now jump
+\* now jump
 
  lda #jumpbackhang
  jmp jumpseq
+}
 
-*-------------------------------
-DoJumphang
+\*-------------------------------
+
+.DoJumphang
+{
  jsr getaboveinf
 
-*  Choose the jumphang sequence (Long/Med) that
-*  will bring us closest to edge, then fudge the X-coord
-*  to make it come out exactly
+\*  Choose the jumphang sequence (Long/Med) that
+\*  will bring us closest to edge, then fudge the X-coord
+\*  to make it come out exactly
 
  jsr getdist ;get distance to front of block
- sta atemp ;# pixels (0-13) returned in A
+ sta ctrl_atemp ;# pixels (0-13) returned in A
 
  cmp #4
- bcc :Med
+ bcc Med
 
-:Long lda atemp
+.Long lda ctrl_atemp
  sec ;"Long" will add 4 to CharX
  sbc #4
  jsr addcharx
@@ -1724,43 +1819,46 @@ DoJumphang
 
  lda #jumphangLong
  jmp jumpseq
-:Med
+.Med
  jsr getfwddist
  cmp #4
- bcs :okMed
+ bcs okMed
 
  cpx #1 ;close to wall?
- beq :Long ;yes--step back & do Long
+ beq Long ;yes--step back & do Long
 
-:okMed lda atemp
+.okMed lda ctrl_atemp
  jsr addcharx
  sta CharX
 
  lda #jumphangMed
  jmp jumpseq
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  D o  R u n  J u m p
-*
-*  Calibrate jump so that foot will push off at edge.
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  D o  R u n  J u m p
+\*
+\*  Calibrate jump so that foot will push off at edge.
+\*
+\*-------------------------------
 RJChange = 4 ;projected change in CharX
 RJLookahead = 1 ;# blocks you can look ahead
 RJLeadDist = 14 ;required leading distance in pixels
 RJMaxFujBak = 8 ;# pixels we're willing to fudge back
 RJMaxFujFwd = 2 ;and forward
 
-DoRunjump
+.DoRunjump
+{
  lda CharPosn
  cmp #7
- bcc ]rts ;must be in full run
+ bcc return ;must be in full run
 
-* Count # of blocks to edge
-* (Use actual CharX)
+\* Count # of blocks to edge
+\* (Use actual CharX)
 
  lda #0
  sta bufindex ;block counter
@@ -1772,7 +1870,7 @@ DoRunjump
  jsr getblockxp
  sta blockx
 
-:loop lda blockx
+.loop lda blockx
  ldx CharFace
  inx
  clc
@@ -1785,20 +1883,20 @@ DoRunjump
  jsr rdblock
 
  cmp #spikes
- beq :done
+ beq done
 
  jsr cmpspace
- beq :done
+ beq done
 
  inc bufindex
 
  lda bufindex
  cmp #RJLookahead+1
- bcc :loop
- bcs :noedge ;no edge in sight--jump anyway
-:done
+ bcc loop
+ bcs noedge ;no edge in sight--jump anyway
+.done
 
-* Calculate # of pixels to end of floor
+\* Calculate # of pixels to end of floor
 
  lda ztemp
  jsr getdist1 ;# pixels to end of block
@@ -1813,41 +1911,44 @@ DoRunjump
  sbc #RJLeadDist
 ;A = difference between actual dist to edge
 ;and distance covered by RunJump
- cmp #-RJMaxFujBak
- bcs :ok ;move back a little & jump
+ cmp #LO(-RJMaxFujBak)
+ bcs ok ;move back a little & jump
 
  cmp #RJMaxFujFwd
- bcc  :ok ;move fwd a little & jump
+ bcc  ok ;move fwd a little & jump
 
  cmp #$80
- bcc ]rts ;still too far away--wait till next frame
+ bcc return ;still too far away--wait till next frame
 
- lda #-3 ;He jumped too late; he'll miss edge
+ lda #LO(-3) ;He jumped too late; he'll miss edge
 ;But let's make it look good anyway
-:ok clc
+.ok clc
  adc #RJChange
 
  jsr addcharx
  sta CharX
 
-* No edge in sight -- just do any old long jump
+\* No edge in sight -- just do any old long jump
 
-:noedge
- jsr ]clr
+.noedge
+ jsr clrall
  sta clrU
 
  lda #runjump
  jmp jumpseq
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  D o  S t e p  F o r w a r d
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  D o  S t e p  F o r w a r d
+\*
+\*-------------------------------
 
-DoStepfwd
+.DoStepfwd
+{
  lda #1
  sta clrF
  sta clrbtn
@@ -1855,55 +1956,58 @@ DoStepfwd
  jsr getfwddist ;returns A = distance to step (0-13)
 
  cmp #0
- beq :1
+ beq label_1
 
-:2 sta CharRepeat ;non-0 value
+.label_2 sta CharRepeat ;non-0 value
 
  clc
  adc #stepfwd1-1
  jmp jumpseq
 
-:1 cpx #1
- beq :thru ;If barrier, step thru
+.label_1 cpx #1
+ beq thru ;If barrier, step thru
 
  cmp CharRepeat
- bne :3 ;First time, test w/foot
+ bne label_3 ;First time, test w/foot
 
-:thru lda #11
- bne :2 ;Second time, step off edge
+.thru lda #11
+ bne label_2 ;Second time, step off edge
 
-:3 sta CharRepeat ;0
+.label_3 sta CharRepeat ;0
 
  lda #testfoot
  jmp jumpseq
+}
 
-*-------------------------------
-*
-*  D o  J u m p  H i g h
-*
-*-------------------------------
-DoJumphigh
- jsr ]clr
+\*-------------------------------
+\*
+\*  D o  J u m p  H i g h
+\*
+\*-------------------------------
+
+.DoJumphigh
+{
+ jsr clrall
  sta clrU
 
  jsr getfwddist
  cmp #4
- bcs :ok
+ bcs ok
  cpx #1 ;barrier?
- bne :ok ;no
+ bne ok ;no
 
  sec
  sbc #3
  jsr addcharx
  sta CharX
-:ok
+.ok
  lda #jumpupreach
  jsr facedx
  sta ztemp
 
  jsr getbasex ;assume char standing still
  clc
- adc #jumpupangle
+ adc #LO(jumpupangle)
  clc
  adc ztemp ;get X-coord at which hand touches ceiling
 
@@ -1917,17 +2021,18 @@ DoJumphigh
  jsr rdblock ;read this block
 
  cmp #block
- beq :jumpup
+ beq local_jumpup
  jsr cmpspace
- bne :jumpup
+ bne local_jumpup
 
  lda #highjump
  jmp jumpseq ;no ceiling above
 
-:jumpup lda #jumpup
+.local_jumpup lda #jumpup
  jsr jumpseq ;touch ceiling
-]rts rts ;& don't forget to crop top
-ENDIF
+.return
+ rts ;& don't forget to crop top
+}
 
 \*-------------------------------
 \*  reread blocks

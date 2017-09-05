@@ -74,7 +74,29 @@
 ;BlockYthis ds 1
 .BlockYlast skip 1
 
-.Op skip $10
+\*-------------------------------
+\*
+\*  Character data
+\*
+\*-------------------------------
+
+.Op
+.OpPosn skip 1
+.OpX skip 1
+.OpY skip 1
+.OpFace skip 1
+.OpBlockX skip 1
+.OpBlockY skip 1
+.OpAction skip 1
+.OpXVel skip 1
+.OpYVel skip 1
+.OpSeq skip 2
+.OpScrn skip 1
+.OpRepeat skip 1
+.OpID skip 1
+.OpSword skip 1
+.OpLife skip 1
+
 
 keybuflen = 10
 ;keybuf ds keybuflen
