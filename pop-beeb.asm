@@ -47,6 +47,8 @@ BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / 8)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
 BEEB_SCREEN_SIZE = (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT)  / 8
 
+beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
+
 INCLUDE "game/beeb-plot.h.asm"
 
 ; Local ZP variables only
@@ -77,11 +79,14 @@ SCRATCH_RAM_ADDR = disksys_scratch
 ; CORE RAM
 \*-------------------------------
 
-ORG &E00
-GUARD &3000             ; bottom of SHADOW RAM
+CORE_START=&E00
+CORE_TOP=&3000
 
-;GUARD &4B80            ; eventually shrunk MODE 1
-;GUARD &5800            ; currently in full MODE 4
+ORG CORE_START
+GUARD CORE_TOP             ; bottom of SHADOW RAM
+
+;GUARD &4B80             ; eventually shrunk MODE 1
+;GUARD &5800             ; currently in full MODE 4
 ;GUARD &65C0             ; now in shrunk MODE 4!
 ;GUARD &8000             ; when testing high watermark
 
@@ -149,7 +154,7 @@ INCLUDE "lib/print.asm"
 
     \\ Remain in AUX...
 
-IF 1
+IF 0
     \\ Level load & plot test
     LDX #1
 
@@ -229,12 +234,8 @@ INCLUDE "game/hires_core.asm"
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
-PRINT "Core code size = ", ~(pop_beeb_core_end-pop_beeb_core_start)
-
 .pop_beeb_data_end
 .pop_beeb_end
-
-PRINT "Core data size = ", ~(pop_beeb_data_end-pop_beeb_data_start)
 
 ; Save Core executable
 
@@ -249,20 +250,25 @@ INCLUDE "game/gameeq.asm"
 
 .pop_beeb_bss_end
 
-; High watermark for Core RAM
+; Core RAM stats
 
+PRINT "Core lib size = ", ~(pop_beeb_lib_end - pop_beeb_lib_start)
+PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
+PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
 PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
 PRINT "Core high watermark = ", ~P%
+PRINT "Core RAM free = ", ~(CORE_TOP - P%)
 
 
 \*-------------------------------
 ; Construct MAIN RAM (video & screen)
 \*-------------------------------
 
-beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
+MAIN_START = &3000
+MAIN_TOP = &8000
 
 CLEAR 0, &FFFF
-ORG &3000
+ORG MAIN_START
 GUARD beeb_screen_addr
 
 .pop_beeb_main_start
@@ -274,27 +280,32 @@ INCLUDE "game/hrtables.asm"
 
 .pop_beeb_main_end
 
-PRINT "Main code & data size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
-
 ; Save executable code for Main RAM
 
 SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
 
+PRINT "Main code & data size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
+PRINT "Main high watermark = ", ~P%
+
 ; BSS in MAIN RAM
 
 ; (screen buffers)
+SKIP BEEB_SCREEN_SIZE           ; this doesn't actually match beeb_screen_addr just used for RAM size tracking
 
-; High watermark for Main RAM
-PRINT "Main high watermark = ", ~P%
+; Main RAM stats
 PRINT "Screen buffer address = ", ~beeb_screen_addr
+PRINT "Main RAM free = ", ~(MAIN_TOP - P%)
 
 \*-------------------------------
 ; Construct  AUX (SHADOW) RAM
 \*-------------------------------
 
+AUX_START = &3000
+AUX_TOP = &8000
+
 CLEAR 0, &FFFF
-ORG &3000
-GUARD &8000
+ORG AUX_START
+GUARD AUX_TOP
 
 .pop_beeb_aux_start
 
@@ -319,8 +330,6 @@ INCLUDE "game/framedefs.asm"
 
 .pop_beeb_aux_end
 
-PRINT "Aux code & data size = ", ~(pop_beeb_aux_end - pop_beeb_aux_start)
-
 ; Save executable code for Aux RAM
 
 SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
@@ -332,8 +341,9 @@ ALIGN &100
 SKIP &900           ; all blueprints same size
 
 ; High watermark for Main RAM
+PRINT "Aux code & data size = ", ~(pop_beeb_aux_end - pop_beeb_aux_start)
 PRINT "Aux high watermark = ", ~P%
-
+PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
 
 \*-------------------------------
 ; Construct MOS RAM
