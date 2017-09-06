@@ -18,14 +18,14 @@
 
 .updatemeters RTS   ; jmp UPDATEMETERS          BEEB TO DO
 .DrawKidMeter BRK   ; jmp DRAWKIDMETER
-.DrawSword BRK      ; jmp DRAWSWORD
-.DrawKid BRK        ; jmp DRAWKID
-.DrawShad BRK       ; jmp DRAWSHAD
+.DrawSword jmp DRAWSWORD
+.DrawKid jmp DRAWKID
+.DrawShad jmp DRAWSHAD
 
 .setupflame RTS     ; jmp SETUPFLAME            BEEB TO DO
 .continuemsg BRK    ; jmp CONTINUEMSG
-.addcharobj BRK     ; jmp ADDCHAROBJ
-.setobjindx BRK     ; jmp SETOBJINDX
+.addcharobj jmp ADDCHAROBJ
+.setobjindx jmp SETOBJINDX
 .printlevel BRK     ; jmp PRINTLEVEL
 
 .DrawOppMeter BRK   ; jmp DRAWOPPMETER
@@ -388,94 +388,122 @@ setupimage
  lda (addr),y
  sta IMAGE
 ]rts
-:rts rts
+ENDIF
+.return_28
+ rts
 
-*-------------------------------
-* Draw Kid
-*-------------------------------
-DRAWKID
+\*-------------------------------
+\* Draw Kid
+\*-------------------------------
+
+.DRAWKID
+{
  lda backtolife
- beq :2
+ beq label_2
  lda PAGE
- beq ]rts ;flash when coming back to life
+ beq return_28 ;flash when coming back to life
 
-:2 lda mergetimer
- bmi :1
+.label_2 lda mergetimer
+ bmi label_1
  and #1
- beq :1
+ beq label_1
  jmp DrawEored ;flash between kid & shadowman
 
-:1 jmp DrawNormal
+.label_1 jmp DrawNormal
+}
 
-*-------------------------------
-* Draw Sword
-*-------------------------------
-DRAWSWORD
+\*-------------------------------
+\* Draw Sword
+\*-------------------------------
+
+.DRAWSWORD
+{
  jmp DrawNormal
+}
 
-*-------------------------------
-* Draw Shadowman
-*-------------------------------
-DRAWSHAD
+\*-------------------------------
+\* Draw Shadowman
+\*-------------------------------
+
+.DRAWSHAD
+{
  jmp DrawEored
+}
 
-*-------------------------------
-* Draw Guard
-*-------------------------------
-DRAWGUARD
- do EditorDisk
+\*-------------------------------
+\* Draw Guard
+\*-------------------------------
+
+.DRAWGUARD
+{
+IF EditorDisk
  lda #EditorDisk
  cmp #2
  beq DrawNormal
- fin
+ENDIF
 
  lda GuardColor ;set by "ADDGUARD" in AUTO
  beq DrawNormal
  bne DrawShifted
+}
 
-*-------------------------------
-DrawNormal
- lda #mask
+\*-------------------------------
+
+.DrawNormal
+{
+ lda #enum_mask
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR $80
  jmp addmid
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-DrawShifted
+\*-------------------------------
+
+.DrawShifted
+{
  lda #1
  jsr chgoffset
 
- lda #mask
+ lda #enum_mask
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR $80
  jmp addmid
+}
 
-*-------------------------------
-DrawEored
- lda #eor
+\*-------------------------------
+
+.DrawEored
+{
+ lda #enum_eor
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR $80
  jmp addmid
+}
 
-*-------------------------------
-chgoffset
+\*-------------------------------
+
+.chgoffset
+{
  clc
  adc OFFSET
  cmp #7
- bcc :1
+ bcc label_1
 
  inc XCO
  sec
  sbc #7
 
-:1 sta OFFSET
+.label_1 sta OFFSET
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Update strength meters
@@ -803,7 +831,7 @@ TWINKLE
  sta YCO
  lda stari,x
  sta IMAGE
- lda #eor
+ lda #enum_eor
  sta OPACITY
  jsr ]setch6
  jsr fastlay ;<--DIRECT HIRES CALL
@@ -1040,23 +1068,27 @@ SETUPCOMIX
 
  lda #TypeComix
  jmp addcharobj
-]rts rts
+ENDIF
+.return_27
+ rts
 
-*-------------------------------
-*
-*  A D D   C H A R   O B J
-*
-*  Add a character to object table
-*
-*  In: FCharVars
-*      A = object type
-*
-*-------------------------------
-ADDCHAROBJ
+\*-------------------------------
+\*
+\*  A D D   C H A R   O B J
+\*
+\*  Add a character to object table
+\*
+\*  In: FCharVars
+\*      A = object type
+\*
+\*-------------------------------
+
+.ADDCHAROBJ
+{
  ldx objX ;# objects already in list
  inx
  cpx #maxobj
- bcs ]rts ;list full (shouldn't happen)
+ bcs return_27 ;list full (shouldn't happen)
  stx objX
 
  sta objTYP,x
@@ -1099,28 +1131,33 @@ ADDCHAROBJ
  sta objFACE,x
 
  jmp SETOBJINDX
+}
 
-*-------------------------------
-*
-*  S E T  O B J  I N D X
-*
-*  Set object index
-*
-*-------------------------------
-SETOBJINDX
+\*-------------------------------
+\*
+\*  S E T  O B J  I N D X
+\*
+\*  Set object index
+\*
+\*-------------------------------
+
+.SETOBJINDX
+{
  lda FCharIndex
  sta objINDX,x
 
  cmp #30
- bcs :os
+ bcs os
 
  tax
 
  lda #1
  sta objbuf,x
-:os
+.os
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Text routines

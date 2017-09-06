@@ -27,8 +27,8 @@
 .gtone BRK      ;jmp GTONE
 .setcenter RTS  ;jmp SETCENTER      BEEB TO DO
 \
-.dimchar BRK    ;jmp DIMCHAR
-.cvtx BRK       ;jmp CVTX
+.dimchar jmp DIMCHAR
+.cvtx jmp CVTX
 .zeropeel jmp ZEROPEEL
 .zeropeels jmp ZEROPEELS
 .pread BRK      ;jmp PREAD
@@ -78,7 +78,7 @@
 .saavelevelg BRK;jmp SAVELEVELG ;ed
 .addback jmp ADDBACK
 .addfore jmp ADDFORE
-.addmid BRK     ;jmp ADDMID
+.addmid jmp ADDMID
 .addmidez jmp ADDMIDEZ
 \
 .addwipe BRK    ;jmp ADDWIPE
@@ -325,28 +325,32 @@ ADDWIPE ldx wipeX
 
  stx wipeX
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  A D D   M I D
-*
-*  Add an image to mid table
-*
-*  In:  XCO, OFFSET, YCO, IMAGE, TABLE, OPACITY
-*       FCharFace, FCharCU-CD-CL-CR
-*       A = midTYP
-*
-*  midTYP bit 7: 1 = char tables, 0 = bg tables
-*  midTYP bits 0-6:
-*    0 = use fastlay (normal for floorpieces)
-*    1 = use lay alone
-*    2 = use lay with layrsave (normal for characters)
-*
-*  For char tables: IMAGE = image #, TABLE = table #
-*  For bg tables: IMAGE bits 0-6 = image #, bit 7 = table #
-*
-*-------------------------------
-ADDMID ldx midX
+\*-------------------------------
+\*
+\*  A D D   M I D
+\*
+\*  Add an image to mid table
+\*
+\*  In:  XCO, OFFSET, YCO, IMAGE, TABLE, OPACITY
+\*       FCharFace, FCharCU-CD-CL-CR
+\*       A = midTYP
+\*
+\*  midTYP bit 7: 1 = char tables, 0 = bg tables
+\*  midTYP bits 0-6:
+\*    0 = use fastlay (normal for floorpieces)
+\*    1 = use lay alone
+\*    2 = use lay with layrsave (normal for characters)
+\*
+\*  For char tables: IMAGE = image #, TABLE = table #
+\*  For bg tables: IMAGE bits 0-6 = image #, bit 7 = table #
+\*
+\*-------------------------------
+
+.ADDMID
+{
+ ldx midX
  inx
  cpx #maxmid
  bcs return
@@ -383,8 +387,9 @@ ADDMID ldx midX
  sta midCR,x
 
  stx midX
-return rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -902,73 +907,76 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  D I M C H A R
-*
-*  Get dimensions of character
-*  (Misc. routine for use by CTRL)
-*
-*  In: A = image #, X = table #
-*  Out: A = width, X = height
-*
-*-------------------------------
-DIMCHAR
+\*-------------------------------
+\*
+\*  D I M C H A R
+\*
+\*  Get dimensions of character
+\*  (Misc. routine for use by CTRL)
+\*
+\*  In: A = image #, X = table #
+\*  Out: A = width, X = height
+\*
+\*-------------------------------
+
+.DIMCHAR
+{
  sta IMAGE
  stx TABLE
  jsr setcharimg
  jmp getwidth
+}
 
-*-------------------------------
-*
-*  C V T X
-*
-*  Convert X-coord to byte & offset
-*  Works for both single & double hires
-*
-*  In: XCO/OFFSET = X-coord (2 bytes)
-*  Out: XCO/OFFSET = byte/offset
-*
-*  Hires scrn: X-coord range 0-279, byte range 0-39
-*  Dbl hires scrn: X-coord range 0-559, byte range 0-79
-*
-*  Trashes Y-register
-*
-*  Returns accurate results for all input (-32767 to 32767)
-*  but wildly offscreen values will slow it down
-*
-*-------------------------------
-]XL = XCO
-]XH = OFFSET
+\*-------------------------------
+\*
+\*  C V T X
+\*
+\*  Convert X-coord to byte & offset
+\*  Works for both single & double hires
+\*
+\*  In: XCO/OFFSET = X-coord (2 bytes)
+\*  Out: XCO/OFFSET = byte/offset
+\*
+\*  Hires scrn: X-coord range 0-279, byte range 0-39
+\*  Dbl hires scrn: X-coord range 0-559, byte range 0-79
+\*
+\*  Trashes Y-register
+\*
+\*  Returns accurate results for all input (-32767 to 32767)
+\*  but wildly offscreen values will slow it down
+\*
+\*-------------------------------
+XL = XCO
+XH = OFFSET
 
 range = 36*7 ;largest multiple of 7 under 256
 
-CVTX
+.CVTX
+{
  lda #0
  sta grafix_temp
 
- lda ]XH
- bmi :negative ;X < 0
- beq :ok ;0 <= X <= 255
+ lda XH
+ bmi negative ;X < 0
+ beq ok ;0 <= X <= 255
 
-:loop lda grafix_temp
+.loop lda grafix_temp
  clc
  adc #36
  sta grafix_temp
 
- lda ]XL
+ lda XL
  sec
  sbc #range
- sta ]XL
+ sta XL
 
- lda ]XH
+ lda XH
  sbc #0
- sta ]XH
+ sta XH
 
- bne :loop
+ bne loop
 
-:ok ldy ]XL
+.ok ldy XL
  lda ByteTable,y
  clc
  adc grafix_temp
@@ -978,24 +986,24 @@ CVTX
  sta OFFSET
  rts
 
-:negative
+.negative
  lda grafix_temp
  sec
  sbc #36
  sta grafix_temp
 
- lda ]XL
+ lda XL
  clc
  adc #range
- sta ]XL
+ sta XL
 
- lda ]XH
+ lda XH
  adc #0
- sta ]XH
- bne :negative
- beq :ok
-return rts
-ENDIF
+ sta XH
+ bne negative
+ beq ok
+.return rts
+}
 
 \*-------------------------------
 \*

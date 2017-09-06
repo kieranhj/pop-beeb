@@ -15,7 +15,7 @@
 ;.GlassState skip 1
 ;.redrawglass skip 1
 .doortop skip 1
-;.GuardColor skip 1
+.GuardColor skip 1
 ;.shadowaction skip 1
 .skipmessage skip 1
 ;.savezp skip 32

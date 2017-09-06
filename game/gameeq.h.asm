@@ -201,7 +201,7 @@ ENDIF
 \*-------------------------------
 
 ;.yellowflag skip 1
-;.timebomb skip 1
+.timebomb skip 1
 ;.justblocked skip 1
 .gdtimer skip 1
 .framepoint skip 2
@@ -235,7 +235,7 @@ ENDIF
 .invert skip 1
 .PlayCount skip 1
 .refract skip 1
-;.backtolife skip 1
+.backtolife skip 1
 .cutplan skip 1
 ;.lastcmd skip 1
 ;.distfallen skip 1
@@ -251,18 +251,18 @@ ENDIF
 ;.dmirr skip 1
 ;.barrdist skip 1
 ;.barrcode skip 1
-;.imwidth skip 1
-;.imheight skip 1
+.imwidth skip 1
+.imheight skip 1
 ;.leadedge skip 1
-;.leftej skip 1
-;.rightej skip 1
-;.topej skip 1
-;.leftblock skip 1
-;.rightblock skip 1
-;.topblock skip 1
-;.bottomblock skip 1
-;.CDLeftEj skip 1
-;.CDRightEj skip 1
+.leftej skip 1
+.rightej skip 1
+.topej skip 1
+.leftblock skip 1
+.rightblock skip 1
+.topblock skip 1
+.bottomblock skip 1
+.CDLeftEj skip 1
+.CDRightEj skip 1
 ;.endrange skip 1
 .bufindex skip 1
 ;.blockedge skip 1

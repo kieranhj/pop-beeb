@@ -444,7 +444,7 @@ $f900 - misc.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
 1k system + 23k game code & data + 19k sprites + 2k level + 3k buffers (48k aux mem) + 4k music + 12k more game code (aux l.c.) = 64k
 
 
-**-------------------------------
+*-------------------------------
 *
 *  Calls to hires & master routines
 *
