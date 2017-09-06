@@ -528,6 +528,37 @@ NEXT
 ENDIF
 
 
+.beeb_set_screen_mode
+{
+    \\ Set CRTC registers
+    LDX #13
+    .crtcloop
+    STX &FE00
+    LDA beeb_crtcregs, X
+    STA &FE01
+    DEX
+    BPL crtcloop
+
+    \\ Set ULA
+    LDA #&88            ; MODE 4
+    STA &FE20
+
+    \\ Set Palette
+    CLC
+    LDA #7              ; PAL_black
+    .palloop1
+    STA &FE21
+    ADC #&10
+    BPL palloop1  
+    EOR #7              ; PAL_white
+    .palloop2
+    STA &FE21
+    ADC #&10
+    BMI palloop2
+
+    RTS
+}
+
 
 .beeb_plot_reloc_img
 {
@@ -561,6 +592,21 @@ ENDIF
 }
 
 
+.beeb_shadow_select_main
+{
+    LDA &FE34
+    AND #&FB            ; mask out bit 2
+    STA &FE34
+    RTS
+}
+
+.beeb_shadow_select_aux
+{
+    LDA &FE34
+    ORA #4
+    STA &FE34
+    RTS
+}
 
 
 .Mult8_LO

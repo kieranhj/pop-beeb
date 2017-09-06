@@ -3,8 +3,9 @@
 ; Port to the BBC Master
 ; Main build file
 
-
+\*-------------------------------
 ; Defines
+\*-------------------------------
 
 _TODO = FALSE
 
@@ -36,7 +37,15 @@ INCLUDE "game/gameeq.h.asm"
 INCLUDE "game/soundnames.h.asm"
 INCLUDE "game/seqdata.h.asm"
 
+\*-------------------------------
 ; BEEB headers
+\*-------------------------------
+
+BEEB_SCREEN_WIDTH = 280
+BEEB_SCREEN_HEIGHT = 192
+BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / 8)
+BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
+BEEB_SCREEN_SIZE = (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT)  / 8
 
 INCLUDE "game/beeb-plot.h.asm"
 
@@ -48,51 +57,51 @@ INCLUDE "game/master.h.asm"
 INCLUDE "game/mover.h.asm"
 INCLUDE "game/ctrl.h.asm"
 
+\*-------------------------------
 ; BSS data in lower RAM
+\*-------------------------------
 
 ORG &300                ; VDU and language workspace
 GUARD &800              ; sound workspace
 
-\ imlists from eq.asm
-
-.bgX skip maxback
-.bgY skip maxback
-.bgIMG skip maxback
-.bgOP skip maxback
-
-.fgX skip maxfore
-.fgY skip maxfore
-.fgIMG skip maxfore
-.fgOP skip maxfore
+\ Move BSS here (e.g. imlists from eq.asm) when out of RAM
 
 ORG &900                ; envelope / speech / CFS / soft key / char defs
 GUARD &D00              ; NMI workspace
 
-; Main RAM
+.disksys_scratch        SKIP &300
+SCRATCH_RAM_ADDR = disksys_scratch
+
+
+\*-------------------------------
+; CORE RAM
+\*-------------------------------
 
 ORG &E00
+GUARD &3000             ; bottom of SHADOW RAM
+
 ;GUARD &4B80            ; eventually shrunk MODE 1
 ;GUARD &5800            ; currently in full MODE 4
 ;GUARD &65C0             ; now in shrunk MODE 4!
-GUARD &8000             ; when testing high watermark
+;GUARD &8000             ; when testing high watermark
 
 .pop_beeb_start
 .pop_beeb_lib_start
-
-; Master 128 PAGE is &0E00 since MOS uses other RAM buffers for DFS workspace
-SCRATCH_RAM_ADDR = &7D00            ; top of screen memory for now
 
 INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
 
 .pop_beeb_lib_end
-.pop_beeb_code_start
+.pop_beeb_core_start
 
 .swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
 .swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
 
-.pop_beeb_main
+.main_filename EQUS "Main   $"
+.aux_filename  EQUS "Aux    $"
+
+.pop_beeb_entry
 {
     \\ Should be MASTER test and exit with nice message
 
@@ -115,9 +124,32 @@ INCLUDE "lib/print.asm"
     LDA #BEEB_SCREEN_MODE
     JSR oswrch
 
+    \\ Special MODE
     JSR beeb_set_screen_mode
 
-IF 0
+    \\ Load executable overlays
+
+    \\ Load Main
+
+    JSR beeb_shadow_select_main
+
+    LDX #LO(main_filename)
+    LDY #HI(main_filename)
+    LDA #HI(pop_beeb_main_start)
+    JSR disksys_load_file
+
+    \\ Load Aux
+
+    JSR beeb_shadow_select_aux
+
+    LDX #LO(aux_filename)
+    LDY #HI(aux_filename)
+    LDA #HI(pop_beeb_aux_start)
+    JSR disksys_load_file
+
+    \\ Remain in AUX...
+
+IF 1
     \\ Level load & plot test
     LDX #1
 
@@ -129,10 +161,7 @@ IF 0
     STX VisScrn
 
     .scrn_loop
-    \\ Select slot 0
-    LDA #BEEB_SWRAM_SLOT_LEVELBG
-    JSR swr_select_slot
-
+    JSR getscrns
     JSR DoSure
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
@@ -163,11 +192,24 @@ ENDIF
     RTS
 }
 
-BEEB_SCREEN_WIDTH=280
-BEEB_SCREEN_HEIGHT=192
-BEEB_SCREEN_CHARS=(BEEB_SCREEN_WIDTH/8)
-BEEB_SCREEN_ROWS=(BEEB_SCREEN_HEIGHT/8)
-beeb_screen_addr=&8000 - (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT) / 8
+; Beeb source in CORE
+
+INCLUDE "game/beeb-plot.asm"
+
+; PoP source in CORE memory (always present)
+
+INCLUDE "game/master.asm"
+INCLUDE "game/topctrl.asm"
+INCLUDE "game/grafix.asm"
+INCLUDE "game/hires_core.asm"
+
+.pop_beeb_core_end
+
+; Data in CORE memory (always present)
+
+.pop_beeb_data_start
+
+; This data could be dumped after boot!
 
 .beeb_crtcregs
 {
@@ -187,52 +229,82 @@ beeb_screen_addr=&8000 - (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT) / 8
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
-.beeb_set_screen_mode
-{
-    \\ Set CRTC registers
-    LDX #13
-    .crtcloop
-    STX &FE00
-    LDA beeb_crtcregs, X
-    STA &FE01
-    DEX
-    BPL crtcloop
+PRINT "Core code size = ", ~(pop_beeb_core_end-pop_beeb_core_start)
 
-    \\ Set ULA
-    LDA #&88            ; MODE 4
-    STA &FE20
+.pop_beeb_data_end
+.pop_beeb_end
 
-    \\ Set Palette
-    CLC
-    LDA #7              ; PAL_black
-    .palloop1
-    STA &FE21
-    ADC #&10
-    BPL palloop1  
-    EOR #7              ; PAL_white
-    .palloop2
-    STA &FE21
-    ADC #&10
-    BMI palloop2
+PRINT "Core data size = ", ~(pop_beeb_data_end-pop_beeb_data_start)
 
-    RTS
-}
+; Save Core executable
 
-; Beeb source
+SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
-INCLUDE "game/beeb-plot.asm"
+; Run time initalised data in Core
 
-; PoP source
+.pop_beeb_bss_start
+
+INCLUDE "game/eq.asm"
+INCLUDE "game/gameeq.asm"
+
+.pop_beeb_bss_end
+
+; High watermark for Core RAM
+
+PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
+PRINT "Core high watermark = ", ~P%
+
+
+\*-------------------------------
+; Construct MAIN RAM (video & screen)
+\*-------------------------------
+
+beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
+
+CLEAR 0, &FFFF
+ORG &3000
+GUARD beeb_screen_addr
+
+.pop_beeb_main_start
+
+; Code & data in MAIN RAM (rendering)
+
+INCLUDE "game/hires.asm"
+INCLUDE "game/hrtables.asm"
+
+.pop_beeb_main_end
+
+PRINT "Main code & data size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
+
+; Save executable code for Main RAM
+
+SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
+
+; BSS in MAIN RAM
+
+; (screen buffers)
+
+; High watermark for Main RAM
+PRINT "Main high watermark = ", ~P%
+PRINT "Screen buffer address = ", ~beeb_screen_addr
+
+\*-------------------------------
+; Construct  AUX (SHADOW) RAM
+\*-------------------------------
+
+CLEAR 0, &FFFF
+ORG &3000
+GUARD &8000
+
+.pop_beeb_aux_start
+
+; Code in AUX RAM (gameplay)
 
 INCLUDE "game/frameadv.asm"
-INCLUDE "game/grafix.asm"
 INCLUDE "game/gamebg.asm"
-INCLUDE "game/hires.asm"
 INCLUDE "game/bgdata.asm"
-INCLUDE "game/master.asm"
-INCLUDE "game/topctrl.asm"
-INCLUDE "game/specialk.asm"
 INCLUDE "game/subs.asm"
+INCLUDE "game/specialk.asm"
 INCLUDE "game/mover.asm"
 INCLUDE "game/misc.asm"
 INCLUDE "game/auto.asm"
@@ -240,48 +312,32 @@ INCLUDE "game/ctrlsubs.asm"
 INCLUDE "game/ctrl.asm"
 INCLUDE "game/coll.asm"
 
-.pop_beeb_code_end
-.pop_beeb_data_start
-
-PRINT "Code high watermark = ", ~P%
-PRINT "Main code size = ", ~(pop_beeb_code_end-pop_beeb_code_start)
+; Data in AUX RAM (gameplay)
 
 INCLUDE "game/tables.asm"
-INCLUDE "game/hrtables.asm"
 INCLUDE "game/framedefs.asm"
 
-.pop_beeb_data_end
-.pop_beeb_end
+.pop_beeb_aux_end
 
-PRINT "Code & data high watermark = ", ~P%
-PRINT "Main data size = ", ~(pop_beeb_data_end-pop_beeb_data_start)
+PRINT "Aux code & data size = ", ~(pop_beeb_aux_end - pop_beeb_aux_start)
 
-SAVE "Main", pop_beeb_start, pop_beeb_end, pop_beeb_main
+; Save executable code for Aux RAM
 
-; Run time initalised data
+SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 
-.pop_beeb_bss_start
-
-INCLUDE "game/eq.asm"
-INCLUDE "game/gameeq.asm"
+; BSS in AUX RAM (gameplay)
 
 ALIGN &100
 .blueprnt
 SKIP &900           ; all blueprints same size
 
-.pop_beeb_bss_end
-
-; High watermark for main RAM
-
-PRINT "RAM high watermark = ", ~P%
-PRINT "BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
-
-; Construct SHADOW RAM
-
-CLEAR 0, &FFFF
+; High watermark for Main RAM
+PRINT "Aux high watermark = ", ~P%
 
 
+\*-------------------------------
 ; Construct MOS RAM
+\*-------------------------------
 
 CLEAR 0, &FFFF
 ORG &8000
@@ -291,7 +347,10 @@ SKIP &800
 .peelbuf2
 SKIP &800
 
+
+\*-------------------------------
 ; Construct ROMS
+\*-------------------------------
 
 CLEAR 0, &FFFF
 ORG &8000
@@ -305,20 +364,17 @@ BEEB_SWRAM_SLOT_CHTAB25 = 2
 BEEB_SWRAM_SLOT_CHTAB4 = 3
 BEEB_SWRAM_SLOT_CHTAB67 = 3             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
 
+; BANK 0
+
 .bank0_start
 .bgtable1
 SKIP 9185           ; max size of IMG.BGTAB1.XXX
-;INCBIN "Images/IMG.BGTAB1.DUN.bin"
-;INCBIN "Images/IMG.BGTAB1.PAL.bin"
 ALIGN &100
 .bgtable2
 SKIP 4593           ; max size of IMG.BGTAB2.XXX
-;INCBIN "Images/IMG.BGTAB2.DUN.bin"
-;INCBIN "Images/IMG.BGTAB2.PAL.bin"
-;INCBIN "Levels/Level1"
 .bank0_end
 
-;SAVE "Bank0", bank0_start, bank0_end, &8000, &8000
+; BANK 1
 
 CLEAR 0, &FFFF
 ORG &8000
@@ -333,6 +389,8 @@ SKIP 5985           ; size of IMG.CHTAB3
 ALIGN &100
 .bank1_end
 
+; BANK 2
+
 CLEAR 0, &FFFF
 ORG &8000
 GUARD &C000
@@ -345,6 +403,8 @@ ALIGN &100
 SKIP 6134           ; size of IMG.CHTAB5
 ALIGN &100
 .bank2_end
+
+; BANK 3
 
 CLEAR 0, &FFFF
 ORG &8000
@@ -362,7 +422,10 @@ SKIP 1155           ; size of IMG.CHTAB7
 ALIGN &100
 .bank3_end
 
+
+\*-------------------------------
 ; Construct overlay files
+\*-------------------------------
 
 CLEAR 0, &FFFF
 
@@ -388,7 +451,10 @@ ORG blueprnt
 .GdStartProg skip 24
 .GdStartSeqH skip 24
 
+
+\*-------------------------------
 ; Put files on the disk
+\*-------------------------------
 
 PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
@@ -403,8 +469,8 @@ PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
 PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
 PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
 PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
-PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
-PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
+;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
+;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
 PUTFILE "Images/IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
 PUTFILE "Images/IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
 PUTFILE "Images/IMG.BGTAB1.PAL.bin", "PAL1", 0, 0

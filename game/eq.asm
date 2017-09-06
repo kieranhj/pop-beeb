@@ -12,16 +12,15 @@
 .imlists
 .genCLS skip 1
 
-\ BEEB MOVED TO POP-BEEB.ASM TO BE STORERD LOWER DOWN IN RAM
-;.bgX skip maxback
-;.bgY skip maxback
-;.bgIMG skip maxback
-;.bgOP skip maxback
+.bgX skip maxback
+.bgY skip maxback
+.bgIMG skip maxback
+.bgOP skip maxback
 
-;.fgX skip maxfore
-;.fgY skip maxfore
-;.fgIMG skip maxfore
-;.fgOP skip maxfore
+.fgX skip maxfore
+.fgY skip maxfore
+.fgIMG skip maxfore
+.fgOP skip maxfore
 
 .wipeX skip maxwipe
 .wipeY skip maxwipe
