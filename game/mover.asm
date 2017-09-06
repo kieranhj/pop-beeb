@@ -10,14 +10,14 @@ PalaceEditor = 0
 \*-------------------------------
 \ org org
 
-.animtrans BRK          ; jmp ANIMTRANS
+.animtrans RTS          ; jmp ANIMTRANS         BEEB TO DO
 .trigspikes BRK         ; jmp TRIGSPIKES
-.pushpp BRK             ; jmp PUSHPP
+.pushpp RTS             ; jmp PUSHPP            BEEB TO DO
 .breakloose1 BRK        ; jmp BREAKLOOSE1
 .breakloose BRK         ; jmp BREAKLOOSE
 
 .animmobs jmp ANIMMOBS
-.addmobs BRK            ; jmp ADDMOBS
+.addmobs jmp ADDMOBS
 .closeexit BRK          ; jmp CLOSEEXIT
 .getspikes BRK          ; jmp GETSPIKES
 .shakem BRK             ; jmp SHAKEM
@@ -624,55 +624,58 @@ triggate
  bne :fail
 :1
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  Animate transitional objects
-*  (Advance each object to next frame in animation table)
-*
-*-------------------------------
-]cleanflag ds 1
+\*-------------------------------
+\*
+\*  Animate transitional objects
+\*  (Advance each object to next frame in animation table)
+\*
+\*-------------------------------
+IF _TODO
+.animtrans_cleanflag skip 1
 
-ANIMTRANS
+.ANIMTRANS
+{
  lda #0
  sta trobcount
 
  ldx numtrans ;# objs in trans (0-maxtr)
- beq ]rts
+ beq return
 
  lda #0
- sta ]cleanflag
+ sta animtrans_cleanflag
 
-:loop stx tempnt
+.loop stx tempnt
 
  jsr animobj ;animate obj #x
 
  ldx tempnt
 
  lda trdirec ;has object stopped?
- bpl :1 ;no
+ bpl label_1 ;no
 
- lda #-1 ;yes--mark it for deletion
- sta ]cleanflag ;& set cleanup flag
+ lda #LO(-1) ;yes--mark it for deletion
+ sta animtrans_cleanflag ;& set cleanup flag
 
-:1 sta trdirec,x ;save direction change if any
+.label_1 sta trdirec,x ;save direction change if any
 
  dex
- bne :loop
+ bne loop
 
- lda ]cleanflag
- beq ]rts
+ lda animtrans_cleanflag
+ beq return
 
-*  Delete all stopped objects (trdirec = ff)
-*  (i.e., copy entire list back onto
-*  itself, omitting stopped objects)
+\*  Delete all stopped objects (trdirec = ff)
+\*  (i.e., copy entire list back onto
+\*  itself, omitting stopped objects)
 
  ldx #1 ;source index (assume numtrans > 0)
  ldy #0 ;dest index
 
-:dloop lda trdirec,x
+.dloop lda trdirec,x
  cmp #$ff
- beq :next
+ beq next
 
  iny
  sta trdirec,y
@@ -681,28 +684,32 @@ ANIMTRANS
  lda trscrn,x ;source
  sta trscrn,y ;dest
 
-:next inx
+.next inx
 
  cpx numtrans
- bcc :dloop
- beq :dloop
+ bcc dloop
+ beq dloop
 
  sty numtrans
+.return
  rts
+}
 
-*-------------------------------
-*
-*  Animate TROB #x
-*
-*-------------------------------
-animobj lda trloc,x
+\*-------------------------------
+\*
+\*  Animate TROB #x
+\*
+\*-------------------------------
+.animobj
+{
+ lda trloc,x
  sta trloc
  lda trscrn,x
  sta trscrn
  lda trdirec,x
  sta trdirec
 
-* Find out what kind of object it is
+\* Find out what kind of object it is
 
  lda trscrn
  jsr calcblue
@@ -714,68 +721,72 @@ animobj lda trloc,x
  lda (BlueType),y
  and #idmask ;objid
 
-* and branch to appropriate subroutine
+\* and branch to appropriate subroutine
 
  cmp #torch
- bne :1
+ bne label_1
  jsr animtorch
- jmp :done
+ jmp done
 
-:1 cmp #upressplate
- beq :plate
+.label_1 cmp #upressplate
+ beq label_plate
  cmp #pressplate
- bne :2
-:plate jsr animplate
- jmp :done
+ bne label_2
+.label_plate jsr animplate
+ jmp done
 
-:2 cmp #spikes
- bne :3
+.label_2 cmp #spikes
+ bne label_3
  jsr animspikes
- jmp :done
+ jmp done
 
-:3 cmp #loose
- bne :31
+.label_3 cmp #loose
+ bne label_31
  jsr animfloor
- jmp :done
+ jmp done
 
-:31 cmp #space ;(loose floor turns into space)
- bne :4
+.label_31 cmp #space ;(loose floor turns into space)
+ bne label_4
  jsr animspace
- jmp :done
+ jmp done
 
-:4 cmp #slicer
- bne :5
+.label_4 cmp #slicer
+ bne label_5
  jsr animslicer
- jmp :done
+ jmp done
 
-:5 cmp #gate
- bne :6
+.label_5 cmp #gate
+ bne label_6
  jsr animgate
- jmp :done
+ jmp done
 
-:6 cmp #exit
- bne :7
+.label_6 cmp #exit
+ bne label_7
  jsr animexit
- jmp :done
+ jmp done
 
-:7 cmp #flask
- bne :8
+.label_7 cmp #flask
+ bne label_8
  jsr animflask
- jmp :done
+ jmp done
 
-:8 cmp #sword
- bne :9
+.label_8 cmp #sword
+ bne label_9
  jsr animsword
- jmp :done
+ jmp label_done
 
-:9 jsr stopobj ;obj is none of these--purge it from trans list!
+.label_9 jsr stopobj ;obj is none of these--purge it from trans list!
 
-:done lda state
+.done lda state
  ldy trloc
  sta (BlueSpec),y
 
-:rts rts
+.return
+ rts
+}
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 * Animate exit
@@ -2007,78 +2018,80 @@ ENDIF
  jmp jumpseq
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Add all visible MOBs to object table (to be drawn later)
-*
-*-------------------------------
-ADDMOBS
+\*-------------------------------
+\*
+\*  Add all visible MOBs to object table (to be drawn later)
+\*
+\*-------------------------------
+.ADDMOBS
+{
  ldx nummob ;# objs in motion (0-maxmob)
- beq :rts
+ beq return_22
 
-:loop stx tempnt
+.loop stx tempnt
  jsr loadmob
 
  lda mobtype
- bne :1
+ bne label_1
  jsr ATM ;Add this MOB
-:1
+.label_1
  ldx tempnt
  dex
- bne :loop
-:rts
-]rts rts
+ bne loop
+}
+.return_22
+ rts
 
-*-------------------------------
-*
-*  Add this MOB to obj table (if visible)
-*
-*-------------------------------
-ATM
 
-* Is floorpiece visible onscreen?
+\*-------------------------------
+\*
+\*  Add this MOB to obj table (if visible)
+\*
+\*-------------------------------
+.ATM
+{
+\* Is floorpiece visible onscreen?
 
  lda mobscrn
  cmp VisScrn
- bne :ok2
+ bne ok2
 
  lda moby
  cmp #192+17 ;17 is generous estimate of image height
- bcc :ok
+ bcc ok
  rts
-:ok2
+.ok2
  cmp scrnBelow
- bne ]rts ;not on screen below
+ bne return_22 ;not on screen below
 
  lda moby
- cmp #-17
- bcs :ok1
+ cmp #LO(-17)
+ bcs ok1
  cmp #17
- bcs ]rts
-:ok1
+ bcs return_22
+.ok1
  clc
  adc #192
  sta moby ;(this change won't be saved)
-:ok
+.ok
 
-* Get block #; index char
+\* Get block #; index char
 
  lda moby
  jsr getblocky ;return blocky (0-3)
  sta tempblocky
 
  lda mobx
- lsr
- lsr
+ lsr A
+ lsr A
  sta tempblockx
 
  jsr indexblock
  sty FCharIndex
 
-* Mark floorbuf & fredbuf of affected blocks to R
+\* Mark floorbuf & fredbuf of affected blocks to R
 
-:cont1
+.cont1
  inc tempblockx
  jsr indexblock  ;block to R
 
@@ -2091,7 +2104,7 @@ ATM
  sbc #FFheight
  jsr getblocky ;highest affected blocky
  cmp tempblocky
- beq :same
+ beq same
 
  sta tempblocky
  jsr indexblock ;block to U.R.
@@ -2099,23 +2112,25 @@ ATM
  lda #2
  jsr markfloor
  jsr markfred
-:same
+.same
 
-* Get frame #
+\* Get frame #
 
  lda #Ffalling
- sta mobframe
+ sta mover_mobframe
 
  jmp addmobobj ;add MOB to object table
+}
 
-*-------------------------------
-*
-*  Add MOB to object table
-*
-*  In: mob data
-*
-*-------------------------------
-addmobobj
+\*-------------------------------
+\*
+\*  Add MOB to object table
+\*
+\*  In: mob data
+\*
+\*-------------------------------
+.addmobobj
+{
  inc objX
  ldx objX
 
@@ -2131,7 +2146,7 @@ addmobobj
  lda moby
  sta objY,x
 
- lda mobframe
+ lda mover_mobframe
  sta objIMG,x
 
  lda #0
@@ -2141,7 +2156,10 @@ addmobobj
  sta objCR,x
 
  jmp setobjindx
-]rts rts
+ rts
+}
+
+IF _TODO
 *-------------------------------
 *
 * Shake floors

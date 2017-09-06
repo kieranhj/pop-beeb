@@ -171,8 +171,8 @@ width = IMAGE+1
 \*  $18-3f: Global vars
 \*-------------------------------
 
-;.JSTKX skip 1
-;.JSTKY skip 1
+.JSTKX skip 1
+.JSTKY skip 1
 .BTN0 skip 1
 .BTN1 skip 1
 ;.BUTT0 skip 1
@@ -195,14 +195,14 @@ width = IMAGE+1
 .scrnAbove skip 1
 .scrnBelow skip 1
 .scrnBelowL skip 1
-;.scrnAboveL skip 1
-;.scrnAboveR skip 1
-;.scrnBelowR skip 1
+.scrnAboveL skip 1
+.scrnAboveR skip 1
+.scrnBelowR skip 1
 ;.kbdX skip 1
 ;.kbdY skip 1
 ;.joyX skip 1
 ;.joyY skip 1
-;.btn skip 1
+.btn skip 1
 ;.butt skip 1
 
 \*-------------------------------

@@ -16,13 +16,13 @@
 \ org org
 
 .AutoCtrl BRK           ; jmp AUTOCTRL
-.checkstrike BRK        ; jmp CHECKSTRIKE
-.checkstab BRK          ; jmp CHECKSTAB
+.checkstrike RTS        ; jmp CHECKSTRIKE           BEEB TO DO
+.checkstab RTS          ; jmp CHECKSTAB             BEEB TO DO
 .AutoPlayback BRK       ; jmp AUTOPLAYBACK
 .cutcheck BRK           ; jmp CUTCHECK
 
 .cutguard BRK           ; jmp CUTGUARD
-.addguard BRK           ; jmp ADDGUARD
+.addguard RTS           ; jmp ADDGUARD              BEEB TO DO
 .cut BRK                ; jmp CUT
 
 \*-------------------------------

@@ -620,3 +620,18 @@ Can put HRTABLES in low part of SHADOW ram underneath the screen
 
 Don't need to port BOOT.S
 
+*-------------------------------
+*
+*  Stage 1: static dbl hires screens -- no animation
+*  Stage 2: character animation only (bg is unpacked)
+*  Stage 3: full game animation
+*
+*-------------------------------
+
+6/9/2017 Time to bite the SHADOW RAM bullet
+~~~
+
+Assemble in 3 parts:
+core = &E00 -  &3000
+main = &3000 - &8000
+aux (shadow) = &3000 - &8000

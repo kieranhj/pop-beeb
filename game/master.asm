@@ -20,7 +20,7 @@
 \*-------------------------------
 \ org org
 
- ._firstboot BRK    ;jmp FIRSTBOOT
+ ._firstboot jmp FIRSTBOOT
  ._loadlevel jmp LOADLEVEL
  ._reload BRK       ;jmp RELOAD
  ._loadstage2 BRK   ;jmp LoadStage2
@@ -167,7 +167,6 @@ kresume = 'l'-$60
 \*
 \*-------------------------------
 
-IF _TODO
 .FIRSTBOOT
 {
 \ NOT BEEB
@@ -191,7 +190,7 @@ IF _TODO
 
 \* Load as much of Stage 3 as we can keep
 
-\ jsr loadperm
+ jsr loadperm
 
 \* Turn off drive
 
@@ -211,9 +210,11 @@ IF _TODO
  lda #1
  sta soundon ;Sound on
 
- jmp AttractLoop
+\ BEEB TEMP comment out
+\ jmp AttractLoop
 }
 
+IF _TODO
 *-------------------------------
 *
 *   Reload code & images
@@ -465,7 +466,7 @@ ENDIF
 .LOADLEVEL
 {
  sta newBGset1
-\ BEEB X STAYS AS LEVEL
+\ BEEB X STAYS AS LEVEL FOR BLUEPRINT
  sta newBGset2
  sty newCHset
 
@@ -1256,85 +1257,178 @@ ENDIF
  jmp start
 }
 
+\*-------------------------------
+\*
+\* Load permanent code & data
+\* (only once)
+\*
+\*-------------------------------
+\loadperm
+\ lda #3
+\ sta track
+\
+\ jsr setaux
+\
+\ jsr rw18
+\ db RdSeq.Inc,$0e
+\
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 04,05,06,07,08,09,0a,0b,0c
+\ hex 0d,20,21,22,23,24,25,26,27
+\
+\ jsr setmain
+\ lda #9
+\ sta track
+\ jsr rw18
+\ db RdSeq.Inc,$84
+\ jsr rw18
+\ db RdSeq.Inc,$96
+\
+\ jsr rw18
+\ db RdSeq.Inc,$08
+\
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 1a,1b,1c,1d,1e,1f,a8,a9,aa
+\ hex ab,ac,ad,ae,af,b0,b1,b2,b3
+\
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex b4,b5,b6,b7,b8,b9,ba,bb,bc
+\ hex bd,be,bf,00,00,00,00,00,00
+\
+\*-------------------------------
+\*
+\* Load aux l.c. stuff (tracks 19-21 & 34)
+\* (includes music set 1)
+\*
+\* Load into main hires area & move to aux l.c.
+\*
+\*-------------------------------
+\ lda #19
+\ sta track
+\
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 00,00,20,21,22,23,24,25,26
+\ hex 27,28,29,2a,2b,2c,2d,2e,2f
+\
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 00,00,00,00,30,31,32,33,34
+\ hex 35,36,37,38,39,3a,3b,3c,3d
+\ jsr rw18
+\ db RdSeq.Inc,$3e
+\
+\ lda #34
+\ sta track
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 00,00,50,51,52,53,54,55,56
+\ hex 57,58,59,5a,5b,5c,5d,5e,5f
+\
+\ jsr setaux
+\ lda #1
+\ sta MSset
+\
+\ jsr setmain
+\ jmp Tmoveauxlc
+\
+\ BEEB - Not sure what this loads on Apple II but for Beeb we'll load:
+\ CHTAB IMG files for Kid
+\ Probably the gameplay code into SHADOW RAM eventually
+.perm_file_names
+EQUS "CHTAB1 $"
+EQUS "CHTAB3 $"
+EQUS "CHTAB2 $"
+EQUS "CHTAB5 $"
+
+.loadperm
+{
+    \ Start with CHTAB1 + 3
+    lda #BEEB_SWRAM_SLOT_CHTAB13
+    jsr swr_select_slot
+
+    \ index into table for filename
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
+    LDA #HI(chtable1)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable1)
+    STA beeb_readptr
+    LDA #HI(chtable1)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 8)
+    LDY #HI(perm_file_names + 8)
+    LDA #HI(chtable3)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable3)
+    STA beeb_readptr
+    LDA #HI(chtable3)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Then CHTAB2 + 5
+    lda #BEEB_SWRAM_SLOT_CHTAB25
+    jsr swr_select_slot
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 16)
+    LDY #HI(perm_file_names + 16)
+    LDA #HI(chtable2)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable2)
+    STA beeb_readptr
+    LDA #HI(chtable2)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 24)
+    LDY #HI(perm_file_names + 24)
+    LDA #HI(chtable5)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable5)
+    STA beeb_readptr
+    LDA #HI(chtable5)
+    STA beeb_readptr+1
+    LDA #LO(&6000)
+    STA beeb_writeptr
+    LDA #HI(&6000)
+    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Probably need to load gameplay code into SHADOW RAM here
+
+    .return
+    rts
+}
+
 IF _TODO
-*-------------------------------
-*
-* Load permanent code & data
-* (only once)
-*
-*-------------------------------
-loadperm
- lda #3
- sta track
-
- jsr setaux
-
- jsr rw18
- db RdSeq.Inc,$0e
-
- jsr rw18
- db RdGrp.Inc
- hex 04,05,06,07,08,09,0a,0b,0c
- hex 0d,20,21,22,23,24,25,26,27
-
- jsr setmain
- lda #9
- sta track
- jsr rw18
- db RdSeq.Inc,$84
- jsr rw18
- db RdSeq.Inc,$96
-
- jsr rw18
- db RdSeq.Inc,$08
-
- jsr rw18
- db RdGrp.Inc
- hex 1a,1b,1c,1d,1e,1f,a8,a9,aa
- hex ab,ac,ad,ae,af,b0,b1,b2,b3
-
- jsr rw18
- db RdGrp.Inc
- hex b4,b5,b6,b7,b8,b9,ba,bb,bc
- hex bd,be,bf,00,00,00,00,00,00
-
-*-------------------------------
-*
-* Load aux l.c. stuff (tracks 19-21 & 34)
-* (includes music set 1)
-*
-* Load into main hires area & move to aux l.c.
-*
-*-------------------------------
- lda #19
- sta track
-
- jsr rw18
- db RdGrp.Inc
- hex 00,00,20,21,22,23,24,25,26
- hex 27,28,29,2a,2b,2c,2d,2e,2f
-
- jsr rw18
- db RdGrp.Inc
- hex 00,00,00,00,30,31,32,33,34
- hex 35,36,37,38,39,3a,3b,3c,3d
- jsr rw18
- db RdSeq.Inc,$3e
-
- lda #34
- sta track
- jsr rw18
- db RdGrp.Inc
- hex 00,00,50,51,52,53,54,55,56
- hex 57,58,59,5a,5b,5c,5d,5e,5f
-
- jsr setaux
- lda #1
- sta MSset
-
- jsr setmain
- jmp Tmoveauxlc
-
 *-------------------------------
 *
 *  Stage 1: static dbl hires screens -- no animation

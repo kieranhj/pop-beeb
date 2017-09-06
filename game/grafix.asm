@@ -25,7 +25,7 @@
 .movemem BRK    ;jmp MOVEMEM
 .buttons BRK    ;jmp BUTTONS ;ed
 .gtone BRK      ;jmp GTONE
-.setcenter BRK  ;jmp SETCENTER
+.setcenter RTS  ;jmp SETCENTER      BEEB TO DO
 \
 .dimchar BRK    ;jmp DIMCHAR
 .cvtx BRK       ;jmp CVTX
@@ -34,15 +34,15 @@
 .pread BRK      ;jmp PREAD
 \
 .addpeel BRK    ;jmp ADDPEEL
-.copyscrn BRK   ;jmp COPYSCRN
+.copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel BRK    ;jmp SNGPEEL
-.rnd BRK        ;jmp RND
+.rnd jmp RND
 .cls jmp CLS
 \
 .lay jmp LAY
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
-.lrcls BRK      ;jmp LRCLS
+.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?
 .fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
@@ -93,15 +93,15 @@
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty BRK    ;jmp INVERTY
-.normspeed BRK  ;jmp NORMSPEED
+.inverty RTS    ;jmp INVERTY                                            BEEB TO DO
+.normspeed RTS  ;jmp NORMSPEED                                          NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
 .zerored jmp ZERORED
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS
-.fastspeed BRK  ;jmp FASTSPEED
+.fastspeed RTS  ;jmp FASTSPEED                                          NOT BEEB
 .musickeys BRK  ;jmp MUSICKEYS
 .dostartgame BRK;jmp DOSTARTGAME
 \
@@ -109,7 +109,7 @@
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank BRK     ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vblank RTS     ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc       BEEB TO DO
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \
@@ -183,7 +183,7 @@ cwidthy = 15 ;21
 \*  Addresses of character image tables
 \*  (Bank: 2 = main, 3 = aux)
 
-.chtabbank EQUB 2,2,2,3,2,3,3
+.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB67, BEEB_SWRAM_SLOT_CHTAB67
 
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
  EQUB HI(chtable5),HI(chtable6),HI(chtable7)
@@ -852,7 +852,8 @@ ENDIF
 {
  tay
 
- lda #3 ;auxmem
+\lda #3 ;auxmem
+ lda #BEEB_SWRAM_SLOT_LEVELBG       ; BEEB BACKGROUND SWRAM SLOT
  sta BANK
 
  lda #0
@@ -1421,25 +1422,29 @@ COPYSCRN
  sta IMAGE ;org addr
 
  jmp copy2000
+ENDIF
 
-*-------------------------------
-*
-*  Generate random number
-*
-*  RNDseed := (5 * RNDseed + 23) mod 256
-*
-*-------------------------------
-RND
+\*-------------------------------
+\*
+\*  Generate random number
+\*
+\*  RNDseed := (5 * RNDseed + 23) mod 256
+\*
+\*-------------------------------
+.RND
+{
  lda RNDseed
- asl
- asl
+ asl A
+ asl A
  clc
  adc RNDseed
  clc
  adc #23
  sta RNDseed
-return rts
+.return rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Calls to hires & master routines

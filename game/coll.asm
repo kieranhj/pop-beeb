@@ -18,7 +18,7 @@
 .collisions BRK     ; jmp COLLISIONS
 .getfwddist BRK     ; jmp GETFWDDIST
 .checkcoll BRK      ; jmp CHECKCOLL
-.animchar BRK       ; jmp ANIMCHAR
+.animchar jmp ANIMCHAR
 
 .checkslice BRK     ; jmp if
 .checkslice2 BRK    ; jmp CHECKSLICE2
@@ -987,34 +987,35 @@ DBarr
  sbc ztemp
 
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  A N I M   C H A R
-*
-*  Get next frame from sequence table;
-*  update char data accordingly.
-*  We're now ready to draw this frame.
-*
-*-------------------------------
-ANIMCHAR
-
-:next jsr getseq ;get next byte from seqtab
+\*-------------------------------
+\*
+\*  A N I M   C H A R
+\*
+\*  Get next frame from sequence table;
+\*  update char data accordingly.
+\*  We're now ready to draw this frame.
+\*
+\*-------------------------------
+.ANIMCHAR
+{
+.next jsr getseq ;get next byte from seqtab
  ;& increment CharSeq
 
  cmp #chx ;"change x" instruction?
- bne :no1
+ bne no1
 
  jsr getseq ;next byte is delta-x
 
  jsr addcharx
  sta CharX
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no1 cmp #chy
- bne :no2
+\*-------------------------------
+.no1 cmp #chy
+ bne no2
 
  jsr getseq
 
@@ -1022,23 +1023,23 @@ ANIMCHAR
  adc CharY
  sta CharY
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no2 cmp #aboutface
- bne :no3
+\*-------------------------------
+.no2 cmp #aboutface
+ bne no3
 
  lda CharFace
  eor #$ff
  sta CharFace
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no3 cmp #goto
- bne :no4
+\*-------------------------------
+.no3 cmp #goto
+ bne no4
 
-:goto jsr getseq ;low byte of address
+.label_goto jsr getseq ;low byte of address
  pha
 
  jsr getseq ;high byte
@@ -1047,39 +1048,39 @@ ANIMCHAR
  pla
  sta CharSeq
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no4 cmp #up
- bne :no5
+\*-------------------------------
+.no4 cmp #up
+ bne no5
 
  dec CharBlockY
 
  jsr addslicers
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no5 cmp #down
- bne :no6
+\*-------------------------------
+.no5 cmp #down
+ bne no6
 
  inc CharBlockY
 
  jsr addslicers
 
- jmp :next
+ jmp next
 
-*-------------------------------
-:no6 cmp #act
- bne :no7
+\*-------------------------------
+.no6 cmp #act
+ bne no7
 
  jsr getseq
  sta CharAction
 
- jmp :next
+ jmp next
 
-:no7 cmp #setfall
- bne :no8
+.no7 cmp #setfall
+ bne no8
 
  jsr getseq
  sta CharXVel
@@ -1087,101 +1088,106 @@ ANIMCHAR
  jsr getseq
  sta CharYVel
 
- jmp :next
+ jmp next
 
-:no8
+.no8
  cmp #ifwtless
- bne :no9
+ bne no9
 
  lda weightless ;weightless?
- bne :goto ;yes--branch
+ bne label_goto ;yes--branch
 
  jsr getseq
  jsr getseq ;skip 2 bytes
- jmp :next ;& continue
+ jmp next ;& continue
 
-:no9 cmp #die
- bne :no10
- jmp :next
+.no9 cmp #die
+ bne no10
+ jmp next
 
-:no10 cmp #jaru
- bne :no11
+.no10 cmp #jaru
+ bne no11
 
  lda #1
  sta jarabove ;jar floorboards above
- jmp :next
+ jmp next
 
-:no11 cmp #jard
- bne :no12
+.no11 cmp #jard
+ bne no12
 
- lda #-1
+ lda #LO(-1)
  sta jarabove ;jar floorboards below
- jmp :next
+ jmp next
 
-*-------------------------------
-:no12 cmp #tap
- bne :no13
+\*-------------------------------
+.no12 cmp #tap
+ bne no13
 
  jsr getseq ;sound #
  cmp #0 ;0: alert guard
- beq :0
+ beq label_0
 
  cmp #1 ;1: footstep
- bne :1
+ bne label_1
  lda #Footstep
-:tap jsr addsound
-:0 lda #1
+.label_tap jsr addsound
+.label_0 lda #1
  sta alertguard
- jmp :next
+ jmp next
 
-:1 cmp #2 ;2: smack wall
- bne :2
+.label_1 cmp #2 ;2: smack wall
+ bne label_2
  lda #SmackWall
- bne :tap
-:2 jmp :next
+ bne label_tap
+.label_2 jmp next
 
-:no13 cmp #nextlevel
- bne :no14
+.no13 cmp #nextlevel
+ bne no14
 
  jsr GoneUpstairs
- jmp :next
+ jmp next
 
-:no14 cmp #effect
- bne :no15
+.no14 cmp #effect
+ bne no15
 
  jsr getseq ;effect #
  cmp #1
- bne :fx0
+ bne fx0
 
  jsr potioneffect
-:fx0 jmp :next
+.fx0 jmp next
 
-:no15
-*-------------------------------
+.no15
+\*-------------------------------
  sta CharPosn ;frame #
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* Char has gone upstairs
-* What do we do?
-*-------------------------------
-GoneUpstairs
+\*-------------------------------
+\* Char has gone upstairs
+\* What do we do?
+\*-------------------------------
+.GoneUpstairs
+{
  lda level
  cmp #13
- beq :ok ;no music for level 13
+ beq ok ;no music for level 13
  cmp #4
- bne :1 ;mirror level is special
-:3 lda #s_Shadow
- bne :2
+ bne label_1 ;mirror level is special
+.label_3 lda #s_Shadow
+ bne label_2
 
-:1 lda #s_Upstairs
-:2 ldx #25
+.label_1 lda #s_Upstairs
+.label_2 ldx #25
  jsr cuesong
 
-:ok inc NextLevel
+.ok inc NextLevel
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Sliced by slicer? (Does CD buf show char overlapping

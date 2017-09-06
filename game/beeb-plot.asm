@@ -50,6 +50,14 @@
 IF BEEB_SCREEN_MODE == 4
 .beeb_plot_apple_mode_4
 {
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    CMP #4
+    BCC slot_set
+    BRK                 ; swram slot for sprite not set!
+    .slot_set
+    JSR swr_select_slot
+
     \ Turns TABLE & IMAGE# into IMAGE ptr
     \ Obtains WIDTH & HEIGHT
     
@@ -200,10 +208,10 @@ IF BEEB_SCREEN_MODE == 4
 
     SEC
     LDA beeb_writeptr
-    SBC #LO(320)
+    SBC #LO(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(320)
+    SBC #HI(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr+1
 
     LDY #7
@@ -302,10 +310,10 @@ IF BEEB_SCREEN_MODE == 4
 
     SEC
     LDA beeb_writeptr
-    SBC #LO(320)
+    SBC #LO(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(320)
+    SBC #HI(BEEB_SCREEN_WIDTH)
     STA beeb_writeptr+1
 
     LDY #7
@@ -520,6 +528,37 @@ NEXT
 ENDIF
 
 
+.beeb_set_screen_mode
+{
+    \\ Set CRTC registers
+    LDX #13
+    .crtcloop
+    STX &FE00
+    LDA beeb_crtcregs, X
+    STA &FE01
+    DEX
+    BPL crtcloop
+
+    \\ Set ULA
+    LDA #&88            ; MODE 4
+    STA &FE20
+
+    \\ Set Palette
+    CLC
+    LDA #7              ; PAL_black
+    .palloop1
+    STA &FE21
+    ADC #&10
+    BPL palloop1  
+    EOR #7              ; PAL_white
+    .palloop2
+    STA &FE21
+    ADC #&10
+    BMI palloop2
+
+    RTS
+}
+
 
 .beeb_plot_reloc_img
 {
@@ -553,6 +592,21 @@ ENDIF
 }
 
 
+.beeb_shadow_select_main
+{
+    LDA &FE34
+    AND #&FB            ; mask out bit 2
+    STA &FE34
+    RTS
+}
+
+.beeb_shadow_select_aux
+{
+    LDA &FE34
+    ORA #4
+    STA &FE34
+    RTS
+}
 
 
 .Mult8_LO

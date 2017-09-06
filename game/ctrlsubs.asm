@@ -18,23 +18,23 @@
 \*-------------------------------
 \ org org
 
-.getframe BRK       ; jmp GETFRAME
-.getseq BRK         ; jmp GETSEQ
-.getbasex BRK       ; jmp GETBASEX
+.getframe jmp GETFRAME
+.getseq jmp GETSEQ
+.getbasex jmp GETBASEX
 .getblockx BRK      ; jmp GETBLOCKX
-.getblockxp BRK     ; jmp GETBLOCKXP
+.getblockxp jmp GETBLOCKXP
 
 .getblocky BRK      ; jmp GETBLOCKY
-.getblockej BRK     ; jmp GETBLOCKEJ
+.getblockej jmp GETBLOCKEJ
 .addcharx BRK       ; jmp ADDCHARX
 .getdist BRK        ; jmp GETDIST
 .getdist1 BRK       ; jmp GETDIST1
 
 .getabovebeh BRK    ; jmp GETABOVEBEH
-.rdblock BRK        ; jmp RDBLOCK
-.rdblock1 BRK       ; jmp RDBLOCK1
-.setupsword BRK     ; jmp SETUPSWORD
-.getscrns BRK       ; jmp GETSCRNS
+.rdblock jmp RDBLOCK
+.rdblock1 jmp RDBLOCK1
+.setupsword RTS     ; jmp SETUPSWORD                BEEB TO DO
+.getscrns jmp GETSCRNS
 
 .addguardobj BRK    ; jmp ADDGUARDOBJ
 .opjumpseq BRK      ; jmp OPJUMPSEQ
@@ -43,10 +43,10 @@
 .quickfg BRK        ; jmp QUICKFG
 
 .cropchar BRK       ; jmp CROPCHAR
-.getleft BRK        ; jmp GETLEFT
-.getright BRK       ; jmp GETRIGHT
-.getup BRK          ; jmp GETUP
-.getdown BRK        ; jmp GETDOWN
+.getleft jmp GETLEFT
+.getright jmp GETRIGHT
+.getup jmp GETUP
+.getdown jmp GETDOWN
 
 .cmpspace BRK       ; jmp CMPSPACE
 .cmpbarr BRK        ; jmp CMPBARR
@@ -54,13 +54,13 @@
 .addshadobj BRK     ; jmp ADDSHADOBJ
 .addreflobj BRK     ; jmp ADDREFLOBJ
 
-.LoadKid BRK        ; jmp LOADKID
+.LoadKid jmp LOADKID
 .LoadShad BRK       ; jmp LOADSHAD
-.SaveKid BRK        ; jmp SAVEKID
+.SaveKid jmp SAVEKID
 .SaveShad BRK       ; jmp SAVESHAD
 .setupchar BRK      ; jmp SETUPCHAR
 
-.GetFrameInfo BRK       ; jmp GETFRAMEINFO
+.GetFrameInfo jmp GETFRAMEINFO
 .indexblock BRK         ; jmp INDEXBLOCK
 .markred BRK            ; jmp MARKRED
 .markfred BRK           ; jmp MARKFRED
@@ -68,7 +68,7 @@
 
 .markmove BRK           ; jmp MARKMOVE
 .markfloor BRK          ; jmp MARKFLOOR
-.unindex BRK            ; jmp UNINDEX
+.unindex jmp UNINDEX
 .quickfloor BRK         ; jmp QUICKFLOOR
 .unevenfloor BRK        ; jmp UNEVENFLOOR
 
@@ -81,11 +81,11 @@
 .checkspikes BRK        ; jmp CHECKSPIKES
 .rechargemeter BRK      ; jmp RECHARGEMETER
 .addfcharx BRK          ; jmp ADDFCHARX
-.facedx BRK             ; jmp FACEDX
-.jumpseq BRK            ; jmp JUMPSEQ
+.facedx jmp FACEDX
+.jumpseq jmp JUMPSEQ
 
-.GetBaseBlock BRK       ; jmp GETBASEBLOCK
-.LoadKidwOp BRK         ; jmp LOADKIDWOP
+.GetBaseBlock jmp GETBASEBLOCK
+.LoadKidwOp jmp LOADKIDWOP
 .SaveKidwOp BRK         ; jmp SAVEKIDWOP
 .getopdist BRK          ; jmp GETOPDIST
 .LoadShadwOp BRK        ; jmp LOADSHADWOP
@@ -123,45 +123,44 @@
 \
 \ dend
 
-IF _TODO
-
 \*-------------------------------
 \*  Misc. data
 
-plus1 db -1,1
-minus1 db 1,-1
+.plus1 EQUB LO(-1),1
+.minus1 EQUB 1,LO(-1)
 
 maxmaxstr = 10 ;strength meter maximum
 
 thinner = 3
 
-*-------------------------------
-*
-*  R E A D   B L O C K
-*
-*  In:  A = screen #
-*       X = block x (0-9 onscreen)
-*       Y = block y (0-2 onscreen)
-*
-*  Out: A,X = objid
-*       Y = block # (0-29)
-*       BlueType, BlueSpec set
-*       tempscrn,tempblockx,tempblocky = onscreen block coords
-*
-*  - Offscreen block values are traced to their home screen
-*  - Screen 0 is treated as a solid mass
-*
-*-------------------------------
-RDBLOCK
+\*-------------------------------
+\*
+\*  R E A D   B L O C K
+\*
+\*  In:  A = screen #
+\*       X = block x (0-9 onscreen)
+\*       Y = block y (0-2 onscreen)
+\*
+\*  Out: A,X = objid
+\*       Y = block # (0-29)
+\*       BlueType, BlueSpec set
+\*       tempscrn,tempblockx,tempblocky = onscreen block coords
+\*
+\*  - Offscreen block values are traced to their home screen
+\*  - Screen 0 is treated as a solid mass
+\*
+\*-------------------------------
+.RDBLOCK
  sta tempscrn
  stx tempblockx
  sty tempblocky
 
-RDBLOCK1
+.RDBLOCK1
+{
  jsr handler ;handle offscreen references
 
  lda tempscrn
- beq :nullscrn ;screen 0
+ beq nullscrn ;screen 0
  jsr calcblue ;returns BlueType/Spec
 
  ldy tempblocky
@@ -174,36 +173,36 @@ RDBLOCK1
  tax ;return result in X & A
  rts
 
-:nullscrn lda #block
+.nullscrn lda #block
  tax
  rts
 
-*-------------------------------
-*  Handle offscreen block references (recursive)
+\*-------------------------------
+\*  Handle offscreen block references (recursive)
 
-handler lda tempblockx
- bpl :1
+.handler lda tempblockx
+ bpl label_1
  jsr offleft
  jmp handler
 
-:1 cmp #10
- bcc :2
+.label_1 cmp #10
+ bcc label_2
  jsr offrt
  jmp handler
 
-:2 lda tempblocky
- bpl :3
+.label_2 lda tempblocky
+ bpl label_3
  jsr offtop
  jmp handler
 
-:3 cmp #3
- bcc :rts
+.label_3 cmp #3
+ bcc return
  jsr offbot
  jmp handler
 
-:rts rts
+.return rts
 
-offtop clc
+.offtop clc
  adc #3
  sta tempblocky
 
@@ -212,7 +211,7 @@ offtop clc
  sta tempscrn
  rts
 
-offbot sec
+.offbot sec
  sbc #3
  sta tempblocky
 
@@ -221,7 +220,7 @@ offbot sec
  sta tempscrn
  rts
 
-offleft clc
+.offleft clc
  adc #10
  sta tempblockx
 
@@ -230,64 +229,78 @@ offleft clc
  sta tempscrn
  rts
 
-offrt sec
+.offrt sec
  sbc #10
  sta tempblockx
 
  lda tempscrn
  jsr GETRIGHT
  sta tempscrn
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  Get adjacent screen numbers
-*
-*  In:  A = original screen #
-*  Out: A = adjacent screen #
-*
-*-------------------------------
-GETLEFT
- beq ]rts
- asl
- asl
+\*-------------------------------
+\*
+\*  Get adjacent screen numbers
+\*
+\*  In:  A = original screen #
+\*  Out: A = adjacent screen #
+\*
+\*-------------------------------
+.GETLEFT
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-4,x
-]rts rts
+.return
+ rts
+}
 
-GETRIGHT
- beq ]rts
- asl
- asl
+.GETRIGHT
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-3,x
+.return
  rts
+}
 
-GETUP
- beq ]rts
- asl
- asl
+.GETUP
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-2,x
+.return
  rts
+}
 
-GETDOWN
- beq ]rts
- asl
- asl
+.GETDOWN
+{
+ beq return
+ asl A
+ asl A
  tax
  lda MAP-1,x
+.return
  rts
+}
 
-*-------------------------------
-*
-*  G E T   S C R E E N S
-*
-*  Get VisScrn's 8 surrounding screens from map
-*  (Store in scrnAbove, scrnBelow, etc.)
-*
-*-------------------------------
-GETSCRNS
+\*-------------------------------
+\*
+\*  G E T   S C R E E N S
+\*
+\*  Get VisScrn's 8 surrounding screens from map
+\*  (Store in scrnAbove, scrnBelow, etc.)
+\*
+\*-------------------------------
+.GETSCRNS
+{
  lda VisScrn
  jsr GETLEFT
  sta scrnLeft
@@ -304,7 +317,7 @@ GETSCRNS
  jsr GETDOWN
  sta scrnBelow
 
-* and diagonals
+\* and diagonals
 
  lda scrnBelow
  jsr GETLEFT
@@ -321,18 +334,20 @@ GETSCRNS
  lda scrnAbove
  jsr GETRIGHT
  sta scrnAboveR
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  G E T   B A S E   X
-*
-*  In: Char data; frame data
-*
-*  Out: A = character's base X-coord
-*
-*-------------------------------
-GETBASEX
+\*-------------------------------
+\*
+\*  G E T   B A S E   X
+\*
+\*  In: Char data; frame data
+\*
+\*  Out: A = character's base X-coord
+\*
+\*-------------------------------
+.GETBASEX
+{
  lda Fcheck
  and #Ffootmark
   ;# pixels to count in from left edge of image
@@ -344,42 +359,46 @@ GETBASEX
  adc Fdx ;Fdx (+ = fwd, - = bkwd)
 
  jmp ADDCHARX ;Add to CharX in direction char is facing
+}
 
-*-------------------------------
-*
-*  Add A to CharX in direction char is facing
-*
-*  In: A = # pixels to add (+ = fwd, - = bkwd)
-*      CharX = original char X-coord
-*      CharFace = direction char is facing
-*
-*  Out: A = new char X-coord
-*
-*-------------------------------
-ADDCHARX
+\*-------------------------------
+\*
+\*  Add A to CharX in direction char is facing
+\*
+\*  In: A = # pixels to add (+ = fwd, - = bkwd)
+\*      CharX = original char X-coord
+\*      CharFace = direction char is facing
+\*
+\*  Out: A = new char X-coord
+\*
+\*-------------------------------
+.ADDCHARX
+{
  bit CharFace ;-1 = left (normal)
- bpl :right ;0 = right (mirrored)
+ bpl right ;0 = right (mirrored)
 
  eor #$ff
  clc
  adc #1 ;A := -A
 
-:right clc
+.right clc
  adc CharX
  rts
+}
 
-*-------------------------------
-*
-* Add A to FCharX
-* (A range: -127 to 127)
-*
-* In: A; FChar data
-* Out: FCharX
-*
-*-------------------------------
-ADDFCHARX
+\*-------------------------------
+\*
+\* Add A to FCharX
+\* (A range: -127 to 127)
+\*
+\* In: A; FChar data
+\* Out: FCharX
+\*
+\*-------------------------------
+.ADDFCHARX
+{
  sta ztemp
- bpl :1 ;hibit clr
+ bpl label_1 ;hibit clr
 
  lda #0
  sec
@@ -387,8 +406,8 @@ ADDFCHARX
  sta ztemp ;make it posititve
 
  lda #$ff ;hibit set
-:1 eor FCharFace
- bmi :left
+.label_1 eor FCharFace
+ bmi left
 
  lda ztemp
  clc
@@ -400,7 +419,7 @@ ADDFCHARX
  sta FCharX+1
  rts
 
-:left lda FCharX
+.left lda FCharX
  sec
  sbc ztemp
  sta FCharX
@@ -409,7 +428,9 @@ ADDFCHARX
  sbc #0
  sta FCharX+1
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * In: CharFace,CharBlockX,CharBlockY,CharScrn
@@ -532,42 +553,46 @@ GETDIST1
  sec
  sbc OFFSET
  rts
+ENDIF
 
-*-------------------------------
-*
-*  G E T   B L O C K   E D G E
-*
-*  In:  A = block # (-5 to 14)
-*  Out: A = screen X-coord of left edge
-*
-*-------------------------------
-GETBLOCKEJ
+\*-------------------------------
+\*
+\*  G E T   B L O C K   E D G E
+\*
+\*  In:  A = block # (-5 to 14)
+\*  Out: A = screen X-coord of left edge
+\*
+\*-------------------------------
+.GETBLOCKEJ
+{
  clc
  adc #5
  tax
  lda BlockEdge,x
  rts
+}
 
-*-------------------------------
-*
-*  G E T   B L O C K   X
-*
-*  In:  A = X-coord
-*
-*  Out: A = # of the 14-pixel-wide block within which
-*           this pixel falls (0-9 onscreen)
-*
-*       OFFSET = pixel within this block
-*
-*  - Use GETBLOCKXP for objects on center plane
-*  - Use GETBLOCKX for absolute X-coords & foreground plane
-*
-*-------------------------------
-GETBLOCKXP
+\*-------------------------------
+\*
+\*  G E T   B L O C K   X
+\*
+\*  In:  A = X-coord
+\*
+\*  Out: A = # of the 14-pixel-wide block within which
+\*           this pixel falls (0-9 onscreen)
+\*
+\*       OFFSET = pixel within this block
+\*
+\*  - Use GETBLOCKXP for objects on center plane
+\*  - Use GETBLOCKX for absolute X-coords & foreground plane
+\*
+\*-------------------------------
+.GETBLOCKXP
  sec
  sbc #angle
 
-GETBLOCKX
+.GETBLOCKX
+{
  tay
 
  lda PixelTable,y
@@ -575,7 +600,9 @@ GETBLOCKX
 
  lda BlockTable,y
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  G E T   B L O C K   Y
@@ -642,71 +669,81 @@ INDEXBLOCK
 :above ldy tempblockx
  sec
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  U N I N D E X
-*
-*  In: A = block index (0-29)
-*  Out: A = blockx, X = blocky
-*
-*-------------------------------
-UNINDEX
+\*-------------------------------
+\*
+\*  U N I N D E X
+\*
+\*  In: A = block index (0-29)
+\*  Out: A = blockx, X = blocky
+\*
+\*-------------------------------
+.UNINDEX
+{
  ldx #0
-:loop cmp #10
- bcc ]rts
+.loop cmp #10
+ bcc return
  sec
  sbc #10
  inx
- bne :loop
-]rts rts
+ bne loop
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  G E T   B A S E   B L O C K
-*
-*  In: Char data
-*  Out: CharBlockX
-*
-*-------------------------------
-GETBASEBLOCK
+\*-------------------------------
+\*
+\*  G E T   B A S E   B L O C K
+\*
+\*  In: Char data
+\*  Out: CharBlockX
+\*
+\*-------------------------------
+.GETBASEBLOCK
+{
  jsr getbasex
  jsr getblockxp
  sta CharBlockX
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  F A C E   D X
-*
-*  In: CharFace; A = DX
-*
-*  Out: DX if char is facing right, -DX if facing left
-*
-*-------------------------------
-FACEDX
+\*-------------------------------
+\*
+\*  F A C E   D X
+\*
+\*  In: CharFace; A = DX
+\*
+\*  Out: DX if char is facing right, -DX if facing left
+\*
+\*-------------------------------
+.FACEDX
+{
  bit CharFace
- bmi ]rts
+ bmi return
 
  eor #$ff
  clc
  adc #1 ;negate
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  J U M P S E Q
-*
-*  Jump to some other point in sequence table
-*
-*  In: A = sequence # (1-127)
-*
-*-------------------------------
-JUMPSEQ
+\*-------------------------------
+\*
+\*  J U M P S E Q
+\*
+\*  Jump to some other point in sequence table
+\*
+\*  In: A = sequence # (1-127)
+\*
+\*-------------------------------
+.JUMPSEQ
+{
  sec
  sbc #1
- asl
+ asl A
  tax ;x = 2(a-1)
 
  lda seqtab,x
@@ -714,8 +751,11 @@ JUMPSEQ
 
  lda seqtab+1,x
  sta CharSeq+1
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Similar routine for Opponent
@@ -899,52 +939,60 @@ SETUPSWORD
  sta FCharY
 
  jmp ADDSWORDOBJ
+ENDIF
 
-*-------------------------------
-*
-*  G E T   F R A M E
-*
-*  In: A = frame # (1-192)
-*  Out: framepoint = 2-byte pointer to frame def table
-*
-*-------------------------------
-GETFRAME ;Kid uses main char set
+\*-------------------------------
+\*
+\*  G E T   F R A M E
+\*
+\*  In: A = frame # (1-192)
+\*  Out: framepoint = 2-byte pointer to frame def table
+\*
+\*-------------------------------
+.GETFRAME ;Kid uses main char set
+{
  jsr getfindex
  lda framepoint
  clc
- adc #Fdef
+ adc #LO(Fdef)
  sta framepoint
  lda framepoint+1
- adc #>Fdef
+ adc #HI(Fdef)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getaltframe1 ;Enemy uses alt set 1
+\*-------------------------------
+.getaltframe1 ;Enemy uses alt set 1
+{
  jsr getfindex
  lda framepoint
  clc
- adc #altset1
+ adc #LO(altset1)
  sta framepoint
  lda framepoint+1
- adc #>altset1
+ adc #HI(altset1)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getaltframe2 ;Princess & Vizier use alt set 2
+\*-------------------------------
+.getaltframe2 ;Princess & Vizier use alt set 2
+{
  jsr getfindex
  lda framepoint
  clc
- adc #altset2
+ adc #LO(altset2)
  sta framepoint
  lda framepoint+1
- adc #>altset2
+ adc #HI(altset2)
  sta framepoint+1
  rts
+}
 
-*-------------------------------
-getfindex
+\*-------------------------------
+.getfindex
+{
  sec
  sbc #1
  sta ztemp
@@ -968,7 +1016,9 @@ getfindex
  adc ztemp+1
  sta framepoint+1 ;make it x5
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * getswordframe
@@ -1623,35 +1673,39 @@ ADDGUARDOBJ
 ADDSWORDOBJ
  lda #TypeSword
  jmp addcharobj
+ENDIF
 
-*-------------------------------
-*
-*  G E T   S E Q
-*
-*  Get next byte from seqtable & advance CharSeq
-*  (2-byte pointer to sequence table)
-*
-*-------------------------------
-GETSEQ
+\*-------------------------------
+\*
+\*  G E T   S E Q
+\*
+\*  Get next byte from seqtable & advance CharSeq
+\*  (2-byte pointer to sequence table)
+\*
+\*-------------------------------
+.GETSEQ
+{
  ldy #0
  lda (CharSeq),y
  pha
 
  inc CharSeq
- bne :done
+ bne done
  inc CharSeq+1
 
-:done pla
+.done pla
  rts
+}
 
-*-------------------------------
-*
-*  G E T   F R A M E   I N F O
-*
-*  Get frame info for char (based on CharPosn)
-*
-*-------------------------------
-GETFRAMEINFO
+\*-------------------------------
+\*
+\*  G E T   F R A M E   I N F O
+\*
+\*  Get frame info for char (based on CharPosn)
+\*
+\*-------------------------------
+.GETFRAMEINFO
+{
  lda CharPosn
  jsr GETFRAME ;set framepoint
 
@@ -1676,50 +1730,54 @@ GETFRAMEINFO
  iny
  lda (framepoint),y
  sta Fcheck
+}
+.return_23
+ rts
 
-]rts rts
-
-*-------------------------------
-*
-* Use alternate character image sets
-* (if appropriate)
-*
-* In: Char data; framepoint
-* Out: framepoint
-*
-*-------------------------------
-usealtsets
+\*-------------------------------
+\*
+\* Use alternate character image sets
+\* (if appropriate)
+\*
+\* In: Char data; framepoint
+\* Out: framepoint
+\*
+\*-------------------------------
+.usealtsets
+{
  ldx CharID
- beq ]rts ;kid uses main set, enemy uses alt set 1
+ beq return_23 ;kid uses main set, enemy uses alt set 1
  cpx #24
- beq ]rts ;mouse uses main set
+ beq return_23 ;mouse uses main set
  cpx #5
- bcs :usealt2 ;princess & vizier use alt set 2
+ bcs usealt2 ;princess & vizier use alt set 2
 
  lda CharPosn
  cpx #2
- bcc :1
+ bcc label_1
  cmp #102
- bcc ]rts
+ bcc return_23
  cmp #107
- bcs :1
+ bcs label_1
  ;frames 102-106 (falling): substitute 172-176 altset
  clc
  adc #70
 
-:1 cmp #150
- bcc ]rts
+.label_1 cmp #150
+ bcc return_23
  cmp #190
- bcs ]rts
+ bcs return_23
 ;frames 150-189: use altset
  sec
  sbc #149
  jmp getaltframe1
 
-:usealt2
+.usealt2
  lda CharPosn
  jmp getaltframe2
+}
 
+IF _TODO
 *===============================
 *
 *  M A R K
@@ -1913,34 +1971,40 @@ sub sta tempblockx
 
  inc tempblocky
  jmp :loop ;check 1 level below
+ENDIF
 
-*===============================
-*
-*  Load/save kid/shad vars
-*
-*-------------------------------
+\*===============================
+\*
+\*  Load/save kid/shad vars
+\*
+\*-------------------------------
 numvars = 16
 
-LOADKID
+.LOADKID
+{
  ldx #numvars-1
 
-:loop lda Kid,x
+.loop lda Kid,x
  sta Char,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+ rts
+}
 
-SAVEKID
+.SAVEKID
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Kid,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+ rts
+}
 
+IF _TODO
 LOADSHAD
  ldx #numvars-1
 
@@ -1961,35 +2025,41 @@ SAVESHAD
  dex
  bpl :loop
  rts
+ENDIF
 
-*  Load kid w/ opponent
+\*  Load kid w/ opponent
 
-LOADKIDWOP
+.LOADKIDWOP
+{
  ldx #numvars-1
 
-:loop lda Kid,x
+.loop lda Kid,x
  sta Char,x
 
  lda Shad,x
  sta Op,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-SAVEKIDWOP
+.SAVEKIDWOP
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Kid,x
 
  lda Op,x
  sta Shad,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
+IF _TODO
 * Load shadowman w/ opponent
 
 LOADSHADWOP

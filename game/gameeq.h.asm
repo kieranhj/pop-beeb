@@ -63,18 +63,8 @@ SavTimer ds 2
 SavNextMsg ds 1
 ENDIF
 
-IF _TODO
- dum topctrl
-
-start ds 3
-restart ds 3
-startresume ds 3
-initsystem ds 3
- ds 3
-
-docrosscut ds 3
-goattract ds 3
-ENDIF
+\dum topctrl
+\ jump table moved to topctrl.asm
 
 \dum ctrl
 \ jump table moved to ctrl.asm
@@ -82,23 +72,8 @@ ENDIF
 \dum auto
 \ jump table moved to auto.asm
 
-IF _TODO
- dum coll
-
-checkbarr ds 3
-collisions ds 3
-getfwddist ds 3
-checkcoll ds 3
-animchar ds 3
-
-checkslice ds 3
-checkslice2 ds 3
- ds 3
-checkgate ds 3
- ds 3
-
-enemycoll ds 3
-ENDIF
+\dum coll
+\ jump table moved to coll.asm
 
 \dum gamebg
 \ jump table moved to gamebg.asm
@@ -128,14 +103,8 @@ _minit ds 3
 _mplay ds 3
 ENDIF
 
-IF _TODO
- dum seqtable
-
-Fdef ds 1200
-altset1 ds 200
-altset2 ds 450
-swordtab ds 192
-ENDIF
+\dum seqtable
+\ tables moved to seqtable.asm
 
 \dum misc
 \ Moved to misc.asm
@@ -234,19 +203,19 @@ ENDIF
 ;.yellowflag skip 1
 ;.timebomb skip 1
 ;.justblocked skip 1
-;.gdtimer skip 1
-;.framepoint skip 2
-;.Fimage skip 1
-;.Fdx skip 1
-;.Fdy skip 1
-;.Fcheck skip 1
+.gdtimer skip 1
+.framepoint skip 2
+.Fimage skip 1
+.Fdx skip 1
+.Fdy skip 1
+.Fcheck skip 1
 .exitopen skip 1
 ;.collX skip 1
 .lightning skip 1
 .lightcolor skip 1
-;.offguard skip 1
-;.blockid skip 1
-;.blockx skip 1
+.offguard skip 1
+.blockid skip 1
+.blockx skip 1
 ;.blocky skip 1
 ;.infrontx skip 1
 ;.behindx skip 1
@@ -262,16 +231,16 @@ ENDIF
 ;.ydiff skip 2
 ;.xdir skip 1
 ;.ydir skip 1
-;.RNskipeed skip 1
+.RNDseed skip 1
 .invert skip 1
 .PlayCount skip 1
-;.refract skip 1
+.refract skip 1
 ;.backtolife skip 1
 .cutplan skip 1
 ;.lastcmd skip 1
 ;.distfallen skip 1
 .cutscrn skip 1
-;.waitingtojump skip 1
+.waitingtojump skip 1
 ;.trigppabove skip 1
 ;.direcpp skip 1
 ;.blockaddr skip 2
@@ -295,7 +264,7 @@ ENDIF
 ;.CDLeftEj skip 1
 ;.CDRightEj skip 1
 ;.endrange skip 1
-;.bufindex skip 1
+.bufindex skip 1
 ;.blockedge skip 1
 ;.collideL skip 1
 ;.collideR skip 1
@@ -308,56 +277,31 @@ ENDIF
 .VisScrn skip 1
 .OppStrength skip 1
 ;.jarabove skip 1
-;.Kiskiptrength skip 1
+.KidStrength skip 1
 .ChgKidStr skip 1
 .MaxKidStr skip 1
 .EnemyAlert skip 1
 .ChgOppStr skip 1
 .heroic skip 1
-;.clrF skip 1
-;.clrB skip 1
-;.clrU skip 1
-;.clrD skip 1
-;.clrbtn skip 1
-;.Fsword skip 1
+.clrF skip 1
+.clrB skip 1
+.clrU skip 1
+.clrD skip 1
+.clrbtn skip 1
+.Fsword skip 1
 ;.purpleflag skip 1 ;$da
 .msgtimer skip 1
 ;.MaxOppStr skip 1
-;.guardprog skip 1
+.guardprog skip 1
 .ManCtrl skip 1
 .mergetimer skip 1
 ;.lastpotion skip 1
 .origstrength skip 1
 ;.jmpaddr skip 2
-;.alertguard skip 1
+.alertguard skip 1
 .createshad skip 1
 .stunned skip 1
-;.droppedout skip 1
-
-\*-------------------------------
-\*
-\*  Character data
-\*
-\*-------------------------------
-
-IF _TODO
- dum Op
-OpPosn ds 1
-OpX ds 1
-OpY ds 1
-OpFace ds 1
-OpBlockX ds 1
-OpBlockY ds 1
-OpAction ds 1
-OpXVel ds 1
-OpYVel ds 1
-OpSeq ds 2
-OpScrn ds 1
-OpRepeat ds 1
-OpID ds 1
-OpSword ds 1
-OpLife ds 1
-ENDIF
+.droppedout skip 1
 
 \*-------------------------------
 \*

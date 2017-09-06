@@ -18,8 +18,8 @@
 IF _TODO
 ByteTable ds $100
 OffsetTable ds $100
-BlockTable ds $100
-PixelTable ds $100
+\BlockTable ds $100
+\PixelTable ds $100
 \Mult10 ds $10
 \Mult7 ds $10
 \Mult30 ds $40
@@ -78,43 +78,59 @@ IF _TODO
  db 0,1,2,3,4,5,6
  --^
  db 0,1,2,3
-
-*-------------------------------
-* BlockTable
-*
-* Index:  Screen X-coord (0 to 255)
-* Yields: Block # (-5 to 14)
-*-------------------------------
- ds BlockTable-*
-
-]byte = -5
- db ]byte,]byte
-
- lup 18
-]byte = ]byte+1
- db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
- db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
- --^
-
-]byte = ]byte+1
- db ]byte,]byte
-
-*-------------------------------
-* PixelTable
-*
-* Index:  Same as BlockTable
-* Yields: Pixel # within block (0 to 13)
-*-------------------------------
- ds PixelTable-*
-
- db 12,13
-
- lup 18
- db 0,1,2,3,4,5,6,7,8,9,10,11,12,13
- --^
-
- db 0,1
 ENDIF
+
+\*-------------------------------
+\* BlockTable
+\*
+\* Index:  Screen X-coord (0 to 255)
+\* Yields: Block # (-5 to 14)
+\*-------------------------------
+\ ds BlockTable-*
+\
+\]byte = -5
+\ db ]byte,]byte
+\
+\ lup 18
+\]byte = ]byte+1
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\ --^
+\
+\]byte = ]byte+1
+\ db ]byte,]byte
+
+.BlockTable
+EQUB LO(-5),LO(-5)
+FOR n,1,18,1
+byte = -5 + n
+EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
+EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
+NEXT
+EQUB 14,14
+
+\*-------------------------------
+\* PixelTable
+\*
+\* Index:  Same as BlockTable
+\* Yields: Pixel # within block (0 to 13)
+\*-------------------------------
+\ ds PixelTable-*
+\
+\ db 12,13
+\
+\ lup 18
+\ db 0,1,2,3,4,5,6,7,8,9,10,11,12,13
+\ --^
+\
+\ db 0,1
+
+.PixelTable
+EQUB 12,13
+FOR n,1,18,1
+EQUB 0,1,2,3,4,5,6,7,8,9,10,11,12,13
+NEXT
+EQUB 0,1
 
 \*-------------------------------
 \* Mult10
@@ -126,6 +142,7 @@ ENDIF
 \ db ]byte
 \]byte = ]byte+10
 \ --^
+
 .Mult10
 FOR n,0,15,1
 EQUB n * 10
@@ -141,6 +158,7 @@ NEXT
 \ db ]byte
 \]byte = ]byte+7
 \ --^
+
 .Mult7
 FOR n,0,15,1
 EQUB n * 7
@@ -156,26 +174,30 @@ NEXT
 \ dw ]word
 \]word = ]word+30
 \ --^
+
 .Mult30
 FOR n,0,31,1
 EQUW n * 30
 NEXT
 
-IF _TODO
-*-------------------------------
-* BlockEdge
-*
-* Index:  Block X (-5 to 14) + 5
-* Yields: Screen X-coord of left edge of block
-*-------------------------------
- ds BlockEdge-*
+\*-------------------------------
+\* BlockEdge
+\*
+\* Index:  Block X (-5 to 14) + 5
+\* Yields: Screen X-coord of left edge of block
+\*-------------------------------
+\ ds BlockEdge-*
+\
+\]byte = -12
+\ lup 20
+\ db ]byte
+\]byte = ]byte+14
+\ --^
 
-]byte = -12
- lup 20
- db ]byte
-]byte = ]byte+14
- --^
-ENDIF
+.BlockEdge
+FOR n,0,19,1
+EQUB LO(-12 + n * 14)
+NEXT
 
 \*-------------------------------
 \* BlockTop, BlockBot, FloorY
