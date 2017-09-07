@@ -20,7 +20,7 @@
 .skipmessage skip 1
 ;.savezp skip 32
 ;.MSset skip 1
-;.rjumpflag skip 1
+.rjumpflag skip 1
 ;.redherring skip 1
 
 \*-------------------------------
@@ -62,16 +62,17 @@
 \*-------------------------------
 
 \dum $320
+ALIGN &10
 
-;CDthisframe ds $10
-;CDlastframe ds $10
-;CDbelow ds $10
-;CDabove ds $10
+.CDthisframe skip $10
+.CDlastframe skip $10
+.CDbelow skip $10
+.CDabove skip $10
 .SNthisframe skip $10
 .SNlastframe skip $10
 .SNbelow skip $10
 .SNabove skip 10
-;BlockYthis ds 1
+.BlockYthis skip 1
 .BlockYlast skip 1
 
 \*-------------------------------

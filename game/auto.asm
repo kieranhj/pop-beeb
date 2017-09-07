@@ -19,9 +19,9 @@
 .checkstrike RTS        ; jmp CHECKSTRIKE           BEEB TO DO
 .checkstab RTS          ; jmp CHECKSTAB             BEEB TO DO
 .AutoPlayback BRK       ; jmp AUTOPLAYBACK
-.cutcheck BRK           ; jmp CUTCHECK
+.cutcheck jmp CUTCHECK
 
-.cutguard BRK           ; jmp CUTGUARD
+.cutguard RTS           ; jmp CUTGUARD              BEEB TO DO
 .addguard RTS           ; jmp ADDGUARD              BEEB TO DO
 .cut BRK                ; jmp CUT
 
@@ -41,7 +41,7 @@
 \ dum $f0
 \ztemp ds 1
 \prob ds 1
-\]cutdir ds 1
+\auto_cutdir ds 1
 \ProgStart ds 2
 \ dend
 
@@ -1224,28 +1224,32 @@ AUTOPLAYBACK
 :endpb ; lda #0 ;Editor: end playback
 ; sta autopilot
 ; rts
+ENDIF
 
-*-------------------------------
-*
-*  C U T   C H E C K
-*
-*  Cut with kid
-*
-*-------------------------------
-CUTCHECK
+\*-------------------------------
+\*
+\*  C U T   C H E C K
+\*
+\*  Cut with kid
+\*
+\*-------------------------------
+
+.CUTCHECK
+{
  lda CUTTIMER
- beq :ok
+ beq ok
 
  dec CUTTIMER
-]rts rts
+.return
+ rts
 
-:ok
+.ok
  jsr LoadKid
  jsr setupchar
  jsr getedges
  jsr cutchar ;cut with character
- bmi ]rts ;no cut
- sta ]cutdir
+ bmi return ;no cut
+ sta auto_cutdir
 
  jsr SaveKid
 
@@ -1254,76 +1258,80 @@ CUTCHECK
 
  lda ShadFace
  cmp #86 ;is there a guard on old screen?
- beq ]rts ;no
+ beq return ;no
 
-* What to do with guard?  Two choices:
-*
-*  (1) UPDATE -- leave guard behind on old screen (& update
-*      his coords so he'll still be there when we come back)
-*  (2) TRANSFER -- transfer guard to new screen (& delete his
-*      coords from old screen)
+\* What to do with guard?  Two choices:
+\*
+\*  (1) UPDATE -- leave guard behind on old screen (& update
+\*      his coords so he'll still be there when we come back)
+\*  (2) TRANSFER -- transfer guard to new screen (& delete his
+\*      coords from old screen)
 
  lda ShadLife
- bpl :update ;dead guard on old screen--leave him behind
+ bpl update ;dead guard on old screen--leave him behind
 
  lda ShadSword
  cmp #2
- bne :update
+ bne update
 
-* Is there a live guard on new screen?
+\* Is there a live guard on new screen?
 
  ldx KidScrn
  lda GdStartBlock-1,x
  cmp #30
- bcs :nonew ;no
+ bcs nonew ;no
 
  lda GdStartSeqH-1,x
- beq :update ;yes
+ beq update ;yes
 
-* If guard is too far o.s., leave him behind
+\* If guard is too far o.s., leave him behind
 
-:nonew
- lda ]cutdir
- beq :left
+.nonew
+ lda auto_cutdir
+ beq local_left
  cmp #1
- beq :right
+ beq local_right
  cmp #2
- beq :up
+ beq local_up
 
-:down lda ShadBlockY
+.local_down lda ShadBlockY
  cmp #3
- bcs :transfer
- bcc :update
+ bcs transfer
+ bcc update
 
-:up lda ShadBlockY
- bmi :transfer
- bpl :update
+.local_up lda ShadBlockY
+ bmi transfer
+ bpl update
 
-:right lda ShadX
+.local_right lda ShadX
  cmp #ScrnWidth+25 ;25 is safety factor
- bcc :update
- bcs :transfer
+ bcc update
+ bcs transfer
 
-:left lda ShadX
+.local_left lda ShadX
  cmp #256-ScrnWidth-25
- bcs :update
+ bcs update
 
-* Take him with us
+\* Take him with us
 
-:transfer jmp transferguard
+.transfer jmp transferguard
 
-* Leave him behind
+\* Leave him behind
 
-:update jmp updateguard
+\ BEEB TEMP comment out
+.update RTS ;jmp updateguard 
+}
 
-*-------------------------------
-*
-* Transfer guard from old screen to new screen
-* (Also remove any dead guards from new scrn)
-*
-*-------------------------------
-transferguard
- lda #-1
+\*-------------------------------
+\*
+\* Transfer guard from old screen to new screen
+\* (Also remove any dead guards from new scrn)
+\*
+\*-------------------------------
+
+.transferguard
+{
+ lda #LO(-1)
  ldx KidScrn ;new scrn
  sta GdStartBlock-1,x
  ldx ShadScrn ;old scrn
@@ -1331,21 +1339,23 @@ transferguard
 
  jsr LoadShad
 
- lda ]cutdir
+ lda auto_cutdir
  jsr cut
 
  jmp SaveShad
 
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-* Leaving guard behind on old screen--
-* update guard coords
-*
-*-------------------------------
+IF _TODO
+\*-------------------------------
+\*
+\* Leaving guard behind on old screen--
+\* update guard coords
+\*
+\*-------------------------------
 
-updateguard
+.updateguard
  lda ShadFace
  cmp #86
  beq ]rts ;no guard
@@ -1460,168 +1470,185 @@ CUTGUARD
  lda #-1
  sta ShadLife
  jmp updateguard
+ENDIF
 
-*-------------------------------
-*
-*  C U T   C H A R
-*
-*  Is character passing o.s.?  If so, cut with him to next scrn
-*
-*  Change CharX,Y,BlockY,Scrn to reflect posn on new scrn
-*
-*  Return A = direction of cut, -1 if no cut
-*
-*-------------------------------
-cutchar
+\*-------------------------------
+\*
+\*  C U T   C H A R
+\*
+\*  Is character passing o.s.?  If so, cut with him to next scrn
+\*
+\*  Change CharX,Y,BlockY,Scrn to reflect posn on new scrn
+\*
+\*  Return A = direction of cut, -1 if no cut
+\*
+\*-------------------------------
+
+.cutchar
+{
  lda CharY
 
  ldx CharAction
  cpx #5
- beq :notup
+ beq notup
  cpx #4
- beq :notup ;In freefall--cut only down
+ beq notup ;In freefall--cut only down
  cpx #3
- beq :notup
+ beq notup
 
-*  Cut up/down?
+\*  Cut up/down?
 
  cmp #TopCutEdgePl
- bcc :CUTUP
+ bcc CUTUP
 
- cmp #TopCutEdgeMi
- bcs :CUTUP
-:notup
+ cmp #LO(TopCutEdgeMi)
+ bcs CUTUP
+.notup
  cmp #BotCutEdge
- bcs :CUTDOWN
+ bcs CUTDOWN
 
-*  Cut left/right?
+\*  Cut left/right?
 
  ldx CharPosn
  cpx #135
- bcc :nocu
+ bcc nocu
  cpx #150
- bcc :nocut ;don't cut L/R on climbup
-:nocu cpx #110
- bcc :nosu
+ bcc nocut ;don't cut L/R on climbup
+.nocu cpx #110
+ bcc nosu
  cpx #120
- bcc :nocut ;or on standup
-:nosu cpx #150
- bcc :nost
+ bcc nocut ;or on standup
+.nosu cpx #150
+ bcc nost
  cpx #163
- bcc :nocut
+ bcc nocut
  cpx #166
- bcc :nost
+ bcc nost
  cpx #169
- bcc :nocut ;or on strike/block
-:nost lda CharAction
+ bcc nocut ;or on strike/block
+.nost lda CharAction
  cmp #7
- beq :nocut ;or on turning
+ beq nocut ;or on turning
 
  ldx CharFace ;-1=left, 0=right
- beq :faceR
+ beq faceR
 ;facing left
  lda leftej
  cmp #LeftCutEdge
- bcc :CUTLEFT
- beq :CUTLEFT
+ bcc CUTLEFT
+ beq CUTLEFT
 
  cmp #ScrnRight+1
- bcs :CUTRIGHT
- bcc :nocut
+ bcs CUTRIGHT
+ bcc nocut
 
-:faceR
+.faceR
  lda CharScrn
  ldx #9
  ldy CharBlockY
  jsr rdblock
 
  cmp #panelwif
- beq :nocutr
+ beq nocutr
  cmp #panelwof
- beq :nocutr ;don't cut R if a panel blocks view
+ beq nocutr ;don't cut R if a panel blocks view
 
  lda rightej
  cmp #RightCutEdge
- bcs :CUTRIGHT
+ bcs CUTRIGHT
 
-:nocutr lda rightej
+.nocutr lda rightej
  cmp #ScrnLeft-1
- bcc :CUTLEFT
- beq :CUTLEFT
+ bcc CUTLEFT
+ beq CUTLEFT
 
-:nocut lda #-1
+.nocut lda #LO(-1)
  rts
 
-:CUTLEFT jsr mirrmusic
+\ BEEB TEMP comment out SOUND
+.CUTLEFT ;jsr mirrmusic
  jsr milestone3
  lda #0
- bpl :cut
+ bpl local_cut
 
-:CUTRIGHT jsr stealsword
- jsr jaffmusic
+.CUTRIGHT jsr stealsword
+\ BEEB TEMP comment out SOUND
+; jsr jaffmusic
  lda #1
- bpl :cut
+ bpl local_cut
 
-:CUTUP lda #2
- bpl :cut
+.CUTUP lda #2
+ bpl local_cut
 
-* Level 6 ("Plunge"): Kid falls off screen 1 into next level
+\* Level 6 ("Plunge"): Kid falls off screen 1 into next level
 
-:CUTDOWN
+.CUTDOWN
  jsr infinity
 
  lda level
  cmp #6
- bne :no6
+ bne no6
  lda CharScrn
  cmp #1
- beq :nocut
-:no6
+ beq nocut
+.no6
  lda #3
-:cut pha
+.local_cut pha
  jsr cut
  pla
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* Level 12--fall off into infinity
-*-------------------------------
-infinity rts
+\*-------------------------------
+\* Level 12--fall off into infinity
+\*-------------------------------
+.infinity
+ rts
 
-*-------------------------------
-* Passed Level 3 milestone?
-*-------------------------------
-milestone3
+\*-------------------------------
+\* Passed Level 3 milestone?
+\*-------------------------------
+
+.milestone3
+{
  lda level
  cmp #3
- bne ]rts
+ bne return
  lda #7 ;scrn to R of gate
-]mcheck cmp CharScrn
- bne ]rts
+.mcheck cmp CharScrn
+ bne return
  lda #1
  sta milestone
  lda MaxKidStr
  sta origstrength
+.return
  rts
+}
 
-*-------------------------------
-* Level 12: Shadow steals sword
-*-------------------------------
-stealsword
+\*-------------------------------
+\* Level 12: Shadow steals sword
+\*-------------------------------
+
+.stealsword
+{
  lda level
  cmp #12
- bne ]rts
+ bne return
  lda CharScrn
  cmp #18 ;scrn below swordscrn
- bne ]rts
+ bne return
  lda #swordscrn
  ldx #swordx
  ldy #swordy
  jsr rdblock
  lda #floor
  sta (BlueType),y
+.return
  rts
+}
 
+IF _TODO
 *-------------------------------
 * Level 13: Play Jaffar's Theme
 *-------------------------------

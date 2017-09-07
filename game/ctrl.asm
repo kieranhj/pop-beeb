@@ -10,14 +10,14 @@
 \ org org
 
 .PlayerCtrl jmp PLAYERCTRL
-.checkfloor BRK       ; jmp CHECKFLOOR
+.checkfloor jmp CHECKFLOOR
 .ShadCtrl BRK         ; jmp SHADCTRL
 .rereadblocks jmp REREADBLOCKS
-.checkpress BRK       ; jmp CHECKPRESS
+.checkpress RTS       ; jmp CHECKPRESS          BEEB TO DO
 
 .DoImpale BRK         ; jmp DOIMPALE
-.GenCtrl BRK          ; jmp GENCTRL
-.checkimpale BRK      ; jmp CHECKIMPALE
+.GenCtrl jmp GENCTRL
+.checkimpale RTS      ; jmp CHECKIMPALE         BEEB TO DO
 
 \*-------------------------------
 \ lst
@@ -68,81 +68,89 @@ gclimbthres = 6
 
 stairthres = 30
 
-IF _TODO
-plus1 db -1,1
-minus1 db 1,-1
+\*-------------------------------
+\*
+\*  If he's passed thru floor plane, change CharBlockY
+\*  If floor is solid, stop him
+\*
+\*-------------------------------
 
-*-------------------------------
-*
-*  If he's passed thru floor plane, change CharBlockY
-*  If floor is solid, stop him
-*
-*-------------------------------
-falling
+.falling
+{
  lda CharY
 
  ldx CharBlockY
  inx
  cmp FloorY,x
- bcs :1
+ bcs label_1
 
  jmp fallon ;Hasn't reached floor yet
 
-* Character is passing thru floor plane
+\* Character is passing thru floor plane
 
-:1 jsr getunderft ;Check if there's
+.label_1 jsr getunderft ;Check if there's
  ;solid floor underfoot
  cmp #block
- bne :2 ;Solid block is special case--
+ bne label_2 ;Solid block is special case--
  jsr InsideBlock ;reset him to either side of block
 
-:2 jsr cmpspace
+.label_2 jsr cmpspace
  bne hitflr
 
  inc CharBlockY ;Fall thru floor plane
 
-]rts rts
-*-------------------------------
-*
-*  C H E C K  F L O O R
-*
-*-------------------------------
+.return
+ rts
+}
 
-CHECKFLOOR
+\*-------------------------------
+\*
+\*  C H E C K  F L O O R
+\*
+\*-------------------------------
+
+.CHECKFLOOR
+{
  lda CharAction
  cmp #6 ;hanging?
- beq ]rts
+ beq return
 
  cmp #5 ;bumped?
- bne :2
+ bne label_2
  lda CharPosn
  cmp #109 ;crouched (e.g. on loose floor)
- beq :ong
+ beq ong
  cmp #185 ;dead
- bne ]rts
-:ong jmp onground
+ bne return
+.ong jmp onground
 
-:2 cmp #4 ;freefall
+.label_2 cmp #4 ;freefall
  beq falling
  cmp #3
- bne :1
+ bne label_1
  lda CharPosn
  cmp #102
- bcc ]rts
+ bcc return
  cmp #106
- bcs ]rts
+ bcs return
  jmp fallon
 
-:1 cmp #2 ;hanging
- beq ]rts
+.label_1 cmp #2 ;hanging
+ beq return
  jmp onground ;7, 0, or 1: on the ground
 
-*-------------------------------
-*
-*  Floor stops him -- Choose appropriate landing
-*
-*-------------------------------
-hitflr
+.return
+ RTS
+}
+
+\*-------------------------------
+\*
+\*  Floor stops him -- Choose appropriate landing
+\*
+\*-------------------------------
+
+.hitflr
+{
  ldx CharBlockY
  inx
  lda FloorY,x
@@ -150,114 +158,118 @@ hitflr
 
  jsr getunderft
  cmp #spikes
- beq :hitspikes
+ beq hitspikes
 
-* Has he landed too close to edge?
+\* Has he landed too close to edge?
 
  jsr getinfront
  jsr cmpspace
- bne :cont ;no
+ bne cont ;no
 
  jsr getdist ;# pixels to edge
  cmp #4 ;was 2
- bcs :cont
+ bcs cont
 ;Yes--move him back a little
- lda #-3
+ lda #LO(-3)
  jsr addcharx
  sta CharX
 
-:cont jsr addslicers ;trigger slicers on this level
+.cont jsr addslicers ;trigger slicers on this level
 
  lda CharLife
- bpl :hardland ;dead before he hits the ground
+ bpl local_hardland ;dead before he hits the ground
 
  jsr getdist
  cmp #12
- bcc :nc
+ bcc nc
  jsr getbehind
  cmp #spikes
- beq :hitspikes ;check block behind if dist>=12
+ beq hitspikes ;check block behind if dist>=12
 
-:nc jsr getunderft ;what has he landed on?
+.nc jsr getunderft ;what has he landed on?
  cmp #spikes
- bne :notspikes
+ bne notspikes
 
-:hitspikes
+.hitspikes
  jsr getspikes ;are spikes lethal?
- bne :impale ;yes
+ bne local_impale ;yes
 
-:notspikes
+.notspikes
  lda CharYVel
  cmp #OofVelocity
- bcc :softland
+ bcc local_softland
 
  cmp #DeathVelocity
- bcc :medland
+ bcc local_medland
 
-:hardland
+.local_hardland
  lda #100
  jsr decstr
-:hdland1
+.hdland1
  lda #Splat
  jsr addsound
 
  lda #hardland
- bne :doland
+ bne doland
 
-:medland
+.local_medland
  lda CharID
  cmp #1
- beq :softland ;shad lands easy
+ beq local_softland ;shad lands easy
  cmp #2
- bcs :hardland ;guards can't survive 2 stories
+ bcs local_hardland ;guards can't survive 2 stories
 
  lda #1
  jsr decstr
- beq :hdland1
+ beq hdland1
 
  lda #Splat
  jsr addsound
 
  lda #medland
- bne :doland
+ bne doland
 
-:softland
+.local_softland
  lda CharID
  cmp #2
- bcs :gd ;guard always lands en garde
+ bcs gd ;guard always lands en garde
  lda CharSword
  cmp #2
- bne :1
-:gd lda #2
+ bne label_1
+.gd lda #2
  sta CharSword
  lda #landengarde
- bne :doland
+ bne doland
 
-:1 lda #softland
- bne :doland
+.label_1 lda #softland
+ bne doland
 
-:impale jmp DoImpale
+.local_impale jmp DoImpale
 
-:doland jsr jumpseq
+.doland jsr jumpseq
  jsr animchar
 
  lda #0
  sta CharYVel
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  Hasn't hit floor yet -- can he grab edge above?
-*
-*-------------------------------
-fallon
+\*-------------------------------
+\*
+\*  Hasn't hit floor yet -- can he grab edge above?
+\*
+\*-------------------------------
+
+.fallon
+{
  lda btn ;is button down?
  and CharLife ;& is he alive?
- bpl ]rts
+ bpl return_31
  ;yes--can he grab edge?
  lda CharYVel
  cmp #grabspeed
- bcs ]rts ;no--falling too fast
+ bcs return_31 ;no--falling too fast
 
  lda CharY
  clc
@@ -265,26 +277,26 @@ fallon
  ldx CharBlockY
  inx
  cmp FloorY,x
- bcc ]rts  ;not within grabbing range yet
+ bcc return_31  ;not within grabbing range yet
 
-*  Char is within vertical range, and button is down
-*  Is there a ledge within reach?
+\*  Char is within vertical range, and button is down
+\*  Is there a ledge within reach?
 
  lda CharX
  sta savekidx
- lda #grabreach
+ lda #LO(grabreach)
  jsr addcharx
  sta CharX
  jsr rereadblocks
 
- jsr :test ;can you grab ledge?
- bne :ok ;yes--do it
+ jsr fallon_test ;can you grab ledge?
+ bne ok ;yes--do it
  lda savekidx
  sta CharX
  jmp rereadblocks
-:ok ;do it!
+.ok ;do it!
 
-* Align char with block
+\* Align char with block
 
  jsr getdist
 
@@ -305,60 +317,69 @@ fallon
 
  lda #stuntime
  sta stunned
-]rts rts
+}
+.return_31
+ rts
 
-:test jsr getabove
+.fallon_test
+{
+ jsr getabove
  sta blockid
  jsr getaboveinf
  jmp checkledge
+}
 
-*-------------------------------
-*  Is there floor underfoot?  If not, start to fall
+\*-------------------------------
+\*  Is there floor underfoot?  If not, start to fall
 
-onground
+.onground
+{
  lda Fcheck
  and #fcheckmark
- beq ]rts ;0--no need to check
+ beq return_31 ;0--no need to check
 
  jsr getunderft
  cmp #block
- bne :1
+ bne label_1
  jsr InsideBlock ;If "inside" block, bump him outside
-:1
+.label_1
  jsr cmpspace
- bne ]rts
+ bne return_31
 
-* Level 12: Phantom bridge
+\* Level 12: Phantom bridge
 
  lda level
  cmp #12
- bne :no
+ bne no
  lda mergetimer
- bpl :no
+ bpl no
  lda CharBlockY
- bne :no
+ bne no
  lda CharScrn
  cmp #2
- beq :yes
+ beq yes
  cmp #13
- bne :no
+ bne no
  lda tempblockx
  cmp #6
- bcc :no
+ bcc no
 ;Create floorboards on the fly
-:yes lda #floor
+.yes lda #floor
  sta (BlueType),y
  jsr indexblock
  lda #2
- jsr :sub
+ jsr sub
  iny
-:sub jsr markwipe
+.sub jsr markwipe
  jmp markred
-:no
-*-------------------------------
-*  No floor underfoot--commence falling
+.no
+}
 
-startfall
+\*-------------------------------
+\*  No floor underfoot--commence falling
+
+.startfall
+{
  lda #0
  sta rjumpflag
  sta CharSword ;so you can grab on
@@ -372,124 +393,131 @@ startfall
  sta rjumpflag
 
  cmp #9 ;run-12
- beq :stepfall
+ beq local_stepfall
  cmp #13 ;run-16
- beq :stepfall2
+ beq local_stepfall2
  cmp #26 ;standjump-19
- beq :jumpfall
+ beq local_jumpfall
  cmp #44 ;runjump-11
- beq :rjumpfall
+ beq local_rjumpfall
  cmp #81
- bcc :2
+ bcc label_2
  cmp #86
- bcc :hdropfall
-:2 cmp #150
- bcc :1
+ bcc local_hdropfall
+.label_2 cmp #150
+ bcc label_1
  cmp #180
- bcc :fightfall ;from fighting stance
-:1
+ bcc local_fightfall ;from fighting stance
+.label_1
 
-:stepfall lda #stepfall
- bne :doit
+.local_stepfall lda #stepfall
+ bne doit
 
-:stepfall2 lda #stepfall2
- bne :doit
+.local_stepfall2 lda #stepfall2
+ bne doit
 
-:jumpfall lda #jumpfall
- bne :doit
+.local_jumpfall lda #jumpfall
+ bne doit
 
-:rjumpfall lda #rjumpfall
- bne :doit
+.local_rjumpfall lda #rjumpfall
+ bne doit
 
-:hdropfall
+.local_hdropfall
  lda #5
  jsr addcharx
  sta CharX
  jsr rereadblocks
- jmp :stepfall2
-]rts rts
+ jmp local_stepfall2
+.return
+ rts
 
-:fightfall lda CharID
+.local_fightfall lda CharID
  cmp #2
- bcc :player
+ bcc local_player
  lda CharXVel
- bmi :fb ;did gd step off fwd or bkwd?
+ bmi fb ;did gd step off fwd or bkwd?
  lda #0
  sta droppedout
  lda #efightfallfwd
- bne :doit
-:fb lda #efightfall
- bne :doit
-:player lda #1
+ bne doit
+.fb lda #efightfall
+ bne doit
+.local_player lda #1
  sta droppedout ;for guard's benefit
  lda #fightfall
- bne :doit
+ bne doit
 
-*-------------------------------
-:doit jsr jumpseq
+\*-------------------------------
+
+.doit jsr jumpseq
  jsr animchar ;advance 1 frame into fall
 
  jsr rereadblocks
  jsr getunderft
  jsr cmpwall
- beq :bump
+ beq local_bump
  jsr getinfront
  jsr cmpwall
- bne ]rts
+ bne return
  jmp CDpatch
 
-:bump jmp InsideBlock ;If "inside" block, bump him outside
+.local_bump jmp InsideBlock ;If "inside" block, bump him outside
+}
 
-CDpatch
+.CDpatch
+{
  lda rjumpflag
  cmp #44 ;running jump?
- bne :patchX
+ bne patchX
 
  jsr getdist
  cmp #6
- bcs :patchX ;dist >= 6...we're OK
+ bcs patchX ;dist >= 6...we're OK
 
  lda #patchfall
  jsr jumpseq
  jsr animchar
  jmp rereadblocks
 
-:patchX lda #-1
-:1 jsr addcharx
+.patchX lda #LO(-1)
+.label_1 jsr addcharx
  sta CharX
  jmp rereadblocks
+}
 
-*-------------------------------
-*
-* Char is "inside" a block--bump him outside
-* (hopefully the same side from which he entered)
-*
-* Change Char X & return rdblock results
-*
-*-------------------------------
-InsideBlock
+\*-------------------------------
+\*
+\* Char is "inside" a block--bump him outside
+\* (hopefully the same side from which he entered)
+\*
+\* Change Char X & return rdblock results
+\*
+\*-------------------------------
+
+.InsideBlock
+{
  jsr getdist ;to EOB
  cmp #8
- bcs :bumpback
+ bcs bumpback
 
-:bumpfwd
+.bumpfwd
  jsr getinfront
  cmp #block
- beq :bumpback
+ beq bumpback
 
  jsr getdist ;to EOB
  clc
  adc #4
-:reland
+.reland
  jsr addcharx
  sta CharX
  jsr rereadblocks ;reposition char
  jmp getunderft
 
-:bumpback
+.bumpback
  jsr getbehind
  cmp #block
- bne :1
+ bne label_1
   ;we're screwed
 ;bump 2 back (what the hell)
  jsr getdist
@@ -498,14 +526,16 @@ InsideBlock
  eor #$ff
  clc
  adc #8
- jmp :reland
-:1
+ jmp reland
+.label_1
  jsr getdist
  eor #$ff
  clc
  adc #8
- jmp :reland
+ jmp reland
+}
 
+IF _TODO
 *-------------------------------
 *
 *  S H A D O W   C O N T R O L

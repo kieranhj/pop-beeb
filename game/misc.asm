@@ -14,7 +14,7 @@
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
-.firstguard BRK     ; jmp FIRSTGUARD
+.firstguard jmp FIRSTGUARD
 .markmeters RTS     ; jmp MARKMETERS                    BEEB TO DO
 
 .potioneffect BRK   ; jmp POTIONEFFECT
@@ -187,33 +187,36 @@ MOVEAUXLC
  sta $FFFF ;set in main l.c. too
 
  rts
+ENDIF
 
-*-------------------------------
-*
-* Player can't run or jump past en-garde guard
-*
-*-------------------------------
-FIRSTGUARD
+\*-------------------------------
+\*
+\* Player can't run or jump past en-garde guard
+\*
+\*-------------------------------
+
+.FIRSTGUARD
+{
  lda EnemyAlert
  cmp #2
- bcc ]rts
+ bcc return
  lda CharSword
- bne ]rts
+ bne return
  lda OpSword
- beq ]rts
+ beq return
  lda OpAction
  cmp #2
- bcs ]rts
+ bcs return
 
  lda CharFace
  cmp OpFace
- beq ]rts
+ beq return
 
  jsr getopdist
- cmp #-15
- bcc ]rts
+ cmp #LO(-15)
+ bcc return
 
-* Bump off guard
+\* Bump off guard
 
  ldx CharBlockY
  lda FloorY+1,x
@@ -222,6 +225,11 @@ FIRSTGUARD
  jsr jumpseq
  jmp animchar
 
+.return
+ rts
+}
+
+IF _TODO
 *-------------------------------
 *
 * Mark strength meters
@@ -249,7 +257,7 @@ MARKKIDMETER
 MARKOPPMETER
  ldy #28
  bne Mark2
-]rts rts
+ rts
 
 *-------------------------------
 *

@@ -42,7 +42,7 @@
 .lay jmp LAY
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
-.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?
+.lrcls RTS      ;jmp LRCLS                          BEEB TO DO OR NOT NEEDED?
 .fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
@@ -65,7 +65,7 @@
 
 .loadstage2 BRK ;jmp LOADSTAGE2
 \ jmp RELOAD
-.getselect BRK  ;jmp GETSELECT
+.getselect RTS  ;jmp GETSELECT                      BEEB TO DO KEYS
 .getdesel BRK   ;jmp GETDESEL
 .edreboot BRK   ;jmp EDREBOOT ;ed
 \
@@ -93,15 +93,15 @@
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty RTS    ;jmp INVERTY                                            BEEB TO DO
-.normspeed RTS  ;jmp NORMSPEED                                          NOT BEEB
+.inverty RTS    ;jmp INVERTY                        BEEB TO DO
+.normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
 .zerored jmp ZERORED
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS
-.fastspeed RTS  ;jmp FASTSPEED                                          NOT BEEB
+.fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
 .musickeys BRK  ;jmp MUSICKEYS
 .dostartgame BRK;jmp DOSTARTGAME
 \

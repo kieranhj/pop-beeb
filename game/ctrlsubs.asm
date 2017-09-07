@@ -27,8 +27,8 @@
 .getblocky jmp GETBLOCKY
 .getblockej jmp GETBLOCKEJ
 .addcharx jmp ADDCHARX
-.getdist BRK        ; jmp GETDIST
-.getdist1 BRK       ; jmp GETDIST1
+.getdist jmp GETDIST
+.getdist1 jmp GETDIST1
 
 .getabovebeh BRK    ; jmp GETABOVEBEH
 .rdblock jmp RDBLOCK
@@ -62,23 +62,23 @@
 
 .GetFrameInfo jmp GETFRAMEINFO
 .indexblock jmp INDEXBLOCK
-.markred BRK            ; jmp MARKRED
+.markred jmp MARKRED
 .markfred jmp MARKFRED
-.markwipe BRK           ; jmp MARKWIPE
+.markwipe jmp MARKWIPE
 
-.markmove BRK           ; jmp MARKMOVE
-.markfloor BRK          ; jmp MARKFLOOR
+.markmove jmp MARKMOVE
+.markfloor jmp MARKFLOOR
 .unindex jmp UNINDEX
 .quickfloor jmp QUICKFLOOR
 .unevenfloor RTS        ; jmp UNEVENFLOOR               BEEB TO DO
 
-.markhalf BRK           ; jmp MARKHALF
+.markhalf jmp MARKHALF
 .addswordobj BRK        ; jmp ADDSWORDOBJ
 .getblocky1 jmp GETBLOCKYP
 .checkledge BRK         ; jmp CHECKLEDGE
 .get2infront BRK        ; jmp GET2INFRONT
 
-.checkspikes BRK        ; jmp CHECKSPIKES
+.checkspikes RTS        ; jmp CHECKSPIKES               BEEB TO DO
 .rechargemeter BRK      ; jmp RECHARGEMETER
 .addfcharx BRK          ; jmp ADDFCHARX
 .facedx jmp FACEDX
@@ -92,12 +92,12 @@
 
 .SaveShadwOp BRK        ; jmp SAVESHADWOP
 .boostmeter BRK         ; jmp BOOSTMETER
-.getunderft BRK         ; jmp GETUNDERFT
-.getinfront BRK         ; jmp GETINFRONT
-.getbehind BRK          ; jmp GETBEHIND
+.getunderft jmp GETUNDERFT
+.getinfront jmp GETINFRONT
+.getbehind jmp GETBEHIND
 
-.getabove BRK           ; jmp GETABOVE
-.getaboveinf BRK        ; jmp GETABOVEINF
+.getabove jmp GETABOVE
+.getaboveinf jmp GETABOVEINF
 .cmpwall jmp CMPWALL
 
 \*-------------------------------
@@ -430,21 +430,24 @@ thinner = 3
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* In: CharFace,CharBlockX,CharBlockY,CharScrn
-*
-* Out: Results of RDBLOCK for block underfoot/in front/etc.
-*
-*-------------------------------
-GETUNDERFT
+\*-------------------------------
+\*
+\* In: CharFace,CharBlockX,CharBlockY,CharScrn
+\*
+\* Out: Results of RDBLOCK for block underfoot/in front/etc.
+\*
+\*-------------------------------
+
+.GETUNDERFT
+{
  ldx CharBlockX
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETINFRONT
+.GETINFRONT
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -456,8 +459,10 @@ GETINFRONT
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GET2INFRONT
+.GET2INFRONT
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -470,8 +475,10 @@ GET2INFRONT
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETBEHIND
+.GETBEHIND
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -483,8 +490,10 @@ GETBEHIND
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVE
+.GETABOVE
+{
  ldy CharBlockY
  dey
  sty abovey
@@ -492,8 +501,10 @@ GETABOVE
  ldx CharBlockX
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVEINF
+.GETABOVEINF
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -508,8 +519,10 @@ GETABOVEINF
 
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVEBEH
+.GETABOVEBEH
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -524,36 +537,39 @@ GETABOVEBEH
 
  lda CharScrn
  jmp RDBLOCK
+}
 
-*-------------------------------
-*
-*  G E T   D I S T A N C E
-*
-*  In: Char data
-*
-*  Out: A = # of pixels (0-13) to add to CharX to move
-*       char base X-coord to end of current block
-*
-*-------------------------------
-GETDIST
+\*-------------------------------
+\*
+\*  G E T   D I S T A N C E
+\*
+\*  In: Char data
+\*
+\*  Out: A = # of pixels (0-13) to add to CharX to move
+\*       char base X-coord to end of current block
+\*
+\*-------------------------------
+
+.GETDIST
  jsr GETBASEX ;returns A = base X-coord
 
-GETDIST1
+.GETDIST1
+{
  jsr GETBLOCKXP ;returns A = block #, OFFSET = pixel #
 
  lda CharFace ;0=right, -1=left
- beq :facingright
+ beq facingright
 
-:facingleft
+.facingleft
  lda OFFSET
  rts
 
-:facingright
+.facingright
  lda #13
  sec
  sbc OFFSET
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1838,29 +1854,34 @@ ENDIF
  jmp getaltframe2
 }
 
-IF _TODO
-*===============================
-*
-*  M A R K
-*
-*  In: A = mark value (usually 2)
-*      Results of INDEXBLOCK:
-*      Y = block #; carry set or clear
-*
-*  Out: Preserve A, Y, carry
-*
-*-------------------------------
-]os cpy #10 ;top line from scrn above?
- bcs ]rts ;no
+\*===============================
+\*
+\*  M A R K
+\*
+\*  In: A = mark value (usually 2)
+\*      Results of INDEXBLOCK:
+\*      Y = block #; carry set or clear
+\*
+\*  Out: Preserve A, Y, carry
+\*
+\*-------------------------------
+
+.mark_os
+{
+ cpy #10 ;top line from scrn above?
+ bcs return ;no
  sta topbuf,y
  sec ;preserve cs
-]rts rts
+.return
+ rts
+}
 
-MARKRED
- bcs ]os
+.MARKRED
+{
+ bcs mark_os
  sta redbuf,y
  rts
-ENDIF
+}
 
 .MARKFRED
 {
@@ -1870,50 +1891,61 @@ ENDIF
  rts
 }
 
-IF _TODO
-MARKWIPE
- bcs ]rts
+.MARKWIPE
+{
+ bcs return
  pha
  lda wipebuf,y
- beq :2
+ beq label_2
  lda height
  cmp whitebuf,y ;if wipebuf is already marked,
- bcc :1 ;use larger of 2 whitebuf values
-:2 lda height
+ bcc label_1 ;use larger of 2 whitebuf values
+.label_2 lda height
  sta whitebuf,y
-:1 pla
+.label_1 pla
  sta wipebuf,y
  clc ;return with cc
+.return
  rts
+}
 
-MARKMOVE
- bcs ]os
+.MARKMOVE
+{
+ bcs mark_os
  sta movebuf,y
  rts
+}
 
-MARKFLOOR
- bcs ]os
+.MARKFLOOR
+{
+ bcs mark_os
  sta floorbuf,y
  rts
+}
 
-MARKHALF
- bcs ]os
+.MARKHALF
+{
+ bcs mark_os
  sta halfbuf,y
  rts
+}
 
-*-------------------------------
-*
-*  Z E R O   R E D
-*
-*  zero redraw buffers
-*
-*-------------------------------
-ZERORED
+IF 0    \\ Weirdly duped from grafix.asm
+\*-------------------------------
+\*
+\*  Z E R O   R E D
+\*
+\*  zero redraw buffers
+\*
+\*-------------------------------
+
+.ZERORED
+{
  lda #0
 
  ldy #29
 
-:loop sta redbuf,y
+.loop sta redbuf,y
  sta fredbuf,y
  sta floorbuf,y
  sta wipebuf,y
@@ -1922,15 +1954,18 @@ ZERORED
  sta halfbuf,y
 
  dey
- bpl :loop
+ bpl loop
 
  ldy #9
-:dloop sta topbuf,y
+.dloop sta topbuf,y
  dey
- bpl :dloop
+ bpl dloop
 
  rts
+}
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 *  C H E C K L E D G E

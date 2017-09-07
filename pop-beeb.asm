@@ -59,6 +59,8 @@ INCLUDE "game/master.h.asm"
 INCLUDE "game/mover.h.asm"
 INCLUDE "game/ctrl.h.asm"
 INCLUDE "game/grafix.h.asm"
+INCLUDE "game/coll.h.asm"
+INCLUDE "game/auto.h.asm"
 
 \*-------------------------------
 ; BSS data in lower RAM

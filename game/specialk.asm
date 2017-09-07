@@ -18,25 +18,25 @@ DebugKeys = 0
 \ org org
 
  .key BRK       ;jmp KEYS
- .clrjstk BRK   ;jmp CLRJSTK
+ .clrjstk RTS   ;jmp CLRJSTK            BEEB TO DO KEYS
  .zerosound RTS ;jmp ZEROSOUND          BEEB TO DO SOUND
  .addsound RTS  ;jmp ADDSOUND           BEEB TO DO SOUND
- .facejstk BRK  ;jmp FACEJSTK
+ .facejstk RTS  ;jmp FACEJSTK           BEEB TO DO KEYS
 
- .SaveSelect BRK  ;jmp SAVESELECT
- .LoadSelect BRK  ;jmp LOADSELECT
+ .SaveSelect RTS  ;jmp SAVESELECT       BEEB TO DO KEYS
+ .LoadSelect RTS  ;jmp LOADSELECT       BEEB TO DO KEYS
  .SaveDesel BRK   ;jmp SAVEDESEL
  .LoadDesel BRK   ;jmp LOADDESEL
- .initinput RTS   ;jmp INITINPUT        BEEB TO DO
+ .initinput RTS   ;jmp INITINPUT        BEEB TO DO KEYS
 
  .demokeys RTS    ;jmp DEMOKEYS         BEEB TO DO
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
  .getminleft BRK  ;jmp GETMINLEFT
- .keeptime BRK    ;jmp KEEPTIME
+ .keeptime RTS    ;jmp KEEPTIME         BEEB TO DO
 
  .shortentime BRK ;jmp SHORTENTIME
- .cuesong RTS     ;jmp CUESONG          BEEB TO DO
+ .cuesong RTS     ;jmp CUESONG          BEEB TO DO SOUND
  \jmp DoSaveGame
  \jmp LoadLevelX
  \jmp decstr

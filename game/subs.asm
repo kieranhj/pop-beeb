@@ -20,7 +20,7 @@ CheckTimer = 0
 .doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
 .PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
-.showtime BRK           ; jmp SHOWTIME
+.showtime RTS           ; jmp SHOWTIME              BEEB TO DO
 
 .doflashoff RTS         ; jmp DOFLASHOFF            BEEB TO DO
 .lrclse RTS             ; jmp LRCLSE                BEEB TO DO OR NOT NEEDED?
@@ -36,12 +36,12 @@ CheckTimer = 0
 
 .addlowersound BRK      ; jmp ADDLOWERSOUND
 .RemoveObj BRK          ; jmp REMOVEOBJ
-.addfall BRK            ; jmp ADDFALL
+.addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
 .startkid jmp STARTKID
 
 .startkid1 jmp STARTKID1
-.gravity BRK            ; jmp GRAVITY
+.gravity jmp GRAVITY
 .initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
 .mirappear BRK          ; jmp MIRAPPEAR
 .crumble RTS            ; jmp CRUMBLE               BEEB TO DO
@@ -1625,68 +1625,77 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G R A V I T Y
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  G R A V I T Y
+\*
+\*-------------------------------
 TermVelocity = 33
 AccelGravity = 3
 WtlessTermVel = 4
 WtlessGravity = 1
 
-GRAVITY
+.GRAVITY
+{
  lda CharAction
  cmp #4
- bne ]rts
+ bne return_29
 
  lda weightless
- bne :wtless
+ bne wtless
 
  lda CharYVel
  clc
  adc #AccelGravity
 
  cmp #TermVelocity
- bcc :ok
+ bcc GRAVITY_ok
  lda #TermVelocity
+}
+.GRAVITY_ok
+ sta CharYVel
+.return_29
+ rts
 
-:ok sta CharYVel
-]rts rts
-
-:wtless lda CharYVel
+.wtless
+{
+ lda CharYVel
  clc
  adc #WtlessGravity
 
  cmp #WtlessTermVel
- bcc :ok
+ bcc GRAVITY_ok
  lda #WtlessTermVel
- bcs :ok
+ bcs GRAVITY_ok
+}
 
-*-------------------------------
-*
-*  Add falling velocity
-*
-*-------------------------------
-ADDFALL
+\*-------------------------------
+\*
+\*  Add falling velocity
+\*
+\*-------------------------------
+
+.ADDFALL
+{
  lda CharYVel
  clc
  adc CharY
  sta CharY
 
-* X-vel
+\* X-vel
 
  lda CharAction
  cmp #4 ;freefall?
- bne ]rts
+ bne return_29
 
  lda CharXVel
  jsr addcharx
  sta CharX
 
  jmp rereadblocks
+}
 
+IF _TODO
 *-------------------------------
 *
 * Set initial guard posns for entire level (call once)
