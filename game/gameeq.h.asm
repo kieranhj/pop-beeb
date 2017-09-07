@@ -9,38 +9,37 @@
 \*
 \*-------------------------------
 
-\ BEEB DEFINED IN pop-beeb.asm AS SWRAM BANKS
-\chtable1 = $6000
-\chtable2 = $8400
-\chtable3 = $0800
-\chtable4 = $9600
-\chtable5 = $a800
-\chtable6 = $6000
-\chtable7 = $9f00
+\chtable1 = $6000               ; see pop-beeb.asm
+\chtable2 = $8400               ; see pop-beeb.asm
+\chtable3 = $0800               ; see pop-beeb.asm
+\chtable4 = $9600               ; see pop-beeb.asm
+\chtable5 = $a800               ; see pop-beeb.asm
+\chtable6 = $6000               ; see pop-beeb.asm
+\chtable7 = $9f00               ; see pop-beeb.asm
 
-\bgtable1 = $6000
-\bgtable2 = $8400
+\bgtable1 = $6000               ; see pop-beeb.asm
+\bgtable2 = $8400               ; see pop-beeb.asm
 
-\topctrl = $2000                ; location determined by assembler
-seqtable = $2800
+\topctrl = $2000                ; see topctrl.asm
+\seqtable = $2800               ; see framedefs.asm
 seqtab = $3000
-\ctrl = $3a00                   ; location determined by assembler
-\coll = $4500                   ; location determined by assembler
-\gamebg = $4c00                 ; location determined by assembler
-\auto = $5400                   ; location determined by assembler
+\ctrl = $3a00                   ; see ctrl.asm
+\coll = $4500                   ; see coll.asm
+\gamebg = $4c00                 ; see gamebg.asm
+\auto = $5400                   ; see auto.asm
 
 \mobtables = $b600              ; location determined by assembler
-savedgame = $b6f0
+;savedgame = $b6f0
 
-msys = $d400
-\ctrlsubs = $d000               ; location determined by assembler
-\specialk = $d900               ; location determined by assembler
-textline = $dfd8                ; location determined by assembler
+;msys = $d400
+\ctrlsubs = $d000               ; see ctrlsubs.asm
+\specialk = $d900               ; see specialk.asm
+;textline = $dfd8                
 \subs = $e000
-sound = $ea00
-\mover = $ee00                  ; location determined by assembler
-\misc = $f900                   ; location determined by assembler
-debugs = $fc00
+;sound = $ea00
+\mover = $ee00                  ; see mover.asm
+\misc = $f900                   ; see misc.asm
+;debugs = $fc00
 
 \*-------------------------------
 \*

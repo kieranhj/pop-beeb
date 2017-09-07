@@ -3,6 +3,7 @@
 ; Animation frame definitions
 
 .framedef
+.seqtable
 \bof = $2800
 \ tr on ;TABS 15,20,40
 \ lst off
