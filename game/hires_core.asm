@@ -7,12 +7,12 @@
 ._cls jmp hires_cls
 ._lay jmp hires_lay
 ._fastlay jmp hires_fastlay
-._layrsave jmp hires_layrsave
+._layrsave RTS      ;jmp hires_layrsave     BEEB TO DO
 
 ._lrcls brk         ;jmp hires_lrcls    \ is implemented but not safe to call!
 ._fastmask jmp hires_fastmask
 ._fastblack BRK     ;jmp hires_fastblack
-._peel jmp hires_peel
+._peel RTS          ;jmp hires_peel         BEEB TO DO
 ._getwidth jmp hires_getwidth
 
 ._copy2000 BRK      ;jmp copyscrnMM

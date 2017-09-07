@@ -330,6 +330,7 @@ INCLUDE "game/coll.asm"
 
 INCLUDE "game/tables.asm"
 INCLUDE "game/framedefs.asm"
+INCLUDE "game/seqtable.asm"
 
 .pop_beeb_aux_end
 

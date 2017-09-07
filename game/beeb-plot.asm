@@ -128,7 +128,8 @@ IF BEEB_SCREEN_MODE == 4
     BRK                 ; means our OPACITY is out of range
     .in_range
     cpx #enum_sta
-    bne not_sta
+; BEEB TEMP always ORA
+;    bne not_sta
 
     \ Force hack ORA for MODE 4
     ldx #enum_ora

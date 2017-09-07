@@ -22,7 +22,7 @@
 
 \topctrl = $2000                ; see topctrl.asm
 \seqtable = $2800               ; see framedefs.asm
-seqtab = $3000
+\seqtab = $3000                 ; see seqtable.asm
 \ctrl = $3a00                   ; see ctrl.asm
 \coll = $4500                   ; see coll.asm
 \gamebg = $4c00                 ; see gamebg.asm

@@ -134,33 +134,34 @@
 \*-------------------------------
 \*  Apple soft switches
 
-IOUDISoff = $c07f
-IOUDISon = $c07e
-DHIRESoff = $c05f
-DHIRESon = $c05e
-HIRESon = $c057
-HIRESoff = $c056
-PAGE2on = $c055
-PAGE2off = $c054
-MIXEDon = $c053
-MIXEDoff = $c052
-TEXTon = $c051
-TEXToff = $c050
-ALTCHARon = $c00f
-ALTCHARoff = $c00e
-ADCOLon = $c00d
-ADCOLoff = $c00c
-ALTZPon = $c009
-ALTZPoff = $c008
-RAMWRTaux = $c005
-RAMWRTmain = $c004
-RAMRDaux = $c003
-RAMRDmain = $c002
-ADSTOREon = $c001
-ADSTOREoff = $c000
-RWBANK2 = $c083
-RWBANK1 = $c08b
-USEROM = $c082
+\ NOT BEEB
+\IOUDISoff = $c07f
+\IOUDISon = $c07e
+\DHIRESoff = $c05f
+\DHIRESon = $c05e
+\HIRESon = $c057
+\HIRESoff = $c056
+\PAGE2on = $c055
+\PAGE2off = $c054
+\MIXEDon = $c053
+\MIXEDoff = $c052
+\TEXTon = $c051
+\TEXToff = $c050
+\ALTCHARon = $c00f
+\ALTCHARoff = $c00e
+\ADCOLon = $c00d
+\ADCOLoff = $c00c
+\ALTZPon = $c009
+\ALTZPoff = $c008
+\RAMWRTaux = $c005
+\RAMWRTmain = $c004
+\RAMRDaux = $c003
+\RAMRDmain = $c002
+\ADSTOREon = $c001
+\ADSTOREoff = $c000
+\RWBANK2 = $c083
+\RWBANK1 = $c08b
+\USEROM = $c082
 
 \*-------------------------------
 \*  Key equates
@@ -1576,133 +1577,134 @@ ENDIF
 \*-------------------------------
 .CLS
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _cls
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .LAY
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _lay
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .FASTLAY
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _fastlay
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .LAYRSAVE
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _layrsave
- sta ALTZPon
- jmp posthr
+\ sta ALTZPon
+\ jmp posthr
+ rts
 }
 
 .LRCLS
 {
  sta scrncolor ;In: A = screen color
- sta ALTZPoff
+\ sta ALTZPoff
  jsr _lrcls
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .FASTMASK
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _fastmask
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .FASTBLACK
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _fastblack
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .PEEL
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _peel
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .GETWIDTH
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _getwidth
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .COPY2000
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _copy2000
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .COPY2000AM
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _copy2000am
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .COPY2000MA
 {
- jsr prehr
- sta ALTZPoff
+\ jsr prehr
+\ sta ALTZPoff
  jsr _copy2000ma
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .SETFASTAUX
 {
- sta ALTZPoff
+\ sta ALTZPoff
  jsr _setfastaux
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .SETFASTMAIN
 {
- sta ALTZPoff
+\ sta ALTZPoff
  jsr _setfastmain
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
 .INVERTY
 {
- sta ALTZPoff
+\ sta ALTZPoff
  jsr _inverty
- sta ALTZPon
+\ sta ALTZPon
  rts
 }
 
@@ -1767,15 +1769,17 @@ ENDIF
 \*-------------------------------
 .prehr
 {
- ldx #$17
-.loop sta ALTZPon ;aux zp
- lda $00,x
- sta ALTZPoff ;main zp
- sta $00,x
- dex
- bpl loop
- sta ALTZPon
- rts
+ BRK
+\ NOT BEEB
+\ ldx #$17
+\.loop sta ALTZPon ;aux zp
+\ lda $00,x
+\ sta ALTZPoff ;main zp
+\ sta $00,x
+\ dex
+\ bpl loop
+\ sta ALTZPon
+\ rts
 }
 
 \*-------------------------------
@@ -1787,14 +1791,16 @@ ENDIF
 \*-------------------------------
 .posthr
 {
- ldx #$17
-.loop sta ALTZPoff
- lda $00,x
- sta ALTZPon
- sta $00,x
- dex
- bpl loop
-.return rts
+ BRK
+\ NOT BEEB
+\ ldx #$17
+\.loop sta ALTZPoff
+\ lda $00,x
+\ sta ALTZPon
+\ sta $00,x
+\ dex
+\ bpl loop
+\.return rts
 }
 
 IF _TODO

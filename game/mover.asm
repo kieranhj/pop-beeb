@@ -20,7 +20,7 @@ PalaceEditor = 0
 .addmobs jmp ADDMOBS
 .closeexit BRK          ; jmp CLOSEEXIT
 .getspikes BRK          ; jmp GETSPIKES
-.shakem BRK             ; jmp SHAKEM
+.shakem RTS             ; jmp SHAKEM            BEEB TO DO
 
 .trigslicer BRK         ; jmp TRIGSLICER
 .trigtorch BRK          ; jmp TRIGTORCH

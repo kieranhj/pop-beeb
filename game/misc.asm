@@ -26,7 +26,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .MarkKidMeter BRK   ; jmp MARKKIDMETER
 .MarkOppMeter BRK   ; jmp MARKOPPMETER
 .bonesrise RTS      ; jmp BONESRISE                     BEEB TO DO
-.decstr BRK         ; jmp DECSTR
+.decstr RTS         ; jmp DECSTR                        BEEB TO DO
 .DoSaveGame BRK     ; jmp DOSAVEGAME
 
 .LoadLevelX jmp LOADLEVELX

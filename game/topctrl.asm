@@ -103,7 +103,8 @@ miry = 0
 \*-------------------------------
 .START
 {
- sta ALTZPon
+\ NOT BEEB
+\ sta ALTZPon
  jsr StartGame
  jmp RESTART
 }
@@ -287,8 +288,9 @@ ENDIF
  lda #' '
  jsr lrcls
  jsr vblank
- lda PAGE2off
- lda TEXTon
+\ NOT BEEB
+\ lda PAGE2off
+\ lda TEXTon
 
  ldx level
  jsr LoadLevelX ;load blueprint & image sets from disk
@@ -990,8 +992,9 @@ ENDIF
  lda #' '
  jsr lrclse
  jsr vblank
- lda PAGE2off
- lda TEXTon
+\ NOT BEEB
+\ lda PAGE2off
+\ lda TEXTon
 
  jsr DoSure ;draw b.g. w/o chars
 
