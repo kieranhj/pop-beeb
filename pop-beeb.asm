@@ -7,6 +7,7 @@
 ; Defines
 \*-------------------------------
 
+CPU 1
 _TODO = FALSE
 
 ; Original PoP global defines
@@ -157,7 +158,54 @@ INCLUDE "lib/print.asm"
 
     \\ Remain in AUX...
 
-IF 0
+IF 1
+    LDX #1
+    STX level
+    JSR LoadLevelX
+
+    JSR beeb_shadow_select_main
+
+    LDA #1
+    STA beeb_sprite_no
+
+    .sprite_loop
+    LDA #0
+    STA XCO
+
+    LDA #12
+    STA YCO
+
+    LDA beeb_sprite_no
+    STA IMAGE
+
+    LDA #LO(bgtable1)
+    STA TABLE
+
+    LDA #HI(bgtable1)
+    STA TABLE+1
+
+    LDA #0
+    STA BANK
+
+    LDA #2
+    STA OPACITY
+
+    JSR beeb_plot_apple_mode_4
+
+    ldx#100:ldy#0:lda#&81:jsr osbyte	
+
+    LDX beeb_sprite_no
+    INX
+    CPX #128
+    BCS finished
+    STX beeb_sprite_no
+    JMP sprite_loop
+
+    .finished
+    RTS
+ENDIF
+
+IF 1
     \\ Level load & plot test
     LDX #1
 
@@ -382,10 +430,10 @@ BEEB_SWRAM_SLOT_CHTAB67 = 3             ; BEEB - NOT SURE WHERE THIS WILL GO YET
 
 .bank0_start
 .bgtable1
-SKIP 9185           ; max size of IMG.BGTAB1.XXX
+SKIP 9185           ; max size of IMG.BGTAB1.XXX        BEEB ACTUALLY LESS
 ALIGN &100
 .bgtable2
-SKIP 4593           ; max size of IMG.BGTAB2.XXX
+SKIP 4593           ; max size of IMG.BGTAB2.XXX        BEEB ACTUALLY LESS
 .bank0_end
 
 ; BANK 1
@@ -396,10 +444,10 @@ GUARD &C000
 
 .bank1_start
 .chtable1
-SKIP 9165           ; size of IMG.CHTAB1
+SKIP 9165           ; size of IMG.CHTAB1        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable3
-SKIP 5985           ; size of IMG.CHTAB3
+SKIP 5985           ; size of IMG.CHTAB3        BEEB ACTUALLY LESS
 ALIGN &100
 .bank1_end
 
@@ -411,10 +459,10 @@ GUARD &C000
 
 .bank2_start
 .chtable2
-SKIP 9189           ; size of IMG.CHTAB2
+SKIP 9189           ; size of IMG.CHTAB2        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable5
-SKIP 6134           ; size of IMG.CHTAB5
+SKIP 6134           ; size of IMG.CHTAB5        BEEB ACTUALLY LESS
 ALIGN &100
 .bank2_end
 
@@ -429,7 +477,7 @@ GUARD &C000
 SKIP 5281           ; size of largest IMG.CHTAB4.X internal file pointer - file size 8999b?
 ALIGN &100
 .chtable6
-SKIP 9201           ; size of largest IMG.CHTAB6.X
+SKIP 9201           ; size of largest IMG.CHTAB6.X        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable7
 SKIP 1155           ; size of IMG.CHTAB7
@@ -485,19 +533,21 @@ PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
 PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
 ;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
 ;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
-PUTFILE "Images/IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
-PUTFILE "Images/IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
-PUTFILE "Images/IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
-PUTFILE "Images/IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
-PUTFILE "Images/IMG.CHTAB4.FAT.bin", "FAT", 0, 0
-PUTFILE "Images/IMG.CHTAB4.GD.bin", "GD", 0, 0
-PUTFILE "Images/IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
-PUTFILE "Images/IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
-PUTFILE "Images/IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
-PUTFILE "Images/IMG.CHTAB1.bin", "CHTAB1", 0, 0
-PUTFILE "Images/IMG.CHTAB2.bin", "CHTAB2", 0, 0
-PUTFILE "Images/IMG.CHTAB3.bin", "CHTAB3", 0, 0
-PUTFILE "Images/IMG.CHTAB5.bin", "CHTAB5", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB4.FAT.bin", "FAT", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 ;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0
+
+;PUTBASIC "chkimg.bas", "CHKIMG"

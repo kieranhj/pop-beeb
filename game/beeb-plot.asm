@@ -8,13 +8,13 @@
 \*
 \*  Parameters passed to hires routines:
 \*
-\*  PAGE        $00 = hires page 1, $20 = hires page 2          - NOT BEEB
+\*  PAGE        $00 = hires page 1, $20 = hires page 2          - NOT BEEB UNLESS DOUBLE BUFFERING
 \*  XCO         Screen X-coord (0=left, 39=right)
 \*  YCO         Screen Y-coord (0=top, 191=bottom)
 \*  OFFSET      # of bits to shift image right (0-6)
 \*  IMAGE       Image # in table (1-127)
 \*  TABLE       Starting address of image table (2 bytes)
-\*  BANK        Memory bank of table (2 = main, 3 = aux)        - NOT BEEB (YET - WILL BE SWRAM BANK)
+\*  BANK        Memory bank of table (2 = main, 3 = aux)        BEEB = SWRAM slot
 \*  OPACITY     Bits 0-6:
 \*                0    AND
 \*                1    OR
@@ -47,7 +47,7 @@
 
 .beeb_plot_start
 
-IF BEEB_SCREEN_MODE == 4
+IF 0
 .beeb_plot_apple_mode_4
 {
     \\ From hires_LAY
@@ -245,7 +245,349 @@ IF BEEB_SCREEN_MODE == 4
     .return
     RTS
 }
+ELSE
+.beeb_plot_apple_mode_4
+{
+    \\ From hires_LAY
+    lda OPACITY
+    bpl notmirr
+
+    and #$7f
+    sta OPACITY
+;    jmp MLAY
+;
+    .notmirr
+;    cmp #enum_eor
+;    bne label_1
+;    jmp LayXOR
+;
+;    .label_1 cmp #enum_mask
+;    bcc label_2
+;    jmp LayMask
+;
+;    .label_2 jmp LayGen
+
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    CMP #4
+    BCC slot_set
+    BRK                 ; swram slot for sprite not set!
+    .slot_set
+    JSR swr_select_slot
+
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
+
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Y offset into character row
+
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+    
+    \ Look up Beeb screen address
+
+    LDX XCO
+    CLC
+    LDA Mult8_LO,X
+    ADC YLO, Y
+    STA beeb_writeptr
+    STA beeb_readptr
+    LDA Mult8_HI,X
+    ADC YHI, Y
+    STA beeb_writeptr+1
+    STA beeb_readptr+1
+
+    \ Look up Beeb shift start
+
+    LDA Mult8_REM,X
+    STA beeb_rem
+
+    \ Switch blend mode
+
+    ldx OPACITY ;hi bit off!
+    cpx #5
+    bcc in_range
+    BRK                 ; means our OPACITY is out of range
+    .in_range
+\    cpx #enum_sta
+\    bne not_sta
+\
+\    \ Force hack ORA for MODE 4
+\    ldx #enum_ora
+    .not_sta
+
+    \ Self-mod code
+
+    lda OPCODE,x
+    sta smod
+
+    \ Set sprite data address 
+
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+
+    LDX #0
+
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+
+    EOR #&FF                ; number of lines clips
+    TAX
+
+    LDA #LO(-1)
+    .no_yclip
+    STA smTOP+1
+    
+    STX smXINC+1
+
+    \ Now in Beeb formt in column order
+    \ Ignore shift for now - just plot on Beeb byte alignment
+
+    LDX #0                  ; index sprite data
+
+    \ Store width & height (or just use directly?)
+
+    LDA WIDTH
+    BEQ done_x
+    STA beeb_width
+
+    .xloop
+
+    LDA YCO
+    STA beeb_height
+
+    LDY beeb_yoffset
+
+    .yloop
+
+    .sprite_addr
+    LDA &FFFF, X            ; now beeb data
+    .smod ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    INX                     ; next sprite byte
+
+    LDA beeb_height
+    DEC A
+    .smTOP
+    CMP #0
+    BEQ done_y
+    STA beeb_height
+
+    DEY                     ; next line
+    BPL yloop
+
+    \ Need to move up a char row
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr+1
+
+    LDY #7
+    BNE yloop
+
+    .done_y
+
+    \ Clip top
+    CLC
+    TXA
+    .smXINC
+    ADC #0
+    TAX 
+
+    \ Done a column
+
+    DEC beeb_width
+    BEQ done_x
+
+    \ Reset write pointer to start + one row
+
+    CLC
+    LDA beeb_readptr
+    ADC #8
+    STA beeb_readptr
+    STA beeb_writeptr
+    LDA beeb_readptr+1
+    ADC #0
+    STA beeb_readptr+1
+    STA beeb_writeptr+1
+
+    \ Next column
+
+    JMP xloop
+
+    .done_x
+
+    .return
+    RTS
+}
 ENDIF
+
+\*-------------------------------
+\*
+\* These functions should be moved to a separate non-plot Beeb module
+\*
+\*-------------------------------
+
+.beeb_set_screen_mode
+{
+    \\ Set CRTC registers
+    LDX #13
+    .crtcloop
+    STX &FE00
+    LDA beeb_crtcregs, X
+    STA &FE01
+    DEX
+    BPL crtcloop
+
+    \\ Set ULA
+    LDA #&88            ; MODE 4
+    STA &FE20
+
+    \\ Set Palette
+    CLC
+    LDA #7              ; PAL_black
+    .palloop1
+    STA &FE21
+    ADC #&10
+    BPL palloop1  
+    EOR #7              ; PAL_white
+    .palloop2
+    STA &FE21
+    ADC #&10
+    BMI palloop2
+
+    RTS
+}
+
+\*-------------------------------
+; Relocate image tables
+
+.beeb_plot_reloc_img
+{
+    LDY #0
+    LDA (beeb_readptr), Y
+    STA beeb_numimages              \ can get rid of this var
+
+    \\ Relocate pointers to image data
+    LDX #0
+    .loop
+    INY
+    CLC
+\    LDA (beeb_readptr), Y
+\    ADC #LO(bgtable1)
+\    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+\ Now at &0000 for BEEB data
+\    SEC
+\    SBC beeb_writeptr+1
+    CLC
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    INX
+    CPX beeb_numimages
+    BCC loop
+
+    .return
+    RTS
+}
+
+\*-------------------------------
+; Clear Beeb screen buffer
+
+.beeb_CLS
+{
+\\ Ignore PAGE as no page flipping yet
+\\ Fixed to MODE 1 screen address for now &3000 - &8000
+
+IF BEEB_SCREEN_MODE == 4
+  ldx #&80 - HI(beeb_screen_addr)
+  lda #HI(beeb_screen_addr)
+ELSE
+  ldx #&50
+  lda #&30
+ENDIF
+  sta loop+2
+  lda #0
+  ldy #0
+  .loop
+  sta &3000,Y
+  iny
+  bne loop
+  inc loop+2
+  dex
+  bne loop
+  rts
+}
+
+\*-------------------------------
+; SHADOW RAM select
+
+.beeb_shadow_select_main
+{
+    LDA &FE34
+    AND #&FB            ; mask out bit 2
+    STA &FE34
+    RTS
+}
+
+.beeb_shadow_select_aux
+{
+    LDA &FE34
+    ORA #4
+    STA &FE34
+    RTS
+}
+
+\*-------------------------------
+; Beeb screen multiplication tables
+
+.Mult8_LO
+FOR n,0,39,1
+x=(n * 7) DIV 8
+EQUB LO(x*8)
+NEXT
+.Mult8_HI
+FOR n,0,39,1
+x=(n * 7) DIV 8
+EQUB HI(x*8)
+NEXT
+.Mult8_REM
+FOR n,0,39,1
+x=(n * 7) MOD 8
+EQUB 8 - x
+NEXT
+
+\*-------------------------------
+\*
+\* MODE 1 colour plot
+\*
+\*-------------------------------
 
 IF BEEB_SCREEN_MODE == 1
 .beeb_plot_apple_mode_1
@@ -448,103 +790,5 @@ EQUB pixel3 OR pixel2 OR pixel1 OR pixel0
 
 NEXT
 ENDIF
-
-
-.beeb_set_screen_mode
-{
-    \\ Set CRTC registers
-    LDX #13
-    .crtcloop
-    STX &FE00
-    LDA beeb_crtcregs, X
-    STA &FE01
-    DEX
-    BPL crtcloop
-
-    \\ Set ULA
-    LDA #&88            ; MODE 4
-    STA &FE20
-
-    \\ Set Palette
-    CLC
-    LDA #7              ; PAL_black
-    .palloop1
-    STA &FE21
-    ADC #&10
-    BPL palloop1  
-    EOR #7              ; PAL_white
-    .palloop2
-    STA &FE21
-    ADC #&10
-    BMI palloop2
-
-    RTS
-}
-
-
-.beeb_plot_reloc_img
-{
-    LDY #0
-    LDA (beeb_readptr), Y
-    STA beeb_numimages              \ can get rid of this var
-
-    \\ Relocate pointers to image data
-    LDX #0
-    .loop
-    INY
-    CLC
-\    LDA (beeb_readptr), Y
-\    ADC #LO(bgtable1)
-\    STA (beeb_readptr), Y
-
-    INY
-    LDA (beeb_readptr), Y
-    SEC
-    SBC beeb_writeptr+1
-    CLC
-    ADC beeb_readptr+1
-    STA (beeb_readptr), Y
-
-    INX
-    CPX beeb_numimages
-    BCC loop
-
-    .return
-    RTS
-}
-
-
-.beeb_shadow_select_main
-{
-    LDA &FE34
-    AND #&FB            ; mask out bit 2
-    STA &FE34
-    RTS
-}
-
-.beeb_shadow_select_aux
-{
-    LDA &FE34
-    ORA #4
-    STA &FE34
-    RTS
-}
-
-
-.Mult8_LO
-FOR n,0,39,1
-x=(n * 7) DIV 8
-EQUB LO(x*8)
-NEXT
-.Mult8_HI
-FOR n,0,39,1
-x=(n * 7) DIV 8
-EQUB HI(x*8)
-NEXT
-.Mult8_REM
-FOR n,0,39,1
-x=(n * 7) MOD 8
-EQUB 8 - x
-NEXT
 
 .beeb_plot_end

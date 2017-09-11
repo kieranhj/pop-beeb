@@ -15,6 +15,7 @@ static int pixel_size[256][2];
 static unsigned char pixels[256][10000];
 
 static unsigned char colours[256][10000];
+static int colour_width[256];
 
 static int total_colours[7];
 
@@ -28,6 +29,8 @@ static int total_colours[7];
 #define WHITE1 7
 
 #define GET_16BIT(ptr)	(*(ptr) + *(ptr+1)*256)
+#define LO(val)			((int)(val) & 0xff)
+#define HI(val)			(((int)(val) >> 8) & 0xff)
 
 unsigned char palette[8][3] = 
 {
@@ -129,7 +132,30 @@ void flip_pixels_in_y(unsigned char *pixel_data, int pixel_width, int pixel_heig
 	}
 }
 
-void convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool invert)
+int calc_image_width_from_colour(unsigned char *colour_data, int pixel_width, int pixel_height)
+{
+	int colour_width = pixel_width;
+
+	for (int x = pixel_width - 1; x >= 0; x--)
+	{
+		int y;
+
+		for (y = 0; y < pixel_height; y++)
+		{
+			if (colour_data[y*pixel_width + x] != BLACK0 && colour_data[y*pixel_width + x] != BLACK1)
+				break;
+		}
+
+		if (y == pixel_height)
+			colour_width--;
+		else
+			break;
+	}
+
+	return colour_width;
+}
+
+int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool invert)
 {
 	for (int y = 0; y < pixel_height; y++)
 	{
@@ -159,40 +185,87 @@ void convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pi
 			total_colours[colour_data[y*pixel_width + x]]++;
 		}
 	}
+
+	return calc_image_width_from_colour(colour_data, pixel_width, pixel_height);
 }
 
-int convert_colour_to_mode1(unsigned char *colour_data, int pixel_width, int pixel_height)
+int convert_colour_to_mode1(unsigned char *colour_data, int colour_width, int pixel_height)
 {
-	int pixel_pitch = pixel_width;
-
-	for (int x = pixel_pitch - 1; x >= 0; x--)
-	{
-		int y;
-
-		for (y = 0; y < pixel_height; y++)
-		{
-			if (colour_data[y*pixel_pitch + x] != BLACK0 && colour_data[y*pixel_pitch + x] != BLACK1)
-				break;
-		}
-
-		if (y == pixel_height)
-			pixel_width--;
-	}
-
-	int mode1_width = (pixel_width + 3) / 4;
+	int mode1_width = (colour_width + 3) / 4;
 	int mode1_height = pixel_height;
+
 	int mode1_bytes = mode1_width * mode1_height;
 
-	printf("%d x %d = %d bytes, %d x %d pixels\n", mode1_width, mode1_height, mode1_bytes, pixel_width, pixel_height);
+	printf("%d x %d = %d bytes, %d x %d colour pixels\n", mode1_width, mode1_height, mode1_bytes, colour_width, pixel_height);
 
-	return mode1_bytes;
+	return mode1_bytes + 4;
+}
+
+int get_pixel(unsigned char *pixel_data, int pixel_width, int pixel_height, int x, int y)
+{
+	if (x < 0 || x >= pixel_width || y < 0 || y >= pixel_height)
+		return 0;
+
+	return pixel_data[y * pixel_width + x];
+}
+
+int convert_colour_to_mode4(unsigned char *colour_data, int colour_width, int pixel_height)
+{
+	int mode4_width = (colour_width + 7) / 8;
+	int mode4_height = pixel_height;
+
+	int mode4_bytes = mode4_width * mode4_height;
+
+	printf("%d x %d = %d bytes, %d x %d non-black pixels\n", mode4_width, mode4_height, mode4_bytes, colour_width, pixel_height);
+
+	return mode4_bytes + 4;
+}
+
+int convert_pixels_to_mode4(unsigned char *pixel_data, int pixel_width, int pixel_height, int colour_width, unsigned char *beebptr)
+{
+	// In this case colour_width is <= pixel_width
+
+	int mode4_width = (colour_width + 7) / 8;
+	int mode4_height = pixel_height;
+
+	int mode4_bytes = mode4_width * mode4_height;
+
+	unsigned char *temp = beebptr;
+
+	if (beebptr)
+	{
+		*beebptr++ = mode4_width;
+		*beebptr++ = mode4_height;
+
+		for (int x8 = 0; x8 < mode4_width; x8++)
+		{
+			for (int y = 0; y < mode4_height; y++)
+			{
+				unsigned char beebbyte = 0;
+				
+				for (int p = 0; p < 8; p++)
+				{
+					if( get_pixel(pixel_data, pixel_width, pixel_height, x8 * 8 + p, y) & 0x3 )
+						beebbyte |= 1 << (7 - p);
+				}
+
+				*beebptr++ = beebbyte;
+			}
+		}
+	}
+
+	return 2 + mode4_bytes;
 }
 
 int main(int argc, char **argv)
 {
 	cimg_usage("POP asset convertor.\n\nUsage : pop2beeb [options]");
 	const char *const inputname = cimg_option("-i", (char*)0, "Input filename");
+	const char *const outputname = cimg_option("-o", (char*)0, "Output filename");
+	const int mode = cimg_option("-mode", 4, "BBC MODE number");
 	const bool test = cimg_option("-test", false, "Save test images");
+	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
+
 
 	if (cimg_option("-h", false, 0)) std::exit(0);
 	if (inputname == NULL)  std::exit(0);
@@ -206,6 +279,8 @@ int main(int argc, char **argv)
 	FILE *parity = fopen(parityfile, "rb");
 
 	fread(imagetab, 1, 10 * 1024, input);				// forgotten how to file length of file!
+	fclose(input);
+	input = NULL;
 
 	int num_images = imagetab[0];
 
@@ -254,7 +329,10 @@ int main(int argc, char **argv)
 
 		printf("Image %d: %d x %d = %d bytes, %d x %d pixels\n", i, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1]);
 
-		flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
+		if( flip )
+		{
+			flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
+		}
 		
 		bool invert = 0;
 
@@ -263,7 +341,7 @@ int main(int argc, char **argv)
 			invert = fgetc(parity) == '1' ? 1 : 0;
 		}
 
-		convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], invert);
+		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], invert);
 	}
 
 	printf("Total bytes = %d\n", total_bytes);
@@ -306,18 +384,71 @@ int main(int argc, char **argv)
 		img.save(testname);
 	}
 
-	int total_mode1 = 0;
+	int total_mode1 = 3;		// num_images + free ptr
+	int total_mode4 = 3;
 
 	for (int i = 0; i < num_images; i++)
 	{
 		printf("Image[%d]: MODE1=", i);
-		total_mode1 += convert_colour_to_mode1(colours[i], pixel_size[i][0], pixel_size[i][1]);
+		total_mode1 += convert_colour_to_mode1(colours[i], colour_width[i], pixel_size[i][1]);
+
+		printf("Image[%d]: MODE4=", i);
+		total_mode4 += convert_colour_to_mode4(colours[i], colour_width[i], pixel_size[i][1]);
 	}
 
-	printf("Total MODE1 bytes = %d\n", total_mode1);
-	printf("Size increase = %f%%\n", 100.0f * total_mode1 / (float)total_bytes);
+	printf("Original Apple bytes = %d\n", total_bytes);
 
-	fclose(input);
+	printf("Total MODE1 bytes = %d\n", total_mode1);
+	printf("Size vs Apple = %f%%\n", 100.0f * total_mode1 / (float)total_bytes);
+
+	printf("Total MODE4 bytes = %d\n", total_mode4);
+	printf("Size vs Apple = %f%%\n", 100.0f * total_mode4 / (float)total_bytes);
+
+	if (outputname)
+	{
+		FILE *output = fopen(outputname, "wb");
+		
+		if (output)
+		{
+			unsigned char *beebdata = (unsigned char*)malloc(total_mode4 + num_images * 4 + 3);
+			unsigned char *beebptr = beebdata;
+
+			*beebptr++ = num_images;
+			for (int i = 0; i < num_images; i++)
+			{
+				*beebptr++ = 0xff;
+				*beebptr++ = 0xff;		// don't know pointers yet
+			}
+			*beebptr++ = 0xff;
+			*beebptr++ = 0xff;			// don't know free yet
+
+			// Write Beeb data
+
+			for (int i = 0; i < num_images; i++)
+			{
+				// Now we know our address
+
+				beebdata[1 + i * 2] = LO(beebptr - beebdata);
+				beebdata[2 + i * 2] = HI(beebptr - beebdata);
+
+				int bytes_written = convert_pixels_to_mode4(pixels[i], pixel_size[i][0], pixel_size[i][1], colour_width[i], beebptr);
+
+				beebptr += bytes_written;
+			}
+
+			// Write free address
+
+			beebdata[1 + num_images * 2] = LO(beebptr - beebdata);
+			beebdata[2 + num_images * 2] = HI(beebptr - beebdata);
+
+			// Write file
+
+			fwrite(beebdata, 1, beebptr - beebdata, output);
+			fclose(output);
+			output = NULL;
+		}
+	}
+
 	if (parity)
 		fclose(parity);
 		

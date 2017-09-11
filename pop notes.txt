@@ -635,3 +635,53 @@ Assemble in 3 parts:
 core = &E00 -  &3000
 main = &3000 - &8000
 aux (shadow) = &3000 - &8000
+
+
+7/9/2017 Plotting needs to be addressed
+~~~
+Game runs at 1 fps without "advanced" plot functions
+Even "fast" plot routine is doing 2x shift operations per pixel before considering any memory access
+This is always going to be incredibly slow
+
+We have plenty of memory for lookup tables and don't need the ones used by Apple hires module
+Suggest think about a direct lookup of Apple 7 bits to Beeb byte in 8 possible shifts
+
+Apple II already has this SHIFTx and CARRYx = 128 x 7 x 2 = &700 bytes (7 pages)
+Might need to think about multiplying this by 8 for Beeb?! 56 pages = &3800 (14k)
+Unlikely to have this much RAM...  Or maybe have double lookup.
+
+Alternatively convert Apple II data into Beeb screen format and arrange in column order
+
+Start with the simple case of plotting to Apple byte alignment (7 pixels) and what tables needed from there
+Ideally want to loop:
+
+Start with existing Beeb screen byte
+Load apple data byte = 7 bits (pixels back to front)
+Convert to Beeb screen format with look up table
+Shift those pixels right by N pixels with look up
+Mask into Beeb screen byte
+Write byte to screen
+Lookup pixels carried by shift as existing screen byte
+Calculate new shift
+
+This is basically what PoP does already but with an extra conversion lookup
+Addressing conversion required as well
+Can read sprite data sequentially most easily
+Means incrementing write index Y by 8 each time (8c)
+
+Shifts are always sequential 0, 7, 6, 5, 4, 3, 2, 1
+Could setup ZP vars to point at various tables then increment the code
+LDA (&70), Y becomes LDA (&72), Y etc.
+Also LDA (&70,X)
+Can also use CMOS instructions don't forget! BRA, STZ, DEC A, INC A, PHX/Y etc.
+
+What is the max width & height of the sprites?
+MODE 4 data is always going to be smaller than Apple II data as 8ppb not 7ppb
+This is not true with MODE 1 or MODE 2 sprites!
+
+With Beeb 8 pixel aligned data the shift is constant between bytes plotted
+Particularly if plotting in column order...
+
+We have pop2beeb that will parse the image files already!
+Keep the same data format just rearrange the data into Beeb MODE 4 screen format
+Bake these out ahead of time.  Worry about colour sprites later!

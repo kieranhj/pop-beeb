@@ -94,61 +94,36 @@
 \*
 \*-------------------------------
 
-IF 0
 .hires_CLS
 {
- lda PAGE ;00 = page 1; 20 = page 2
- clc
- adc #$20
- sta loop+2
- adc #$10
- sta smod+2
-
- lda #$80 ;black2
-
- ldx #$10
-
- ldy #0
-
-.loop sta $2000,y
-.smod sta $3000,y
- iny
- bne loop
-
- inc loop+2
- inc smod+2
-
- dex
- bne loop
-
- rts
+ BRK
+\ NOT BEEB
+\ lda PAGE ;00 = page 1; 20 = page 2
+\ clc
+\ adc #$20
+\ sta loop+2
+\ adc #$10
+\ sta smod+2
+\
+\ lda #$80 ;black2
+\
+\ ldx #$10
+\
+\ ldy #0
+\
+\.loop sta $2000,y
+\.smod sta $3000,y
+\ iny
+\ bne loop
+\
+\ inc loop+2
+\ inc smod+2
+\
+\ dex
+\ bne loop
+\
+\ rts
 }
-ELSE
-.beeb_CLS
-{
-\\ Ignore PAGE as no page flipping yet
-\\ Fixed to MODE 1 screen address for now &3000 - &8000
-
-IF BEEB_SCREEN_MODE == 4
-  ldx #&80 - HI(beeb_screen_addr)
-  lda #HI(beeb_screen_addr)
-ELSE
-  ldx #&50
-  lda #&30
-ENDIF
-  sta loop+2
-  lda #0
-  ldy #0
-  .loop
-  sta &3000,Y
-  iny
-  bne loop
-  inc loop+2
-  dex
-  bne loop
-  rts
-}
-ENDIF
 
 \*-------------------------------
 \*
@@ -162,18 +137,20 @@ ENDIF
 
 .hires_LRCLS
 {
- LDY #$F7
-.label_2 STA $400,Y
- STA $500,Y
- STA $600,Y
- STA $700,Y
- DEY
- CPY #$7F
- BNE label_3
- LDY #$77
-.label_3 CPY #$FF
- BNE label_2
- RTS
+ BRK
+\ NOT BEEB
+\ LDY #$F7
+\.label_2 STA $400,Y
+\ STA $500,Y
+\ STA $600,Y
+\ STA $700,Y
+\ DEY
+\ CPY #$7F
+\ BNE label_3
+\ LDY #$77
+\.label_3 CPY #$FF
+\ BNE label_2
+\ RTS
 }
 
 \*-------------------------------
