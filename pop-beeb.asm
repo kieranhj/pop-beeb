@@ -172,7 +172,7 @@ IF 1
     LDA #0
     STA XCO
 
-    LDA #12
+    LDA #64
     STA YCO
 
     LDA beeb_sprite_no
@@ -550,4 +550,4 @@ PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 ;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
-;PUTBASIC "chkimg.bas", "CHKIMG"
+PUTBASIC "chkimg.bas", "CHKIMG"

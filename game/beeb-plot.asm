@@ -285,12 +285,6 @@ ELSE
 
     \ Convert to Beeb screen layout
 
-    \ Y offset into character row
-
-    LDA YCO
-    AND #&7
-    STA beeb_yoffset
-
     \ Mask off Y offset
 
     LDA YCO
@@ -341,7 +335,10 @@ ELSE
     LDA IMAGE+1
     STA sprite_addr+2
 
-    LDX #0
+    \ Check NULL
+
+    LDA WIDTH
+    BEQ done_y
 
     \ Simple Y clip
     SEC
@@ -349,15 +346,10 @@ ELSE
     SBC HEIGHT
     BCS no_yclip
 
-    EOR #&FF                ; number of lines clips
-    TAX
-
     LDA #LO(-1)
     .no_yclip
     STA smTOP+1
     
-    STX smXINC+1
-
     \ Now in Beeb formt in column order
     \ Ignore shift for now - just plot on Beeb byte alignment
 
@@ -365,18 +357,23 @@ ELSE
 
     \ Store width & height (or just use directly?)
 
-    LDA WIDTH
-    BEQ done_x
-    STA beeb_width
-
-    .xloop
-
     LDA YCO
     STA beeb_height
 
-    LDY beeb_yoffset
+    \ Y offset into character row
+
+    AND #&7
+    TAY
 
     .yloop
+    STY beeb_yoffset
+
+    LDA WIDTH
+    STA beeb_width
+
+    CLC
+
+    .xloop
 
     .sprite_addr
     LDA &FFFF, X            ; now beeb data
@@ -385,13 +382,23 @@ ELSE
 
     INX                     ; next sprite byte
 
-    LDA beeb_height
-    DEC A
-    .smTOP
-    CMP #0
-    BEQ done_y
-    STA beeb_height
+    TYA                     ; next char column [6c]
+    ADC #8    
+    TAY
 
+    DEC beeb_width
+    BNE xloop
+
+    \ Done a row
+
+    LDY beeb_height
+    DEY
+    .smTOP
+    CPY #0
+    BEQ done_y
+    STY beeb_height
+
+    LDY beeb_yoffset
     DEY                     ; next line
     BPL yloop
 
@@ -409,36 +416,6 @@ ELSE
     BNE yloop
 
     .done_y
-
-    \ Clip top
-    CLC
-    TXA
-    .smXINC
-    ADC #0
-    TAX 
-
-    \ Done a column
-
-    DEC beeb_width
-    BEQ done_x
-
-    \ Reset write pointer to start + one row
-
-    CLC
-    LDA beeb_readptr
-    ADC #8
-    STA beeb_readptr
-    STA beeb_writeptr
-    LDA beeb_readptr+1
-    ADC #0
-    STA beeb_readptr+1
-    STA beeb_writeptr+1
-
-    \ Next column
-
-    JMP xloop
-
-    .done_x
 
     .return
     RTS

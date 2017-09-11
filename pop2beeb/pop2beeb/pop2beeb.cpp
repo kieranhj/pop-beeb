@@ -237,9 +237,9 @@ int convert_pixels_to_mode4(unsigned char *pixel_data, int pixel_width, int pixe
 		*beebptr++ = mode4_width;
 		*beebptr++ = mode4_height;
 
-		for (int x8 = 0; x8 < mode4_width; x8++)
+		for (int y = 0; y < mode4_height; y++)
 		{
-			for (int y = 0; y < mode4_height; y++)
+			for (int x8 = 0; x8 < mode4_width; x8++)
 			{
 				unsigned char beebbyte = 0;
 				
