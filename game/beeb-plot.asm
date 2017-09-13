@@ -306,8 +306,25 @@ ELSE
 
     \ Look up Beeb shift start
 
-    LDA Mult8_REM,X
+    LDA Mult8_MOD,X
     STA beeb_rem
+
+    TAX
+    LDA SHIFTL,X
+    STA smSHIFT+1
+    LDA SHIFTH,X
+    STA smSHIFT+2
+
+    LDA CARRYL,X
+    STA smCARRY+1
+    LDA CARRYH,X
+    STA smCARRY+2
+
+    LDA CARRY_MASK, X
+    STA smCARRY_MASK+1
+
+    LDA SHIFT_MASK, X
+    STA smSHIFT_MASK+1
 
     \ Switch blend mode
 
@@ -316,17 +333,18 @@ ELSE
     bcc in_range
     BRK                 ; means our OPACITY is out of range
     .in_range
-\    cpx #enum_sta
-\    bne not_sta
-\
-\    \ Force hack ORA for MODE 4
-\    ldx #enum_ora
+    cpx #enum_sta
+    bne not_sta
+
+    \ Force hack ORA for MODE 4
+    ldx #enum_ora
     .not_sta
 
     \ Self-mod code
 
     lda OPCODE,x
     sta smod
+    sta smod2
 
     \ Set sprite data address 
 
@@ -371,12 +389,34 @@ ELSE
     LDA WIDTH
     STA beeb_width
 
+    \ Initialise carry with byte from screen masked appropriately
+    .smCARRY_MASK
+    LDA #0
+    AND (beeb_writeptr), Y
+    STA beeb_next_carry
+
     CLC
 
     .xloop
+    STY beeb_temp_y
+
+    LDA beeb_next_carry
+    STA beeb_carry
 
     .sprite_addr
     LDA &FFFF, X            ; now beeb data
+
+    TAY
+    .smCARRY
+    LDA &FFFF, Y            ; carry N
+    STA beeb_next_carry
+
+    .smSHIFT
+    LDA &FFFF, Y            ; shift N
+    ORA beeb_carry
+
+    LDY beeb_temp_y
+
     .smod ORA (beeb_writeptr), Y
     STA (beeb_writeptr), Y
 
@@ -388,6 +428,19 @@ ELSE
 
     DEC beeb_width
     BNE xloop
+
+    \ Flush the carry
+
+    .smSHIFT_MASK
+    LDA #0
+    AND (beeb_writeptr), Y
+    ORA beeb_next_carry
+\    ora (beeb_writeptr),y   ; always ORA last byte because of 7 vs 8 pixel alignment?
+    \ Needs to also have the operand mod
+    .smod2 ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    .no_carry_pixels
 
     \ Done a row
 
@@ -558,6 +611,11 @@ NEXT
 FOR n,0,39,1
 x=(n * 7) MOD 8
 EQUB 8 - x
+NEXT
+.Mult8_MOD
+FOR n,0,39,1
+x=(n * 7) MOD 8
+EQUB x
 NEXT
 
 \*-------------------------------

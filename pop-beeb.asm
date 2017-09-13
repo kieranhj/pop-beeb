@@ -158,7 +158,7 @@ INCLUDE "lib/print.asm"
 
     \\ Remain in AUX...
 
-IF 1
+IF 0
     LDX #1
     STX level
     JSR LoadLevelX
@@ -169,10 +169,11 @@ IF 1
     STA beeb_sprite_no
 
     .sprite_loop
-    LDA #0
+    LDA beeb_sprite_no
+    AND #&1F
     STA XCO
 
-    LDA #64
+    LDA #127
     STA YCO
 
     LDA beeb_sprite_no
@@ -207,7 +208,7 @@ ENDIF
 
 IF 1
     \\ Level load & plot test
-    LDX #1
+    LDX #5
 
     .level_loop
     STX level
@@ -339,12 +340,11 @@ PRINT "Main code & data size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
 PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
-
 ; (screen buffers)
-SKIP BEEB_SCREEN_SIZE           ; this doesn't actually match beeb_screen_addr just used for RAM size tracking
 
 ; Main RAM stats
 PRINT "Screen buffer address = ", ~beeb_screen_addr
+PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
 PRINT "Main RAM free = ", ~(MAIN_TOP - P%)
 
 \*-------------------------------

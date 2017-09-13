@@ -685,3 +685,48 @@ Particularly if plotting in column order...
 We have pop2beeb that will parse the image files already!
 Keep the same data format just rearrange the data into Beeb MODE 4 screen format
 Bake these out ahead of time.  Worry about colour sprites later!
+
+
+Plot at Apple byte 1 - pixel pos 7
+Rem=7
+
+; byte 0
+LDA screen
+AND b0
+ORA shift>>7
+STA screen
+
+LDA screen+8
+AND b7-b1
+ORA carry>>7
+STA screen+8
+
+; byte1
+LDA screen+8
+AND b0
+ORA shift>>7
+STA screen
+
+
+; no mask
+LDX sprite
+LDA shift, X
+ORA carry
+STA screen
+LDA carry, X
+
+Is there any way to arrange the data so using one index for both sprite & screen?  :\
+
+Still need to ORA always becuase 8ppb means that a typical 28 pixel wide bg tile is 4x beeb bytes
+= 32 pixels.  So have 4 pixels extra at the end which we never want to plot to the screen.
+
+Eeek!  And level 5 starts to go to crap.  Think this is because there is a genuine bg tile > 255 bytes
+Largest genuine tile is 6 Apple bytes wide = 42 pixels
+
+Width in Beeb bytes = width in Apple bytes up to 42 pixels (<=8 Apple bytes)
+For each byte in width, don't want to attempt to plot 'width' number of bits at the end
+
+A sprite that is "width" bytes wide can span width or width+1 bytes on screen
+Check how hires plot fn handles this?  Writes carry over byte to screen with BMASK as expected
+
+Ponder: create individual functions for plotting sprites of width 1/2/3/4/5/6/7 to handle left over bits?
