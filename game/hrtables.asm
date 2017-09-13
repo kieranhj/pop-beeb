@@ -467,11 +467,77 @@ NEXT
  EQUB (&FF >> n) EOR &FF
  NEXT
 
+.CARRY_MASK1
+ FOR n,0,7,1
+ EQUB (&FE >> n) EOR &FF
+ NEXT
+
+\ Don't need carry masks above 1 as > 7 bits
+
  .SHIFT_MASK
  FOR n,0,7,1
  EQUB LO(&FF >> n)
  NEXT
 
+.SHIFT_MASK1
+ FOR n,0,7,1
+ EQUB LO(&1FF >> n)
+ NEXT
+
+.SHIFT_MASK2
+ FOR n,0,7,1
+ EQUB LO(&3FF >> n)
+ NEXT
+
+.SHIFT_MASK3
+ FOR n,0,7,1
+ EQUB LO(&7FF >> n)
+ NEXT
+
+.SHIFT_MASK4
+ FOR n,0,7,1
+ EQUB LO(&FFF >> n)
+ NEXT
+
+.SHIFT_MASK5
+ FOR n,0,7,1
+ EQUB LO(&1FFF >> n)
+ NEXT
+
+.SHIFT_MASK6
+ FOR n,0,7,1
+ EQUB LO(&3FFF >> n)
+ NEXT
+
+.SPECIAL_MASK1
+FOR n,0,7,1
+EQUB LO((&7F << 1) >> n) EOR &FF
+NEXT
+
+.SPECIAL_MASK2
+FOR n,0,7,1
+EQUB LO((&FF << 2) >> n) EOR &FF
+NEXT
+
+.SPECIAL_MASK3
+FOR n,0,7,1
+EQUB LO((&FF << 3) >> n) EOR &FF
+NEXT
+
+.SPECIAL_MASK4
+FOR n,0,7,1
+EQUB LO((&FF << 4) >> n) EOR &FF
+NEXT
+
+.SPECIAL_MASK5
+FOR n,0,7,1
+EQUB LO((&FF << 5) >> n) EOR &FF
+NEXT
+
+.SPECIAL_MASK6
+FOR n,0,7,1
+EQUB LO((&FF << 6) >> n) EOR &FF
+NEXT
 
 \*-------------------------------
 \*

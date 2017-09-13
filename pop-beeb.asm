@@ -179,10 +179,10 @@ IF 0
     LDA beeb_sprite_no
     STA IMAGE
 
-    LDA #LO(bgtable1)
+    LDA #LO(bgtable2)
     STA TABLE
 
-    LDA #HI(bgtable1)
+    LDA #HI(bgtable2)
     STA TABLE+1
 
     LDA #0
@@ -208,7 +208,7 @@ ENDIF
 
 IF 1
     \\ Level load & plot test
-    LDX #5
+    LDX #1
 
     .level_loop
     STX level

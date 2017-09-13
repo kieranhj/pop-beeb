@@ -647,12 +647,14 @@ ENDIF
  sta YCO
 
  lda fgOP,x ;opacity
+ \ BEEB TEMP moved this here so enum_mask OPACITY gets passed through
+ sta OPACITY ;fastlay for everything else
  cmp #enum_mask
  bne label_1
  jsr fastmask
  jmp cont
 
-.label_1 sta OPACITY ;fastlay for everything else
+.label_1 
  jsr fastlay
 
 .cont ldx index

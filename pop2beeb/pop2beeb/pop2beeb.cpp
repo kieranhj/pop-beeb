@@ -224,8 +224,9 @@ int convert_colour_to_mode4(unsigned char *colour_data, int colour_width, int pi
 int convert_pixels_to_mode4(unsigned char *pixel_data, int pixel_width, int pixel_height, int colour_width, unsigned char *beebptr)
 {
 	// In this case colour_width is <= pixel_width
+	// Now not using colour_width
 
-	int mode4_width = (colour_width + 7) / 8;
+	int mode4_width = (pixel_width + 7) / 8;
 	int mode4_height = pixel_height;
 
 	int mode4_bytes = mode4_width * mode4_height;
@@ -389,11 +390,17 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < num_images; i++)
 	{
-		printf("Image[%d]: MODE1=", i);
-		total_mode1 += convert_colour_to_mode1(colours[i], colour_width[i], pixel_size[i][1]);
+		if (mode == 1)
+		{
+			printf("Image[%d]: MODE1=", i);
+			total_mode1 += convert_colour_to_mode1(colours[i], colour_width[i], pixel_size[i][1]);
+		}
 
-		printf("Image[%d]: MODE4=", i);
-		total_mode4 += convert_colour_to_mode4(colours[i], colour_width[i], pixel_size[i][1]);
+		if ( mode == 4)
+		{
+			printf("Image[%d]: MODE4=", i);
+			total_mode4 += convert_colour_to_mode4(colours[i], pixel_size[i][0], pixel_size[i][1]);
+		}
 	}
 
 	printf("Original Apple bytes = %d\n", total_bytes);

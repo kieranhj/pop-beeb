@@ -730,3 +730,12 @@ A sprite that is "width" bytes wide can span width or width+1 bytes on screen
 Check how hires plot fn handles this?  Writes carry over byte to screen with BMASK as expected
 
 Ponder: create individual functions for plotting sprites of width 1/2/3/4/5/6/7 to handle left over bits?
+
+Simple case that goes wrong (still)
+Plot at XC0=16 (5th bg piece)  pixel pos = 112 which is Beeb byte aligned
+Plot 4 Apple byte width tile (28 pixels) means plotting 4 Beeb bytes no carry over
+Need to do carryover masking on last byte plotted not just carry over to +1 byte
+Because Beeb bytes are wider than Apple bytes
+Apple can always assume a carry over which may be 0 when shift = 0
+
+If shift < width then loop width - 1 times?  Would have to make next_carry 
