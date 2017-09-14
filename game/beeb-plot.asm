@@ -73,11 +73,11 @@
     .label_1 cmp #enum_mask
     bcc label_2
     
-    \ BEEB TEMP hack enum_mask to be enum_ora
-    LDA #enum_ora
-    STA OPACITY
+\    \ BEEB TEMP hack enum_mask to be enum_ora
+\    LDA #enum_ora
+\    STA OPACITY
 
-;    jmp LayMask
+    jmp beeb_plot_apple_mode_4_mask
 ;
     .label_2
 ;    jmp LayGen
@@ -117,6 +117,7 @@
     \ Look up Beeb screen address
 
     LDX XCO
+
     CLC
     LDA Mult8_LO,X
     ADC YLO, Y
@@ -127,12 +128,10 @@
     STA beeb_writeptr+1
     STA beeb_readptr+1
 
-    \ Look up Beeb shift start
-
     LDA Mult8_MOD,X
     STA beeb_rem
 
-    \ Can add in OFFSET here?  Probably higher up actually - add to XCO
+    \ Complicated SHIFT and CARRY tables :S
   
     TAX
     LDA SHIFTL,X
@@ -361,6 +360,306 @@
     RTS
 }
 
+
+.beeb_plot_apple_mode_4_mask
+{
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    CMP #4
+    BCC slot_set
+    BRK                 ; swram slot for sprite not set!
+    .slot_set
+    JSR swr_select_slot
+
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
+
+    \ Check NULL sprite
+
+    LDA WIDTH
+    BNE width_ok
+    JMP return
+    .width_ok
+    STA beeb_temp_width
+
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+    
+    \ Look up Beeb screen address
+
+    LDX XCO
+    CLC
+    LDA Mult8_LO,X
+    ADC YLO, Y
+    STA beeb_writeptr
+    STA beeb_readptr
+    LDA Mult8_HI,X
+    ADC YHI, Y
+    STA beeb_writeptr+1
+    STA beeb_readptr+1
+
+    \ Look up Beeb shift start
+
+    LDA Mult8_MOD,X
+    STA beeb_rem
+
+    \ Can add in OFFSET here?  Probably higher up actually - add to XCO
+  
+    TAX
+    LDA SHIFTL,X
+    STA smSHIFT+1
+    STA smSHIFT2+1
+    LDA SHIFTH,X
+    STA smSHIFT+2
+    STA smSHIFT2+2
+
+    LDA CARRYL,X
+    STA smCARRY+1
+    LDA CARRYH,X
+    STA smCARRY+2
+
+    LDA CARRY_MASK, X
+    STA smCARRY_MASK+1
+
+    CPX #1
+    BNE shift_not_1
+    
+    \ Shift 1 special case
+    LDA CARRY_MASK1, X
+    STA smCARRY_MASK+1
+
+    .shift_not_1
+
+    CPX WIDTH
+    BCS width_plus_carryover
+
+    \ Shift < Width special case
+
+    DEC beeb_temp_width
+    \ sm=(&FF<<W)>>S
+
+    \ Special MASK derived from WIDTH
+    LDA beeb_temp_width
+    ASL A: ASL A: ASL A     ; x8
+    CLC
+    ADC #LO(SPECIAL_MASK1)
+    STA special_mask_read+1
+    LDA #HI(SPECIAL_MASK1)
+    ADC #0
+    STA special_mask_read+2
+
+    .special_mask_read
+    LDA SPECIAL_MASK1, X
+    STA smSHIFT_MASK+1
+
+    JMP switch_blend
+
+    .width_plus_carryover
+
+    \ Shift MASK derived from WIDTH
+    LDA WIDTH
+    ASL A: ASL A: ASL A     ; x8
+    CLC
+    ADC #LO(SHIFT_MASK)
+    STA shift_mask_read+1
+    LDA #HI(SHIFT_MASK)
+    ADC #0
+    STA shift_mask_read+2
+
+    .shift_mask_read
+    LDA SHIFT_MASK, X
+    STA smSHIFT_MASK+1
+
+    \ Switch blend mode
+    .switch_blend
+
+    ldx OPACITY ;hi bit off!
+
+    \ Self-mod code
+
+    lda OPCODE,x
+    sta smod
+    sta smod2
+
+    \ Set sprite data address 
+
+    LDA IMAGE
+    STA sprite_addr+1
+    STA sprite_addr2+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+    STA sprite_addr2+2
+
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+
+    LDA #LO(-1)
+    .no_yclip
+    STA smTOP+1
+    
+    \ Now in Beeb formt in column order
+    \ Ignore shift for now - just plot on Beeb byte alignment
+
+    LDX #0                  ; index sprite data
+
+    \ Store width & height (or just use directly?)
+
+    LDA YCO
+    STA beeb_height
+
+    \ Y offset into character row
+
+    AND #&7
+    TAY
+
+    .yloop
+    STY beeb_yoffset
+
+    \ Initialise carry with byte from screen masked appropriately
+    .smCARRY_MASK
+    LDA #0
+    AND (beeb_writeptr), Y
+    STA beeb_next_carry
+
+    LDA beeb_temp_width
+    BEQ done_x              ; nothing to do!
+    STA beeb_width
+
+    CLC
+
+    .xloop
+    STY beeb_temp_y
+
+    LDA beeb_next_carry
+    STA beeb_carry
+
+    .sprite_addr
+    LDY &FFFF, X            ; now beeb data
+    INX                     ; next sprite byte
+
+    .smCARRY
+    LDA &FFFF, Y            ; carry N
+    STA beeb_next_carry
+
+    .smSHIFT
+    LDA &FFFF, Y            ; shift N
+    ORA beeb_carry
+
+    \\ Now have a byte to write
+    STA imbyte
+
+    \\ Convert it into a mask
+    TAY
+    LDA MASKTAB, Y
+
+    LDY beeb_temp_y
+    AND (beeb_writeptr), Y  ; mask screen byte
+    ORA imbyte      ; merge image byte
+
+    \\ As before
+
+    .smod ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    TYA                     ; next char column [6c]
+    ADC #8    
+    TAY
+
+    DEC beeb_width
+    BNE xloop
+
+    .done_x
+
+    STY beeb_temp_y
+
+    \ If shift<width
+    LDA WIDTH
+    CMP beeb_temp_width
+    BEQ regular_carry
+
+    \ We had one less loop - need to derive carryover
+    .sprite_addr2
+    LDY &FFFF, X            ; now beeb data
+    INX
+
+    .smSHIFT2
+    LDA &FFFF, Y            ; shift N
+    ORA beeb_next_carry
+    STA beeb_next_carry   
+
+    LDY beeb_temp_y
+    .regular_carry
+
+    \ Flush the carry over
+
+    .smSHIFT_MASK
+    LDA #0
+    CMP #&FF
+    BEQ no_carryover
+
+    AND (beeb_writeptr), Y
+    STA imbyte      ; actually screen byte
+
+    \ Convert byte to mask
+    LDY beeb_next_carry
+    LDA MASKTAB, Y
+
+    LDY beeb_temp_y
+    AND (beeb_writeptr), Y  ; mask screen byte
+    ORA imbyte      ; merge image byte
+
+    \ Needs to also have the operand mod
+    .smod2 ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    .no_carryover
+
+    \ Done a row
+
+    LDY beeb_height
+    DEY
+    .smTOP
+    CPY #0
+    BEQ done_y
+    STY beeb_height
+
+    LDY beeb_yoffset
+    DEY                     ; next line
+    BPL yloop
+
+    \ Need to move up a char row
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr+1
+
+    LDY #7
+    JMP yloop
+
+    .done_y
+
+    .return
+    RTS
+}
+
+
 IF 0
 \ Plot sprite 1 Apple byte wide (7 pixels)
 \ Depending on shift it may cover 1 or 2 Beeb screen bytes
@@ -530,6 +829,51 @@ ENDIF
 
 
 \*-------------------------------
+; Beeb screen multiplication tables
+
+IF 0
+.Mult7_LO
+FOR n,0,39,1
+EQUB LO(n*7)
+NEXT
+.Mult7_HI
+FOR n,0,39,1
+EQUB HI(n*7)
+NEXT
+.Div8_LO
+FOR n,0,279,1
+EQUB LO(n DIV 8)
+NEXT
+.Mod8_LO
+FOR n,0,279,1
+EQUB LO(n MOD 8)
+NEXT
+ENDIF
+.Mult8_LO
+FOR n,0,39,1
+x=(n * 7) DIV 8
+EQUB LO(x*8)
+NEXT
+.Mult8_HI
+FOR n,0,39,1
+x=(n * 7) DIV 8
+EQUB HI(x*8)
+NEXT
+IF 0
+.Mult8_REM
+FOR n,0,39,1
+x=(n * 7) MOD 8
+EQUB 8 - x
+NEXT
+ENDIF
+.Mult8_MOD
+FOR n,0,39,1
+x=(n * 7) MOD 8
+EQUB x
+NEXT
+
+
+\*-------------------------------
 \*
 \* These functions should be moved to a separate non-plot Beeb module
 \*
@@ -647,30 +991,6 @@ ENDIF
     STA &FE34
     RTS
 }
-
-\*-------------------------------
-; Beeb screen multiplication tables
-
-.Mult8_LO
-FOR n,0,39,1
-x=(n * 7) DIV 8
-EQUB LO(x*8)
-NEXT
-.Mult8_HI
-FOR n,0,39,1
-x=(n * 7) DIV 8
-EQUB HI(x*8)
-NEXT
-.Mult8_REM
-FOR n,0,39,1
-x=(n * 7) MOD 8
-EQUB 8 - x
-NEXT
-.Mult8_MOD
-FOR n,0,39,1
-x=(n * 7) MOD 8
-EQUB x
-NEXT
 
 
 \*-------------------------------

@@ -191,6 +191,9 @@ IF 0
     LDA #2
     STA OPACITY
 
+\    LDA #0
+\    STA OFFSET
+
     JSR beeb_plot_apple_mode_4
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
