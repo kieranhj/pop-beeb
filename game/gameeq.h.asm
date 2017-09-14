@@ -319,6 +319,7 @@ VertDist = 11
 UseFastlay = 0
 UseLay = 1
 UseLayrsave = 2
+UseCharTable = $80
 
 TypeKid = 0
 TypeShad = 1

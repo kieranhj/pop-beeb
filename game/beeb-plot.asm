@@ -588,12 +588,8 @@
     LDA MASKTAB, Y
 
     LDY beeb_temp_y
-    AND (beeb_writeptr), Y  ; mask screen byte
+    .smod AND (beeb_writeptr), Y  ; mask screen byte
     ORA imbyte      ; merge image byte
-
-    \\ As before
-
-    .smod ORA (beeb_writeptr), Y
     STA (beeb_writeptr), Y
 
     TYA                     ; next char column [6c]
@@ -633,18 +629,15 @@
     BEQ no_carryover
 
     AND (beeb_writeptr), Y
-    STA imbyte      ; actually screen byte
+    STA (beeb_writeptr), Y      ; actually screen byte
 
     \ Convert byte to mask
     LDY beeb_next_carry
     LDA MASKTAB, Y
 
     LDY beeb_temp_y
-    AND (beeb_writeptr), Y  ; mask screen byte
-    ORA imbyte      ; merge image byte
-
-    \ Needs to also have the operand mod
-    .smod2 ORA (beeb_writeptr), Y
+    .smod2 AND (beeb_writeptr), Y  ; mask screen byte
+    ORA beeb_next_carry      ; merge image byte
     STA (beeb_writeptr), Y
 
     .no_carryover

@@ -454,7 +454,7 @@ ENDIF
  lda #enum_mask
  sta OPACITY
 
- lda #UseLayrsave OR $80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
 
 .return
@@ -471,7 +471,7 @@ ENDIF
  lda #enum_mask
  sta OPACITY
 
- lda #UseLayrsave OR $80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
 }
 
@@ -482,7 +482,7 @@ ENDIF
  lda #enum_eor
  sta OPACITY
 
- lda #UseLayrsave OR $80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
 }
 

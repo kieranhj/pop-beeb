@@ -159,6 +159,8 @@ INCLUDE "lib/print.asm"
     \\ Remain in AUX...
 
 IF 0
+    JSR loadperm
+
     LDX #1
     STX level
     JSR LoadLevelX
@@ -179,16 +181,16 @@ IF 0
     LDA beeb_sprite_no
     STA IMAGE
 
-    LDA #LO(bgtable1)
+    LDA #LO(chtable1)
     STA TABLE
 
-    LDA #HI(bgtable1)
+    LDA #HI(chtable1)
     STA TABLE+1
 
-    LDA #0
+    LDA #BEEB_SWRAM_SLOT_CHTAB13
     STA BANK
 
-    LDA #2
+    LDA #enum_mask
     STA OPACITY
 
     LDA beeb_sprite_no
@@ -216,7 +218,7 @@ IF 0
     RTS
 ENDIF
 
-IF 1
+IF 0
     \\ Level load & plot test
     LDX #1
 
