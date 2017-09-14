@@ -28,8 +28,10 @@ INCLUDE "lib/bbc_utils.h.asm"
 locals = $d0                    ; VDU workspace
 locals_top = $e3
 
+zp_top = &a0
+
 ORG &0
-GUARD locals
+GUARD zp_top
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
 

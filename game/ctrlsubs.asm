@@ -1122,7 +1122,8 @@ ENDIF
 
  lda Fimage
  and #$7f
- ora timebomb ;must be 0!
+\ NOT BEEB
+\ ora timebomb ;must be 0!
  sta FCharImage
 
  rts
