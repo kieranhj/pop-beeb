@@ -391,17 +391,11 @@ NEXT
 .MASKTAB
 FOR byte,0,255,1
 
-b0=byte AND 1
-b1=byte AND 2
-b2=byte AND 4
-b3=byte AND 8
-b4=byte AND 16
-b5=byte AND 32
-b6=byte AND 64
-b7=byte AND 128
+\ Simpler way of providing a 1 pixel mask
+EQUB LO(byte OR byte<<1 OR byte>>1) EOR &FF
 
-
-\ Simpler version:
+\ Potentially use a 2 pixel mask:
+\EQUB LO(byte OR byte<<1 OR byte>>1 OR byte<<2 OR byte>>2) EOR &FF
 
  NEXT
 
