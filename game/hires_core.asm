@@ -49,6 +49,9 @@
 .hires_fastlay
 {
  jsr mainmem
+ \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
  jsr beeb_plot_apple_mode_4
 \ jsr hires_FASTLAY
  jmp auxmem
@@ -71,6 +74,9 @@
 .hires_fastmask
 {
  jsr mainmem
+\ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
  jsr beeb_plot_apple_mode_4
 \ jsr hires_FASTMASK
  jmp auxmem

@@ -179,10 +179,10 @@ IF 0
     LDA beeb_sprite_no
     STA IMAGE
 
-    LDA #LO(bgtable2)
+    LDA #LO(bgtable1)
     STA TABLE
 
-    LDA #HI(bgtable2)
+    LDA #HI(bgtable1)
     STA TABLE+1
 
     LDA #0
@@ -191,8 +191,15 @@ IF 0
     LDA #2
     STA OPACITY
 
-\    LDA #0
-\    STA OFFSET
+    LDA beeb_sprite_no
+    .subloop
+    CMP #7
+    BCC donesub    
+    SEC
+    SBC #7
+    BNE subloop
+    .donesub
+    STA OFFSET
 
     JSR beeb_plot_apple_mode_4
 

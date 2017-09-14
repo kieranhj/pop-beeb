@@ -114,26 +114,41 @@
     AND #&F8
     TAY    
     
-    \ Look up Beeb screen address
+    \ BEEB TEMP
+    LDA OFFSET
+    CMP #7
+    BCC offset_ok
+    BRK
+    .offset_ok    
+
+    \ Look up Beeb screen address w/ OFFSET
 
     LDX XCO
-
     CLC
-    LDA Mult8_LO,X
+    LDA Mult7_LO,X
+    ADC OFFSET
+    STA beeb_readptr            ; temp var LO(xpos)
+    LDA Mult7_HI,X
+    ADC #0
+    STA beeb_readptr+1          ; temp var HI(xpos)
+
+    \ beeb_readptr is now xpos [0-279]
+    LDA beeb_readptr
+    AND #&7
+    STA beeb_rem                ; this is now our shift
+
+    LDA beeb_readptr
+    AND #&F8
+    CLC
     ADC YLO, Y
     STA beeb_writeptr
-    STA beeb_readptr
-    LDA Mult8_HI,X
+    LDA beeb_readptr+1
     ADC YHI, Y
     STA beeb_writeptr+1
-    STA beeb_readptr+1
-
-    LDA Mult8_MOD,X
-    STA beeb_rem
 
     \ Complicated SHIFT and CARRY tables :S
-  
-    TAX
+
+    LDX beeb_rem
     LDA SHIFTL,X
     STA smSHIFT+1
     STA smSHIFT2+1
@@ -395,27 +410,34 @@
     AND #&F8
     TAY    
     
-    \ Look up Beeb screen address
+    \ Look up Beeb screen address w/ OFFSET
 
     LDX XCO
     CLC
-    LDA Mult8_LO,X
+    LDA Mult7_LO,X
+    ADC OFFSET
+    STA beeb_readptr            ; temp var LO(xpos)
+    LDA Mult7_HI,X
+    ADC #0
+    STA beeb_readptr+1          ; temp var HI(xpos)
+
+    \ beeb_readptr is now xpos [0-279]
+    LDA beeb_readptr
+    AND #&7
+    STA beeb_rem                ; this is now our shift
+
+    LDA beeb_readptr
+    AND #&F8
+    CLC
     ADC YLO, Y
     STA beeb_writeptr
-    STA beeb_readptr
-    LDA Mult8_HI,X
+    LDA beeb_readptr+1
     ADC YHI, Y
     STA beeb_writeptr+1
-    STA beeb_readptr+1
 
-    \ Look up Beeb shift start
-
-    LDA Mult8_MOD,X
-    STA beeb_rem
-
-    \ Can add in OFFSET here?  Probably higher up actually - add to XCO
+    \ Complicated SHIFT and CARRY tables :S
   
-    TAX
+    LDX beeb_rem
     LDA SHIFTL,X
     STA smSHIFT+1
     STA smSHIFT2+1
@@ -831,7 +853,6 @@ ENDIF
 \*-------------------------------
 ; Beeb screen multiplication tables
 
-IF 0
 .Mult7_LO
 FOR n,0,39,1
 EQUB LO(n*7)
@@ -840,15 +861,7 @@ NEXT
 FOR n,0,39,1
 EQUB HI(n*7)
 NEXT
-.Div8_LO
-FOR n,0,279,1
-EQUB LO(n DIV 8)
-NEXT
-.Mod8_LO
-FOR n,0,279,1
-EQUB LO(n MOD 8)
-NEXT
-ENDIF
+
 .Mult8_LO
 FOR n,0,39,1
 x=(n * 7) DIV 8
