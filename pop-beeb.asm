@@ -254,7 +254,7 @@ ENDIF
 
 ; Beeb source in CORE
 
-INCLUDE "game/beeb-plot.asm"
+INCLUDE "game/beeb_core.asm"
 
 ; PoP source in CORE memory (always present)
 
@@ -332,6 +332,7 @@ GUARD beeb_screen_addr
 
 INCLUDE "game/hires.asm"
 INCLUDE "game/hrtables.asm"
+INCLUDE "game/beeb-plot.asm"
 
 .pop_beeb_main_end
 
