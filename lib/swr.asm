@@ -104,3 +104,10 @@
 ;    cli
     rts
 }
+
+.swr_select_mos4k
+{
+    LDA #&80
+    STA &fe30
+    RTS
+}

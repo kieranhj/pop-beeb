@@ -43,9 +43,27 @@
 
 \ BEEB TO DO
 \ Use original game ZP variables
-\ Implement offset and clipping etc.
+\ Implement clipping and mirroring
+\ Implement special XOR
+\ Speed it up massively :(
 
 .beeb_plot_start
+
+.beeb_PREPREP
+{
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    CMP #4
+    BCC slot_set
+    BRK                 ; swram slot for sprite not set!
+    .slot_set
+    JSR swr_select_slot
+
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JMP PREPREP
+}
 
 .beeb_plot_apple_mode_4
 {
@@ -82,18 +100,7 @@
     .label_2
 ;    jmp LayGen
 
-    \\ Must have a swram bank to select or assert
-    LDA BANK
-    CMP #4
-    BCC slot_set
-    BRK                 ; swram slot for sprite not set!
-    .slot_set
-    JSR swr_select_slot
-
-    \ Turns TABLE & IMAGE# into IMAGE ptr
-    \ Obtains WIDTH & HEIGHT
-    
-    JSR PREPREP
+    JSR beeb_PREPREP
 
     \ Check NULL sprite
 
@@ -378,18 +385,7 @@
 
 .beeb_plot_apple_mode_4_mask
 {
-    \\ Must have a swram bank to select or assert
-    LDA BANK
-    CMP #4
-    BCC slot_set
-    BRK                 ; swram slot for sprite not set!
-    .slot_set
-    JSR swr_select_slot
-
-    \ Turns TABLE & IMAGE# into IMAGE ptr
-    \ Obtains WIDTH & HEIGHT
-    
-    JSR PREPREP
+    JSR beeb_PREPREP
 
     \ Check NULL sprite
 
@@ -844,6 +840,292 @@ ENDIF
 
 
 \*-------------------------------
+\*
+\*  L A Y E R S A V E
+\*
+\*  In:  Same as for LAY, plus PEELBUF (2 bytes)
+\*  Out: PEELBUF (updated), PEELIMG (2 bytes), PEELXCO, PEELYCO
+\*
+\*  PEELIMG is 2-byte pointer to beginning of image table.
+\*  (Hi byte = 0 means no image has been stored.)
+\*
+\*  PEELBUF is 2-byte pointer to first available byte in
+\*  peel buffer.
+\*
+\*-------------------------------
+
+.beeb_plot_layrsave
+{
+    JSR beeb_PREPREP
+
+    \ OK to page out sprite data now we have dimensions etc.
+
+    \ Select MOS 4K RAM
+    JSR swr_select_mos4k
+
+    lda OPACITY
+    bpl normal
+
+    \ Mirrored
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+
+    .normal
+    inc WIDTH ;extra byte to cover shift right
+
+\ BEEB TO DO
+\    jsr CROP
+\    bmi SKIPIT
+
+    lda PEELBUF ;PEELBUF: 2-byte pointer to 1st
+    sta PEELIMG ;available byte in peel buffer
+    lda PEELBUF+1
+    sta PEELIMG+1
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    \ Look up Beeb screen address
+
+    LDX XCO
+    CLC
+    LDA Mult8_LO,X
+    ADC YLO, Y
+    STA beeb_readptr
+    LDA Mult8_HI,X
+    ADC YHI, Y
+    STA beeb_readptr+1
+
+    \ Ignore clip for now
+    
+    \ Make sprite
+
+    LDY #0
+    LDA WIDTH
+    BNE width_ok
+    JMP SKIPIT
+
+    .width_ok
+    STA (PEELBUF), Y
+    
+    INY
+    LDA HEIGHT
+    STA (PEELBUF), Y
+
+    LDA PEELBUF
+    CLC
+    ADC #2
+    STA peel_addr+1
+    LDA PEELBUF+1
+    ADC #0
+    STA peel_addr+2
+
+    LDX #0                  ; index sprite data
+
+    \ Store width & height (or just use directly?)
+
+    LDA HEIGHT
+    STA beeb_height
+
+    \ Y offset into character row
+
+    LDA YCO
+    AND #&7
+    TAY
+
+    .yloop
+    STY beeb_yoffset
+
+    LDA WIDTH
+    STA beeb_width
+
+    .xloop
+    LDA (beeb_readptr), Y
+
+    \ TEST
+    PHA:LDA #&AA:STA (beeb_readptr), Y:PLA
+
+    .peel_addr
+    STA &FFFF, X
+    INX
+
+    TYA                     ; next char column [6c]
+    ADC #8    
+    TAY
+
+    DEC beeb_width
+    BNE xloop
+    
+    .done_x
+    DEC beeb_height
+    BEQ done
+
+    LDY beeb_yoffset
+    DEY
+    BPL yloop
+
+    SEC
+    LDA beeb_readptr
+    SBC #LO(BEEB_SCREEN_WIDTH)
+    STA beeb_readptr
+    LDA beeb_readptr+1
+    SBC #HI(BEEB_SCREEN_WIDTH)
+    STA beeb_readptr+1
+
+    LDY #7
+    BNE yloop
+    .done
+
+    \ Must update PEELBUF on way out
+    CLC
+    TXA
+    ADC peel_addr+1
+    STA PEELBUF
+    LDA peel_addr+2
+    ADC #0
+    STA PEELBUF+1
+
+    JMP DONE                ; restore vars
+}
+
+\*-------------------------------
+\*
+\*  F A S T L A Y
+\*
+\*  Streamlined LAY routine
+\*
+\*  No offset - no clipping - no mirroring - no masking -
+\*  no EOR - trashes IMAGE - may crash if overtaxed -
+\*  but it's fast.
+\*
+\*  10/3/88: OK for images to protrude PARTLY off top
+\*  Still more streamlined version of FASTLAY (STA only)
+\*
+\*-------------------------------
+
+.beeb_plot_peel
+{
+    RTS
+    
+    \ Select MOS 4K RAM as our sprite bank
+    JSR swr_select_mos4k
+
+    \ NOT beeb_PREPREP as we don't want to select swram here
+    jsr PREPREP
+
+    \ OFFSET IGNORED
+    \ OPACITY IGNORED
+    \ MIRROR IGNORED
+    \ CLIPPING IGNORED
+
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    \ Look up Beeb screen address
+
+    LDX XCO
+    CLC
+    LDA Mult8_LO,X
+    ADC YLO, Y
+    STA beeb_writeptr
+    LDA Mult8_HI,X
+    ADC YHI, Y
+    STA beeb_writeptr+1
+
+    \ Set sprite data address 
+
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+
+    LDA #LO(-1)
+    .no_yclip
+    STA smTOP+1
+
+    \ Store height
+
+    LDA YCO
+    STA beeb_height
+
+    \ Y offset into character row
+
+    AND #&7
+
+    \ Plot loop
+
+    LDX #0          ; data index
+
+    .yloop
+    STY beeb_yoffset
+
+    LDA WIDTH
+    STA beeb_width
+
+    .xloop
+
+    .sprite_addr
+    LDA &FFFF, X
+    INX
+
+    \ TEST
+    LDA #&FF
+    STA (beeb_writeptr), Y
+
+    TYA                     ; next char column [6c]
+    ADC #8    
+    TAY
+
+    DEC beeb_width
+    BNE xloop
+    
+    .done_x
+    LDA beeb_height
+    DEC A
+    .smTOP
+    CMP #0
+    BEQ done_y
+
+    LDY beeb_yoffset
+    DEY
+    BPL yloop
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr+1
+
+    LDY #7
+    BNE yloop
+    .done_y
+
+    RTS
+}
+
+
+\*-------------------------------
 ; Beeb screen multiplication tables
 
 .Mult7_LO
@@ -871,13 +1153,12 @@ FOR n,0,39,1
 x=(n * 7) MOD 8
 EQUB 8 - x
 NEXT
-ENDIF
 .Mult8_MOD
 FOR n,0,39,1
 x=(n * 7) MOD 8
 EQUB x
 NEXT
-
+ENDIF
 
 \*-------------------------------
 ; Clear Beeb screen buffer

@@ -33,9 +33,9 @@
 .zeropeels jmp ZEROPEELS
 .pread BRK      ;jmp PREAD
 \
-.addpeel BRK    ;jmp ADDPEEL
+.addpeel jmp ADDPEEL
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
-.sngpeel BRK    ;jmp SNGPEEL
+.sngpeel jmp SNGPEEL
 .rnd jmp RND
 .cls jmp CLS
 \
@@ -46,7 +46,7 @@
 .fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
-.peel BRK       ;jmp PEEL
+.peel jmp PEEL
 .getwidth jmp GETWIDTH
 .copy2000 BRK   ;jmp COPY2000
 .copy2000ma BRK ;jmp COPY2000MA
@@ -1054,14 +1054,15 @@ range = 36*7 ;largest multiple of 7 under 256
 .ZEROPEEL
 {
  lda #0
- ldx PAGE
- beq page1
-.page2 sta peelX+maxpeel
- lda #LO(peelbuf2)
- sta PEELBUF
- lda #HI(peelbuf2)
- sta PEELBUF+1
- rts
+\ NOT BEEB for now
+\ ldx PAGE
+\ beq page1
+\.page2 sta peelX+maxpeel
+\ lda #LO(peelbuf2)
+\ sta PEELBUF
+\ lda #HI(peelbuf2)
+\ sta PEELBUF+1
+\ rts
 
 .page1 sta peelX
  lda #LO(peelbuf1)
