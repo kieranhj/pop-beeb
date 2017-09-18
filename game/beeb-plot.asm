@@ -867,10 +867,10 @@ ENDIF
     bpl normal
 
     \ Mirrored
-    LDA XCO
-    SEC
-    SBC WIDTH
-    STA XCO
+\    LDA XCO
+\    SEC
+\    SBC WIDTH
+\    STA XCO
 
     .normal
     inc WIDTH ;extra byte to cover shift right
@@ -887,12 +887,16 @@ ENDIF
     \ Mask off Y offset
 
     LDA YCO
+    STA PEELYCO
+
     AND #&F8
     TAY    
 
     \ Look up Beeb screen address
 
     LDX XCO
+    STX PEELXCO
+
     CLC
     LDA Mult8_LO,X
     ADC YLO, Y
@@ -944,11 +948,10 @@ ENDIF
     LDA WIDTH
     STA beeb_width
 
+    CLC
+
     .xloop
     LDA (beeb_readptr), Y
-
-    \ TEST
-    PHA:LDA #&AA:STA (beeb_readptr), Y:PLA
 
     .peel_addr
     STA &FFFF, X
@@ -1010,13 +1013,19 @@ ENDIF
 
 .beeb_plot_peel
 {
-    RTS
-    
     \ Select MOS 4K RAM as our sprite bank
     JSR swr_select_mos4k
 
-    \ NOT beeb_PREPREP as we don't want to select swram here
-    jsr PREPREP
+    \ Can't use PREPREP or setimage here as no TABLE!
+    \ Assume IMAGE has been set correctly
+
+    ldy #0
+    lda (IMAGE),y
+    sta WIDTH
+
+    iny
+    lda (IMAGE),y
+    sta HEIGHT
 
     \ OFFSET IGNORED
     \ OPACITY IGNORED
@@ -1047,9 +1056,12 @@ ENDIF
 
     \ Set sprite data address 
 
+    CLC
     LDA IMAGE
+    ADC #2
     STA sprite_addr+1
     LDA IMAGE+1
+    ADC #0
     STA sprite_addr+2
 
     \ Simple Y clip
@@ -1070,6 +1082,7 @@ ENDIF
     \ Y offset into character row
 
     AND #&7
+    TAY
 
     \ Plot loop
 
@@ -1081,14 +1094,14 @@ ENDIF
     LDA WIDTH
     STA beeb_width
 
+    CLC
+
     .xloop
 
     .sprite_addr
     LDA &FFFF, X
     INX
 
-    \ TEST
-    LDA #&FF
     STA (beeb_writeptr), Y
 
     TYA                     ; next char column [6c]
@@ -1104,6 +1117,7 @@ ENDIF
     .smTOP
     CMP #0
     BEQ done_y
+    STA beeb_height
 
     LDY beeb_yoffset
     DEY

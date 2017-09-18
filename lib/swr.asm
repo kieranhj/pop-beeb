@@ -107,7 +107,9 @@
 
 .swr_select_mos4k
 {
-    LDA #&80
+    LDA &fe30
+    ORA #&80
+    sta &f4
     STA &fe30
     RTS
 }
