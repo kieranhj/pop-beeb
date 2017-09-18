@@ -74,8 +74,8 @@
     and #$7f
     sta OPACITY
 
-;    jmp MLAY
-;
+\    jmp beeb_plot_MLAY
+
     .notmirr
     
     \ BEEB TEMP
@@ -84,21 +84,17 @@
     BRK
     .opacity_valid
 
-;    cmp #enum_eor
-;    bne label_1
-;    jmp LayXOR
-;
+    cmp #enum_eor
+    bne label_1
+\    jmp beeb_plot_LayXOR
+
     .label_1 cmp #enum_mask
     bcc label_2
     
-\    \ BEEB TEMP hack enum_mask to be enum_ora
-\    LDA #enum_ora
-\    STA OPACITY
-
     jmp beeb_plot_apple_mode_4_mask
-;
+
     .label_2
-;    jmp LayGen
+    \ This is LayGen
 
     JSR beeb_PREPREP
 
@@ -251,7 +247,6 @@
     STA smTOP+1
     
     \ Now in Beeb formt in column order
-    \ Ignore shift for now - just plot on Beeb byte alignment
 
     LDX #0                  ; index sprite data
 
@@ -529,7 +524,6 @@
     STA smTOP+1
     
     \ Now in Beeb formt in column order
-    \ Ignore shift for now - just plot on Beeb byte alignment
 
     LDX #0                  ; index sprite data
 
@@ -867,17 +861,18 @@ ENDIF
     bpl normal
 
     \ Mirrored
-\    LDA XCO
-\    SEC
-\    SBC WIDTH
-\    STA XCO
+IF 0            \ need to implement sprite draw mirroring first!
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+ENDIF
 
     .normal
     inc WIDTH ;extra byte to cover shift right
 
-\ BEEB TO DO
-\    jsr CROP
-\    bmi SKIPIT
+    jsr CROP
+    bmi skipit
 
     lda PEELBUF ;PEELBUF: 2-byte pointer to 1st
     sta PEELIMG ;available byte in peel buffer
@@ -910,16 +905,28 @@ ENDIF
     \ Make sprite
 
     LDY #0
-    LDA WIDTH
+    LDA VISWIDTH
     BNE width_ok
+
+    .skipit
     JMP SKIPIT
+
+    \ Store visible width
 
     .width_ok
     STA (PEELBUF), Y
     
+    \ Calculate visible height
+
     INY
-    LDA HEIGHT
-    STA (PEELBUF), Y
+    LDA YCO
+    SEC
+    SBC TOPEDGE
+    STA (PEELBUF),y ;Height of onscreen portion ("VISHEIGHT")
+
+    STA beeb_height
+
+    \ Increment (w,h) header to start of image data
 
     LDA PEELBUF
     CLC
@@ -931,11 +938,6 @@ ENDIF
 
     LDX #0                  ; index sprite data
 
-    \ Store width & height (or just use directly?)
-
-    LDA HEIGHT
-    STA beeb_height
-
     \ Y offset into character row
 
     LDA YCO
@@ -945,7 +947,7 @@ ENDIF
     .yloop
     STY beeb_yoffset
 
-    LDA WIDTH
+    LDA VISWIDTH
     STA beeb_width
 
     CLC
@@ -1135,6 +1137,331 @@ ENDIF
     BNE yloop
     .done_y
 
+    RTS
+}
+
+
+.beeb_plot_MLAY ;A = OPACITY
+{
+ cmp #enum_eor
+ bne label_1
+\ jmp beeb_plot_MLayXOR
+
+.label_1 cmp #enum_mask
+ bcc label_2
+\ jmp beeb_plot_MLayMask
+
+.label_2 jmp beeb_plot_MLayGen
+}
+
+
+.beeb_plot_MLayGen
+{
+    JSR beeb_PREPREP
+
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+
+\ Must implement CROP for mirror
+
+    jsr CROP
+    bpl cont
+    jmp DONE
+    .cont
+
+    \ Check NULL sprite
+
+    LDA VISWIDTH
+    BNE width_ok
+    JMP DONE
+    .width_ok
+    STA beeb_temp_width
+
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+    
+    \ BEEB TEMP
+    LDA OFFSET
+    CMP #7
+    BCC offset_ok
+    BRK
+    .offset_ok    
+
+    \ Look up Beeb screen address w/ OFFSET
+
+    LDX XCO
+    CLC
+    LDA Mult7_LO,X
+    ADC OFFSET
+    STA beeb_readptr            ; temp var LO(xpos)
+    LDA Mult7_HI,X
+    ADC #0
+    STA beeb_readptr+1          ; temp var HI(xpos)
+
+    \ beeb_readptr is now xpos [0-279]
+    LDA beeb_readptr
+    AND #&7
+    STA beeb_rem                ; this is now our shift
+
+    LDA beeb_readptr
+    AND #&F8
+    CLC
+    ADC YLO, Y
+    STA beeb_writeptr
+    LDA beeb_readptr+1
+    ADC YHI, Y
+    STA beeb_writeptr+1
+
+    \ Complicated SHIFT and CARRY tables :S
+
+    LDX beeb_rem
+    LDA SHIFTL,X
+    STA smSHIFT+1
+    STA smSHIFT2+1
+    LDA SHIFTH,X
+    STA smSHIFT+2
+    STA smSHIFT2+2
+
+    LDA CARRYL,X
+    STA smCARRY+1
+    LDA CARRYH,X
+    STA smCARRY+2
+
+    LDA CARRY_MASK, X
+    STA smCARRY_MASK+1
+
+    CPX #1
+    BNE shift_not_1
+    
+    \ Shift 1 special case
+    LDA CARRY_MASK1, X
+    STA smCARRY_MASK+1
+
+    .shift_not_1
+
+    CPX WIDTH
+    BCS width_plus_carryover
+
+    \ Shift < Width special case
+
+    DEC beeb_temp_width
+    \ sm=(&FF<<W)>>S
+
+    \ Special MASK derived from WIDTH
+    LDA beeb_temp_width
+    ASL A: ASL A: ASL A     ; x8
+    CLC
+    ADC #LO(SPECIAL_MASK1)
+    STA special_mask_read+1
+    LDA #HI(SPECIAL_MASK1)
+    ADC #0
+    STA special_mask_read+2
+
+    .special_mask_read
+    LDA SPECIAL_MASK1, X
+    STA smSHIFT_MASK+1
+
+    JMP switch_blend
+
+    .width_plus_carryover
+
+    \ Shift MASK derived from WIDTH
+    LDA WIDTH
+    ASL A: ASL A: ASL A     ; x8
+    CLC
+    ADC #LO(SHIFT_MASK)
+    STA shift_mask_read+1
+    LDA #HI(SHIFT_MASK)
+    ADC #0
+    STA shift_mask_read+2
+
+    .shift_mask_read
+    LDA SHIFT_MASK, X
+    STA smSHIFT_MASK+1
+
+    \ Switch blend mode
+    .switch_blend
+
+    ldx OPACITY ;hi bit off!
+
+    \ Self-mod code
+
+    lda OPCODE,x
+    sta smod
+    sta smod2
+
+    \ Set sprite data address 
+
+    LDA IMAGE
+    STA sprite_addr+1
+    STA sprite_addr2+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+    STA sprite_addr2+2
+
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+
+    LDA #LO(-1)
+    .no_yclip
+    STA smTOP+1
+    
+    \ Now in Beeb formt in column order
+
+    LDX WIDTH                  ; index sprite data
+    ; actually needs to be related to right cut
+
+    \ Store width & height (or just use directly?)
+
+    LDA YCO
+    STA beeb_height
+
+    \ Y offset into character row
+
+    AND #&7
+    TAY
+
+    .yloop
+    STY beeb_yoffset
+
+    \ Initialise carry with byte from screen masked appropriately
+    \ Should initialise carry from sprite data if clipped on that side...
+
+    .smCARRY_MASK
+    LDA #0
+    AND (beeb_writeptr), Y
+    STA beeb_next_carry
+
+    LDA beeb_temp_width
+    BEQ done_x              ; nothing to do!
+    STA beeb_width
+
+    CLC
+
+    .xloop
+    STY beeb_temp_y
+
+    LDA beeb_next_carry
+    STA beeb_carry
+
+    .sprite_addr
+    DEX                     ; next sprite byte
+    LDY &FFFF, X            ; now beeb data
+
+    \ Reverse bits for mirror
+    LDA MIRROR, Y
+    TAY
+
+    .smCARRY
+    LDA &FFFF, Y            ; carry N
+    STA beeb_next_carry
+
+    .smSHIFT
+    LDA &FFFF, Y            ; shift N
+    ORA beeb_carry
+
+    \\ Would need to jump out of the loop here to carryover if shift<width && beeb_width==1 - doh!
+
+    LDY beeb_temp_y
+
+    .smod ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    TYA                     ; next char column [6c]
+    ADC #8    
+    TAY
+
+    DEC beeb_width
+    BNE xloop
+
+    .done_x
+
+    \ If shift<width
+    LDA WIDTH
+    CMP beeb_temp_width
+    BEQ regular_carry
+
+    \ We had one less loop - need to derive carryover
+    STY beeb_temp_y
+
+    .sprite_addr2
+    DEX
+    LDY &FFFF, X            ; now beeb data
+
+    .smSHIFT2
+    LDA &FFFF, Y            ; shift N
+    ORA beeb_next_carry
+    STA beeb_next_carry   
+
+    LDY beeb_temp_y
+    .regular_carry
+
+    \ Flush the carry over
+
+    .smSHIFT_MASK
+    LDA #0
+    CMP #&FF
+    BEQ no_carryover
+
+    AND (beeb_writeptr), Y
+    ORA beeb_next_carry
+\    ora (beeb_writeptr),y   ; always ORA last byte because of 7 vs 8 pixel alignment?
+    \ Needs to also have the operand mod
+    .smod2 ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    .no_carryover
+
+    \ Done a row
+
+    LDY beeb_height
+    DEY
+    .smTOP
+    CPY #0
+    BEQ done_y
+    STY beeb_height
+
+    \ Sprite data read backwards
+
+    TXA
+    CLC
+    ADC VISWIDTH            ; we just plotted this many
+    ADC WIDTH               ; now go up a line of sprite data
+    TAX
+
+    LDY beeb_yoffset
+    DEY                     ; next line
+    BPL yloop
+
+    \ Need to move up a char row
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_WIDTH)
+    STA beeb_writeptr+1
+
+    LDY #7
+    BNE yloop
+
+    .done_y
+
+    .return
     RTS
 }
 

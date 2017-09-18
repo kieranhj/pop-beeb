@@ -335,10 +335,12 @@ NEXT
 \* Index: byte value w/hibit clr (0-127)
 \* Returns mirrored byte w/hibit set
 \*
+\* BEEB - just reverse all 8 bits
+\*
 \*-------------------------------
 
 .MIRROR
-FOR byte,0,127,1
+FOR byte,0,255,1
 b0=byte AND 1
 b1=byte AND 2
 b2=byte AND 4
@@ -346,7 +348,8 @@ b3=byte AND 8
 b4=byte AND 16
 b5=byte AND 32
 b6=byte AND 64
-EQUB $80 OR (b0<<6) OR (b1<<4) OR (b2<<2) OR b3 OR (b4>>2) OR (b5>>4) OR (b6>>6)
+b7=byte AND 128
+EQUB (b0<<7) OR (b1<<5) OR (b2<<3) OR (b3<<1) OR (b4>>1) OR (b5>>3) OR (b6>>5) OR (b7>>7)
 NEXT
 \ hex 80C0A0E090D0B0F088C8A8E898D8B8F8
 \ hex 84C4A4E494D4B4F48CCCACEC9CDCBCFC

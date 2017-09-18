@@ -739,3 +739,16 @@ Because Beeb bytes are wider than Apple bytes
 Apple can always assume a carry over which may be 0 when shift = 0
 
 If shift < width then loop width - 1 times?  Would have to make next_carry 
+
+
+18/9/2017
+~~~
+Dealing with 7 pixel increments getting very difficult  complicated
+Ponder moving to 8 pixel wide bytes properly?
+
+Moveable objects have own coordinate system 58 left border, 140 pixels across, 58 right border
+SETUPCHAR in ctrlsubs.asm converts these into 280 pixel X positions
+
+-> could convert this into 320 pixel screen coordiantes then into XCO & OFFSET?
+
+CVTX in grafix.asm converts 16-bit X position (already in screen coordinates) into XCO and OFFSET values
