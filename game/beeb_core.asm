@@ -19,21 +19,20 @@
     BPL crtcloop
 
     \\ Set ULA
-    LDA #&88            ; MODE 4
+    LDA #&F4            ; MODE 2
     STA &FE20
 
     \\ Set Palette
     CLC
-    LDA #7              ; PAL_black
-    .palloop1
+    LDX #0
+    LDA #0
+    .palloop
+    ORA beeb_palette,X
+    INX
     STA &FE21
+    AND #&F0
     ADC #&10
-    BPL palloop1  
-    EOR #7              ; PAL_white
-    .palloop2
-    STA &FE21
-    ADC #&10
-    BMI palloop2
+    BCC palloop
 
     RTS
 }

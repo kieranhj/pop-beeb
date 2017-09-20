@@ -44,11 +44,12 @@ INCLUDE "game/seqdata.h.asm"
 ; BEEB headers
 \*-------------------------------
 
-BEEB_SCREEN_WIDTH = 280
+BEEB_SCREEN_WIDTH = 160         ; actually 160
+BEEB_PIXELS_PER_BIT = 2
 BEEB_SCREEN_HEIGHT = 192
-BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / 8)
+BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
-BEEB_SCREEN_SIZE = (BEEB_SCREEN_WIDTH * BEEB_SCREEN_HEIGHT)  / 8
+BEEB_SCREEN_SIZE = (BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
@@ -284,10 +285,10 @@ INCLUDE "game/hires_core.asm"
 
 .beeb_crtcregs
 {
-	EQUB 63 			; R0  horizontal total
+	EQUB 127 			; R0  horizontal total
 	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
-	EQUB 49				; R2  horizontal position
-	EQUB &24			; R3  sync width
+	EQUB 98				; R2  horizontal position
+	EQUB &28			; R3  sync width
 	EQUB 38				; R4  vertical total
 	EQUB 0				; R5  vertical total adjust
 	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
@@ -298,6 +299,29 @@ INCLUDE "game/hires_core.asm"
 	EQUB 8				; R11 cursor end
 	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
+}
+
+.beeb_palette
+{
+    EQUB PAL_black
+    EQUB PAL_red
+    EQUB PAL_yellow
+    EQUB PAL_white
+
+    EQUB PAL_blue
+    EQUB PAL_red
+    EQUB PAL_yellow
+    EQUB PAL_white
+
+    EQUB PAL_cyan
+    EQUB PAL_red
+    EQUB PAL_yellow
+    EQUB PAL_white
+
+    EQUB PAL_green
+    EQUB PAL_red
+    EQUB PAL_yellow
+    EQUB PAL_white
 }
 
 .pop_beeb_data_end

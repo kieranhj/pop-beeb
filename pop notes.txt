@@ -752,3 +752,49 @@ SETUPCHAR in ctrlsubs.asm converts these into 280 pixel X positions
 -> could convert this into 320 pixel screen coordiantes then into XCO & OFFSET?
 
 CVTX in grafix.asm converts 16-bit X position (already in screen coordinates) into XCO and OFFSET values
+
+What eventual screen mode would we want to use?
+Don't want to keep MODE 4 in long run
+Options are MODE 5 - 2bpp but 1/2 horizontal resolution
+2bpp format but plotted in MODE2/5 - use MODE 2 masking trick
+Could potentially use different sprite formats for bg vs characters
+Also expand chars to be multiples of 8 wide?
+
+Lots of opportunities to store sprite data in more interesting way, particularly as it is sparse
+e.g. with increment tables ala Thrust.  Check Exile code as sprite plot bound to be derive from that.
+
+For MODE 2 plot ala Exile
+Unroll one row of pixels into a buffer
+Make the 2bpp lookup transform to Beeb format such that left/right pixel pairs are accounted for based on parity
+Then plot loop just becomes LDA buffer,X; INX; ORA buffer,X;EOR (screen),Y;STA (screen),Y;Y+=8
+Can switch INX/DEX to reverse plot order - set parity accordingly for L/R pixels
+Exile uses direct lookup into ZP to save cycles and unrolls into stack to save memory, but keep it simple!
+
+How would this extend to MODE1 or MODE4?
+For MODE4 - unpack 1bpp into shifted version but would need to pop x8 per byte write - doesn't make sense
+Wonder how Imogen did sprite plotting..
+
+MODE1 - unpack 2bpp and map into appropriate pixel position according to X fraction
+Still seems expensive to pop 4 bytes off the stack to plot one byte
+Looks like Thrust stores sprites as 1bpp and unpacks to multiple bytes
+
+If use MODE2 free masking then foreground & background use separate parts of palette
+So fg is 0-3 and bg is 4&8 | fg
+bg0 = 0
+fg = (mask), 1,2,3
+bg1 = 4,5,6,7
+bg2 = 8,9,10,11
+bg3 = 12,13,14,15
+
+left pixel $AA right pixel $55
+Storing & loading ZP directly saves saveing & restoring index registers
+Don't just use X&Y as index registers - 2c to save or restore accumulator
+Exile stores 2bpp data in MODE1 pixel format so can load this directly into screen memory for preview
+
+Now have sprite data in Beeb MODE5 format ready to expand into MODE 2 but widened to 8 pixel multiples not 7.
+Will change CVTX routine to convert 0-279 screen coordinates into XCO 0-39 and OFFSET [0-7]
+
+Need to set screen mode to MODE 2.  MEMORY?  Screen that is 160x192 is &3C00 in size, starting at &4400.
+Current hwm ~&5400 but can remove &1000 of shift tables
+
+Start with STA plot:

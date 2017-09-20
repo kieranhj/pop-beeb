@@ -29,5 +29,5 @@
 .beeb_sprite_no  SKIP 1
 .beeb_rem        SKIP 1
 
-BEEB_SCREEN_MODE = 4
+BEEB_SCREEN_MODE = 2
 ;BEEB_SCREEN_ROW_BYTES = 640

@@ -71,6 +71,15 @@ SN_FB_MASK = &04
 SN_FB_PERIODIC = 0
 SN_FB_WHITENOISE = &04
 
+\\ Palette values for ULA
+PAL_black	= (0 EOR 7)
+PAL_blue	= (4 EOR 7)
+PAL_red		= (1 EOR 7)
+PAL_magenta = (5 EOR 7)
+PAL_green	= (2 EOR 7)
+PAL_cyan	= (6 EOR 7)
+PAL_yellow	= (3 EOR 7)
+PAL_white	= (7 EOR 7)
 
 
 \\ MODE 7

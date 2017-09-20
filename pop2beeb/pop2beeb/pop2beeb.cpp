@@ -68,7 +68,7 @@ unsigned char even_columns[8] =
 	WHITE0
 };
 
-unsigned char mode1[8] =
+unsigned char apple_colour_to_beeb_logical_colour[8] =
 {
 	0,							// black
 	1,							// purple = magenta
@@ -78,6 +78,14 @@ unsigned char mode1[8] =
 	1,							// blue = blue or cyan
 	2,							// orange = red or yellow or stiple?
 	3							// white
+};
+
+unsigned char beeb_logical_colour_to_screen_pixel[4][4] =			//
+{
+	{ 0x00, 0x00, 0x00, 0x00 },
+	{ 0x08, 0x04, 0x02, 0x01 },
+	{ 0x80, 0x40, 0x20, 0x10 },
+	{ 0x88, 0x44, 0x22, 0x11 }
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
@@ -189,16 +197,77 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 	return calc_image_width_from_colour(colour_data, pixel_width, pixel_height);
 }
 
-int convert_colour_to_mode1(unsigned char *colour_data, int colour_width, int pixel_height)
+int calc_mode5_size(unsigned char *colour_data, int pixel_width, int pixel_height)
 {
-	int mode1_width = (colour_width + 3) / 4;
-	int mode1_height = pixel_height;
+	int expanded_width = 8 * pixel_width / 7;
+	int reduced_width = expanded_width / 2;
+	int mode5_width = (reduced_width + 3) / 4;
+	int mode5_height = pixel_height;
 
-	int mode1_bytes = mode1_width * mode1_height;
+	int mode5_bytes = mode5_width * mode5_height;
 
-	printf("%d x %d = %d bytes, %d x %d colour pixels\n", mode1_width, mode1_height, mode1_bytes, colour_width, pixel_height);
+	printf("%d x %d = %d bytes, %d x %d pixels at 2bpp half width\n", mode5_width, mode5_height, mode5_bytes, reduced_width, pixel_height);
 
-	return mode1_bytes + 4;
+	return mode5_bytes + 4;
+}
+
+int get_colour(unsigned char *colour_data, int pixel_width, int pixel_height, int x, int y)
+{
+	if (x < 0 || x >= pixel_width || y < 0 || y >= pixel_height)
+		return BLACK1;
+
+	return colour_data[y * pixel_width + x];
+}
+
+int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, unsigned char *beebptr)
+{
+	int expanded_width = 8 * pixel_width / 7;
+	int reduced_width = expanded_width / 2;
+	int mode5_width = (reduced_width + 3) / 4;
+	int mode5_height = pixel_height;
+
+	int mode5_bytes = mode5_width * mode5_height;
+
+	unsigned char *temp = beebptr;
+
+	if (beebptr)
+	{
+		*beebptr++ = mode5_width;
+		*beebptr++ = mode5_height;
+	}
+
+	for (int y = 0; y < mode5_height; y++)
+	{
+		for (int x8 = 0; x8 < mode5_width; x8++)
+		{
+			unsigned char beebbyte = 0;
+
+			// Turn 7 Apple II B&W pixels into 4 Beeb colour pixels
+			// Eventually ask an artist to redraw everything
+
+			// For now just point sample
+//			int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
+//			int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
+//			int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
+//			int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
+
+			int c0 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 0)*pixel_width / reduced_width, y);
+			int c1 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 1)*pixel_width / reduced_width, y);
+			int c2 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 2)*pixel_width / reduced_width, y);
+			int c3 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 3)*pixel_width / reduced_width, y);
+
+			beebbyte = beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0]
+				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1]
+				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c2]][2]
+				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c3]][3];
+
+//			printf("y=%d x8=%d c0=%d c1=%d c2=%d c3=%d l0=%d l1=%d l2=%d l3=%d p0=0x%2x p1=0x%2x p2=0x%2x p3=0x%2x b=0x%2x\n", y, x8, c0, c1, c2, c3, apple_colour_to_beeb_logical_colour[c0], apple_colour_to_beeb_logical_colour[c1], apple_colour_to_beeb_logical_colour[c2], apple_colour_to_beeb_logical_colour[c3], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c2]][2], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c3]][3], beebbyte);
+
+			*beebptr++ = beebbyte;
+		}
+	}
+
+	return 2 + mode5_bytes;
 }
 
 int get_pixel(unsigned char *pixel_data, int pixel_width, int pixel_height, int x, int y)
@@ -209,14 +278,14 @@ int get_pixel(unsigned char *pixel_data, int pixel_width, int pixel_height, int 
 	return pixel_data[y * pixel_width + x];
 }
 
-int convert_colour_to_mode4(unsigned char *colour_data, int colour_width, int pixel_height)
+int calc_mode4_size(unsigned char *colour_data, int colour_width, int pixel_height)
 {
 	int mode4_width = (colour_width + 7) / 8;
 	int mode4_height = pixel_height;
 
 	int mode4_bytes = mode4_width * mode4_height;
 
-	printf("%d x %d = %d bytes, %d x %d non-black pixels\n", mode4_width, mode4_height, mode4_bytes, colour_width, pixel_height);
+	printf("%d x %d = %d bytes, %d x %d pixels\n", mode4_width, mode4_height, mode4_bytes, colour_width, pixel_height);
 
 	return mode4_bytes + 4;
 }
@@ -385,28 +454,28 @@ int main(int argc, char **argv)
 		img.save(testname);
 	}
 
-	int total_mode1 = 3;		// num_images + free ptr
+	int total_mode5 = 3;		// num_images + free ptr
 	int total_mode4 = 3;
 
 	for (int i = 0; i < num_images; i++)
 	{
-		if (mode == 1)
+		if (mode == 5)
 		{
-			printf("Image[%d]: MODE1=", i);
-			total_mode1 += convert_colour_to_mode1(colours[i], colour_width[i], pixel_size[i][1]);
+			printf("Image[%d]: MODE5=", i);
+			total_mode5 += calc_mode5_size(colours[i], pixel_size[i][0], pixel_size[i][1]);
 		}
 
 		if ( mode == 4)
 		{
 			printf("Image[%d]: MODE4=", i);
-			total_mode4 += convert_colour_to_mode4(colours[i], pixel_size[i][0], pixel_size[i][1]);
+			total_mode4 += calc_mode4_size(colours[i], pixel_size[i][0], pixel_size[i][1]);
 		}
 	}
 
 	printf("Original Apple bytes = %d\n", total_bytes);
 
-	printf("Total MODE1 bytes = %d\n", total_mode1);
-	printf("Size vs Apple = %f%%\n", 100.0f * total_mode1 / (float)total_bytes);
+	printf("Total MODE5 bytes = %d\n", total_mode5);
+	printf("Size vs Apple = %f%%\n", 100.0f * total_mode5 / (float)total_bytes);
 
 	printf("Total MODE4 bytes = %d\n", total_mode4);
 	printf("Size vs Apple = %f%%\n", 100.0f * total_mode4 / (float)total_bytes);
@@ -417,7 +486,7 @@ int main(int argc, char **argv)
 		
 		if (output)
 		{
-			unsigned char *beebdata = (unsigned char*)malloc(total_mode4 + num_images * 4 + 3);
+			unsigned char *beebdata = (unsigned char*)malloc((mode == 4 ? total_mode4 : total_mode5) + num_images * 4 + 3);
 			unsigned char *beebptr = beebdata;
 
 			*beebptr++ = num_images;
@@ -438,7 +507,18 @@ int main(int argc, char **argv)
 				beebdata[1 + i * 2] = LO(beebptr - beebdata);
 				beebdata[2 + i * 2] = HI(beebptr - beebdata);
 
-				int bytes_written = convert_pixels_to_mode4(pixels[i], pixel_size[i][0], pixel_size[i][1], colour_width[i], beebptr);
+
+				int bytes_written = 0;
+				
+				if (mode == 4)
+				{
+					bytes_written += convert_pixels_to_mode4(pixels[i], pixel_size[i][0], pixel_size[i][1], colour_width[i], beebptr);
+				}
+
+				if (mode == 5)
+				{
+					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], beebptr);
+				}
 
 				beebptr += bytes_written;
 			}
