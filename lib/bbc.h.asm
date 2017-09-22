@@ -27,6 +27,12 @@ CLI_OP = $58
 NOP_OP = $ea
 OPCODE_eor_indirect_Y = &51
 OPCODE_ora_indirect_Y = &11
+OPCODE_INX = &E8
+OPCODE_DEX = &CA
+OPCODE_LDAimm = &A9
+OPCODE_LDAzp = &A5
+OPCODE_LDXimm = &A2
+OPCODE_LDXzp = &A6
 
 \\ SN Register Values
 SN_REG_MASK = &70

@@ -797,4 +797,44 @@ Will change CVTX routine to convert 0-279 screen coordinates into XCO 0-39 and O
 Need to set screen mode to MODE 2.  MEMORY?  Screen that is 160x192 is &3C00 in size, starting at &4400.
 Current hwm ~&5400 but can remove &1000 of shift tables
 
-Start with STA plot:
+Start with STA plot...
+
+0123456012345601234560123456
+A B C DA B C DA B C D
+
+0123456012345601234560123456
+A B C D
+
+0123456012345601234560123456
+A B C D
+      A B C D
+
+0123456012345601234560123456
+A B C D A B
+          C D A B C D
+
+0123456012345601234560123456
+A B C D
+      A B C D A B C D
+                    A B C D
+
+Probably going to need a 3 colour palette per sprite ala Exile for best results
+Will mean not using XOR trick for free sprite masking but using top bit for backgrounds instead
+
+XCO [0-39] OFFSET [0-6]
+Map [0-279] to MODE2 [0-159]
+Important that XCO remain the same
+So really just mapping OFFSET from [0-6] into [0-3]
+0123456
+0 1 2 3
+
+0
+H
+G
+F
+E
+D
+C
+B
+A
+(0) <- parity

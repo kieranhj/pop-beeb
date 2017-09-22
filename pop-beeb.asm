@@ -50,6 +50,7 @@ BEEB_SCREEN_HEIGHT = 192
 BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
 BEEB_SCREEN_SIZE = (BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8)
+BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
@@ -173,6 +174,9 @@ IF 0
     LDA #1
     STA beeb_sprite_no
 
+    LDA #0
+    STA OFFSET
+
     .sprite_loop
     LDA beeb_sprite_no
     AND #&1F
@@ -193,22 +197,21 @@ IF 0
     LDA #BEEB_SWRAM_SLOT_CHTAB13
     STA BANK
 
-    LDA #enum_mask
+    LDA #enum_sta
     STA OPACITY
 
-    LDA beeb_sprite_no
-    .subloop
-    CMP #7
-    BCC donesub    
-    SEC
-    SBC #7
-    BNE subloop
-    .donesub
-    STA OFFSET
-
-    JSR beeb_plot_apple_mode_4
+    JSR beeb_plot_sprite_LayGen
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
+
+    LDX OFFSET
+    INX
+    STX OFFSET
+    CPX #7
+    BCC sprite_loop
+
+    LDX #0
+    STX OFFSET    
 
     LDX beeb_sprite_no
     INX
@@ -301,27 +304,36 @@ INCLUDE "game/hires_core.asm"
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
+FOREGROUND_1=PAL_red
+FOREGROUND_2=PAL_cyan
+FOREGROUND_3=PAL_white
+
+BACKGROUND_0=PAL_black
+BACKGROUND_1=PAL_red
+BACKGROUND_2=PAL_blue
+BACKGROUND_3=PAL_white
+
 .beeb_palette
 {
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_yellow
-    EQUB PAL_white
+    EQUB BACKGROUND_0                   ; background 0
+    EQUB FOREGROUND_1                   ; foreground 1
+    EQUB FOREGROUND_2                   ; foreground 2
+    EQUB FOREGROUND_3                   ; foreground 3
 
-    EQUB PAL_blue
-    EQUB PAL_red
-    EQUB PAL_yellow
-    EQUB PAL_white
+    EQUB BACKGROUND_1                   ; background 1
+    EQUB FOREGROUND_1                   ; foreground 1
+    EQUB FOREGROUND_2                   ; foreground 2
+    EQUB FOREGROUND_3                   ; foreground 3
 
-    EQUB PAL_cyan
-    EQUB PAL_red
-    EQUB PAL_yellow
-    EQUB PAL_white
+    EQUB BACKGROUND_2                   ; background 2
+    EQUB FOREGROUND_1                   ; foreground 1
+    EQUB FOREGROUND_2                   ; foreground 2
+    EQUB FOREGROUND_3                   ; foreground 3
 
-    EQUB PAL_green
-    EQUB PAL_red
-    EQUB PAL_yellow
-    EQUB PAL_white
+    EQUB BACKGROUND_3                   ; background 3
+    EQUB FOREGROUND_1                   ; foreground 1
+    EQUB FOREGROUND_2                   ; foreground 2
+    EQUB FOREGROUND_3                   ; foreground 3
 }
 
 .pop_beeb_data_end

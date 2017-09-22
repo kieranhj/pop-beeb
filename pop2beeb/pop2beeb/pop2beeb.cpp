@@ -236,25 +236,50 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 		*beebptr++ = mode5_height;
 	}
 
+	int width_parity = mode5_width & 1;
+
 	for (int y = 0; y < mode5_height; y++)
 	{
+
 		for (int x8 = 0; x8 < mode5_width; x8++)
 		{
+			int x_parity = x8 & 1;
 			unsigned char beebbyte = 0;
 
 			// Turn 7 Apple II B&W pixels into 4 Beeb colour pixels
 			// Eventually ask an artist to redraw everything
 
 			// For now just point sample
-//			int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
-//			int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
-//			int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
-//			int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
 
-			int c0 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 0)*pixel_width / reduced_width, y);
-			int c1 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 1)*pixel_width / reduced_width, y);
-			int c2 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 2)*pixel_width / reduced_width, y);
-			int c3 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 3)*pixel_width / reduced_width, y);
+			if (x_parity == 0)
+			{
+				int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
+				int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
+				int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
+				int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
+			}
+			else
+			{
+				if (width_parity == 1)
+				{
+					int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 - 1, y);
+					int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
+					int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
+				}
+				else
+				{
+					int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
+					int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
+				}
+			}
+
+//			int c0 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 0)*pixel_width / reduced_width, y);
+//			int c1 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 1)*pixel_width / reduced_width, y);
+//			int c2 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 2)*pixel_width / reduced_width, y);
+//			int c3 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 3)*pixel_width / reduced_width, y);
 
 			beebbyte = beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0]
 				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1]
