@@ -52,7 +52,7 @@
  \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
  LDA #0
  STA OFFSET
- jsr beeb_plot_sprite_LayGen
+ jsr beeb_plot_sprite_LayGen_NoCrop
 \ jsr hires_FASTLAY
  jmp auxmem
 }
@@ -78,7 +78,7 @@
 \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
  LDA #0
  STA OFFSET
- jsr beeb_plot_sprite_LayGen
+ jsr beeb_plot_sprite_LayGen_NoCrop
 \ jsr hires_FASTMASK
  jmp auxmem
 }

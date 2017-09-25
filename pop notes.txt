@@ -828,13 +828,16 @@ So really just mapping OFFSET from [0-6] into [0-3]
 0123456
 0 1 2 3
 
-0
-H
-G
-F
-E
-D
-C
-B
-A
-(0) <- parity
+Parity vs Mirror
+  R P M P
+0   r   l    
+H r l l r
+G l r r l
+F r l l r
+E l r r l
+D r l l r
+C l r r l
+B r l l r
+A l r r l
+0   l   r <- parity
+Mirror inverts parity when swapping pixel mapping
