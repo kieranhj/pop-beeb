@@ -163,32 +163,59 @@ int calc_image_width_from_colour(unsigned char *colour_data, int pixel_width, in
 	return colour_width;
 }
 
-int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool invert)
+int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool invert, bool simple)
 {
 	for (int y = 0; y < pixel_height; y++)
 	{
 		for (int x = 0; x < pixel_width; x++)
 		{
-			unsigned char byte0 = x > 0 ? pixel_data[y*pixel_width + x - 1] : 0;
-			unsigned char byte1 = pixel_data[y*pixel_width + x];
-			unsigned char byte2 = x < (pixel_width - 1) ? pixel_data[y*pixel_width + x + 1] : 0;
-
-			int group0 = byte0 & 4;
-			int group1 = byte1 & 4;
-			int group2 = byte2 & 4;
-
-			int pixel0 = byte0 & 1;
-			int pixel1 = byte1 & 1;
-			int pixel2 = byte2 & 1;
-
-			if ((x & 1) == invert)
+			if (simple)
 			{
-				colour_data[y*pixel_width + x] = group1 | odd_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
+				// For POP data everything is group 1 (blue + orange)
+				// Simplistic colour conversion - just look at pairs of pixels
+
+				unsigned char byte1 = pixel_data[y*pixel_width + x];
+				unsigned char byte2 = x < (pixel_width - 1) ? pixel_data[y*pixel_width + x + 1] : 0;
+				unsigned char colour = 4;
+
+				if (invert)
+					colour |= ((byte2 & 1) << 1) | (byte1 & 1);
+				else
+					colour |= ((byte1 & 1) << 1) | (byte2 & 1);
+
+				colour_data[y*pixel_width + x] = colour;
+				if (x < (pixel_width - 1))
+					colour_data[y*pixel_width + x + 1] = colour;
+
+				x++;
 			}
 			else
 			{
-				colour_data[y*pixel_width + x] = group1 | even_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
+				// Use three b&w Apple II pixels to look up colour (see emulator notes)
+
+				unsigned char byte0 = x > 0 ? pixel_data[y*pixel_width + x - 1] : 0;
+				unsigned char byte1 = pixel_data[y*pixel_width + x];
+				unsigned char byte2 = x < (pixel_width - 1) ? pixel_data[y*pixel_width + x + 1] : 0;
+
+				int group0 = byte0 & 4;
+				int group1 = byte1 & 4;
+				int group2 = byte2 & 4;
+
+				int pixel0 = byte0 & 1;
+				int pixel1 = byte1 & 1;
+				int pixel2 = byte2 & 1;
+
+				if ((x & 1) == invert)
+				{
+					colour_data[y*pixel_width + x] = group1 | odd_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
+				}
+				else
+				{
+					colour_data[y*pixel_width + x] = group1 | even_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
+				}
 			}
+
+			// Colour use tracking - not that interesting now
 
 			total_colours[colour_data[y*pixel_width + x]]++;
 		}
@@ -251,35 +278,37 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 
 			// For now just point sample
 
+						int c0 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 0)*pixel_width / reduced_width, y);
+						int c1 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 1)*pixel_width / reduced_width, y);
+						int c2 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 2)*pixel_width / reduced_width, y);
+						int c3 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 3)*pixel_width / reduced_width, y);
+
+			// Or select specific pixels to double-up
+
 			if (x_parity == 0)
 			{
-				int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
-				int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
-				int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
-				int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
+				c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
+				c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
+				c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
+				c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
 			}
 			else
 			{
 				if (width_parity == 1)
 				{
-					int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 - 1, y);
-					int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
-					int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
-					int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
+					c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 - 1, y);
+					c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
+					c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
 				}
 				else
 				{
-					int c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
-					int c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
-					int c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
-					int c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
+					c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y);
+					c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y);
+					c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y);
 				}
 			}
-
-//			int c0 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 0)*pixel_width / reduced_width, y);
-//			int c1 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 1)*pixel_width / reduced_width, y);
-//			int c2 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 2)*pixel_width / reduced_width, y);
-//			int c3 = get_colour(colour_data, pixel_width, pixel_height, ((x8 * 4) + 3)*pixel_width / reduced_width, y);
 
 			beebbyte = beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0]
 				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1]
@@ -360,6 +389,7 @@ int main(int argc, char **argv)
 	const int mode = cimg_option("-mode", 4, "BBC MODE number");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
+	const bool simple = cimg_option("-simple", false, "Use simple colour conversion");
 
 
 	if (cimg_option("-h", false, 0)) std::exit(0);
@@ -436,7 +466,7 @@ int main(int argc, char **argv)
 			invert = fgetc(parity) == '1' ? 1 : 0;
 		}
 
-		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], invert);
+		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], invert, simple);
 	}
 
 	printf("Total bytes = %d\n", total_bytes);

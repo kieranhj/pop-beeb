@@ -1043,6 +1043,15 @@ NEXT
 
     JSR beeb_PREPREP
 
+    lda OPACITY
+    BPL dont_reverse
+
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+    .dont_reverse
+
     \ CLIP here
 
     JSR CROP

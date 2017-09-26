@@ -841,3 +841,11 @@ B r l l r
 A l r r l
 0   l   r <- parity
 Mirror inverts parity when swapping pixel mapping
+
+Exile plotting uses standard palette with top bit as background indicator
+All objects sprites EOR'd to screen but don't overwrite background if top bit set
+Therefore attempt to always draw on black background where possible
+We need proper sprite mask as large sprites always drawn on top of complex background
+If want "free" masking then need to stick to 4 colour bg + 3 colour fg
+
+Maybe take PC DOS sprites as a starting point instead of Apple II?
