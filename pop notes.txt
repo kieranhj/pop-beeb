@@ -849,3 +849,32 @@ We need proper sprite mask as large sprites always drawn on top of complex backg
 If want "free" masking then need to stick to 4 colour bg + 3 colour fg
 
 Maybe take PC DOS sprites as a starting point instead of Apple II?
+
+Load mask; AND (screen); ORA sprite: STA (screen)
+Mask derived from whether l & r pixels are 0
+
+For a pixel we have &00,&01,&10,&11 or &00,&02,&20,&22
+And we know in code whether we are decoding left or right pixel
+And we know whether the pixels have been flipped
+
+Right pixel &00 -> mask &55
+Right pixel &01,&10,&11 -> mask &00
+Left pixel &00 -> mask &AA
+Left pixel &02,&20,&22 -> mask &00
+
+But mask need to be flipped if parity reversed
+
+Could have a left_mask
+[&00] = &AA
+[&02] = [&20] = [&22] = &0 
+And a right_mask
+[&00] = &55
+[&01] = [&10] = [&11] = &0 
+Then just swap &AA and &55 if parity reversed
+
+Also pondering a much larger lookup table for palettes that go directly from 2bpp to bytes
+Have two versions of the table and switch the lookup address rather than table contents
+Will use a lot more memory but need to look at the tradeoffs in the inner loop
+Current version uses the stack as a "free" index register
+And then stores accumulator value in X register as temp storage
+Probably quicker to store in ZP var for now and work out faster inner loop methods later

@@ -44,7 +44,8 @@ INCLUDE "game/seqdata.h.asm"
 ; BEEB headers
 \*-------------------------------
 
-BEEB_SCREEN_WIDTH = 160         ; actually 160
+BEEB_SCREEN_MODE = 2
+BEEB_SCREEN_WIDTH = 160
 BEEB_PIXELS_PER_BIT = 2
 BEEB_SCREEN_HEIGHT = 192
 BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
@@ -224,7 +225,7 @@ IF 0
     RTS
 ENDIF
 
-IF 0
+IF 1
     \\ Level load & plot test
     LDX #1
 
@@ -304,36 +305,25 @@ INCLUDE "game/hires_core.asm"
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
-FOREGROUND_1=PAL_red
-FOREGROUND_2=PAL_cyan
-FOREGROUND_3=PAL_white
-
-BACKGROUND_0=PAL_black
-BACKGROUND_1=PAL_red
-BACKGROUND_2=PAL_blue
-BACKGROUND_3=PAL_white
-
 .beeb_palette
 {
-    EQUB BACKGROUND_0                   ; background 0
-    EQUB FOREGROUND_1                   ; foreground 1
-    EQUB FOREGROUND_2                   ; foreground 2
-    EQUB FOREGROUND_3                   ; foreground 3
+    EQUB PAL_black
+    EQUB PAL_red
+    EQUB PAL_green
+    EQUB PAL_yellow
+    EQUB PAL_blue
+    EQUB PAL_magenta
+    EQUB PAL_cyan
+    EQUB PAL_white
 
-    EQUB BACKGROUND_1                   ; background 1
-    EQUB FOREGROUND_1                   ; foreground 1
-    EQUB FOREGROUND_2                   ; foreground 2
-    EQUB FOREGROUND_3                   ; foreground 3
-
-    EQUB BACKGROUND_2                   ; background 2
-    EQUB FOREGROUND_1                   ; foreground 1
-    EQUB FOREGROUND_2                   ; foreground 2
-    EQUB FOREGROUND_3                   ; foreground 3
-
-    EQUB BACKGROUND_3                   ; background 3
-    EQUB FOREGROUND_1                   ; foreground 1
-    EQUB FOREGROUND_2                   ; foreground 2
-    EQUB FOREGROUND_3                   ; foreground 3
+    EQUB PAL_black
+    EQUB PAL_red
+    EQUB PAL_green
+    EQUB PAL_yellow
+    EQUB PAL_blue
+    EQUB PAL_magenta
+    EQUB PAL_cyan
+    EQUB PAL_white
 }
 
 .pop_beeb_data_end

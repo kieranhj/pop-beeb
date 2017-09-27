@@ -41,7 +41,7 @@
 .hires_lay
 {
  jsr mainmem
- jsr beeb_plot_sprite_LayGen
+ jsr beeb_plot_sprite_LAY
 \ jsr hires_LAY
  jmp auxmem
 }

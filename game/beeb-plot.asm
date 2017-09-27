@@ -59,6 +59,13 @@
     .slot_set
     JSR swr_select_slot
 
+    \ Set a palette per swram bank
+    \ Could set palette per sprite table or even per sprite
+
+    LDY BANK
+    LDA bank_to_palette_temp,Y
+    JSR beeb_plot_sprite_SetExilePalette
+
     \ Turns TABLE & IMAGE# into IMAGE ptr
     \ Obtains WIDTH & HEIGHT
     
@@ -280,7 +287,7 @@ IF 0
     STY beeb_temp_y
 
     LDA beeb_next_carry
-    STA beeb_carry
+    STA beeb_stack_ptr
 
     .sprite_addr
     LDY &FFFF, X            ; now beeb data
@@ -292,7 +299,7 @@ IF 0
 
     .smSHIFT
     LDA &FFFF, Y            ; shift N
-    ORA beeb_carry
+    ORA beeb_stack_ptr
 
     \\ Would need to jump out of the loop here to carryover if shift<width && beeb_width==1 - doh!
 
@@ -557,7 +564,7 @@ IF 0
     STY beeb_temp_y
 
     LDA beeb_next_carry
-    STA beeb_carry
+    STA beeb_stack_ptr
 
     .sprite_addr
     LDY &FFFF, X            ; now beeb data
@@ -569,7 +576,7 @@ IF 0
 
     .smSHIFT
     LDA &FFFF, Y            ; shift N
-    ORA beeb_carry
+    ORA beeb_stack_ptr
 
     \\ Now have a byte to write
     STA imbyte
@@ -1037,6 +1044,27 @@ NEXT
 \*-------------------------------
 ; New sprite routines - 2bpp expanded to MODE 2
 
+.beeb_plot_sprite_LAY
+{
+ lda OPACITY
+ bpl notmirr
+
+ and #$7f
+\ BEEB TEMP
+\ sta OPACITY
+ jmp beeb_plot_sprite_MLAY
+
+.notmirr\ cmp #enum_eor
+\ bne label_1
+\ jmp LayXOR
+
+.label_1 cmp #enum_mask
+ bcc label_2
+ jmp beeb_plot_sprite_LayMask
+
+.label_2 jmp beeb_plot_sprite_LayGen
+}
+
 .beeb_plot_sprite_LayGen
 {
     \ Get sprite data address 
@@ -1068,12 +1096,7 @@ NEXT
 
     \ Set palette
 
-    LDA #&10:STA map_2bpp_to_mode2_pixel+&01
-    LDA #&20:STA map_2bpp_to_mode2_pixel+&02
-    LDA #&40:STA map_2bpp_to_mode2_pixel+&10
-    LDA #&50:STA map_2bpp_to_mode2_pixel+&11
-    LDA #&80:STA map_2bpp_to_mode2_pixel+&20
-    LDA #&A0:STA map_2bpp_to_mode2_pixel+&22
+\    JSR beeb_plot_sprite_SetPalette
 
     \ XCO & YCO are screen coordinates
     \ XCO (0-39) and YCO (0-191)
@@ -1124,14 +1147,7 @@ NEXT
 
 \ L&R pixels need to be swapped over
 
-    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
-    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
-
-    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
-    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
-
-    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
-    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+    JSR beeb_plot_sprite_FlipPalette
 
     .no_swap
 
@@ -1179,7 +1195,7 @@ NEXT
     STA smTOP+1
 
     TSX
-    STX beeb_carry          ; use this to reset stack
+    STX beeb_stack_ptr          ; use this to reset stack
 
 .plot_lines_loop
 
@@ -1188,7 +1204,7 @@ NEXT
 
 \ Decode a line of sprite data using Exile method!
 
-    LDX beeb_carry
+    LDX beeb_stack_ptr
     TXS
 
 \ Push a zero on the end in case of parity
@@ -1200,32 +1216,32 @@ NEXT
 
     .sprite_addr
     LDA &FFFF, Y
-    TAX
+    STA beeb_data
     AND #&11
-    STA smPIXELD+1
+    TAX
 .smPIXELD
-    LDA map_2bpp_to_mode2_pixel         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+    LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
     PHA                                 ; [3c]
-    TXA
+    LDA beeb_data
     AND #&22
-    STA smPIXELC+1
-.smPIXELC
-    LDA map_2bpp_to_mode2_pixel
-    PHA
-    TXA
-    LSR A
-    LSR A
     TAX
-    AND #&11
-    STA smPIXELB+1
-.smPIXELB
-    LDA map_2bpp_to_mode2_pixel
+.smPIXELC
+    LDA map_2bpp_to_mode2_pixel,X
     PHA
-    TXA
+    LDA beeb_data
+    LSR A
+    LSR A
+    STA beeb_data
+    AND #&11
+    TAX
+.smPIXELB
+    LDA map_2bpp_to_mode2_pixel,X
+    PHA
+    LDA beeb_data
     AND #&22
-    STA smPIXELA+1
+    TAX
 .smPIXELA
-    LDA map_2bpp_to_mode2_pixel
+    LDA map_2bpp_to_mode2_pixel,X
     PHA
     DEY
     BPL line_loop
@@ -1345,7 +1361,7 @@ NEXT
 \ Reset stack before we leave
 
     .done_y
-    LDX beeb_carry
+    LDX beeb_stack_ptr
     TXS
 
     .return
@@ -1353,27 +1369,38 @@ NEXT
 }
 
 
-.beeb_plot_sprite_LayGen_NoCrop
+.beeb_plot_sprite_LayMask
 {
     \ Get sprite data address 
 
     JSR beeb_PREPREP
 
+    lda OPACITY
+    BPL dont_reverse
+
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+    .dont_reverse
+
+    \ CLIP here
+
+    JSR CROP
+    bpl cont
+    jmp DONE
+    .cont
+
     \ Check NULL sprite
 
-    LDA WIDTH
+    LDA VISWIDTH
     BNE width_ok
     JMP DONE
     .width_ok
 
     \ Set palette
 
-    LDA #&10:STA map_2bpp_to_mode2_pixel+&01
-    LDA #&20:STA map_2bpp_to_mode2_pixel+&02
-    LDA #&40:STA map_2bpp_to_mode2_pixel+&10
-    LDA #&50:STA map_2bpp_to_mode2_pixel+&11
-    LDA #&80:STA map_2bpp_to_mode2_pixel+&20
-    LDA #&A0:STA map_2bpp_to_mode2_pixel+&22
+\    JSR beeb_plot_sprite_SetPalette
 
     \ XCO & YCO are screen coordinates
     \ XCO (0-39) and YCO (0-191)
@@ -1424,6 +1451,318 @@ NEXT
 
 \ L&R pixels need to be swapped over
 
+    JSR beeb_plot_sprite_FlipPalette
+
+    .no_swap
+
+    LDX #OPCODE_INX
+    lda OPACITY
+    BPL not_mirrored
+
+    \ INX -> DEX
+    LDX #OPCODE_DEX
+
+    .not_mirrored
+    STX smSTACKdir1: STX smSTACKdir2
+
+    AND #&7f    ;hi bit off
+    TAX
+
+    \ Self-mod code
+
+    \ Not even sure this is correct for MODE 2?
+
+\    lda OPCODE,x
+\    sta smod
+
+    \ Set sprite data address 
+
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+    
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+
+    LDA #LO(-1)
+    .no_yclip
+    STA smTOP+1
+
+    TSX
+    STX beeb_stack_ptr          ; use this to reset stack
+
+.plot_lines_loop
+
+    LDY WIDTH
+    DEY                     ; bytes_per_line_in_sprite
+
+\ Decode a line of sprite data using Exile method!
+
+    LDX beeb_stack_ptr
+    TXS
+
+\ Push a zero on the end in case of parity
+
+    LDA #0
+    PHA
+
+    .line_loop
+
+    .sprite_addr
+    LDA &FFFF, Y
+    STA beeb_data
+    AND #&11
+    TAX
+.smPIXELD
+    LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+\    ORA map_2bpp_to_left_mask,X
+    PHA                                 ; [3c]
+    LDA beeb_data
+    AND #&22
+    TAX
+.smPIXELC
+    LDA map_2bpp_to_mode2_pixel,X
+\    ORA map_2bpp_to_right_mask,X
+    PHA
+    LDA beeb_data
+    LSR A
+    LSR A
+    STA beeb_data
+    AND #&11
+    TAX
+.smPIXELB
+    LDA map_2bpp_to_mode2_pixel,X
+\    ORA map_2bpp_to_left_mask,X
+    PHA
+    LDA beeb_data
+    AND #&22
+    TAX
+.smPIXELA
+    LDA map_2bpp_to_mode2_pixel,X
+\    ORA map_2bpp_to_right_mask,X
+    PHA
+    DEY
+    BPL line_loop
+
+\ How many bytes to plot?
+
+    LDA VISWIDTH
+    ASL A           ; bytes_per_line_on_screen - can precompute
+    STA beeb_width
+
+\ If parity push an extra blank
+
+    LDA beeb_rem
+    BEQ no_extra
+    LDA #0
+    PHA
+    INC beeb_width  ; and extra byte
+    .no_extra
+
+\ Not sure how Exile does this?
+
+    TSX
+    STX smSTACK1+1
+    STX smSTACK2+1
+
+\ None of this needs to happen each loop!
+
+\ Sort out where to start in the stack lookup
+
+    LDA OFFLEFT
+    ASL A
+    TAX
+
+    LDA OPACITY
+    BPL not_reversed
+    LDA beeb_width
+    SEC
+    SBC OFFRIGHT
+    ASL A
+    INC A
+    TAX
+    .not_reversed
+
+\ Now plot that data to the screen
+
+    LDY beeb_yoffset
+    CLC
+
+.plot_screen_loop
+
+    .smSTACKdir1
+    INX
+.smSTACK1
+    LDA &100,X
+
+    .smSTACKdir2
+    INX
+.smSTACK2
+    ORA &100,X
+
+    STA load_mask+1
+    .load_mask
+    LDA mask_table
+    
+\ Plotting mode here
+
+    .smod
+    AND (beeb_writeptr), Y
+
+\ OR in sprite byte
+
+    ORA load_mask+1
+
+\ Write to screen
+
+    STA (beeb_writeptr), Y
+
+\ Next screen byte across
+
+    TYA
+    ADC #8
+    TAY
+
+    DEC beeb_width
+    BNE plot_screen_loop
+
+    LDA YCO
+    DEC A
+    .smTOP
+    CMP #LO(-1)
+    STA YCO
+    BEQ done_y
+
+\ Move to next sprite data row
+
+    CLC
+    LDA sprite_addr+1
+    ADC WIDTH
+    STA sprite_addr+1
+    LDA sprite_addr+2
+    ADC #0
+    STA sprite_addr+2
+
+\ Next scanline
+
+    DEC beeb_yoffset
+    BMI next_char_row
+    JMP plot_lines_loop
+
+\ Need to move up a screen char row
+
+    .next_char_row
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr+1
+
+    LDY #7
+    STY beeb_yoffset
+    JMP plot_lines_loop
+
+\ Reset stack before we leave
+
+    .done_y
+    LDX beeb_stack_ptr
+    TXS
+
+    .return
+    JMP DONE
+}
+
+
+\*-------------------------------
+\*
+\*  M I R R O R    L A Y
+\*
+\*  Called by LAY
+\*
+\*  Specified starting byte (XCO, YCO) is image's bottom
+\*  right corner, not bottom left; bytes are read off image
+\*  table R-L, T-B and mirrored before printing.
+\*
+\*  In:  A = OPACITY, sans bit 7
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_MLAY ;A = OPACITY
+{
+\ cmp #enum_eor
+\ bne label_1
+\ jmp MLayXOR
+
+.label_1 cmp #enum_mask
+ bcc label_2
+ jmp beeb_plot_sprite_LayMask               ; could be MLayMask custom fn
+
+.label_2 jmp beeb_plot_sprite_LayGen        ; could be MLayGen custom fn
+}
+
+
+.beeb_plot_sprite_SetPalette
+{
+    \ Set palette
+
+    LDA #&10:STA map_2bpp_to_mode2_pixel+&01
+    LDA #&20:STA map_2bpp_to_mode2_pixel+&02
+    LDA #&40:STA map_2bpp_to_mode2_pixel+&10
+    LDA #&50:STA map_2bpp_to_mode2_pixel+&11
+    LDA #&80:STA map_2bpp_to_mode2_pixel+&20
+    LDA #&A0:STA map_2bpp_to_mode2_pixel+&22
+
+    RTS
+}
+
+\ Top 4-bits are colour 3
+\ Bottom 4-bits are lookup into pixel pairs for colours 1 & 2
+\ Colour 0 always black
+.beeb_plot_sprite_SetExilePalette
+{
+    TAX
+    LSR A                     
+    LSR A
+    LSR A
+    LSR A
+    TAY                         ; Y = primary colour 
+
+    LDA pixel_table,Y           ; map primary colour (0-15) to Mode 2
+                                ; pixel value with that colour in both
+                                ; pixels
+    AND #$55                    
+    STA map_2bpp_to_mode2_pixel+$11                     ; &11 - primary colour right pixel
+    ASL A                       
+    STA map_2bpp_to_mode2_pixel+$22                     ; &22 - primary colour left pixel
+    
+    TXA
+    AND #$0F                    ; Y = (palette>>0)&15 - pair index
+    TAY
+    LDA palette_value_to_pixel_lookup,Y ; get pair
+    TAY                         
+    AND #$55                    ; get right pixel
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+    TYA
+    AND #$AA                    ; get left pixel
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    LSR A
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
     LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
     STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
 
@@ -1432,6 +1771,76 @@ NEXT
 
     LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
     STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
+}
+
+
+.beeb_plot_sprite_LayGen_NoCrop
+{
+    \ Get sprite data address 
+
+    JSR beeb_PREPREP
+
+    \ Check NULL sprite
+
+    LDA WIDTH
+    BNE width_ok
+    JMP DONE
+    .width_ok
+
+\    JSR beeb_plot_sprite_SetPalette
+
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
+
+    \ Beeb screen address
+
+    \ Mask off Y offset to get character row
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    LDX XCO
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
+
+\ Handle OFFSET
+
+    LDA OFFSET
+    AND #&04
+    ASL A
+    CLC
+    ADC beeb_writeptr
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    ADC #0
+    STA beeb_writeptr+1
+
+    LDA OFFSET
+    LSR A
+    AND #&1
+    STA beeb_rem                ; this is parity
+
+    ROR A
+    ROR A           ; put parity into &80
+    EOR OPACITY     ; mirror reverses parity
+    BPL no_swap
+
+\ L&R pixels need to be swapped over
+
+    JSR beeb_plot_sprite_FlipPalette
 
     .no_swap
 
@@ -1479,7 +1888,7 @@ NEXT
     STA smTOP+1
 
     TSX
-    STX beeb_carry          ; use this to reset stack
+    STX beeb_stack_ptr          ; use this to reset stack
 
 .plot_lines_loop
 
@@ -1488,7 +1897,7 @@ NEXT
 
 \ Decode a line of sprite data using Exile method!
 
-    LDX beeb_carry
+    LDX beeb_stack_ptr
     TXS
 
 \ Push a zero on the end in case of parity
@@ -1641,7 +2050,7 @@ NEXT
 \ Reset stack before we leave
 
     .done_y
-    LDX beeb_carry
+    LDX beeb_stack_ptr
     TXS
 
     .return
@@ -1653,20 +2062,20 @@ ALIGN &100
 IF 0
 .map_2bpp_to_mode2_pixel            ; foreground
 {
-    EQUB &00                        ; 00000000 either pixel logical 0
-    EQUB &01                        ; 000A000a right pixel logical 1
-    EQUB &02                        ; 00B000b0 left pixel logical 1
+    EQUB &00                        ; &00 - 00000000 either pixel logical 0
+    EQUB &01                        ; &01 - 000A000a right pixel logical 1
+    EQUB &02                        ; &02 - 00B000b0 left pixel logical 1
 
     skip &0D
 
-    EQUB &04                        ; 000A000a right pixel logical 2
-    EQUB &05                        ; 000A000a right pixel logical 3
+    EQUB &04                        ; &10 - 000A000a right pixel logical 2
+    EQUB &05                        ; &11 - 000A000a right pixel logical 3
 
     skip &0E
 
-    EQUB &08                        ; 00B000b0 left pixel logical 2
+    EQUB &08                        ; &20 - 00B000b0 left pixel logical 2
     skip 1
-    EQUB &0A                        ; 00B000b0 left pixel logical 3
+    EQUB &0A                        ; &22 - 00B000b0 left pixel logical 3
 }
 ELSE
 .map_2bpp_to_mode2_pixel            ; background
@@ -1713,5 +2122,82 @@ ENDIF
   rts
 }
 
+.bank_to_palette_temp
+{
+    EQUB &71            \ bg
+    EQUB &72            \ chtab13
+    EQUB &72            \ chtab25
+    EQUB &72            \ chtab467
+}
+
+.palette_value_to_pixel_lookup
+{
+    EQUB &07                        ; red / yellow
+    EQUB &34                        ; blue / cyan
+    EQUB &23                        ; magenta / red
+\    equb $CA                        ; yellow bg, black bg
+\    equb $C9                        ; green bg, red bg
+\    equb $E3                        ; magenta bg, red bg
+    equb $E9                        ; cyan bg, red bg
+    equb $EB                        ; white bg, red bg
+    equb $CE                        ; yellow bg, green bg
+    equb $F8                        ; cyan bg, blue bg
+    equb $E6                        ; magenta bg, green bg
+    equb $CC                        ; green bg, green bg
+    equb $EE                        ; white bg, green bg
+    equb $30                        ; blue fg, blue fg
+    equb $DE                        ; yellow bg, cyan bg
+    equb $EF                        ; white bg, yellow bg
+    equb $CB                        ; yellow bg, red bg
+    equb $FB                        ; white bg, magenta bg
+    equb $FE                        ; white bg, cyan bg
+}
+
+.pixel_table
+{
+    ;                                 ABCDEFGH
+    equb $00                        ; 00000000 0  0  
+    equb $03                        ; 00000011 1  1  
+    equb $0C                        ; 00001100 2  2  
+    equb $0F                        ; 00001111 3  3  
+    equb $30                        ; 00110000 4  4  
+    equb $33                        ; 00110011 5  5  
+    equb $3C                        ; 00111100 6  6  
+    equb $3F                        ; 00111111 7  7  
+    equb $C0                        ; 11000000 8  8  
+    equb $C3                        ; 11000011 9  9  
+    equb $CC                        ; 11001100 10 10
+    equb $CF                        ; 11001111 11 11
+    equb $F0                        ; 11110000 12 12
+    equb $F3                        ; 11110011 13 13
+    equb $FC                        ; 11111100 14 14
+    equb $FF                        ; 11111111 15 15
+}
+
+ALIGN &100
+.mask_table
+FOR byte,0,255,1
+left=byte AND &AA
+right=byte AND &55
+
+IF left = 0
+
+    IF right = 0
+        EQUB &FF
+    ELSE
+        EQUB &AA
+    ENDIF
+
+ELSE
+
+    IF right = 0
+        EQUB &55
+    ELSE
+        EQUB &00
+    ENDIF
+
+ENDIF
+
+NEXT
 
 .beeb_plot_end
