@@ -30,7 +30,7 @@
 .getdist jmp GETDIST
 .getdist1 jmp GETDIST1
 
-.getabovebeh BRK    ; jmp GETABOVEBEH
+.getabovebeh jmp GETABOVEBEH
 .rdblock jmp RDBLOCK
 .rdblock1 jmp RDBLOCK1
 .setupsword RTS     ; jmp SETUPSWORD                BEEB TO DO
@@ -75,7 +75,7 @@
 .markhalf jmp MARKHALF
 .addswordobj BRK        ; jmp ADDSWORDOBJ
 .getblocky1 jmp GETBLOCKYP
-.checkledge BRK         ; jmp CHECKLEDGE
+.checkledge jmp CHECKLEDGE
 .get2infront BRK        ; jmp GET2INFRONT
 
 .checkspikes RTS        ; jmp CHECKSPIKES               BEEB TO DO
@@ -1966,63 +1966,67 @@ IF 0    \\ Weirdly duped from grafix.asm
 }
 ENDIF
 
-IF _TODO
-*-------------------------------
-*
-*  C H E C K L E D G E
-*
-*  In: blockid = block that must be clear;
-*      A = RDBLOCK results for block that must be ledge
-*
-*  Out: A = 1 if grabbable, 0 if not
-*
-*-------------------------------
-CHECKLEDGE
+\*-------------------------------
+\*
+\*  C H E C K L E D G E
+\*
+\*  In: blockid = block that must be clear;
+\*      A = RDBLOCK results for block that must be ledge
+\*
+\*  Out: A = 1 if grabbable, 0 if not
+\*
+\*-------------------------------
+
+.CHECKLEDGE
+{
  sta ztemp
 
  lda (BlueSpec),y
- sta tempstate
+ sta coll_tempstate
 
  lda blockid ;must be clear
 
  cmp #block
- beq :no
+ beq local_no
 
  cmp #panelwof ;CMPSPACE considers panel w/o floor
-  bne :cont ;to be clear--
+  bne cont ;to be clear--
 
  bit CharFace ;but it isn't if char wants to grab
- bpl :no ;floorpiece to right
-:cont
+ bpl local_no ;floorpiece to right
+.cont
  jsr cmpspace
- bne :no
+ bne local_no
 
-* Clear above -- is there a ledge in front?
+\* Clear above -- is there a ledge in front?
 
  lda ztemp ;must be a solid floorpiece
 ;with exposed ledge
  cmp #loose
- bne :notloose
+ bne local_notloose
 
- bit tempstate
- bne :no ;floor is already loose
+ bit coll_tempstate
+ bne local_no ;floor is already loose
 
-:notloose
+.local_notloose
  cmp #panelwif
- bne :cont2 ;panel w/floor can be grabbed
+ bne cont2 ;panel w/floor can be grabbed
 ;only if facing right
  bit CharFace
- bmi :no
+ bmi local_no
 
-:cont2 jsr cmpspace
- beq :no
+.cont2 jsr cmpspace
+ beq local_no
 
-:yes lda #1
+.local_yes lda #1
  rts
 
-:no lda #0
-]rts rts
+.local_no lda #0
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  C H E C K   S P I K E S

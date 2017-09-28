@@ -84,15 +84,15 @@ jthres1x ds 1
 jthres1y ds 1
 jthres2x ds 1
 jthres2y ds 1
-jvert ds 1
-jhoriz ds 1
-jbtns ds 1
-joyon ds 1
 ENDIF
+.jvert skip 1
+.jhoriz skip 1
+.jbtns skip 1
+.joyon skip 1
 .develment skip 1
 .keypress skip 1
+.keydown skip 1
 IF _TODO
-keydown ds 1
 IIGS ds 1
 ENDIF
 

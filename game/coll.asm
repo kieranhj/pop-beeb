@@ -16,7 +16,7 @@
 
 .checkbarr jmp CHECKBARR
 .collisions jmp COLLISIONS
-.getfwddist BRK     ; jmp GETFWDDIST
+.getfwddist jmp GETFWDDIST
 .checkcoll jmp CHECKCOLL
 .animchar jmp ANIMCHAR
 
@@ -869,146 +869,150 @@ gatemargin = 6 ;higher = more generous
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   F W D   D I S T
-*
-*  In: Char data
-*
-*  Out: A = size of "careful step" forward (0-14 pixels)
-*       X = what you're stepping up to
-*           (0 = edge, 1 = barrier, 2 = clear)
-*       RDBLOCK results for that block
-*
-*-------------------------------
-GETFWDDIST
+\*-------------------------------
+\*
+\*  G E T   F W D   D I S T
+\*
+\*  In: Char data
+\*
+\*  Out: A = size of "careful step" forward (0-14 pixels)
+\*       X = what you're stepping up to
+\*           (0 = edge, 1 = barrier, 2 = clear)
+\*       RDBLOCK results for that block
+\*
+\*-------------------------------
 
-* Get edges
+.GETFWDDIST
+{
+\* Get edges
 
  jsr GetBaseBlock
  jsr setupchar
  jsr getedges
 
-* If this block contains barrier, get distance
+\* If this block contains barrier, get distance
 
  jsr getunderft ;read block underfoot
- sta tempobjid
+ sta coll_tempobjid
 
  jsr cmpbarr
- beq :nextb ;This block is clear
+ beq nextb ;This block is clear
 
  lda CharBlockX
  sta tempblockx
  jsr DBarr ;returns A = dist to barrier
  tax
- bpl :tobarr
+ bpl tobarr
 
-* If next block contains barrier, get distance
+\* If next block contains barrier, get distance
 
-:nextb
+.nextb
  jsr getinfront
- sta tempobjid
+ sta coll_tempobjid
  cmp #panelwof
- bne :99 ;Panelwof is special case
+ bne label_99 ;Panelwof is special case
  ldx CharFace ;if you're facing R
- bpl :toEOB
+ bpl toEOB
 
-:99 jsr cmpbarr
- beq :nobarr
+.label_99 jsr cmpbarr
+ beq nobarr
 
  lda infrontx
  sta tempblockx
  jsr DBarr
  tax
- bpl :tobarr
+ bpl tobarr
 
-* If next block is dangerous (e.g., empty space)
-* or sword or potion, step to end of this block
+\* If next block is dangerous (e.g., empty space)
+\* or sword or potion, step to end of this block
 
-:nobarr
+.nobarr
  jsr getinfront ;read block in front
- sta tempobjid
+ sta coll_tempobjid
 
   cmp #loose
- beq :toEOB ;step to end of block
+ beq toEOB ;step to end of block
 
  cmp #pressplate
- beq :toEOB1
+ beq toEOB1
 
  cmp #sword
- beq :toEOB1
+ beq toEOB1
  cmp #flask
- beq :toEOB1
+ beq toEOB1
 
  jsr cmpspace
- beq :toEOB
+ beq toEOB
 
-* All clear--take a full step forward
+\* All clear--take a full step forward
 
-:fullstep lda #11 ;natural step size
+.local_fullstep lda #11 ;natural step size
 
  ldx #2 ;clear
- bne :done
+ bne done
 
-* Step to end of block (no "testfoot")
+\* Step to end of block (no "testfoot")
 
-:toEOB1 jsr getdist
- beq :fullstep
+.toEOB1 jsr getdist
+ beq local_fullstep
  ldx #0
- beq :done
+ beq done
 
-* Step to end of block
+\* Step to end of block
 
-:toEOB jsr getdist ;returns # pixels to end of block (0-13)
+.toEOB jsr getdist ;returns # pixels to end of block (0-13)
 
  ldx #0 ;edge
 
-:done ldy tempobjid
-]rts rts
+.done ldy coll_tempobjid
+.return
+ rts
 
-* Step up to barrier
+\* Step up to barrier
 
-:tobarr
+.tobarr
  cmp #14
- bcs :fullstep
+ bcs local_fullstep
 
  ldx #1 ;barrier
- bne :done
+ bne done
+}
 
-*-------------------------------
-*
-* Get distance to barrier
-*
-* In: rdblock results; tempobjid
-*     Must have called setupchar/getedges
+\*-------------------------------
+\*
+\* Get distance to barrier
+\*
+\* In: rdblock results; tempobjid
+\*     Must have called setupchar/getedges
 \* Out: A = distance to barrier (- if barr is behind char)
-*
-*-------------------------------
-DBarr
- lda tempobjid
+\*
+\*-------------------------------
+
+.DBarr
+{
+ lda coll_tempobjid
  cmp #gate
- bne :ok
+ bne ok
 ;treat gate as barrier only if down
  jsr gatebarr ;returns cs if open
- bcs :clr
+ bcs local_clr
 
-:ok lda tempblockx
+.ok lda tempblockx
  jsr getblockej
  clc
  adc #angle
  sta blockedge ;L edge of this block
 
  lda CharFace
- bmi :checkL
+ bmi checkL
 
-* Char facing R -- get distance to barrier
+\* Char facing R -- get distance to barrier
 
-:checkR
- lda tempobjid ;block ID
+.checkR
+ lda coll_tempobjid ;block ID
 
  jsr cmpbarr ;return A = barrier code #
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1020,16 +1024,16 @@ DBarr
  sbc CDRightEj
  rts ;If -, barr is behind char
 
-:clr lda #-1
+.local_clr lda #LO(-1)
  rts
 
-* Char facing L -- get distance to barr
+\* Char facing L -- get distance to barr
 
-:checkL
- lda tempobjid
+.checkL
+ lda coll_tempobjid
 
  jsr cmpbarr
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1043,8 +1047,9 @@ DBarr
  sec
  sbc ztemp
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*

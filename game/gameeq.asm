@@ -77,7 +77,7 @@
 .AMtimer skip 1
 .begrange skip 1
 ;.scrn skip 1
-;.keybufptr skip 1
+.keybufptr skip 1
 .VisScrn skip 1
 .OppStrength skip 1
 ;.jarabove skip 1
@@ -149,8 +149,8 @@
 .message skip 1
 .SPEED skip 1
 .nummob skip 1
-;.clrSEL skip 5
-;.clrDESEL skip 5
+.clrSEL skip 5
+.clrDESEL skip 5
 .vibes skip 1
 .SongCue skip 1
 .musicon skip 1
@@ -205,7 +205,7 @@ ALIGN &100
 
 
 keybuflen = 10
-;keybuf ds keybuflen
+.keybuf skip keybuflen
 
 \*-------------------------------
 \*

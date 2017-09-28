@@ -198,10 +198,10 @@ width = IMAGE+1
 .scrnAboveL skip 1
 .scrnAboveR skip 1
 .scrnBelowR skip 1
-;.kbdX skip 1
-;.kbdY skip 1
-;.joyX skip 1
-;.joyY skip 1
+.kbdX skip 1
+.kbdY skip 1
+.joyX skip 1
+.joyY skip 1
 .btn skip 1
 ;.butt skip 1
 

@@ -17,7 +17,7 @@
 \
 .gr BRK         ;jmp GR
 .drawall jmp DRAWALL
-.controller BRK ;jmp CONTROLLER
+.controller RTS ;jmp CONTROLLER     BEEB TO DO JOYSTICK
 \ jmp dispversion
 .saveblue BRK   ;jmp SAVEBLUE
 \
@@ -65,7 +65,7 @@
 
 .loadstage2 BRK ;jmp LOADSTAGE2
 \ jmp RELOAD
-.getselect RTS  ;jmp GETSELECT                      BEEB TO DO KEYS
+.getselect jmp GETSELECT
 .getdesel BRK   ;jmp GETDESEL
 .edreboot BRK   ;jmp EDREBOOT ;ed
 \
@@ -1080,54 +1080,61 @@ range = 36*7 ;largest multiple of 7 under 256
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Joystick/keyboard routines
-*
-*-------------------------------
-*
-*  Get input from selected/deselected device
-*
-*  In: kbdX, kbdY, joyX, joyY, BTN0, BTN1, ManCtrl
-*
-*  Out: JSTKX, JSTKY, btn
-*
-*-------------------------------
-GETSELECT
+\*-------------------------------
+\*
+\*  Joystick/keyboard routines
+\*
+\*-------------------------------
+\*
+\*  Get input from selected/deselected device
+\*
+\*  In: kbdX, kbdY, joyX, joyY, BTN0, BTN1, ManCtrl
+\*
+\*  Out: JSTKX, JSTKY, btn
+\*
+\*-------------------------------
+.GETSELECT
  lda joyon ;joystick selected?
  bne getjoy ;yes--use jstk
  beq getkbd ;no--use kbd
 
-GETDESEL
+.GETDESEL
  lda joyon
  bne getkbd
  beq getjoy
 
-getjoy lda joyX
+.getjoy
+{
+ lda joyX
  sta JSTKX
  lda joyY
  sta JSTKY
 
  lda BTN1
  ldx ManCtrl ;When manual ctrl is on, btn 0 belongs
- bmi :1 ;to kbd and btn 1 to jstk.  With manual ctrl
+ bmi label_1 ;to kbd and btn 1 to jstk.  With manual ctrl
  ora BTN0 ;off, btns can be used interchangeably.
-:1 sta btn
+.label_1 sta btn
  rts
+}
 
-getkbd lda kbdX
+.getkbd
+{
+ lda kbdX
  sta JSTKX
  lda kbdY
  sta JSTKY
 
  lda BTN0
  ldx ManCtrl
- bmi :1
+ bmi label_1
  ora BTN1
-:1 sta btn
-return rts
+.label_1 sta btn
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Read controller (jstk & buttons)

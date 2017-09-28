@@ -17,17 +17,17 @@ DebugKeys = 0
 \*-------------------------------
 \ org org
 
- .key BRK       ;jmp KEYS
- .clrjstk RTS   ;jmp CLRJSTK            BEEB TO DO KEYS
+ .keys jmp KEYS
+ .clrjstk jmp CLRJSTK
  .zerosound RTS ;jmp ZEROSOUND          BEEB TO DO SOUND
  .addsound RTS  ;jmp ADDSOUND           BEEB TO DO SOUND
- .facejstk RTS  ;jmp FACEJSTK           BEEB TO DO KEYS
+ .facejstk jmp FACEJSTK
 
- .SaveSelect RTS  ;jmp SAVESELECT       BEEB TO DO KEYS
- .LoadSelect RTS  ;jmp LOADSELECT       BEEB TO DO KEYS
- .SaveDesel BRK   ;jmp SAVEDESEL
- .LoadDesel BRK   ;jmp LOADDESEL
- .initinput RTS   ;jmp INITINPUT        BEEB TO DO KEYS
+ .SaveSelect jmp SAVESELECT
+ .LoadSelect jmp LOADSELECT
+ .SaveDesel jmp SAVEDESEL
+ .LoadDesel jmp LOADDESEL
+ .initinput jmp INITINPUT
 
  .demokeys RTS    ;jmp DEMOKEYS         BEEB TO DO
  .listtorches BRK ;jmp LISTTORCHES
@@ -42,7 +42,7 @@ DebugKeys = 0
  \jmp decstr
 
  .dloop BRK       ;jmp DLOOP
- .strobe RTS      ;jmp STROBE           BEEB TO DO KEYS
+ .strobe jmp STROBE
 
 \*-------------------------------
 \ lst
@@ -84,12 +84,19 @@ game_time_limit = 60 ;game time limit
 
 \*  Player control keys
 
-kleft = 'j'
-kdown = 'k'
-kright = 'l'
-kupleft = 'u'
-kup = 'i'
-kupright = 'o'
+;kleft = 'j'+&80
+;kdown = 'k'+&80
+;kright = 'l'+&80
+;kupleft = 'u'+&80
+;kup = 'i'+&80
+;kupright = 'o'+&80
+
+kleft = 'z'+&80
+kdown = '/'+&80
+kright = 'x'+&80
+kupleft = ';'+&80
+kup = ':'+&80
+kupright = ']'+&80
 
 \*  Special keys (legit)
 
@@ -132,23 +139,25 @@ ktimefwd = '>'
 ktimeup = 'M'
 kerasegame = '*'
 
-IF _TODO
-*-------------------------------
-*
-*  K E Y S
-*
-*  Detect & respond to keypresses
-*
-*-------------------------------
-KEYS
+\*-------------------------------
+\*
+\*  K E Y S
+\*
+\*  Detect & respond to keypresses
+\*
+\*-------------------------------
+.KEYS
+{
  lda SINGSTEP
  beq KEYS1
-
-freeze lda $C000
+}
+.freeze
+{
+ lda $C000
  bpl freeze
 
  cmp #kfreeze
- beq :fradv
+ beq fradv
 
  ldx #0
  stx SINGSTEP
@@ -156,103 +165,143 @@ freeze lda $C000
  lda #0 ;ignore the keypress that breaks ESC
  beq KEYS2
 
-:fradv lda #1
+.fradv lda #1
  sta SINGSTEP
  sta $C010
  sta keypress
-]rts rts
+}
+.return_35
+ rts
 
-KEYS1 lda $C000 ;ASCII value of last keypress
+.beeb_strobe EQUB 0
+
+.KEYS1
+{
+\ NOT BEEB
+\lda $C000 ;ASCII value of last keypress
  ;(Hibit is keyboard strobe)
-KEYS2 sta keypress
 
- lda $C010 ;Hibit is any-key-down flag
+\ BEEB
+ LDA #&81
+ LDX #0
+ LDY #0
+ JSR osbyte
+\ X=ASCII value if pressed
+ BCC key_pressed 
+
+\ No key pressed
+ LDA #0
+ STA beeb_strobe
+ JMP KEYS2
+
+.key_pressed
+
+  TXA
+  AND #&7F
+
+  LDY beeb_strobe
+  BNE stale_press
+
+  LDY #&80
+  STY beeb_strobe
+
+  \ If strobe 0 then fresh press
+  ORA #&80
+  .stale_press
+}
+.KEYS2
+{
+ sta keypress
+
+\ NOT BEEB
+\ lda $C010 ;Hibit is any-key-down flag
  ;(Clears keyboard strobe)
+ LDA beeb_strobe
  sta keydown
 
  jsr KREAD ;Keyboard control
 
  lda keypress
- bpl ]rts
+ bpl return_35
 
  IF DebugKeys
 
  ldx develment
- beq :nogo ;GO codes work only in cheat mode
+ beq nogo ;GO codes work only in cheat mode
  cmp #"0"
  bcc :nogo
  cmp #"9"+1
  bcs :nogo
 
-* We have a keypress 0-9
-* Check if it follows a "GO" key sequence
+\* We have a keypress 0-9
+\* Check if it follows a "GO" key sequence
 
- lda #C_go0
- ldx #>C_go0
+ lda #LO(C_go0)
+ ldx #HI(C_go0)
  jsr checkcode
- bne :nogo0
+ bne nogo0
  lda #0 ;1st digit
-:golevel clc
+.golevel clc
  adc keypress
  sec
  sbc #"0" ;2-key value
 
  cmp #4 ;only levels 4-12 accessible
- bcc ]rts
+ bcc return
  cmp #13
- bcs ]rts
+ bcs return
  sta NextLevel
  jsr shortentime
-]rts rts
+.return
+ rts
 
-:nogo0 lda #C_go1
- ldx #>C_go1
+.nogo0 lda #LO(C_go1)
+ ldx #HI(C_go1)
  jsr checkcode
- bne :nogo
+ bne nogo
  lda #10
- bne :golevel
+ bne golevel
 
  ENDIF
 
-* Normal key handling
+\* Normal key handling
 
-:nogo lda keypress
+.nogo lda keypress
  jsr addkey ;Add key to kbd buffer
 
  IF NoCheatKeys
  ELSE
 
-* Set development flag?
+\* Set development flag?
 
- lda #C_devel
- ldx #>C_devel
+ lda #LO(C_devel)
+ ldx #HI(C_devel)
  jsr checkcode
- bne :1
+ bne label_1
  lda #1
  sta develment
  jmp gtone
-:1
+.label_1
  ENDIF
 
-* Skip to next level?
+\* Skip to next level?
 
- lda #C_skip
- ldx #>C_skip
+ lda #LO(C_skip)
+ ldx #HI(C_skip)
  jsr checkcode
- bne :2
+ bne label_2
  lda #3 ;up to level 4
  ldx develment
- beq :limit
+ beq limit
  lda #11 ;or level 12 in cheat mode
-:limit cmp level
- bcc :2
+.limit cmp level
+ bcc label_2
  inc NextLevel
 
  jsr shortentime
-:2
- fin      \\ WHERE'S THE DO?
+.label_2
 
-* Special keys
+\* Special keys
 
  jsr LegitKeys
 
@@ -260,129 +309,141 @@ KEYS2 sta keypress
 
  jsr TempDevel
 
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-*  L E G I T   K E Y S
-*
-*-------------------------------
-LegitKeys
+\*-------------------------------
+\*
+\*  L E G I T   K E Y S
+\*
+\*-------------------------------
+
+.LegitKeys
+{
  lda keypress
  cmp #kfreeze
- bne :1
+ bne label_1
  jmp freeze
 
-:1 cmp #krestart
- bne :1a
+.label_1 cmp #krestart
+ bne label_1a
  jmp goattract ;in topctrl
 
-:1a cmp #kabort
- bne :1b
+.label_1a cmp #kabort
+ bne label_1b
  jmp restart
 
-:1b
+.label_1b
  IF EditorDisk
  cmp #kreturn
- bne :2
+ bne label_2
  jmp gobuild
  ENDIF
 
-* Keyboard/joystick
+\* Keyboard/joystick
 
-:2 cmp #ksetkbd
- bne :30
+.label_2 cmp #ksetkbd
+ bne label_30
  lda #0
  sta joyon
-]sk1 jmp gtone
+.label_sk1 jmp gtone
 
-:30 cmp #ksetjstk
- bne :31
+.label_30 cmp #ksetjstk
+ bne label_31
  jsr setcenter
- jmp ]sk1
+ jmp label_sk1
 
-:31 cmp #kflipx
- bne :32
+.label_31 cmp #kflipx
+ bne label_32
  lda jhoriz
  eor #1
  sta jhoriz
- bpl ]sk1
+ bpl label_sk1
 
-:32 cmp #kflipy
- bne :3
+.label_32 cmp #kflipy
+ bne label_3
  lda jvert
  eor #1
  sta jvert
- bpl ]sk1
+ bpl label_sk1
 
-* Sound on/off
+\* Sound on/off
 
-:3 cmp #ksound
- bne :16
-]togsound
+.label_3 cmp #ksound
+ bne label_16
+.togsound
  jsr zerosound
  lda soundon
  eor #1
  sta soundon
- bne ]sk1
+ bne label_sk1
  rts
 
-:16 cmp #kmusic
- bne :26
+.label_16 cmp #kmusic
+ bne label_26
  lda musicon
  eor #1
  sta musicon
- bne ]sk1
+ bne label_sk1
  rts
 
-:26 cmp #kversion
- bne :17
+.label_26 cmp #kversion
+ bne label_17
  jmp dispversion ;display version #
 
-* Save/load game
+\* Save/load game
 
-:17 cmp #ksavegame
- bne :18
- lda level
- sta SavLevel
- jmp DoSaveGame
+.label_17 cmp #ksavegame
+ bne label_18
+\ BEEB TEMP SAVE GAMEs
+\ lda level
+\ sta SavLevel
+\ jmp DoSaveGame
 
-* Show time left
+\* Show time left
 
-:18 cmp #kshowtime
- bne :19
+.label_18 cmp #kshowtime
+ bne label_19
  lda #3
  sta timerequest
  rts
 
-:19
-]rts rts
+.label_19
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  D E V E L O P M E N T - O N L Y   K E Y S
-*
-*-------------------------------
-DevelKeys
+\*-------------------------------
+\*
+\*  D E V E L O P M E N T - O N L Y   K E Y S
+\*
+\*-------------------------------
+
+.DevelKeys
+{
  lda develment ;development flag
- beq ]rts
+ beq return
 
  jsr checkcodes ;secret codes
 
  lda keypress
  cmp #kclean
- bne :1
+ bne label_1
  lda #0
  sta develment
  rts
-:1
-]rts rts
+.label_1
+.return
+ rts
+}
 
-*-------------------------------
-* Temp development keys
-* (remove for final version)
-*-------------------------------
-TempDevel
+\*-------------------------------
+\* Temp development keys
+\* (remove for final version)
+\*-------------------------------
+
+.TempDevel
+{
  IF DebugKeys
 
  lda develment ;development flag
@@ -546,8 +607,11 @@ TempDevel
 
 :34
  ENDIF
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 * Temporarily change BBundID to reload code & data from side 1
 
@@ -562,56 +626,62 @@ preload
  lda #POPside1
  sta BBundID
  rts
+ENDIF
 
-*-------------------------------
-*
-* A D D K E Y
-*
-* In: A = key value
-*
-*-------------------------------
-addkey
+\*-------------------------------
+\*
+\* A D D K E Y
+\*
+\* In: A = key value
+\*
+\*-------------------------------
+
+.addkey
+{
  ldx keybufptr ;index to last key entry
  inx
  cpx #keybuflen
- bcc :ok
+ bcc ok
  ldx #0 ;wrap around
-:ok stx keybufptr
+.ok stx keybufptr
 
  sta keybuf,x
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  C H E C K   C O D E S
-*
-*  Only work in devel mode
-*
-*-------------------------------
-checkcodes
+\*-------------------------------
+\*
+\*  C H E C K   C O D E S
+\*
+\*  Only work in devel mode
+\*
+\*-------------------------------
+.checkcodes
+{
  IF NoCheatKeys
  rts
  ELSE
 
- lda #C_boost
- ldx #>C_boost
+ lda #LO(C_boost)
+ ldx #HI(C_boost)
  jsr checkcode
- bne :1
+ bne label_1
  jsr boostmeter
  lda MaxKidStr
  sta origstrength
  rts
 
-:1 lda #C_restore
- ldx #>C_restore
+.label_1 lda #LO(C_restore)
+ ldx #HI(C_restore)
  jsr checkcode
- bne :2
+ bne label_2
  jmp rechargemeter
 
-:2 lda #C_zap2
- ldx #>C_zap2
+.label_2 lda #LO(C_zap2)
+ ldx #HI(C_zap2)
  jsr checkcode
- bne :3
+ bne label_3
 ;zap guard down to 0
  lda #0
  sec
@@ -619,10 +689,10 @@ checkcodes
  sta ChgOppStr
  rts
 
-:3 lda #C_zap1
- ldx #>C_zap1
+.label_3 lda #LO(C_zap1)
+ ldx #HI(C_zap1)
  jsr checkcode
- bne :4
+ bne label_4
  ;zap guard down to 1
  lda #1
  sec
@@ -630,168 +700,171 @@ checkcodes
  sta ChgOppStr
  rts
 
-:4 lda #C_tina
- ldx #>C_tina
+.label_4 lda #LO(C_tina)
+ ldx #HI(C_tina)
  jsr checkcode
- bmi :5
+ bmi label_5
  lda #14
  sta NextLevel
  jsr shortentime
  rts
-:5
-]rts rts
+.label_5
+.return
+ rts
  ENDIF
+}
 
-*-------------------------------
-*
-* Compare keybuf sequence against code sequence
-*
-* In: A-X = code sequence address lo-hi
-* Return A = 0 if it matches, else ff
-*
-*-------------------------------
-checkcode
- sta :smod+1
- stx :smod+2
+\*-------------------------------
+\*
+\* Compare keybuf sequence against code sequence
+\*
+\* In: A-X = code sequence address lo-hi
+\* Return A = 0 if it matches, else ff
+\*
+\*-------------------------------
+
+.checkcode
+{
+ sta smod+1
+ stx smod+2
 
  ldx keybufptr ;last key entry
  ldy #0 ;last char of code seq
-:loop
-:smod lda $ffff,y ;smod
- beq ]rts ;0 = code seq delimiter
+.loop
+.smod lda $ffff,y ;smod
+ beq return ;0 = code seq delimiter
  cmp keybuf,x
- beq :match
- cmp #"A" ;alpha?
- bcc :fail
- cmp #"Z"+1
- bcs :fail
+ beq match
+ cmp #'A' ;alpha?
+ bcc fail
+ cmp #'Z'+1
+ bcs fail
  ora #$20 ;yes--try LC too
  cmp keybuf,x
- bne :fail
+ bne fail
 
-:match iny
+.match iny
  dex
- bpl :loop
+ bpl loop
  ldx #keybuflen-1 ;wrap around
- bpl :loop
+ bpl loop
 
-:fail lda #$ff
-]rts rts
+.fail lda #$ff
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Key sequence codes
-*
-* Use all caps; LC will be accepted too
-*
-*-------------------------------
-C_skip rev "SKIP"
- db 0
+\*-------------------------------
+\*
+\* Key sequence codes
+\*
+\* Use all caps; LC will be accepted too
+\*
+\*-------------------------------
+.C_skip EQUS "SKIP", 0
 
  IF NoCheatKeys
  ELSE
 
-C_devel rev "POP"
- db 0
-C_go0 rev "GO0"
- db 0
-C_go1 rev "GO1"
- db 0
-C_zap2 rev "ZAP"
- db 0
-C_boost rev "BOOST"
- db 0
-C_restore rev "R"
- db 0
-C_zap1 rev "Z"
- db 0
-C_tina rev "TINA"
- db 0
+.C_devel EQUS "POP", 0
+.C_go0 EQUS "GO0", 0
+.C_go1 EQUS "GO1", 0
+.C_zap2 EQUS "ZAP", 0
+.C_boost EQUS "BOOST", 0
+.C_restore EQUS "R", 0
+.C_zap1 EQUS "Z", 0
+.C_tina EQUS "TINA", 0
 
  ENDIF
 
-*-------------------------------
-*
-*  K R E A D
-*
-*  Keyboard player control
-*
-*  (Register a keypress for as long as key is held down)
-*
-*  Out: kbdX, kbdY
-*
-*-------------------------------
-KREAD
+\*-------------------------------
+\*
+\*  K R E A D
+\*
+\*  Keyboard player control
+\*
+\*  (Register a keypress for as long as key is held down)
+\*
+\*  Out: kbdX, kbdY
+\*
+\*-------------------------------
+
+.KREAD
+{
  lda #0
  sta kbdX
  sta kbdY
 
  lda keypress
- bmi :cont ;fresh press
+ bmi cont ;fresh press
 
  ldx keydown
- bpl ]rts ;No fresh press & no key down
+ bpl return ;No fresh press & no key down
 
  ora #$80 ;stale press, key still down
-:cont
+.cont
  cmp #kleft
- beq :left
+ beq local_left
  cmp #kleft-SHIFT
- bne :1
+ bne label_1
 
-:left lda #-1
-:setx sta kbdX
+.local_left lda #LO(-1)
+.local_setx sta kbdX
  rts
 
-:1 cmp #kright
- beq :right
+.label_1 cmp #kright
+ beq local_right
  cmp #kright-SHIFT
- bne :2
+ bne label_2
 
-:right lda #1
- bne :setx
+.local_right lda #1
+ bne local_setx
 
-:2 cmp #kup
- beq :up
+.label_2 cmp #kup
+ beq local_up
  cmp #kup-SHIFT
- bne :3
+ bne label_3
 
-:up lda #-1
-:sety sta kbdY
+.local_up lda #LO(-1)
+.local_sety sta kbdY
  rts
 
-:3 cmp #kdown
- beq :down
+.label_3 cmp #kdown
+ beq local_down
  cmp #kdown-SHIFT
- bne :4
+ bne label_4
 
-:down lda #1
- bne :sety
+.local_down lda #1
+ bne local_sety
 
-:4 cmp #kupleft
- beq :ul
+.label_4 cmp #kupleft
+ beq local_ul
  cmp #kupleft-SHIFT
- bne :5
+ bne label_5
 
-:ul lda #-1
+.local_ul lda #LO(-1)
  sta kbdX
- bne :sety
+ bne local_sety
 
-:5 cmp #kupright
- beq :ur
+.label_5 cmp #kupright
+ beq local_ur
  cmp #kupright-SHIFT
- bne :6
+ bne label_6
 
-:ur lda #1
+.local_ur lda #1
  sta kbdX
- lda #-1
+ lda #LO(-1)
  sta kbdY
- bne :sety
-:6
+ bne local_sety
+.label_6
 
-]rts rts
-*-------------------------------
-FACEJSTK
+.return
+ rts
+}
+
+\*-------------------------------
+.FACEJSTK
+{
  lda #0
  sec
  sbc JSTKX
@@ -802,175 +875,198 @@ FACEJSTK
  sta clrF
  stx clrB ;& switch clrF/clrB
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  Note: Jstk-push flags are saved as if back = R, fwd = L
-*  (i.e., char is facing L)
-*
-*-------------------------------
-SAVESELECT
+\*-------------------------------
+\*
+\*  Note: Jstk-push flags are saved as if back = R, fwd = L
+\*  (i.e., char is facing L)
+\*
+\*-------------------------------
+
+.SAVESELECT
+{
  ldx #4
-:loop lda clrF,x
+.loop lda clrF,x
  sta clrSEL,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-LOADSELECT
+\*-------------------------------
+
+.LOADSELECT
+{
  ldx #4
-:loop lda clrSEL,x
+.loop lda clrSEL,x
  sta clrF,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-SAVEDESEL
+\*-------------------------------
+
+.SAVEDESEL
+{
  ldx #4
-:loop lda clrF,x
+.loop lda clrF,x
  sta clrDESEL,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-LOADDESEL
+\*-------------------------------
+
+.LOADDESEL
+{
  ldx #4
-:loop lda clrDESEL,x
+.loop lda clrDESEL,x
  sta clrF,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-INITINPUT
+\*-------------------------------
+
+.INITINPUT
+{
  lda #0
 
  ldx #4
-:loop sta clrDESEL,x
+.loop sta clrDESEL,x
  sta clrSEL,x
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  C L E A R   J O Y S T I C K
-*
-*  In/out: JSTKX, JSTKY, btn
-*          clrF-B-U-D-btn
-*
-*  clr = 0: no press
-*  clr = 1: used press
-*  clr = -1: unused press
-*
-*  Assume char is facing L
-*
-*-------------------------------
-*
-*  Input consists of 5 "buttons": forward, back, up, down,
-*  and the real button.  Each button has its own "clr" flag:
-*  clrF,B,U,D & btn.
-*
-*  When ClrJstk sees a button down:
-*    If clr = 1 or -1... leave it alone
-*    If clr = 0... set clr = -1
-*
-*  When ClrJstk sees a button up:
-*    If clr = 0 or -1... leave it alone
-*    If clr = 1... set clr = 0
-*
-*  When GenCtrl acts on a button press, it sets clr = 1.
-*
-*-------------------------------
-CLRJSTK
+\*-------------------------------
+\*
+\*  C L E A R   J O Y S T I C K
+\*
+\*  In/out: JSTKX, JSTKY, btn
+\*          clrF-B-U-D-btn
+\*
+\*  clr = 0: no press
+\*  clr = 1: used press
+\*  clr = -1: unused press
+\*
+\*  Assume char is facing L
+\*
+\*-------------------------------
+\*
+\*  Input consists of 5 "buttons": forward, back, up, down,
+\*  and the real button.  Each button has its own "clr" flag:
+\*  clrF,B,U,D & btn.
+\*
+\*  When ClrJstk sees a button down:
+\*    If clr = 1 or -1... leave it alone
+\*    If clr = 0... set clr = -1
+\*
+\*  When ClrJstk sees a button up:
+\*    If clr = 0 or -1... leave it alone
+\*    If clr = 1... set clr = 0
+\*
+\*  When GenCtrl acts on a button press, it sets clr = 1.
+\*
+\*-------------------------------
+
+.CLRJSTK
+{
  lda clrF
- bmi :1 ;leave it set at -1
+ bmi label_1 ;leave it set at -1
 
  ldx JSTKX ;jstk fwd?
- bmi :yesF ;yes--if clr = 0, set clr = -1
+ bmi yesF ;yes--if clr = 0, set clr = -1
 ;no--set clr = 0
  lda #0
- beq :staF
+ beq staF
 
-:yesF cmp #0
- bne :1
+.yesF cmp #0
+ bne label_1
 
- lda #-1
-:staF sta clrF
+ lda #LO(-1)
+.staF sta clrF
 
-*-------------------------------
-:1 lda clrB
- bmi :2
+\*-------------------------------
+.label_1 lda clrB
+ bmi label_2
 
  ldx JSTKX
  cpx #1
- beq :yesB
+ beq yesB
 
  lda #0
- beq :staB
+ beq staB
 
-:yesB cmp #0
- bne :2
+.yesB cmp #0
+ bne label_2
 
- lda #-1
-:staB sta clrB
+ lda #LO(-1)
+.staB sta clrB
 
-*-------------------------------
-:2 lda clrU
- bmi :3
+\*-------------------------------
+.label_2 lda clrU
+ bmi label_3
 
  ldx JSTKY
- bmi :yesU
+ bmi yesU
 
  lda #0
- beq :staU
+ beq staU
 
-:yesU cmp #0
- bne :3
+.yesU cmp #0
+ bne label_3
 
- lda #-1
-:staU sta clrU
+ lda #LO(-1)
+.staU sta clrU
 
-*-------------------------------
-:3 lda clrD
- bmi :4
+\*-------------------------------
+.label_3 lda clrD
+ bmi label_4
 
  ldx JSTKY
  cpx #1
- beq :yesD
+ beq yesD
 
  lda #0
- beq :staD
+ beq staD
 
-:yesD cmp #0
- bne :4
+.yesD cmp #0
+ bne label_4
 
- lda #-1
-:staD sta clrD
+ lda #LO(-1)
+.staD sta clrD
 
-*-------------------------------
-:4 lda clrbtn
- bmi :5
+\*-------------------------------
+.label_4 lda clrbtn
+ bmi label_5
 
  ldx btn
- bmi :yesbtn
+ bmi yesbtn
 
  lda #0
- beq :stabtn
+ beq stabtn
 
-:yesbtn cmp #0
- bne :5
+.yesbtn cmp #0
+ bne label_5
 
- lda #-1
-:stabtn sta clrbtn
+ lda #LO(-1)
+.stabtn sta clrbtn
 
-:5
-]rts rts
+.label_5
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Z E R O S O U N D
@@ -1339,21 +1435,23 @@ CUESONG
  sta SongCue
  stx SongCount
  rts
+ENDIF
 
-*-------------------------------
-*
-*  Strobe keyboard
-*
-*-------------------------------
-DLOOP
-STROBE jsr keys ;Detect & respond to keypresses
+\*-------------------------------
+\*
+\*  Strobe keyboard
+\*
+\*-------------------------------
+.DLOOP
+.STROBE
+{
+ jsr keys ;Detect & respond to keypresses
  jsr controller
-]rts rts
-
+ rts
+}
 
 \*-------------------------------
 \ lst
 \eof ds 1
 \  usr $a9,19,$b00,*-org
 \ lst off
-ENDIF

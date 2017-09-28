@@ -23,7 +23,7 @@
 
 .cutguard RTS           ; jmp CUTGUARD              BEEB TO DO
 .addguard RTS           ; jmp ADDGUARD              BEEB TO DO
-.cut BRK                ; jmp CUT
+.cut jmp CUT
 
 \*-------------------------------
 \ lst
@@ -1689,17 +1689,20 @@ mirrmusic
  sta exitopen ;so we don't repeat theme
 :no4
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  C U T
-*
-*  Move char from CharScrn to adjacent screen
-*
-*  In: A = cut dir: 0 = left, 1 = right, 2 = up, 3 = down
-*
-*-------------------------------
-CUT
+\*-------------------------------
+\*
+\*  C U T
+\*
+\*  Move char from CharScrn to adjacent screen
+\*
+\*  In: A = cut dir: 0 = left, 1 = right, 2 = up, 3 = down
+\*
+\*-------------------------------
+
+.CUT
+{
  cmp #3
  beq Cdown
  cmp #1
@@ -1707,7 +1710,7 @@ CUT
  cmp #2
  beq Cup
 
-Cleft
+.Cleft
  lda CharScrn
  jsr getleft ;get new screen #
  sta CharScrn
@@ -1720,7 +1723,7 @@ Cleft
  ldx #1 ;new FromDir
  rts
 
-Cright
+.Cright
  lda CharScrn
  jsr getright
  sta CharScrn
@@ -1733,7 +1736,7 @@ Cright
  ldx #0
  rts
 
-Cup
+.Cup
  lda CharScrn
  jsr getup
  sta CharScrn
@@ -1751,7 +1754,7 @@ Cup
  ldx #3
  rts
 
-Cdown
+.Cdown
  lda CharScrn
  jsr getdown
  sta CharScrn
@@ -1767,8 +1770,11 @@ Cdown
  sta CharY
 
  ldx #2
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * A D D  G U A R D
