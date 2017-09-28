@@ -196,6 +196,10 @@
 \
 \.RAMRD sta $c003
 
+\ Must select swram bank before accessing sprite data
+   LDA BANK
+   JSR swr_select_slot
+
  jsr setimage
 
  ldy #1
