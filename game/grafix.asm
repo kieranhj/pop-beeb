@@ -81,7 +81,7 @@
 .addmid jmp ADDMID
 .addmidez jmp ADDMIDEZ
 \
-.addwipe BRK    ;jmp ADDWIPE
+.addwipe RTS    ;jmp ADDWIPE
 .addmsg BRK     ;jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
@@ -109,7 +109,7 @@
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank RTS     ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc       BEEB TO DO
+.vblank JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc       BEEB TO DO
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \
@@ -219,6 +219,10 @@ cwidthy = 15 ;21
  sta bgY,X
 
  lda IMAGE
+\\ BEEB TEMP
+ BNE image_ok
+ BRK
+ .image_ok
  sta bgIMG,X
 
  lda OPACITY
@@ -868,6 +872,10 @@ ENDIF
  sta TABLE
 
  lda IMAGE ;Bit 7: 0 = bgtable1, 1 = bgtable2
+\\ BEEB TEMP
+ BNE image_ok
+ BRK
+ .image_ok
  bpl bg1
 
  and #$7f

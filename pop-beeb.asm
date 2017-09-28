@@ -7,8 +7,9 @@
 ; Defines
 \*-------------------------------
 
-CPU 1
+CPU 1               ; MASTER ONLY
 _TODO = FALSE
+_DEBUG = TRUE       ; enable bounds checks
 
 ; Original PoP global defines
 
@@ -225,7 +226,7 @@ IF 0
     RTS
 ENDIF
 
-IF 1
+IF 0
     \\ Level load & plot test
     LDX #1
 

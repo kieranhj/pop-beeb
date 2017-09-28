@@ -101,7 +101,7 @@ ENDIF
 {
  jsr mainmem
  jsr hires_GETWIDTH
- jmp auxmem
+ PHA:JSR auxmem:PLA:RTS         \\ must preserve A&X
 }
 
 IF _TODO

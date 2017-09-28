@@ -91,8 +91,14 @@
     sta &f4
     sta swr_slot_selected
     cli
+IF _DEBUG
+    rts
+.bad_socket
+    brk
+ELSE
 .bad_socket
     rts
+ENDIF
 }
 
 ; A contains ROM bank to be selected

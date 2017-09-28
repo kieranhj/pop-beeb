@@ -94,4 +94,10 @@
     RTS
 }
 
+.beeb_core_vsync            ; *FX19
+{
+    LDA #19
+    JMP osbyte
+}
+
 .beeb_core_end

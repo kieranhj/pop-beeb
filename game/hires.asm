@@ -164,6 +164,15 @@
 
 .setimage
 {
+\\ Bounds check that image# is not out of range of the table
+IF _DEBUG
+ LDA (TABLE)
+ CMP IMAGE
+ BCS image_ok
+ BRK
+.image_ok
+ENDIF
+
  lda IMAGE
  asl A
  sec
@@ -176,6 +185,13 @@
  iny
  lda (TABLE),y
  sta IMAGE+1
+
+\\ Bounds check that sprite data pointer is in swram
+IF _DEBUG
+ BMI addr_ok
+ BRK
+ .addr_ok
+ENDIF
 
  rts
 }
@@ -195,6 +211,10 @@
 \ sta RAMRD+1
 \
 \.RAMRD sta $c003
+
+ \\ Select swram bank for sprite data
+ LDA BANK
+ JSR swr_select_slot
 
  jsr setimage
 
@@ -220,6 +240,14 @@
 \* Save IMAGE, XCO, YCO
 
  LDA IMAGE
+
+\\ Bounds check that image# is not zero
+IF _DEBUG
+ BNE image_ok
+ BRK
+.image_ok
+ENDIF
+
  STA IMSAVE
  LDA XCO
  STA XSAVE
@@ -241,6 +269,14 @@
  LDY #0
  LDA (IMAGE),Y
  STA WIDTH
+
+\\ Bounds check that width <=16 bytes
+IF _DEBUG
+ CMP #16
+ BCC width_ok
+ BRK
+ .width_ok
+ENDIF
 
  INY
  LDA (IMAGE),Y

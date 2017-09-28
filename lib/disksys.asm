@@ -101,8 +101,14 @@ ENDIF
 ; Y = destination memory address MSB
 ; on exit
 ; 512 bytes written to buffer in X/Y
+.disksys_catalogue_read
+EQUB 0
+
 .disksys_read_catalogue
 {
+    LDA disksys_catalogue_read
+    BMI return
+
  ;   jsr disksys_set_catalogue_addr
 
     ldx #0
@@ -112,6 +118,10 @@ ENDIF
     ldx #LO(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+0
     ldy #HI(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+1
     jsr disksys_read_sectors    
+
+    LDA #&FF
+    STA disksys_catalogue_read
+    .return
     rts
 }
 

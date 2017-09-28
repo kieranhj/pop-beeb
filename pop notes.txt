@@ -878,3 +878,9 @@ Will use a lot more memory but need to look at the tradeoffs in the inner loop
 Current version uses the stack as a "free" index register
 And then stores accumulator value in X register as temp storage
 Probably quicker to store in ZP var for now and work out faster inner loop methods later
+
+Need to profile exactly what's going on before optimising inner loops
+PoP sprite plotting modes need adjusting for MODE 2
+AND means remove background using sprite as a mask
+ORA means add to background but think this means regular MASK in MODE 2
+If bg always AND followed by ORA might be replaced by a single MASK call instead?

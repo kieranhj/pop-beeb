@@ -427,7 +427,8 @@ gatemargin = 6 ;higher = more generous
 {
  lda AMtimer ;antimatter timer
  beq cont
- lda $c030
+\ NOT BEEB
+\ lda $c030
  dec AMtimer
  rts
 .cont
