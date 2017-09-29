@@ -33,11 +33,11 @@
 .getabovebeh jmp GETABOVEBEH
 .rdblock jmp RDBLOCK
 .rdblock1 jmp RDBLOCK1
-.setupsword RTS     ; jmp SETUPSWORD                BEEB TO DO
+.setupsword jmp SETUPSWORD
 .getscrns jmp GETSCRNS
 
 .addguardobj jmp ADDGUARDOBJ
-.opjumpseq BRK      ; jmp OPJUMPSEQ
+.opjumpseq jmp OPJUMPSEQ
 .getedges jmp GETEDGES
 .indexchar jmp INDEXCHAR
 .quickfg jmp QUICKFG
@@ -55,9 +55,9 @@
 .addreflobj jmp ADDREFLOBJ
 
 .LoadKid jmp LOADKID
-.LoadShad BRK       ; jmp LOADSHAD
+.LoadShad BRK           ; jmp LOADSHAD
 .SaveKid jmp SAVEKID
-.SaveShad BRK       ; jmp SAVESHAD
+.SaveShad BRK           ; jmp SAVESHAD
 .setupchar jmp SETUPCHAR
 
 .GetFrameInfo jmp GETFRAMEINFO
@@ -73,21 +73,21 @@
 .unevenfloor jmp UNEVENFLOOR
 
 .markhalf jmp MARKHALF
-.addswordobj BRK        ; jmp ADDSWORDOBJ
+.addswordobj jmp ADDSWORDOBJ
 .getblocky1 jmp GETBLOCKYP
 .checkledge jmp CHECKLEDGE
-.get2infront BRK        ; jmp GET2INFRONT
+.get2infront jmp GET2INFRONT
 
 .checkspikes jmp CHECKSPIKES
 .rechargemeter BRK      ; jmp RECHARGEMETER
-.addfcharx BRK          ; jmp ADDFCHARX
+.addfcharx jmp ADDFCHARX
 .facedx jmp FACEDX
 .jumpseq jmp JUMPSEQ
 
 .GetBaseBlock jmp GETBASEBLOCK
 .LoadKidwOp jmp LOADKIDWOP
 .SaveKidwOp BRK         ; jmp SAVEKIDWOP
-.getopdist BRK          ; jmp GETOPDIST
+.getopdist jmp GETOPDIST
 .LoadShadwOp BRK        ; jmp LOADSHADWOP
 
 .SaveShadwOp BRK        ; jmp SAVESHADWOP
@@ -777,16 +777,17 @@ thinner = 3
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Similar routine for Opponent
-*
-*-------------------------------
-OPJUMPSEQ
+\*-------------------------------
+\*
+\*  Similar routine for Opponent
+\*
+\*-------------------------------
+
+.OPJUMPSEQ
+{
  sec
  sbc #1
- asl
+ asl A
  tax ;x = 2(a-1)
 
  lda seqtab,x
@@ -794,8 +795,9 @@ OPJUMPSEQ
 
  lda seqtab+1,x
  sta OpSeq+1
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -912,43 +914,45 @@ ENDIF
  bcc ok
  inc FCharX+1
 .ok
- rts
 }
+.return_43
+ rts
 
-IF _TODO
-*-------------------------------
-*
-*  S E T   U P   S W O R D
-*
-*  In: Char & FChar data
-*
-*  If character's sword is visible, add it to obj table
-*
-*-------------------------------
-SETUPSWORD
+\*-------------------------------
+\*
+\*  S E T   U P   S W O R D
+\*
+\*  In: Char & FChar data
+\*
+\*  If character's sword is visible, add it to obj table
+\*
+\*-------------------------------
+
+.SETUPSWORD
+{
  lda CharID
  cmp #2
- bne :3
+ bne label_3
  lda CharLife
- bmi :2 ;live guard's sword is always visible
+ bmi label_2 ;live guard's sword is always visible
 
-:3 lda CharPosn
+.label_3 lda CharPosn
  cmp #229
- bcc :1
+ bcc label_1
  cmp #238
- bcc :2 ;sheathing
-:1 lda CharSword
- beq ]rts
-:2
+ bcc label_2 ;sheathing
+.label_1 lda CharSword
+ beq return_43
+.label_2
  lda Fsword
  and #$3f ;frame #
- beq ]rts ;no sword for this frame
+ beq return_43 ;no sword for this frame
 
  jsr getswordframe
 
  ldy #0
  lda (framepoint),y
- beq ]rts
+ beq return_43
 
  jsr decodeswim ;get FCharImage & Table
 
@@ -969,7 +973,7 @@ SETUPSWORD
  sta FCharY
 
  jmp ADDSWORDOBJ
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -979,6 +983,7 @@ ENDIF
 \*  Out: framepoint = 2-byte pointer to frame def table
 \*
 \*-------------------------------
+
 .GETFRAME ;Kid uses main char set
 {
  jsr getfindex
@@ -993,6 +998,7 @@ ENDIF
 }
 
 \*-------------------------------
+
 .getaltframe1 ;Enemy uses alt set 1
 {
  jsr getfindex
@@ -1007,6 +1013,7 @@ ENDIF
 }
 
 \*-------------------------------
+
 .getaltframe2 ;Princess & Vizier use alt set 2
 {
  jsr getfindex
@@ -1021,6 +1028,7 @@ ENDIF
 }
 
 \*-------------------------------
+
 .getfindex
 {
  sec
@@ -1048,16 +1056,17 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* getswordframe
-*
-* In: A = frame #
-* Out: framepoint
-*
-*-------------------------------
-getswordframe
+\*-------------------------------
+\*
+\* getswordframe
+\*
+\* In: A = frame #
+\* Out: framepoint
+\*
+\*-------------------------------
+
+.getswordframe
+{
  sec
  sbc #1
  sta ztemp
@@ -1081,15 +1090,15 @@ getswordframe
 
  lda framepoint
  clc
- adc #swordtab
+ adc #LO(swordtab)
  sta framepoint
 
  lda framepoint+1
- adc #>swordtab
+ adc #HI(swordtab)
  sta framepoint+1
 
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1129,23 +1138,24 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Decode sword image
-*
-* In: A = image #
-*
-* Out: FCharImage, FCharTable
-*
-*-------------------------------
-decodeswim
+\*-------------------------------
+\*
+\* Decode sword image
+\*
+\* In: A = image #
+\*
+\* Out: FCharImage, FCharTable
+\*
+\*-------------------------------
+
+.decodeswim
+{
  sta FCharImage ;image #
 
  lda #2 ;chtable3
  sta FCharTable
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -2222,68 +2232,71 @@ BOOSTMETER
  sta MaxKidStr
 
 :1 jmp RECHARGEMETER
+ENDIF
 
-*-------------------------------
-*
-* Get distance between char & opponent
-* (# pixels char must move fwd to reach opponent)
-* If dist is greater than 127, return 127 (+ or -)
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Get distance between char & opponent
+\* (# pixels char must move fwd to reach opponent)
+\* If dist is greater than 127, return 127 (+ or -)
+\*
+\*-------------------------------
 estwidth = 13 ;rough est of char width
 
-GETOPDIST
+.GETOPDIST
+{
  lda CharScrn
  cmp OpScrn
- bne :safe
+ bne safe
 
-* First, get A = OpX-CharX (abs. value <= 127)
+\* First, get A = OpX-CharX (abs. value <= 127)
 
  lda OpX
  cmp CharX
- bcc :neg
+ bcc neg
  sec
  sbc CharX
- bpl :got
+ bpl got
  lda #127
- bpl :got
+ bpl got
 
-:neg lda CharX
+.neg lda CharX
  sec
  sbc OpX
- bpl :1
+ bpl label_1
  lda #127
-:1 eor #$ff
+.label_1 eor #$ff
  clc
  adc #1 ;negate
 
-* If CharFace = left, negate
+\* If CharFace = left, negate
 
-:got ldx CharFace
- bpl :cont
+.got ldx CharFace
+ bpl cont
  eor #$ff
  clc
  adc #1
 
-* If chars are facing in opposite directions,
-* adjust by estimate of width of figure
+\* If chars are facing in opposite directions,
+\* adjust by estimate of width of figure
 
-:cont tax
+.cont tax
  lda CharFace
  eor OpFace
- bpl :done
+ bpl done
  txa
  cmp #127-estwidth
- bcs :done2
+ bcs done2
  clc
  adc #estwidth
-:done2 tax
+.done2 tax
  rts
 
-:safe ldx #127 ;arbitrary large dist.
-:done txa ;return value in A
-]rts rts
-ENDIF
+.safe ldx #127 ;arbitrary large dist.
+.done txa ;return value in A
+.return
+ rts
+}
 
 \*-------------------------------
 \*

@@ -23,9 +23,9 @@
 .restart jmp RESTART
 .startresume BRK  ; jmp STARTRESUME
 .initsystem jmp INITSYSTEM
-\ jmp showpage
+\ jmp showpage                        DEBUG
 
-.docrosscut BRK   ; jmp showpage
+\.docrosscut BRK   ; jmp showpage     UNUSED
 .goattract BRK    ; jmp GOATTRACT
 
 \*-------------------------------

@@ -23,15 +23,15 @@
 \
 .reloadblue BRK ;jmp RELOADBLUE
 .movemem BRK    ;jmp MOVEMEM
-.buttons BRK    ;jmp BUTTONS ;ed
-.gtone BRK      ;jmp GTONE
+.buttons BRK    ;jmp BUTTONS ;ed    EDITOR
+.gtone BRK      ;jmp GTONE          SOUND
 .setcenter RTS  ;jmp SETCENTER      BEEB TO DO JOYSTICK
 \
 .dimchar jmp DIMCHAR
 .cvtx jmp CVTX
 .zeropeel jmp ZEROPEEL
 .zeropeels jmp ZEROPEELS
-.pread BRK      ;jmp PREAD
+.pread BRK      ;jmp PREAD          JOYSTICK
 \
 .addpeel jmp ADDPEEL
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
@@ -42,7 +42,7 @@
 .lay jmp LAY
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
-.lrcls RTS      ;jmp LRCLS                          BEEB TO DO OR NOT NEEDED?
+.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?
 .fastmask jmp FASTMASK
 \
 .fastblack BRK  ;jmp FASTBLACK
@@ -81,7 +81,7 @@
 .addmid jmp ADDMID
 .addmidez jmp ADDMIDEZ
 \
-.addwipe RTS    ;jmp ADDWIPE
+.addwipe RTS    ;jmp ADDWIPE                        BEEB TO DO GFX
 .addmsg BRK     ;jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
@@ -100,9 +100,9 @@
 .zerored jmp ZERORED
 \
 .xplaycut BRK   ;jmp XPLAYCUT
-.checkIIGS BRK  ;jmp CHECKIIGS
+.checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
-.musickeys BRK  ;jmp MUSICKEYS
+.musickeys BRK  ;jmp MUSICKEYS                      BEEB TO DO SOUND
 .dostartgame BRK;jmp DOSTARTGAME
 \
 .epilog BRK     ;jmp EPILOG

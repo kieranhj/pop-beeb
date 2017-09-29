@@ -108,6 +108,8 @@ GUARD &800              ; sound workspace
 .wipeY skip maxwipe
 .wipeH skip maxwipe
 
+PAGE_ALIGN
+
 ORG &900                ; envelope / speech / CFS / soft key / char defs
 GUARD &D00              ; NMI workspace
 
@@ -141,6 +143,8 @@ SCRATCH_RAM_ADDR = &900
 .objY skip maxobj
 .objIMG skip maxobj
 
+PAGE_ALIGN
+
 \*-------------------------------
 ; CORE RAM
 \*-------------------------------
@@ -149,7 +153,7 @@ CORE_START=&E00
 CORE_TOP=&3000
 
 ORG CORE_START
-GUARD CORE_TOP             ; bottom of SHADOW RAM
+GUARD &8000; CORE_TOP             ; bottom of SHADOW RAM
 
 ;GUARD &4B80             ; eventually shrunk MODE 1
 ;GUARD &5800             ; currently in full MODE 4
@@ -456,7 +460,7 @@ AUX_TOP = &8000
 
 CLEAR 0, &FFFF
 ORG AUX_START
-GUARD AUX_TOP
+GUARD &FFFF; AUX_TOP
 
 .pop_beeb_aux_start
 .pop_beeb_aux_code_start

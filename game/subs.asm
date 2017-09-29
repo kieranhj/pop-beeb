@@ -16,7 +16,7 @@ CheckTimer = 0
 \*-------------------------------
 \ org org
 
-.addtorches RTS         ; jmp ADDTORCHES            BEEB TO DO
+.addtorches jmp ADDTORCHES
 .doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
 .PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
@@ -143,51 +143,55 @@ CRUMBLE
  clc
  adc #1
  jmp breakloose1
+ENDIF
 
-*-------------------------------
-* Add all flasks & torches on VisScrn to trans list
-* & swords
-*-------------------------------
-ADDTORCHES
+\*-------------------------------
+\* Add all flasks & torches on VisScrn to trans list
+\* & swords
+\*-------------------------------
+
+.ADDTORCHES
+{
  lda VisScrn
  jsr calcblue
 
  ldy #29
-:loop lda (BlueType),y
+.loop lda (BlueType),y
  and #idmask
  cmp #torch
- bne :c1
+ bne c1
  tya
  pha
  lda VisScrn
  jsr trigtorch
  pla
  tay
- bpl :cont
+ bpl cont
 
-:c1 cmp #flask
- bne :c2
+.c1 cmp #flask
+ bne c2
  tya
  pha
  lda VisScrn
  jsr trigflask
  pla
  tay
- bpl :cont
+ bpl cont
 
-:c2 cmp #sword
- bne :cont
+.c2 cmp #sword
+ bne cont
  tya
  pha
  lda VisScrn
  jsr trigsword
  pla
  tay
-:cont dey
- bpl :loop
+.cont dey
+ bpl loop
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*

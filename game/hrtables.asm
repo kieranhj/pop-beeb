@@ -523,36 +523,6 @@ FOR byte,0,255,1
  EQUB LO(&3FFF >> n)
  NEXT
 
-.SPECIAL_MASK1
-FOR n,0,7,1
-EQUB LO((&7F << 1) >> n) EOR &FF
-NEXT
-
-.SPECIAL_MASK2
-FOR n,0,7,1
-EQUB LO((&FF << 2) >> n) EOR &FF
-NEXT
-
-.SPECIAL_MASK3
-FOR n,0,7,1
-EQUB LO((&FF << 3) >> n) EOR &FF
-NEXT
-
-.SPECIAL_MASK4
-FOR n,0,7,1
-EQUB LO((&FF << 4) >> n) EOR &FF
-NEXT
-
-.SPECIAL_MASK5
-FOR n,0,7,1
-EQUB LO((&FF << 5) >> n) EOR &FF
-NEXT
-
-.SPECIAL_MASK6
-FOR n,0,7,1
-EQUB LO((&FF << 6) >> n) EOR &FF
-NEXT
-
 \*-------------------------------
 \*
 \* OPCODE
@@ -573,4 +543,3 @@ NEXT
 \ lst
 \ usr $a9,2,$0000,*-org
 \ lst off
-

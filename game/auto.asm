@@ -98,51 +98,51 @@ jumpthres = 50
 runthres = 40
 blocktime = 4
 
-IF _TODO
-*-------------------------------
-*
-* Fighter params (indexed by guardprog #)
-*
-* strikeprob = probability x255 of striking from ready posn
-* restrikeprob = prob x 255 of restriking after blocking
-* blockprob  = prob x255 of blocking opponent's strike
-* advprob = of advancing to within striking range
-* refractimer = length of refractory period after being hit
-*
-*               0   1   2   3   4   5   6   7   8   9   10  11
+\*-------------------------------
+\*
+\* Fighter params (indexed by guardprog #)
+\*
+\* strikeprob = probability x255 of striking from ready posn
+\* restrikeprob = prob x 255 of restriking after blocking
+\* blockprob  = prob x255 of blocking opponent's strike
+\* advprob = of advancing to within striking range
+\* refractimer = length of refractory period after being hit
+\*
+\*               0   1   2   3   4   5   6   7   8   9   10  11
 
-strikeprob
- db 075,100,075,075,075,050,100,220,000,060,040,060
-restrikeprob
- db 000,000,000,005,005,175,020,010,000,255,255,150
-blockprob
- db 000,150,150,200,200,255,200,250,000,255,255,255
-impblockprob
- db 000,075,075,100,100,145,100,250,000,145,255,175
-advprob
- db 255,200,200,200,255,255,200,000,000,255,100,100
-refractimer
- db 020,020,020,020,010,010,010,010,000,010,000,000
-specialcolor
- db 000,000,000,001,000,001,001,000,000,000,000,001
-extrastrength
- db 000,000,000,000,001,000,000,000,000,000,000,000
+.strikeprob
+ EQUB 075,100,075,075,075,050,100,220,000,060,040,060
+.restrikeprob
+ EQUB 000,000,000,005,005,175,020,010,000,255,255,150
+.blockprob
+ EQUB 000,150,150,200,200,255,200,250,000,255,255,255
+.impblockprob
+ EQUB 000,075,075,100,100,145,100,250,000,145,255,175
+.advprob
+ EQUB 255,200,200,200,255,255,200,000,000,255,100,100
+.refractimer
+ EQUB 020,020,020,020,010,010,010,010,000,010,000,000
+.specialcolor
+ EQUB 000,000,000,001,000,001,001,000,000,000,000,001
+.extrastrength
+ EQUB 000,000,000,000,001,000,000,000,000,000,000,000
 
 numprogs = 12
 
-*-------------------------------
-* Basic guard strength & uniform color (indexed by level #)
+\*-------------------------------
+\* Basic guard strength & uniform color (indexed by level #)
 
-basicstrength
- db 4,3,3,3,3,4,5 ;levels 0-6
- db 4,4,5,5,5,4,6 ;levels 7-13
+.basicstrength
+ EQUB 4,3,3,3,3,4,5 ;levels 0-6
+ EQUB 4,4,5,5,5,4,6 ;levels 7-13
 
-basiccolor
- db 1,0,0,0,1,1,1 ;0 = blue, 1 = red
- db 0,0,0,1,1,0,0
+.basiccolor
+ EQUB 1,0,0,0,1,1,1 ;0 = blue, 1 = red
+ EQUB 0,0,0,1,1,0,0
 
 shadstrength = 4
 
+IF _TODO
 *-------------------------------
 *
 * 10: kid (demo)
@@ -1043,20 +1043,23 @@ CHECKSTAB
  sta KidAction
  bne :2 ;player wins a tie
 ]rts rts
+ENDIF
 
-*-------------------------------
-* Change shadowman posn
-* In: A-X = shadpos L-H
-* Out: Char data
-*-------------------------------
-chgshadposn
+\*-------------------------------
+\* Change shadowman posn
+\* In: A-X = shadpos L-H
+\* Out: Char data
+\*-------------------------------
+
+.chgshadposn
+{
  sta ztemp
  stx ztemp+1
  ldy #6
-:loop lda (ztemp),y
+.loop lda (ztemp),y
  sta Char,y
  dey
- bpl :loop
+ bpl loop
 
  ldy #7
  lda (ztemp),y
@@ -1068,10 +1071,12 @@ chgshadposn
  lda #0
  sta PlayCount ;zero playback counter
  rts
+}
+\* ... & save
 
-* ... & save
-
-csps jsr chgshadposn
+.csps
+{
+ jsr chgshadposn
 
  lda #3
  sta guardprog
@@ -1081,21 +1086,22 @@ csps jsr chgshadposn
  sta OppStrength
 
  jmp SaveShad
+}
 
-*-------------------------------
-* (Posn, X, Y, Face, BlockX, BlockY, Action)
-*               0  1  2  3  4  5  6
+\*-------------------------------
+\* (Posn, X, Y, Face, BlockX, BlockY, Action)
+\*               0  1  2  3  4  5  6
 
-shadpos6a hex 0f,51,76,00,00,01,00
- db stand
+.shadpos6a EQUB $0f,$51,$76,$00,$00,$01,$00
+ EQUB stand
 
-shadpos5 hex 0f,37,37,00,ff,00,00
- db stand ;just o.s. to L
+.shadpos5 EQUB $0f,$37,$37,$00,$ff,$00,$00
+ EQUB stand ;just o.s. to L
 
-shadpos12 hex 0f,51,f0,00,00,00,00
- db stepfall
+.shadpos12 EQUB $0f,$51,$f0,$00,$00,$00,$00
+ EQUB stepfall
 
-*-------------------------------
+\*-------------------------------
 EndProg = -2
 EndDemo = -1
 Ctr = 0
@@ -1107,31 +1113,32 @@ Upfwd = 5
 Press = 6
 Release = 7
 
-* Commands:
-*
-* -2 - end of programmed sequence
-* -1 - end of demo
-*  0 - center jstk & release btn
-*  1 - jstk fwd
-*  2 - jstk back
-*  3 - jstk up
-*  4 - jstk down
-*  5 - jstk up & fwd
-*  6 - press & hold btn
-*  7 - release btn
+\* Commands:
+\*
+\* -2 - end of programmed sequence
+\* -1 - end of demo
+\*  0 - center jstk & release btn
+\*  1 - jstk fwd
+\*  2 - jstk back
+\*  3 - jstk up
+\*  4 - jstk down
+\*  5 - jstk up & fwd
+\*  6 - press & hold btn
+\*  7 - release btn
 
-*-------------------------------
-*
-* Prerecorded sequence format:
-*
-*  1.  Frame # (1 byte)
-*  2.  Command (1 byte)
-*
-* 255 frames = approx. 25-30 seconds
-*
-*-------------------------------
-* Level 5 (THIEF): Steal potion
+\*-------------------------------
+\*
+\* Prerecorded sequence format:
+\*
+\*  1.  Frame # (1 byte)
+\*  2.  Command (1 byte)
+\*
+\* 255 frames = approx. 25-30 seconds
+\*
+\*-------------------------------
+\* Level 5 (THIEF): Steal potion
 
+IF _TODO
 ShadProg5
  db 0,Ctr
  db 1,Fwd
@@ -1774,54 +1781,55 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* A D D  G U A R D
-*
-* On cut to new screen--if guard is there, bring him to life
-* Also handles hard-wired shadowman appearances
-*
-* In: VisScrn
-*
-*-------------------------------
-ADDGUARD
+\*-------------------------------
+\*
+\* A D D  G U A R D
+\*
+\* On cut to new screen--if guard is there, bring him to life
+\* Also handles hard-wired shadowman appearances
+\*
+\* In: VisScrn
+\*
+\*-------------------------------
+
+.ADDGUARD
+{
  lda #0
  sta offguard
 
-* Level 12
+\* Level 12
 
  lda level
  cmp #12
- bne :not12
+ bne not12
  lda exitopen ;set when shadow drops
- bne ]rts
+ bne return_44
  lda mergetimer
- bne :1 ;shadow has been reabsorbed
+ bne label_1 ;shadow has been reabsorbed
  lda VisScrn
  cmp #swordscrn
-:1 bne ]rts
+.label_1 bne return_44
  sta CharScrn
 
  ldx #swordx
  ldy #swordy
  jsr rdblock
  cmp #sword
- beq ]rts ;sword is still there
+ beq return_44 ;sword is still there
  lda #0
  sta shadowaction
  lda #1
  sta exitopen
- lda #shadpos12
- ldx #>shadpos12
+ lda #LO(shadpos12)
+ ldx #HI(shadpos12)
  jmp csps
 
-* Level 6 (Plunge)
+\* Level 6 (Plunge)
 
-:not12
+.not12
  lda level
  cmp #6 ;plunge
- bne :not6
+ bne not6
 
  lda VisScrn
  sta CharScrn
@@ -1830,22 +1838,22 @@ ADDGUARD
 
  lda exitopen
  cmp #77
- beq :norepeat
+ beq norepeat
  lda #s_Danger
  ldx #50
  jsr cuesong
  lda #77
  sta exitopen
-:norepeat
- lda #shadpos6a
- ldx #>shadpos6a
+.norepeat
+ lda #LO(shadpos6a)
+ ldx #HI(shadpos6a)
  jmp csps
 
-* Level 5 (Thief)
+\* Level 5 (Thief)
 
-:not6 lda level
+.not6 lda level
  cmp #5 ;thief
- bne :not5
+ bne not5
 
  lda VisScrn
  sta CharScrn
@@ -1856,22 +1864,26 @@ ADDGUARD
  ldy #flasky
  jsr rdblock
  cmp #flask
- bne ]rts ;potion is gone
+ bne return_44 ;potion is gone
 
- lda #shadpos5
- ldx #>shadpos5
+ lda #LO(shadpos5)
+ ldx #HI(shadpos5)
  jmp csps
-]rts rts
-:not5
+}
+.return_44
+ rts
+.not5
 
-*-------------------------------
-AddNormalGd
+\*-------------------------------
+
+.AddNormalGd
+{
  ldx VisScrn
  lda GdStartBlock-1,x
  cmp #30
- bcs ]rts ;no guard on this scrn
+ bcs return_44 ;no guard on this scrn
 
-* Bring guard to life (or death)
+\* Bring guard to life (or death)
 
  stx CharScrn
 
@@ -1893,46 +1905,46 @@ AddNormalGd
 
  lda level
  cmp #3
- bne :3
+ bne label_3
 
  lda #4 ;skel
- bne :4
-:3 lda #2 ;guard
-:4 sta CharID
+ bne label_4
+.label_3 lda #2 ;guard
+.label_4 sta CharID
 
  lda GdStartSeqH-1,x
- bne :1 ;0 is code for fresh start
+ bne label_1 ;0 is code for fresh start
 
  lda CharID
  cmp #4
- bne :5
+ bne label_5
  lda #2
  sta CharSword
  lda #landengarde ;skel (ready)
- bne :6
-:5 lda #0
+ bne label_6
+.label_5 lda #0
  sta CharSword
  lda #alertstand ;guard
-:6 jsr jumpseq
- jmp :2
+.label_6 jsr jumpseq
+ jmp label_2
 
-:1 sta CharSeq+1
+.label_1 sta CharSeq+1
  lda GdStartSeqL-1,x
  sta CharSeq
 
-:2 jsr animchar
+.label_2 jsr animchar
 
  lda CharPosn
  cmp #185 ;killed
- beq :dead
+ beq local_dead
  cmp #177 ;impaled
- beq :dead
+ beq local_dead
  cmp #178 ;halved
- beq :dead
+ beq local_dead
 
-* Live guard
+\* Live guard
 
- lda #-1
+ lda #LO(-1)
  sta CharLife
 
  lda #0
@@ -1941,18 +1953,18 @@ AddNormalGd
  sta justblocked
 
  jsr getgdstrength
- jmp :cont
+ jmp cont
 
-* Dead guard
+\* Dead guard
 
-:dead lda #1
+.local_dead lda #1
  sta CharLife
  lda #0
  sta OppStrength
 
-* Continue
+\* Continue
 
-:cont lda #0
+.cont lda #0
  sta CharXVel
  sta CharYVel
  lda #1
@@ -1961,9 +1973,9 @@ AddNormalGd
  ldx VisScrn
  lda GdStartProg-1,x
  cmp #numprogs
- bcc :ok
+ bcc ok
  lda #3 ;default
-:ok sta guardprog
+.ok sta guardprog
 
  ldx level
  lda basiccolor,x
@@ -1972,11 +1984,14 @@ AddNormalGd
  sta GuardColor  ;0 = blue, 1 = red
 
  jmp SaveShad ;save ShadVars
+}
 
-*-------------------------------
-* Get guard fighting strength
-*-------------------------------
-getgdstrength
+\*-------------------------------
+\* Get guard fighting strength
+\*-------------------------------
+
+.getgdstrength
+{
  ldx level
  lda basicstrength,x
  ldx guardprog
@@ -1984,8 +1999,9 @@ getgdstrength
  adc extrastrength,x
  sta MaxOppStr
  sta OppStrength
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst

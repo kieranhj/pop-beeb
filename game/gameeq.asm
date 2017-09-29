@@ -11,7 +11,7 @@
 
 ;.yellowflag skip 1
 ;.timebomb skip 1
-;.justblocked skip 1
+.justblocked skip 1
 .gdtimer skip 1
 .exitopen skip 1
 .collX skip 1
@@ -95,7 +95,7 @@
 .Fsword skip 1
 ;.purpleflag skip 1 ;$da
 .msgtimer skip 1
-;.MaxOppStr skip 1
+.MaxOppStr skip 1
 .guardprog skip 1
 .ManCtrl skip 1
 .mergetimer skip 1
@@ -121,7 +121,7 @@
 ;.redrawglass skip 1
 .doortop skip 1
 .GuardColor skip 1
-;.shadowaction skip 1
+.shadowaction skip 1
 .skipmessage skip 1
 ;.savezp skip 32
 ;.MSset skip 1
