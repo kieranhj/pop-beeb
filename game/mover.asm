@@ -10,7 +10,7 @@ PalaceEditor = 0
 \*-------------------------------
 \ org org
 
-.animtrans RTS          ; jmp ANIMTRANS         BEEB TO DO
+.animtrans jmp ANIMTRANS
 .trigspikes BRK         ; jmp TRIGSPIKES
 .pushpp RTS             ; jmp PUSHPP            BEEB TO DO
 .breakloose1 jmp BREAKLOOSE1
@@ -24,12 +24,12 @@ PalaceEditor = 0
 
 .trigslicer BRK         ; jmp TRIGSLICER
 .trigtorch BRK          ; jmp TRIGTORCH
-.getflameflame BRK      ; jmp GETFLAMEFRAME
+.getflameflame jmp GETFLAMEFRAME
 .smashmirror BRK        ; jmp SMASHMIRROR
 .jamspikes BRK          ; jmp JAMSPIKES
 
 .trigflask BRK          ; jmp TRIGFLASK
-.getflaskflame BRK      ; jmp GETFLASKFRAME
+.getflaskflame jmp GETFLASKFRAME
 .trigsword BRK          ; jmp TRIGSWORD
 .jampp BRK              ; jmp JAMPP
 
@@ -46,9 +46,9 @@ PalaceEditor = 0
 \ put soundnames
 
 \*-------------------------------
-\gatevel db 0,0,0,20,40,60,80,100,120
+.gatevel EQUB 0,0,0,20,40,60,80,100,120
 
-\maxgatevel = *-gatevel-1
+maxgatevel = P%-gatevel-1
 
 \*-------------------------------
 pptimer = 5 ;pressplate timer setting (min=3, max=30)
@@ -81,7 +81,7 @@ spikewipe = 31
 slicerwipe = 63
 platewipe = 16
 
-\gateinc db -1,4,4 ;for trdirec = 0,1,2 (down,up,upjam)
+.gateinc EQUB -1,4,4 ;for trdirec = 0,1,2 (down,up,upjam)
 
 exitinc = 4
 emaxval = 43*4
@@ -637,7 +637,6 @@ ENDIF
 \*
 \*-------------------------------
 
-IF _TODO
 .animtrans_cleanflag skip 1
 
 .ANIMTRANS
@@ -790,16 +789,18 @@ IF _TODO
  rts
 }
 
-*-------------------------------
-*
-* Animate exit
-*
-*-------------------------------
-animexit
+\*-------------------------------
+\*
+\* Animate exit
+\*
+\*-------------------------------
+
+.animexit
+{
  ldx trdirec
- bmi :cont
+ bmi cont
  cpx #3
- bcs :downfast ;>= 3: coming down fast
+ bcs local_downfast ;>= 3: coming down fast
 
  lda #RaisingExit
  jsr addsound
@@ -810,11 +811,11 @@ animexit
  sta state
 
  cmp #emaxval
- bcs :stop
+ bcs local_stop
 
-:cont jmp redexit
+.cont jmp redexit
 
-:stop jsr stopobj
+.local_stop jsr stopobj
 
  lda #GateDown
  jsr addsound
@@ -824,21 +825,21 @@ animexit
  lda #1
  sta exitopen
  jsr mirappear
- jmp :cont
+ jmp cont
 
-* Exit coming down fast
+\* Exit coming down fast
 
-:downfast
+.local_downfast
  cpx #maxgatevel
- bcs :2
+ bcs label_2
  inx
  stx trdirec
-:2 lda state
+.label_2 lda state
  sec
  sbc gatevel,x
  sta state
- beq :cont
- bcs :cont
+ beq cont
+ bcs cont
 
  jsr stopobj
 
@@ -848,89 +849,93 @@ animexit
  lda #GateSlam
  jsr addsound
 
- jmp :cont
+ jmp cont
+}
 
-*-------------------------------
-*
-*  Animate gate
-*
-*-------------------------------
-animgate
+\*-------------------------------
+\*
+\*  Animate gate
+\*
+\*-------------------------------
+
+.animgate
+{
  ldx trdirec
- bmi :cont ;gate has stopped
+ bmi cont ;gate has stopped
 
  cpx #3 ;trdirec >= 3: coming down fast
- bcs :downfast
+ bcs local_downfast
 
  lda state
  cmp #$ff
- beq :stop ;jammed open
+ beq local_stop ;jammed open
  clc
  adc gateinc,x
  sta state
 
  cpx #0
- beq :goingdown
+ beq local_goingdown
 
  cmp #gmaxval
- bcs :attop ;stop at top
+ bcs local_attop ;stop at top
 
  lda #RaisingGate
  jsr addsound
 
- jmp :cont
+ jmp cont
 
-:goingdown
+.local_goingdown
  cmp #gminval
- beq :stop
- bcc :stop
+ beq local_stop
+ bcc local_stop
 
  cmp #gmaxval
- bcs :cont ;at top
+ bcs cont ;at top
  jsr addlowersound
 
-:cont jmp redgate ;mark gate for redrawing
+.cont jmp redgate ;mark gate for redrawing
 
-:stop jsr stopobj
+.local_stop jsr stopobj
 
  lda #GateDown
  jsr addsound
 
- jmp :cont
+ jmp cont
 
-* Gate has reached top
-* trdirec = 1: pause, then start to close again
-* trdirec = 2: jam at top
+\* Gate has reached top
+\* trdirec = 1: pause, then start to close again
+\* trdirec = 2: jam at top
 
-:attop
+.local_attop
  cpx #2
- bcc :tr1
+ bcc local_tr1
  lda #$ff ;jammed-open value
  sta state
- jmp :stop
+ jmp local_stop
 
-:tr1 lda #gatetimer
+.local_tr1 lda #gatetimer
  sta state
 
  lda #0 ;down
  sta trdirec
-]rts rts
+.return
+ rts
 
-* Down fast
+\* Down fast
 
-:downfast
+.local_downfast
  cpx #maxgatevel
- bcs :2
+ bcs label_2
 
  inx
  stx trdirec ;trdirec is velocity index
-:2
+.label_2
  lda state
  sec
  sbc gatevel,x
  sta state
- beq :cont
- bcs :cont
+ beq cont
+ bcs cont
 
  lda #0
  sta state
@@ -938,16 +943,19 @@ animgate
 
  lda #GateSlam
  jsr addsound
- jmp :cont
+ jmp cont
+}
 
-*-------------------------------
-*
-*  Animate pressplate
-*
-*-------------------------------
-animplate
+\*-------------------------------
+\*
+\*  Animate pressplate
+\*
+\*-------------------------------
+
+.animplate
+{
  ldx trdirec
- bmi ]rts
+ bmi return_37
 
  lda state
  tax
@@ -958,7 +966,7 @@ animplate
  jsr chgtimer
  pla
  cmp #2
- bcs ]rts ;timer stops at t=1
+ bcs return_37 ;timer stops at t=1
 
  lda #PlateUp
  jsr addsound
@@ -966,16 +974,20 @@ animplate
  jsr stopobj
 
  jmp redplate ;add obj to redraw buffer
-]rts rts
+}
+.return_37
+ rts
 
-*-------------------------------
-*
-*  Animate slicer
-*
-*-------------------------------
-animslicer
+\*-------------------------------
+\*
+\*  Animate slicer
+\*
+\*-------------------------------
+
+.animslicer
+{
  ldx trdirec
- bmi :done
+ bmi local_done
 
  lda state
  tax
@@ -986,244 +998,268 @@ animslicer
  clc
  adc #1
  cmp #slicetimer+1
- bcc :1
+ bcc label_1
  lda #1 ;wrap around
-:1 ora state
+.label_1 ora state
  sta state
  and #$7f ;next frame #
  cmp #slicerExt
- bne :2
+ bne label_2
 
  lda #JawsClash
  jsr addsound
 
-:2 lda trscrn
+.label_2 lda trscrn
  cmp VisScrn ;is slicer on visible screen?
- bne :os ;no
+ bne local_os ;no
 
  lda trloc
  jsr unindex
  cpx KidBlockY ;on same level as kid?
- bne :os ;no
+ bne local_os ;no
 
  lda KidLife
- bmi :done
+ bmi local_done
  ;If kid is dead, stop all unbloodied slicers
  lda state
  and #$80
- bne :done
+ bne local_done
 
-* As soon as slicer is retracted, purge it from trans list
+\* As soon as slicer is retracted, purge it from trans list
 
-:os lda state
+.local_os lda state
  and #$7f
  cmp #slicerRet
- bcc :done
+ bcc local_done
 
-:purge jsr stopobj
+.local_purge jsr stopobj
 
-:done lda state
+.local_done lda state
  and #$7f
  cmp #slicerRet ;retracted?
- bcs ]rts ;yes--don't bother to redraw
+ bcs return_37 ;yes--don't bother to redraw
 
  jmp redslicer
+}
 
-*-------------------------------
-*
-* Animate flask
-*
-*-------------------------------
-animflask
+\*-------------------------------
+\*
+\* Animate flask
+\*
+\*-------------------------------
+
+.animflask
+{
  ldx trdirec
- bmi ]rts
+ bmi return_37
 
  lda trscrn
  cmp VisScrn
- bne :purge
+ bne animflask_purge
 
  lda state
  and #%11100000 ;potion #
- sta temp1
+ sta mover_temp1
  lda state
  and #%00011111 ;frame #
  jsr GETFLASKFRAME
- ora temp1
+ ora mover_temp1
  sta state
 
  jmp redflask
-]purge
-:purge jmp stopobj
+}
+.animflask_purge
+ jmp stopobj
 
-*-------------------------------
-*
-* Animate gleaming sword
-*
-*-------------------------------
-animsword
+\*-------------------------------
+\*
+\* Animate gleaming sword
+\*
+\*-------------------------------
+
+.animsword
+{
  lda trscrn
  cmp VisScrn
- bne ]purge
+ bne animflask_purge
 
  dec state
- bne :1
+ bne label_1
  jsr rnd
  and #$3f
  clc
  adc #40
  sta state
 
-:1 jmp redsword
-]rts rts
+.label_1 jmp redsword
+}
+.return_38
+ rts
 
-*-------------------------------
-*
-* Animate torch
-*
-*-------------------------------
-animtorch
+\*-------------------------------
+\*
+\* Animate torch
+\*
+\*-------------------------------
+
+.animtorch
+{
  ldx trdirec
- bmi ]rts
+ bmi return_38
 
  lda trscrn
  cmp VisScrn
- bne ]purge
+ bne animflask_purge
 
  lda state
  jsr GETFLAMEFRAME
  sta state
 
  jmp redtorch
+}
 
-*-------------------------------
-*
-* Get flame frame
-*
-* In/out: A = state
-*
-*-------------------------------
-GETFLAMEFRAME
+\*-------------------------------
+\*
+\* Get flame frame
+\*
+\* In/out: A = state
+\*
+\*-------------------------------
+
+.GETFLAMEFRAME
+{
  sta state
 
  jsr rnd
 
  cmp state
- beq :2
+ beq label_2
  cmp #torchLast+1
- bcc :1
+ bcc label_1
 
  lda state
-:2 clc
+.label_2 clc
  adc #1
  cmp #torchLast+1
- bcc :1
+ bcc label_1
 
  lda #0 ;wrap around
-:1
-]rts rts
+.label_1
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Get flask frame
-*
-* In/out: A = state (low 5 bits)
-*
-*-------------------------------
-GETFLASKFRAME
+\*-------------------------------
+\*
+\* Get flask frame
+\*
+\* In/out: A = state (low 5 bits)
+\*
+\*-------------------------------
+
+.GETFLASKFRAME
+{
  clc
  adc #1
  cmp #bubbLast+1
- bcc ]rts
+ bcc return
  lda #1
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Animate spikes
-*
-*-------------------------------
-animspikes
+\*-------------------------------
+\*
+\* Animate spikes
+\*
+\*-------------------------------
+
+.animspikes
+{
  ldx trdirec
- bmi :done
+ bmi local_done
 
  lda state
- bmi :timerloop ;Hibit set: remaining 7 bits
+ bmi timerloop ;Hibit set: remaining 7 bits
  ;represent timer value
 
-* Hibit clear: remaining 7 bits represent BGDATA frame #
+\* Hibit clear: remaining 7 bits represent BGDATA frame #
 
  inc state
 
  cmp #spikeExt ;is extension complete?
- beq :starttimer ;yes--start timer
+ beq starttimer ;yes--start timer
 
  cmp #spikeRet ;is retraction complete?
- bne :done ;not yet
+ bne local_done ;not yet
 
  lda #0
  sta state ;yes--reset to "ready" state
 
  jsr stopobj
 
-:done jmp redspikes
+.local_done jmp redspikes
 
-* Spike timer loop
+\* Spike timer loop
 
-:starttimer
+.starttimer
  lda #spiketimer
  sta state
 
- bne :done
+ bne local_done
 
-:timerloop
+.timerloop
  dec state
 
  lda state
  and #$7f
- bne :rts
+ bne return_39
 ;Time's up
  lda #spikeExt+1 ;First "retracting" frame
  sta state
 
- bne :done
-:rts
-]rts rts
+ bne local_done
+}
+.return_39
+ rts
 
-*-------------------------------
-*
-* Animate loose floor
-*
-*-------------------------------
-animfloor
+\*-------------------------------
+\*
+\* Animate loose floor
+\*
+\*-------------------------------
+
+.animfloor
+{
  ldx trdirec
- bmi :red
+ bmi red
 
-* When timer reaches max value & loose floor detaches:
-*  (1)  Change objid from "loose floor" to "empty space"
-*  (2)  Create a MOB to take over where TROB stopped
+\* When timer reaches max value & loose floor detaches:
+\*  (1)  Change objid from "loose floor" to "empty space"
+\*  (2)  Create a MOB to take over where TROB stopped
 
  inc state
 
  lda state
- bmi :wiggle ;floor is only wiggling
+ bmi wiggle ;floor is only wiggling
 
  cmp #loosetimer
- bcc :red
+ bcc red
 
-* Timer has reached max value--detach floor
+\* Timer has reached max value--detach floor
 
  jsr makespace
  sta state
 
  jsr stopobj
 
-* and create new MOB
+\* and create new MOB
 
  lda trloc
  jsr unindex
 
- asl
- asl  ;x4
+ asl A
+ asl A ;x4
  sta mobx
  stx moblevel
 
@@ -1239,35 +1275,42 @@ animfloor
 
  jsr addamob
 
-:red jmp redloose
+.red jmp redloose
 
-* Floor is only wiggling
+\* Floor is only wiggling
 
-:wiggle ldx level
+.wiggle ldx level
  cpx #13
- beq ]rts
+ beq return_39
 
  cmp #wiggletime+$80
- bcc :red
+ bcc red
 
  lda #0
  sta state
  jsr stopobj ;stop wiggling
 
- jmp :red
+ jmp red
+}
 
-animspace jsr stopobj
+.animspace
+{
+ jsr stopobj
  jmp redloose
+}
 
-*-------------------------------
-*
-*  Stop object (set trdirec = -1)
-*
-*-------------------------------
-stopobj lda #-1
+\*-------------------------------
+\*
+\*  Stop object (set trdirec = -1)
+\*
+\*-------------------------------
+
+.stopobj
+{
+ lda #LO(-1)
  sta trdirec
  rts
-ENDIF
+}
 
 \*-------------------------------
 \* General redraw-object routine
@@ -1285,25 +1328,29 @@ ENDIF
  jmp markwipe
 }
 
-IF _TODO
-*-------------------------------
-* redraw torch/exit
-*-------------------------------
-redexit
-redtorch
+\*-------------------------------
+\* redraw torch/exit
+\*-------------------------------
+
+.redexit
+.redtorch
+{
  jsr checkright
  lda #2
  jmp markmove
+}
 
-*-------------------------------
-* redraw flask/sword
-*-------------------------------
-redsword
-redflask
+\*-------------------------------
+\* redraw flask/sword
+\*-------------------------------
+
+.redsword
+.redflask
+{
  jsr check
  lda #2
  jmp markmove
-ENDIF
+}
 
 \*-------------------------------
 \* redraw loose floor
@@ -1317,11 +1364,12 @@ ENDIF
  jmp redtrobj
 }
 
-IF _TODO
-*-------------------------------
-* redraw gate
-*-------------------------------
-redgate
+\*-------------------------------
+\* redraw gate
+\*-------------------------------
+
+.redgate
+{
  jsr checkright ;mark piece to right of gate
  lda #2
  jsr markmove
@@ -1329,20 +1377,26 @@ redgate
  jsr checkabover ;& piece to right of gate panel
  lda #2
  jmp markmove
+}
 
-*-------------------------------
-* redraw spikes
-*-------------------------------
-redspikes
+\*-------------------------------
+\* redraw spikes
+\*-------------------------------
+
+.redspikes
+{
  inc trobcount
  lda #spikewipe
  sta height
  jmp redtrobj
+}
 
-*-------------------------------
-* redraw slicer
-*-------------------------------
-redslicer
+\*-------------------------------
+\* redraw slicer
+\*-------------------------------
+
+.redslicer
+{
  inc trobcount
  lda #slicerwipe
  sta height
@@ -1350,15 +1404,18 @@ redslicer
  lda #2
  jsr markred
  jmp markwipe
+}
 
-*-------------------------------
-* redraw pressplate
-*-------------------------------
-redplate
+\*-------------------------------
+\* redraw pressplate
+\*-------------------------------
+
+.redplate
+{
  lda #platewipe
  sta height
  jmp redtrobj
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1483,7 +1540,7 @@ ENDIF
  beq yesl
 
  cpy #29
- bne local_no
+ bne checkright_no
 
 .yesl tya
  sec
@@ -1492,31 +1549,34 @@ ENDIF
 
  clc
  rts
-
-.local_no ldy #30
- sec
-.return
- rts
 }
+.checkright_no
+{
+ ldy #30
+ sec
+}
+.return_40
+ rts
 
-IF _TODO
-*-------------------------------
-*  Check piece above & to right of (trscrn,trloc)
-*-------------------------------
-checkabover
+\*-------------------------------
+\*  Check piece above & to right of (trscrn,trloc)
+\*-------------------------------
+
+.checkabover
+{
  lda trscrn
  cmp VisScrn
- bne :notonscrn
+ bne notonscrn
 ;piece is on this screen
  ldy trloc
  cpy #10
- bcc :above ;piece is on top row
+ bcc local_above ;piece is on top row
 
  cpy #19
- beq ]no
+ beq checkright_no
 
  cpy #29
- beq ]no
+ beq checkright_no
 ;yes
  tya
  sec
@@ -1526,26 +1586,26 @@ checkabover
  clc
  rts
 
-:above
+.local_above
  iny
  sec
  rts
 
-:notonscrn
+.notonscrn
  cmp scrnLeft
- bne :notonleft
+ bne notonleft
 ;piece is on screen to left
  ldy trloc
  cpy #9
- beq :yes0
+ beq local_yes0
 
  cpy #19
- beq :yesl
+ beq local_yesl
 
  cpy #29
- bne ]no
+ bne checkright_no
 
-:yesl tya
+.local_yesl tya
  sec
  sbc #19 ;mark corresponding left-edge piece
  tay ;on this screen
@@ -1553,17 +1613,17 @@ checkabover
  clc
  rts
 
-:yes0 ldy #0
+.local_yes0 ldy #0
  sec
  rts
 
-:notonleft
+.notonleft
  cmp scrnBelow
- bne :notbelow
+ bne notbelow
 ;piece is on screen below
  ldy trloc
  cpy #9
- bcs ]no
+ bcs checkright_no
 ;yes--piece is on top row
  tya
  clc
@@ -1573,60 +1633,76 @@ checkabover
  clc
  rts
 
-:notbelow
+.notbelow
  cmp scrnBelowL
- bne ]rts
+ bne return_40
  ;piece is on scrn below & to left
  ldy trloc
  cpy #9
- bne ]no
+ bne checkright_no
 ;yes--piece is in u.r.
  ldy #20
  clc
  rts
+}
 
-*-------------------------------
-*
-*  Extract information from LINKLOC/LINKMAP
-*
-*  In: X = linkindex
-*  Out: A = info
-*
-*-------------------------------
-gettimer
+\*-------------------------------
+\*
+\*  Extract information from LINKLOC/LINKMAP
+\*
+\*  In: X = linkindex
+\*  Out: A = info
+\*
+\*-------------------------------
+
+.gettimer
+{
  lda LINKMAP,x
  and #%00011111 ;pressplate timer (0-31)
  rts
-chgtimer ;In: A = new timer setting
+}
+
+.chgtimer ;In: A = new timer setting
+{
  and #%00011111
- sta temp1
+ sta mover_temp1
  lda LINKMAP,x
  and #%11100000
- ora temp1
+ ora mover_temp1
  sta LINKMAP,x
  rts
-getloc
+}
+
+.getloc
+{
  lda LINKLOC,x
  and #%00011111 ;screen posn (0-29)
  rts
-getlastflag
+}
+
+.getlastflag
+{
  lda LINKLOC,x
  and #%10000000 ;last-entry flag (0-1)
  rts
-getscrn
+}
+
+.getscrn
+{
  lda LINKLOC,x
  and #%01100000 ;low 2 bits
- lsr
- lsr
- sta temp1
+ lsr A
+ lsr A
+ sta mover_temp1
  lda LINKMAP,x
  and #%11100000 ;high 3 bits
- adc temp1
- lsr
- lsr
- lsr ;Result: screen # (0-31)
-]rts rts
-ENDIF
+ adc mover_temp1
+ lsr A
+ lsr A
+ lsr A;Result: screen # (0-31)
+.return
+ rts
+}
 
 \*-------------------------------
 \*

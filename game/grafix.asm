@@ -25,7 +25,7 @@
 .movemem BRK    ;jmp MOVEMEM
 .buttons BRK    ;jmp BUTTONS ;ed
 .gtone BRK      ;jmp GTONE
-.setcenter RTS  ;jmp SETCENTER      BEEB TO DO
+.setcenter RTS  ;jmp SETCENTER      BEEB TO DO JOYSTICK
 \
 .dimchar jmp DIMCHAR
 .cvtx jmp CVTX
@@ -66,7 +66,7 @@
 .loadstage2 BRK ;jmp LOADSTAGE2
 \ jmp RELOAD
 .getselect jmp GETSELECT
-.getdesel BRK   ;jmp GETDESEL
+.getdesel jmp GETDESEL
 .edreboot BRK   ;jmp EDREBOOT ;ed
 \
 .gobuild BRK    ;jmp GOBUILD ;ed
@@ -93,7 +93,7 @@
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty RTS    ;jmp INVERTY                        BEEB TO DO
+.inverty jmp INVERTY
 .normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
@@ -109,7 +109,7 @@
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc       BEEB TO DO
+.vblank JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \

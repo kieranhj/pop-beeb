@@ -43,9 +43,7 @@
 
 \ BEEB TO DO
 \ Use original game ZP variables
-\ Implement clipping and mirroring
 \ Implement special XOR
-\ Speed it up massively :(
 
 .beeb_plot_start
 

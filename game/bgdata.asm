@@ -202,3 +202,10 @@ gmaxval = 47*4
 gminval = 0
 
 \*-------------------------------
+
+\*-------------------------------
+\* misc. values from MOVEDATA.S
+
+torchLast = 17
+bubbLast = 8
+
