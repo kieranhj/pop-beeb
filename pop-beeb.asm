@@ -75,6 +75,7 @@ INCLUDE "game/ctrl.h.asm"
 INCLUDE "game/grafix.h.asm"
 INCLUDE "game/coll.h.asm"
 INCLUDE "game/auto.h.asm"
+INCLUDE "game/ctrlsubs.h.asm"
 
 \*-------------------------------
 ; BSS data in lower RAM
@@ -335,16 +336,13 @@ INCLUDE "game/topctrl.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/hires_core.asm"
 
-; PoP gameplay code moved from AUX memory
-
-INCLUDE "game/ctrl.asm"
-ctrl_end=P%
-
 .pop_beeb_core_end
 
-; Data in CORE memory (always present)
-
 .pop_beeb_data_start
+
+; Data in CORE memory (always present)
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
 
 ; This data could be dumped after boot!
 
@@ -405,7 +403,6 @@ INCLUDE "game/gameeq.asm"
 
 ; Core RAM stats
 
-PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "Core lib size = ", ~(pop_beeb_lib_end - pop_beeb_lib_start)
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -466,6 +463,10 @@ GUARD AUX_TOP
 
 ; Code in AUX RAM (gameplay)
 
+; PoP gameplay code moved from AUX memory
+
+INCLUDE "game/ctrl.asm"
+ctrl_end=P%
 INCLUDE "game/frameadv.asm"
 frameadv_end=P%
 INCLUDE "game/gamebg.asm"
@@ -495,8 +496,6 @@ coll_end=P%
 
 INCLUDE "game/framedefs.asm"
 framedef_end=P%
-INCLUDE "game/seqtable.asm"
-seqtab_end=P%
 INCLUDE "game/tables.asm"
 tables_end=P%
 
@@ -518,6 +517,7 @@ SKIP &900           ; all blueprints same size
 .pop_beeb_aux_bss_end
 
 ; High watermark for Main RAM
+PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
 PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
 PRINT "BGDATA size = ", ~(bgdata_end-bgdata)

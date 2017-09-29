@@ -70,7 +70,7 @@
 .markfloor jmp MARKFLOOR
 .unindex jmp UNINDEX
 .quickfloor jmp QUICKFLOOR
-.unevenfloor RTS        ; jmp UNEVENFLOOR               BEEB TO DO
+.unevenfloor jmp UNEVENFLOOR
 
 .markhalf jmp MARKHALF
 .addswordobj BRK        ; jmp ADDSWORDOBJ
@@ -78,7 +78,7 @@
 .checkledge jmp CHECKLEDGE
 .get2infront BRK        ; jmp GET2INFRONT
 
-.checkspikes RTS        ; jmp CHECKSPIKES               BEEB TO DO
+.checkspikes jmp CHECKSPIKES
 .rechargemeter BRK      ; jmp RECHARGEMETER
 .addfcharx BRK          ; jmp ADDFCHARX
 .facedx jmp FACEDX
@@ -116,7 +116,7 @@
 \*-------------------------------
 \ dum locals
 \
-\tempright ds 1
+\ctrlsubs_tempright ds 1
 \ztemp ds 2
 \tempstate ds 1
 \]cutdir ds 1
@@ -2022,62 +2022,63 @@ ENDIF
  rts
 
 .local_no lda #0
-.return
- rts
 }
+.return_41
+ rts
 
-IF _TODO
-*-------------------------------
-*
-*  C H E C K   S P I K E S
-*
-*  Spikes spring out when char passes over them (at any
-*  height).
-*
-*-------------------------------
-CHECKSPIKES
+\*-------------------------------
+\*
+\*  C H E C K   S P I K E S
+\*
+\*  Spikes spring out when char passes over them (at any
+\*  height).
+\*
+\*-------------------------------
+
+.CHECKSPIKES
+{
  lda rightej
  jsr getblockxp
- bmi ]rts
- sta tempright
+ bmi return_41
+ sta ctrlsubs_tempright
 
-* for blockx = leftblock to rightblock
+\* for blockx = leftblock to rightblock
 
  lda leftej
  jsr getblockxp
-:loop sta blockx
+.loop_1 sta blockx
 
  jsr sub
 
  lda blockx
- cmp tempright
- beq ]rts
+ cmp ctrlsubs_tempright
+ beq return_41
  clc
  adc #1
- jmp :loop
+ jmp loop_1
 
-sub sta tempblockx
+.sub sta tempblockx
  lda CharBlockY
  sta tempblocky
  lda CharScrn
  sta tempscrn
-:loop jsr rdblock1
+.loop_2 jsr rdblock1
 
  cmp #spikes
- bne :again
+ bne again
  jmp trigspikes
 
-:again jsr cmpspace
- bne ]rts
+.again jsr cmpspace
+ bne return_41
 
  lda tempscrn
- beq ]rts ;null scrn
+ beq return_41 ;null scrn
  cmp CharScrn
- bne ]rts ;wait till he's on same screen
+ bne return_41 ;wait till he's on same screen
 
  inc tempblocky
- jmp :loop ;check 1 level below
-ENDIF
+ jmp loop_2 ;check 1 level below
+}
 
 \*===============================
 \*
@@ -2282,19 +2283,23 @@ GETOPDIST
 :safe ldx #127 ;arbitrary large dist.
 :done txa ;return value in A
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  Adjust CharY for uneven floor
-*
-*-------------------------------
-UNEVENFLOOR
+\*-------------------------------
+\*
+\*  Adjust CharY for uneven floor
+\*
+\*-------------------------------
+
+.UNEVENFLOOR
+{
  jsr getunderft
  cmp #dpressplate
- bne ]rts
+ bne return
  inc CharY
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst

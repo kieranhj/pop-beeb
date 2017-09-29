@@ -20,10 +20,10 @@
 .checkcoll jmp CHECKCOLL
 .animchar jmp ANIMCHAR
 
-.checkslice RTS     ; jmp if                    BEEB TO DO
-.checkslice2 BRK    ; jmp CHECKSLICE2
+.checkslice jmp CHECKSLICE
+.checkslice2 jmp CHECKSLICE2
 \ jmp markmeters ;temp
-.checkgate RTS      ; jmp CHECKGATE             BEEB TO DO
+.checkgate jmp CHECKGATE
 \ jmp firstguard ;temp
 
 .enemycoll BRK      ; jmp ENEMYCOLL
@@ -1231,6 +1231,7 @@ gatemargin = 6 ;higher = more generous
 \* Char has gone upstairs
 \* What do we do?
 \*-------------------------------
+
 .GoneUpstairs
 {
  lda level
@@ -1249,60 +1250,61 @@ gatemargin = 6 ;higher = more generous
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Sliced by slicer? (Does CD buf show char overlapping
-*  with a closed slicer?)
-*
-*  In: Char data, CD data
-*
-*-------------------------------
-CHECKSLICE
+\*-------------------------------
+\*
+\*  Sliced by slicer? (Does CD buf show char overlapping
+\*  with a closed slicer?)
+\*
+\*  In: Char data, CD data
+\*
+\*-------------------------------
+
+.CHECKSLICE
+{
  lda CharBlockY
  sta tempblocky
 
  ldx #9
 
-:loop stx tempblockx
+.loop stx tempblockx
 
  lda CDthisframe,x
  cmp #$ff ;char overlapping barr?
- bne :ok ;no
+ bne ok ;no
 
-* Yes--is it a slicer?
+\* Yes--is it a slicer?
 
  lda SNthisframe,x
  sta tempscrn
 
  jsr rdblock1
  cmp #slicer
- bne :ok
+ bne ok
 
  lda (BlueSpec),y
  and #$7f
  cmp #slicerExt ;slicer closed?
- beq :slice ;yes--slice!
+ beq local_slice ;yes--slice!
 
-* No--keep checking
+\* No--keep checking
 
-:ok ldx tempblockx
+.ok ldx tempblockx
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
 
-* Slice!
-* In: rdblock results for slicer block
+\* Slice!
+\* In: rdblock results for slicer block
 
-:slice
-]slice
+.local_slice
  lda (BlueSpec),y
  ora #$80
  sta (BlueSpec),y ;set hibit (smear)
 
-:cont lda CharPosn
+.cont lda CharPosn
  cmp #178 ;if already cut in half (e.g. by another slicer),
- beq ]rts ;leave him alone
+ beq return ;leave him alone
 
  lda tempblockx
  jsr getblockej ;edge of slicer block
@@ -1328,31 +1330,34 @@ CHECKSLICE
  lda #halve
  jsr jumpseq
  jmp animchar
+}
 
-*-------------------------------
-*
-*  Sliced by slicer?
-*
-*  (Use this routine for enemy, who has no CD data)
-*
-*  In: Char data; GETEDGES results
-*
-*-------------------------------
-CHECKSLICE2
+\*-------------------------------
+\*
+\*  Sliced by slicer?
+\*
+\*  (Use this routine for enemy, who has no CD data)
+\*
+\*  In: Char data; GETEDGES results
+\*
+\*-------------------------------
+
+.CHECKSLICE2
+{
  jsr getunderft
- jsr slice ;return cs if sliced
- bcs ]rts
+ jsr local_slice ;return cs if sliced
+ bcs return
 
  inc tempblockx
  jsr rdblock1
 
-.slice
+.local_slice
  cmp #slicer
- bne :safe
+ bne safe
  lda (BlueSpec),y
  and #$7f
  cmp #slicerExt
- bne :safe ;slicer open
+ bne safe ;slicer open
 
  lda tempblockx
  jsr getblockej
@@ -1365,88 +1370,94 @@ CHECKSLICE2
  ldy tempblocky
  jsr getleftbar
  cmp CDRightEj
- bcs :safe
+ bcs safe
 
  lda tempscrn
  ldx tempblockx
  ldy tempblocky
  jsr getrightbar
  cmp CDLeftEj
- bcc :safe
- beq :safe
+ bcc safe
+ beq safe
 
  jsr rdblock1
- jsr ]slice
+ jsr local_slice
  sec
  rts
 
-:safe clc
-]rts rts
+.safe clc
+.return
+ rts
+}
 
-*-------------------------------
-*
+\*-------------------------------
+\*
 \* Special situation: If char is standing directly under closing
-* gate, it knocks him aside when it shuts.
-*
-* In: Char data, CD data
-*
-*-------------------------------
-CHECKGATE
+\* gate, it knocks him aside when it shuts.
+\*
+\* In: Char data, CD data
+\*
+\*-------------------------------
+
+.CHECKGATE
+{
  lda CharAction
  cmp #7 ;turning
- beq :1
+ beq label_1
  lda CharPosn
  cmp #15 ;standing?
- beq :1
+ beq label_1
  cmp #108
- bcc ]rts
+ bcc return
  cmp #111 ;crouching?
- bcs ]rts
-:1
+ bcs return
+.label_1
  jsr getunderft
  cmp #gate
- beq :check
+ beq local_check
 
  dec tempblockx
  jsr rdblock1
  cmp #gate
- bne ]rts
-:check
+ bne return
+.local_check
  ldx tempblockx
  lda CDthisframe,x
  and CDlastframe,x
  cmp #$ff
- bne ]rts
+ bne return
 
  jsr gatebarr
- bcs ]rts
+ bcs return
 
  jsr BumpSound
 
-* bump him left or right?
+\* bump him left or right?
 
  lda tempblockx
  sta collX
  jsr getunderft
  lda tempblockx
  cmp collX
- beq :left
- bcs :right
+ beq local_left
+ bcs local_right
 
-:left lda #-5
- bne :10
-:right lda #5
-:10 clc
+.local_left lda #LO(-5)
+ bne label_10
+.local_right lda #5
+.label_10 clc
  adc CharX
  sta CharX
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
 \* Return cc if gate bars you, cs if clear
 \*
 \*-------------------------------
+
 .gatebarr
 {
  lda (BlueSpec),y

@@ -34,7 +34,7 @@ CheckTimer = 0
 .deadenemy BRK          ; jmp DEADENEMY
 .playcut BRK            ; jmp PLAYCUT
 
-.addlowersound BRK      ; jmp ADDLOWERSOUND
+.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TO DO SOUND
 .RemoveObj BRK          ; jmp REMOVEOBJ
 .addfall jmp ADDFALL
 .setinitials jmp SETINITIALS

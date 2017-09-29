@@ -11,27 +11,27 @@ PalaceEditor = 0
 \ org org
 
 .animtrans jmp ANIMTRANS
-.trigspikes BRK         ; jmp TRIGSPIKES
-.pushpp RTS             ; jmp PUSHPP            BEEB TO DO
+.trigspikes jmp TRIGSPIKES
+.pushpp jmp PUSHPP
 .breakloose1 jmp BREAKLOOSE1
 .breakloose jmp BREAKLOOSE
 
 .animmobs jmp ANIMMOBS
 .addmobs jmp ADDMOBS
 .closeexit BRK          ; jmp CLOSEEXIT
-.getspikes BRK          ; jmp GETSPIKES
+.getspikes jmp GETSPIKES
 .shakem jmp SHAKEM
 
 .trigslicer BRK         ; jmp TRIGSLICER
 .trigtorch BRK          ; jmp TRIGTORCH
 .getflameflame jmp GETFLAMEFRAME
 .smashmirror BRK        ; jmp SMASHMIRROR
-.jamspikes BRK          ; jmp JAMSPIKES
+.jamspikes jmp JAMSPIKES
 
 .trigflask BRK          ; jmp TRIGFLASK
 .getflaskflame jmp GETFLASKFRAME
 .trigsword BRK          ; jmp TRIGSWORD
-.jampp BRK              ; jmp JAMPP
+.jampp jmp JAMPP
 
 \*-------------------------------
 \ lst
@@ -321,25 +321,31 @@ TRIGTORCH
  and #$f
  sta (BlueSpec),y
  jmp addtrob
+ENDIF
 
-*-------------------------------
-*
-*  Trigger spikes
-*
-*-------------------------------
-TRIGSPIKES
+\*-------------------------------
+\*
+\*  Trigger spikes
+\*
+\*-------------------------------
+
+.TRIGSPIKES
+{
  lda (BlueSpec),y
- beq :ready ;State = 0: spikes are fully retracted--
+ beq ready ;State = 0: spikes are fully retracted--
 ;spring 'em
- bpl ]rts ;Nonzero, hibit clear: spikes are in motion
+ bpl return ;Nonzero, hibit clear: spikes are in motion
  cmp #$ff
- beq ]rts ;jammed
+ beq return ;jammed
  lda #spiketimer ;Nonzero, hibit set: spikes are fully
  sta (BlueSpec),y ;extended--reset timer to max value
-]rts rts
+.return rts
 ;Spring spikes
-:ready ldx #1
-]cont stx trdirec
+.ready ldx #1
+}
+.TRIGSPIKES_cont
+{
+ stx trdirec
  sty trloc
 
  lda tempscrn ;from rdblock
@@ -350,44 +356,51 @@ TRIGSPIKES
 
  lda #GateDown ;TEMP
  jmp addsound
+}
 
-*-------------------------------
-*
-* Jam spikes (& remove from trans list)
-*
-* In: Same as TRIGSPIKES
-*
-*-------------------------------
-JAMSPIKES
+\*-------------------------------
+\*
+\* Jam spikes (& remove from trans list)
+\*
+\* In: Same as TRIGSPIKES
+\*
+\*-------------------------------
+
+.JAMSPIKES
+{
  lda #$ff
  sta (BlueSpec),y
- ldx #-1 ;stop object
- bmi ]cont
+ ldx #LO(-1) ;stop object
+ bmi TRIGSPIKES_cont
+}
 
-*-------------------------------
-*
-* Get spike status: 0 = safe, 1 = sprung, 2 = springing
-*
-*-------------------------------
-GETSPIKES
+\*-------------------------------
+\*
+\* Get spike status: 0 = safe, 1 = sprung, 2 = springing
+\*
+\*-------------------------------
+
+.GETSPIKES
+{
  lda (BlueSpec),y
- bmi :sprung
- beq :safe ;fully retracted
+ bmi sprung
+ beq safe ;fully retracted
 
  cmp #spikeExt
- bcc :springing
+ bcc springing
 
-:safe lda #0 ;safe: retracted or retracting
+.safe lda #0 ;safe: retracted or retracting
  rts
 
-:sprung cmp #$ff ;jammed (body impaled on them)?
- beq :safe
+.sprung cmp #$ff ;jammed (body impaled on them)?
+ beq safe
  lda #1
  rts
 
-:springing lda #2
-]rts rts
-ENDIF
+.springing lda #2
+}
+.return_42
+ rts
 
 \*-------------------------------
 \*
@@ -424,33 +437,36 @@ ENDIF
  jmp redloose
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Depress pressplate
-*
-*  In: results of RDBLOCK
-*     (tempblockx-y, tempscrn refer to pressplate)
-*
-*-------------------------------
-PUSHPP
+\*-------------------------------
+\*
+\*  Depress pressplate
+\*
+\*  In: results of RDBLOCK
+\*     (tempblockx-y, tempscrn refer to pressplate)
+\*
+\*-------------------------------
+
+.PUSHPP
+{
  lda (BlueType),y
  and #idmask
- sta pptype ;pressplate/upressplate/rubble
-pushpp1
+ sta mover_pptype ;pressplate/upressplate/rubble
+}
+.pushpp1
+{
  lda (BlueSpec),y ;LINKLOC index
- sta linkindex
+ sta mover_linkindex
  tax
  jsr gettimer
 
  cmp #31
- beq ]rts ;plate is permanently down
+ beq return_42 ;plate is permanently down
 
  cmp #2
- bcs :starttimer ;plate is temporarily down--
+ bcs starttimer ;plate is temporarily down--
 ;just restart timer
 
-*  Fresh plate has been stepped on--reset timer
+\*  Fresh plate has been stepped on--reset timer
 
  lda #pptimer ;put plate down for the count
  jsr chgtimer
@@ -472,54 +488,60 @@ pushpp1
  lda #PlateDown
  jsr addsound
 
-:trig jmp trigger ;trigger something?
+.trig jmp trigger ;trigger something?
 
-* plate is already down--just restart timer
-* (& retrigger gates)
+\* plate is already down--just restart timer
+\* (& retrigger gates)
 
-:starttimer lda #pptimer
+.starttimer lda #pptimer
  jsr chgtimer
- jmp :trig
+ jmp trig
+}
 
-*-------------------------------
-*
-* Jam pressplate (dead weight)
-*
-* In: Same as PUSHPP
-*
-*-------------------------------
-JAMPP
+\*-------------------------------
+\*
+\* Jam pressplate (dead weight)
+\*
+\* In: Same as PUSHPP
+\*
+\*-------------------------------
+
+.JAMPP
+{
  lda (BlueType),y
  and #idmask
- sta pptype
+ sta mover_pptype
  cmp #pressplate
- beq :1
+ beq local_1
 
  lda #floor
  sta (BlueType),y
  lda #0
  sta (BlueSpec),y
  lda #rubble
- sta pptype
+ sta mover_pptype
  bne pushpp1
 
-:1 lda #dpressplate
+.local_1 lda #dpressplate
  sta (BlueType),y
  bne pushpp1
+}
 
-*-------------------------------
-*
-*  We just pushed a pressplate -- did we trigger something?
-*
-*  In: linkindex, pptype
-*
-*-------------------------------
-trigger
-:loop ldx linkindex
+\*-------------------------------
+\*
+\*  We just pushed a pressplate -- did we trigger something?
+\*
+\*  In: mover_linkindex, mover_pptype
+\*
+\*-------------------------------
+
+.trigger
+{
+.loop ldx mover_linkindex
 
  lda LINKLOC,x
  cmp #$ff
- beq :rts ;linked to nothing
+ beq return ;linked to nothing
 
  jsr getloc
  sta trloc
@@ -535,100 +557,112 @@ trigger
  jsr trigobj ;call appropriate trigger routine
 
  lda trdirec
- bmi :skip ;trigger fails
+ bmi skip ;trigger fails
 
  jsr addtrob ;add gadget to transition list
 
-:skip ldx linkindex
- inc linkindex
+.skip ldx mover_linkindex
+ inc mover_linkindex
 
  jsr getlastflag
- beq :loop
+ beq loop
 
-:rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  Trigger object
-*
-*  Out: trdirec (-1 if trigger fails)
-*
-*-------------------------------
-trigobj
+\*-------------------------------
+\*
+\*  Trigger object
+\*
+\*  Out: trdirec (-1 if trigger fails)
+\*
+\*-------------------------------
+
+.trigobj
+{
  cmp #gate
- bne :1
+ bne local_1
  jmp triggate
-:1
+.local_1
  cmp #exit
- bne :2
+ bne local_2
  jmp openexit
-:2
-]rts rts
+.local_2
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Open exit
-*
-*-------------------------------
-openexit
+\*-------------------------------
+\*
+\* Open exit
+\*
+\*-------------------------------
+
+.openexit
+{
  lda (BlueSpec),y
- bne :fail ;Exit can only open, not close
+ bne fail ;Exit can only open, not close
 
  lda #1
- bpl :1
+ bpl local_1
 
-:fail lda #-1
-:1 sta trdirec
+.fail lda #LO(-1)
+.local_1 sta trdirec
  rts
+}
 
-*-------------------------------
-*
-*  Trigger gate
-*
-*  In: BlueSpec, Y, pptype
-*  Out: trdirec
-*
-*-------------------------------
-triggate
+\*-------------------------------
+\*
+\*  Trigger gate
+\*
+\*  In: BlueSpec, Y, mover_pptype
+\*  Out: trdirec
+\*
+\*-------------------------------
+
+.triggate
+{
  lda (BlueSpec),y ;current gate position
 
- ldx pptype
+ ldx mover_pptype
  cpx #upressplate
- beq :raise
+ beq local_raise
  cpx #rubble
- beq :jam
+ beq local_jam
 
-* Lower gate
+\* Lower gate
 
-:lower cmp #gminval ;at bottom?
- bne :yeslower ;no--lower it
+.local_lower cmp #gminval ;at bottom?
+ bne yeslower ;no--lower it
 ;yes--trigger fails
-:fail jmp stopobj
+.fail jmp stopobj
 
-:yeslower
+.yeslower
  lda #3 ;down fast
  sta trdirec
  rts
 
-:jam ldx #2 ;open & jam
+.local_jam ldx #2 ;open & jam
  stx trdirec
  cmp #gmaxval
- bcc :1
+ bcc label_1
  lda #$ff ;"jammed open" state
- bmi :3
+ bmi label_3
 
-:raise ldx #1 ;open
+.local_raise ldx #1 ;open
  stx trdirec
  cmp #$ff
- beq :fail ;jammed
+ beq fail ;jammed
  cmp #gmaxval
- bcc :1
+ bcc label_1
  lda #gatetimer
-:3 sta (BlueSpec),y ;reset timer
- bne :fail
-:1
-]rts rts
-ENDIF
+.label_3 sta (BlueSpec),y ;reset timer
+ bne fail
+.label_1
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -1650,7 +1684,7 @@ ENDIF
 \*
 \*  Extract information from LINKLOC/LINKMAP
 \*
-\*  In: X = linkindex
+\*  In: X = mover_linkindex
 \*  Out: A = info
 \*
 \*-------------------------------

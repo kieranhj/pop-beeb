@@ -13,11 +13,11 @@
 .checkfloor jmp CHECKFLOOR
 .ShadCtrl BRK         ; jmp SHADCTRL
 .rereadblocks jmp REREADBLOCKS
-.checkpress RTS       ; jmp CHECKPRESS          BEEB TO DO
+.checkpress jmp CHECKPRESS
 
-.DoImpale BRK         ; jmp DOIMPALE
+.DoImpale jmp DOIMPALE
 .GenCtrl jmp GENCTRL
-.checkimpale RTS      ; jmp CHECKIMPALE         BEEB TO DO
+.checkimpale jmp CHECKIMPALE
 
 \*-------------------------------
 \ lst
@@ -2073,133 +2073,142 @@ RJMaxFujFwd = 2 ;and forward
  jmp GetBaseBlock
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Is character stepping on a pressure plate?
-*  or on loose floor?
-*
-*-------------------------------
-CHECKPRESS
+\*-------------------------------
+\*
+\*  Is character stepping on a pressure plate?
+\*  or on loose floor?
+\*
+\*-------------------------------
+
+.CHECKPRESS
+{
  lda CharPosn
  cmp #87
- bcc :1
+ bcc label_1
  cmp #100
- bcc :hanging ;87-99: jumphang22-34
+ bcc local_hanging ;87-99: jumphang22-34
  cmp #135
- bcc :1
+ bcc label_1
  cmp #141
- bcc :hanging ;135-140: climb up/down
-:1
+ bcc local_hanging ;135-140: climb up/down
+.label_1
  lda CharAction
  cmp #7
- beq :ground ;turning
+ beq local_ground ;turning
  cmp #5
- beq :ground ;bumped
+ beq local_ground ;bumped
  cmp #2
- bcs ]rts
+ bcs return
 
-* Action code 7, 0 or 1: on the ground
+\* Action code 7, 0 or 1: on the ground
 
-:ground
+.local_ground
  lda CharPosn
  cmp #79 ;jumpup/touch ceiling
- beq :touchceil
+ beq local_touchceil
 
  lda Fcheck
  and #fcheckmark
- beq ]rts ;foot isn't touching floor
+ beq return ;foot isn't touching floor
 
-*  Standing on a pressplate?
+\*  Standing on a pressplate?
 
  jsr getunderft
-:checkit
+.local_checkit
  cmp #upressplate
- beq :PP
+ beq local_PP
  cmp #pressplate
- bne :notPP
+ bne local_notPP
 
-:PP lda CharLife
- bmi :push
+.local_PP lda CharLife
+ bmi local_push
  jmp jampp ;dead weight
-:push jmp pushpp
+.local_push jmp pushpp
 
-:notPP cmp #loose
- bne ]rts
+.local_notPP cmp #loose
+ bne return
 
  lda #1
  sta alertguard
  jmp breakloose
 
-*  Hanging on a pressplate?
+\*  Hanging on a pressplate?
 
-:hanging
+.local_hanging
  jsr getabove
- jmp :checkit
-]rts rts
+ jmp local_checkit
+.return
+ rts
 
-* Jumping up to touch ceiling?
+\* Jumping up to touch ceiling?
 
-:touchceil
+.local_touchceil
  jsr getabove
 
  cmp #loose
- bne ]rts
+ bne return
 
  jmp breakloose
+}
 
-*-------------------------------
-*
-*  C H E C K   I M P A L E
-*
-*  Impalement by running or jumping onto spikes
-*  (Impalement by landing on spikes is covered by
-*  CHECKFLOOR:falling)
-*
-*-------------------------------
-CHECKIMPALE
+\*-------------------------------
+\*
+\*  C H E C K   I M P A L E
+\*
+\*  Impalement by running or jumping onto spikes
+\*  (Impalement by landing on spikes is covered by
+\*  CHECKFLOOR:falling)
+\*
+\*-------------------------------
+
+.CHECKIMPALE
+{
  ldx CharBlockX
  ldy CharBlockY
  lda CharScrn
  jsr rdblock
  cmp #spikes
- bne ]rts ;not spikes
+ bne return ;not spikes
 
  ldx CharPosn
 
  cpx #7
- bcc ]rts
+ bcc return
 
  cpx #15
- bcs :2
- jmp :running
+ bcs label_2
+ jmp local_running
 
-:2 cpx #43 ;runjump-10
- beq :jumpland
+.label_2 cpx #43 ;runjump-10
+ beq local_jumpland
 
  cpx #26 ;standjump-19
- beq :jumpland
+ beq local_jumpland
 
-]rts rts
+.return
+ rts
 
-:running
+.local_running
  jsr getspikes
  cmp #2
- bcc ]rts ;must be springing
- bcs :impale
+ bcc return ;must be springing
+ bcs local_impale
 
-:jumpland
+.local_jumpland
  jsr getspikes ;are spikes lethal?
- beq ]rts ;no
+ beq return ;no
 
-:impale jmp DoImpale
+.local_impale jmp DoImpale
+}
 
-*-------------------------------
-* Impale char on spikes
-*
-* In: rdblock results
-*-------------------------------
-DOIMPALE
+\*-------------------------------
+\* Impale char on spikes
+\*
+\* In: rdblock results
+\*-------------------------------
+
+.DOIMPALE
+{
  jsr jamspikes
 
  ldx CharBlockY
@@ -2228,83 +2237,89 @@ DOIMPALE
  lda #impale
  jsr jumpseq
  jmp animchar
+}
 
-*-------------------------------
-*
-*  Pick up object
-*  Return 0 if no result
-*
-*-------------------------------
-TryPickup
+\*-------------------------------
+\*
+\*  Pick up object
+\*  Return 0 if no result
+\*
+\*-------------------------------
+
+.TryPickup
+{
  jsr getunderft
  cmp #flask
- beq :2
+ beq label_2
  cmp #sword
- bne :1
-:2 jsr getbehind
+ bne label_1
+.label_2 jsr getbehind
  jsr cmpspace
- beq :no
+ beq local_no
  lda CharX
- lda #-14
+ lda #LO(-14)
  jsr addcharx
  sta CharX ;move char 1 block back
  jsr rereadblocks
-:1 jsr getinfront
+.label_1 jsr getinfront
  cmp #flask
- beq :pickup
+ beq local_pickup
  cmp #sword
- beq :pickup
-:no lda #0
+ beq local_pickup
+.local_no lda #0
  rts
 
-:pickup jsr PickItUp
+.local_pickup jsr PickItUp
  lda #1
  rts
+}
 
-*-------------------------------
-*
-* Pick something up
-*
-* In: rdblock results for object block ("infront")
-*
-*-------------------------------
-PickItUp
+\*-------------------------------
+\*
+\* Pick something up
+\*
+\* In: rdblock results for object block ("infront")
+\*
+\*-------------------------------
+
+.PickItUp
+{
  ldx CharPosn
  cpx #109 ;crouch first, then pick up obj
- beq :ok
+ beq ok
  jsr getfwddist
  cpx #2
- beq :0 ;right at edge
+ beq label_0 ;right at edge
  jsr addcharx
  sta CharX
-:0 lda CharFace
- bmi :1
- lda #-2
+.label_0 lda CharFace
+ bmi label_1
+ lda #LO(-2)
  jsr addcharx
  sta CharX ;put char within reach of obj
-:1 jmp DoCrouch
+.label_1 jmp DoCrouch
 
-:ok cmp #sword
- beq :PickupSword
+.ok cmp #sword
+ beq PickupSword
 
  lda (BlueSpec),y
- lsr
- lsr
- lsr
- lsr
- lsr ;potion # (0-7)
+ lsr A
+ lsr A
+ lsr A
+ lsr A
+ lsr A;potion # (0-7)
  jsr RemoveObj
 
  lda #drinkpotion ;pick up & drink potion
  jmp jumpseq
 
-:PickupSword
- lda #-1 ;sword
+.PickupSword
+ lda #LO(-1) ;sword
  jsr RemoveObj
 
  lda #pickupsword
  jmp jumpseq ;pick up, brandish & sheathe sword
-ENDIF
+}
 
 \*-------------------------------
 \ lst
