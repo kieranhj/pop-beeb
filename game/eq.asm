@@ -124,32 +124,10 @@ ENDIF
 \*
 \*-------------------------------
 
-IF 0 \\ BEEB TEMP
-.blueprnt
-.BLUETYPE skip 24*30
-.BLUESPEC skip 24*30
-.LINKLOC skip 256
-.LINKMAP skip 256
-.MAP skip 24*4
-.INFO
- skip 64                ; not sure why this is skipped, unused?
-.KidStartScrn skip 1
-.KidStartBlock skip 1
-.KidStartFace skip 1
- skip 1
-.SwStartScrn skip 1
-.SwStartBlock skip 1
- skip 1
-.GdStartBlock skip 24
-.GdStartFace skip 24
-.GdStartX skip 24
-.GdStartSeqL skip 24
-.GdStartProg skip 24
-.GdStartSeqH skip 24
-ENDIF
+\\ Moved to pop-beeb.asm
 
 .redbufs
- skip 60 ;unused - why?
+ ;skip 60 ;unused - why?
 .halfbuf skip 30
 .redbuf skip 30
 .fredbuf skip 30

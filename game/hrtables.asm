@@ -76,7 +76,7 @@ NEXT
 \*
 \*-------------------------------
 
-ALIGN &100
+PAGE_ALIGN
 
 .SHIFT0
 \FOR byte,0,127,1

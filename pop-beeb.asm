@@ -11,6 +11,13 @@ CPU 1               ; MASTER ONLY
 _TODO = FALSE
 _DEBUG = TRUE       ; enable bounds checks
 
+; Helpful MACROs
+
+MACRO PAGE_ALIGN
+    PRINT "ALIGN LOST ", ~LO(((P% AND &FF) EOR &FF)+1), " BYTES"
+    ALIGN &100
+ENDMACRO
+
 ; Original PoP global defines
 
 EditorDisk = 0 ;1 = dunj, 2 = palace
@@ -401,27 +408,47 @@ ORG AUX_START
 GUARD AUX_TOP
 
 .pop_beeb_aux_start
+.pop_beeb_aux_code_start
 
 ; Code in AUX RAM (gameplay)
 
 INCLUDE "game/frameadv.asm"
+frameadv_end=P%
 INCLUDE "game/gamebg.asm"
+gamebg_end=P%
 INCLUDE "game/bgdata.asm"
+bgdata_end=P%
 INCLUDE "game/subs.asm"
+subs_end=P%
 INCLUDE "game/specialk.asm"
+specialk_end=P%
 INCLUDE "game/mover.asm"
+mover_end=P%
 INCLUDE "game/misc.asm"
+misc_end=P%
 INCLUDE "game/auto.asm"
+auto_end=P%
 INCLUDE "game/ctrlsubs.asm"
+ctrlsubs_end=P%
 INCLUDE "game/ctrl.asm"
+ctrl_end=P%
 INCLUDE "game/coll.asm"
+coll_end=P%
+
+.pop_beeb_aux_code_end
 
 ; Data in AUX RAM (gameplay)
 
-INCLUDE "game/tables.asm"
-INCLUDE "game/framedefs.asm"
-INCLUDE "game/seqtable.asm"
+.pop_beeb_aux_data_start
 
+INCLUDE "game/framedefs.asm"
+framedef_end=P%
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
+INCLUDE "game/tables.asm"
+tables_end=P%
+
+.pop_beeb_aux_data_end
 .pop_beeb_aux_end
 
 ; Save executable code for Aux RAM
@@ -430,12 +457,36 @@ SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 
 ; BSS in AUX RAM (gameplay)
 
-ALIGN &100
+.pop_beeb_aux_bss_start
+
+PAGE_ALIGN
 .blueprnt
 SKIP &900           ; all blueprints same size
 
+.pop_beeb_aux_bss_end
+
 ; High watermark for Main RAM
-PRINT "Aux code & data size = ", ~(pop_beeb_aux_end - pop_beeb_aux_start)
+PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
+PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
+PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
+PRINT "SUBS size = ", ~(subs_end-subs)
+PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "MOVER size = ", ~(mover_end-mover)
+PRINT "MISC size = ", ~(misc_end-misc)
+PRINT "AUTO size = ", ~(auto_end-auto)
+PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
+PRINT "CTRL size = ", ~(ctrl_end-ctrl)
+PRINT "COLL size = ", ~(coll_end-coll)
+
+PRINT "Aux code size = ", ~(pop_beeb_aux_code_end - pop_beeb_aux_code_start)
+
+PRINT "TABLES size = ", ~(tables_end-tables)
+PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
+PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
+
+PRINT "Aux data size = ", ~(pop_beeb_aux_data_end - pop_beeb_aux_data_start)
+PRINT "Aux BSS size = ", ~(pop_beeb_aux_bss_end - pop_beeb_aux_bss_start)
+
 PRINT "Aux high watermark = ", ~P%
 PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
 
@@ -530,6 +581,12 @@ ALIGN &100
 \*-------------------------------
 
 CLEAR 0, &FFFF
+
+\*-------------------------------
+\*
+\*  Blueprint info
+\*
+\*-------------------------------
 
 ORG blueprnt
 .BLUETYPE skip 24*30

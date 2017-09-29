@@ -1435,7 +1435,7 @@ NEXT
 }
 
 
-ALIGN &100
+PAGE_ALIGN
 .map_2bpp_to_mode2_pixel            ; background
 {
     EQUB &00                        ; 00000000 either pixel logical 0
@@ -1531,7 +1531,7 @@ ALIGN &100
     equb $FF                        ; 11111111 15 15
 }
 
-ALIGN &100
+PAGE_ALIGN
 .mask_table
 FOR byte,0,255,1
 left=byte AND &AA

@@ -15,7 +15,6 @@
 
 \ dum org
 
-IF _TODO
 \ByteTable ds $100
 \OffsetTable ds $100
 \BlockTable ds $100
@@ -24,14 +23,13 @@ IF _TODO
 \Mult7 ds $10
 \Mult30 ds $40
 
-BlockEdge ds 20
-BlockTop ds 5
-BlockBot skip 5
-FloorY ds 5
-BlockAy ds 5
-
- dend
-ENDIF
+\BlockEdge ds 20
+\BlockTop ds 5
+\BlockBot skip 5
+\FloorY ds 5
+\BlockAy ds 5
+\
+\ dend
 
 \*-------------------------------
 \ org org
@@ -48,102 +46,6 @@ Blox1 = BlockHeight
 Blox2 = 2*BlockHeight
 Blox3 = 3*BlockHeight
 Blox4 = 4*BlockHeight
-
-ALIGN &100
-
-\*-------------------------------
-\* ByteTable
-\*
-\* Index:  Real screen X-coord (0-255)
-\* Yields: Byte # (0-36)
-\*-------------------------------
-
-\ ds ByteTable-*
-\
-\]byte = 0
-\ lup 36
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\]byte = ]byte+1
-\ --^
-\ db 36,36,36,36
-
-.ByteTable
-FOR n,0,35,1
-EQUB n,n,n,n,n,n,n
-NEXT
-EQUB 36,36,36,36
-
-\*-------------------------------
-\* OffsetTable
-\*
-\* Index:  Same as ByteTable
-\* Yields: Offset (0-6)
-\*-------------------------------
-\ ds OffsetTable-*
-\
-\ lup 36
-\ db 0,1,2,3,4,5,6
-\ --^
-\ db 0,1,2,3
-\ENDIF
-
-.OffsetTable
-FOR n,1,36,1
-EQUB 0,1,2,3,4,5,6
-NEXT
-EQUB 0,1,2,3
-
-\*-------------------------------
-\* BlockTable
-\*
-\* Index:  Screen X-coord (0 to 255)
-\* Yields: Block # (-5 to 14)
-\*-------------------------------
-\ ds BlockTable-*
-\
-\]byte = -5
-\ db ]byte,]byte
-\
-\ lup 18
-\]byte = ]byte+1
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\ --^
-\
-\]byte = ]byte+1
-\ db ]byte,]byte
-
-.BlockTable
-EQUB LO(-5),LO(-5)
-FOR n,1,18,1
-byte = -5 + n
-EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
-EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
-NEXT
-EQUB 14,14
-
-\*-------------------------------
-\* PixelTable
-\*
-\* Index:  Same as BlockTable
-\* Yields: Pixel # within block (0 to 13)
-\*-------------------------------
-\ ds PixelTable-*
-\
-\ db 12,13
-\
-\ lup 18
-\ db 0,1,2,3,4,5,6,7,8,9,10,11,12,13
-\ --^
-\
-\ db 0,1
-
-.PixelTable
-EQUB 12,13
-FOR n,1,18,1
-EQUB 0,1,2,3,4,5,6,7,8,9,10,11,12,13
-NEXT
-EQUB 0,1
 
 \*-------------------------------
 \* Mult10
@@ -251,6 +153,106 @@ NEXT
  EQUB ScrnBot-Blox1-DHeight
  EQUB ScrnBot-DHeight
  EQUB ScrnBot+Blox1-DHeight
+
+\*-------------------------------
+; Move PAGE aligned tables to end
+\*-------------------------------
+
+PAGE_ALIGN
+
+\*-------------------------------
+\* ByteTable
+\*
+\* Index:  Real screen X-coord (0-255)
+\* Yields: Byte # (0-36)
+\*-------------------------------
+
+\ ds ByteTable-*
+\
+\]byte = 0
+\ lup 36
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\]byte = ]byte+1
+\ --^
+\ db 36,36,36,36
+
+.ByteTable
+FOR n,0,35,1
+EQUB n,n,n,n,n,n,n
+NEXT
+EQUB 36,36,36,36
+
+\*-------------------------------
+\* OffsetTable
+\*
+\* Index:  Same as ByteTable
+\* Yields: Offset (0-6)
+\*-------------------------------
+\ ds OffsetTable-*
+\
+\ lup 36
+\ db 0,1,2,3,4,5,6
+\ --^
+\ db 0,1,2,3
+\ENDIF
+
+.OffsetTable
+FOR n,1,36,1
+EQUB 0,1,2,3,4,5,6
+NEXT
+EQUB 0,1,2,3
+
+\*-------------------------------
+\* BlockTable
+\*
+\* Index:  Screen X-coord (0 to 255)
+\* Yields: Block # (-5 to 14)
+\*-------------------------------
+\ ds BlockTable-*
+\
+\]byte = -5
+\ db ]byte,]byte
+\
+\ lup 18
+\]byte = ]byte+1
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\ --^
+\
+\]byte = ]byte+1
+\ db ]byte,]byte
+
+.BlockTable
+EQUB LO(-5),LO(-5)
+FOR n,1,18,1
+byte = -5 + n
+EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
+EQUB LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte),LO(byte)
+NEXT
+EQUB 14,14
+
+\*-------------------------------
+\* PixelTable
+\*
+\* Index:  Same as BlockTable
+\* Yields: Pixel # within block (0 to 13)
+\*-------------------------------
+\ ds PixelTable-*
+\
+\ db 12,13
+\
+\ lup 18
+\ db 0,1,2,3,4,5,6,7,8,9,10,11,12,13
+\ --^
+\
+\ db 0,1
+
+.PixelTable
+EQUB 12,13
+FOR n,1,18,1
+EQUB 0,1,2,3,4,5,6,7,8,9,10,11,12,13
+NEXT
+EQUB 0,1
 
 \*-------------------------------
 \ lst

@@ -167,7 +167,7 @@
 \*-------------------------------
 
 \dum $320
-ALIGN &100
+PAGE_ALIGN
 
 .CDthisframe skip $10
 .CDlastframe skip $10

@@ -13,14 +13,14 @@ PalaceEditor = 0
 .animtrans RTS          ; jmp ANIMTRANS         BEEB TO DO
 .trigspikes BRK         ; jmp TRIGSPIKES
 .pushpp RTS             ; jmp PUSHPP            BEEB TO DO
-.breakloose1 BRK        ; jmp BREAKLOOSE1
-.breakloose BRK         ; jmp BREAKLOOSE
+.breakloose1 jmp BREAKLOOSE1
+.breakloose jmp BREAKLOOSE
 
 .animmobs jmp ANIMMOBS
 .addmobs jmp ADDMOBS
 .closeexit BRK          ; jmp CLOSEEXIT
 .getspikes BRK          ; jmp GETSPIKES
-.shakem RTS             ; jmp SHAKEM            BEEB TO DO
+.shakem jmp SHAKEM
 
 .trigslicer BRK         ; jmp TRIGSLICER
 .trigtorch BRK          ; jmp TRIGTORCH
@@ -209,9 +209,9 @@ maxmob = mobspace-1
  sta mobtype
  lda moblevel,x
  sta moblevel
-.return
- rts
 }
+.return_36
+ rts
 
 IF _TODO
 *-------------------------------
@@ -387,27 +387,29 @@ GETSPIKES
 
 :springing lda #2
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  Break off section of loose floor
-*
-*-------------------------------
-BREAKLOOSE
+\*-------------------------------
+\*
+\*  Break off section of loose floor
+\*
+\*-------------------------------
+.BREAKLOOSE
  lda #1
 
-BREAKLOOSE1 ;in: A = initial state
+.BREAKLOOSE1 ;in: A = initial state
+{
  sta state
 
  lda (BlueType),y
  and #reqmask ;required floorpiece?
- bne ]rts ;yes--blocked below
+ bne return_36 ;yes--blocked below
 
  lda (BlueSpec),y
- bmi :ok ;wiggling
- bne ]rts ;already triggered
+ bmi ok ;wiggling
+ bne return_36 ;already triggered
 
-:ok lda state
+.ok lda state
  sta (BlueSpec),y
 
  sty trloc
@@ -420,7 +422,9 @@ BREAKLOOSE1 ;in: A = initial state
 
  jsr addtrob ;add floor to trans list
  jmp redloose
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Depress pressplate
@@ -632,6 +636,7 @@ ENDIF
 \*  (Advance each object to next frame in animation table)
 \*
 \*-------------------------------
+
 IF _TODO
 .animtrans_cleanflag skip 1
 
@@ -784,9 +789,7 @@ IF _TODO
 .return
  rts
 }
-ENDIF
 
-IF _TODO
 *-------------------------------
 *
 * Animate exit
@@ -1264,11 +1267,14 @@ animspace jsr stopobj
 stopobj lda #-1
  sta trdirec
  rts
+ENDIF
 
-*-------------------------------
-* General redraw-object routine
-*-------------------------------
-redtrobj
+\*-------------------------------
+\* General redraw-object routine
+\*-------------------------------
+
+.redtrobj
+{
  jsr check
  lda #2
  jsr markred
@@ -1277,7 +1283,9 @@ redtrobj
  lda #2
  jsr markred
  jmp markwipe
+}
 
+IF _TODO
 *-------------------------------
 * redraw torch/exit
 *-------------------------------
@@ -1295,16 +1303,21 @@ redflask
  jsr check
  lda #2
  jmp markmove
+ENDIF
 
-*-------------------------------
-* redraw loose floor
-*-------------------------------
-redloose
+\*-------------------------------
+\* redraw loose floor
+\*-------------------------------
+
+.redloose
+{
  inc trobcount
  lda #loosewipe
  sta height
  jmp redtrobj
+}
 
+IF _TODO
 *-------------------------------
 * redraw gate
 *-------------------------------
@@ -1345,24 +1358,28 @@ redplate
  lda #platewipe
  sta height
  jmp redtrobj
+ENDIF
 
-*-------------------------------
-*
-*  Before marking a piece in redraw buffer,
-*  check whether it's visible.
-*
-*  If piece is visible onscreen:
-*    return with carry clear, y = redbuf index
-*  If piece is not visible:
-*    return with carry set
-*
-*-------------------------------
-]no ldy #30
+\*-------------------------------
+\*
+\*  Before marking a piece in redraw buffer,
+\*  check whether it's visible.
+\*
+\*  If piece is visible onscreen:
+\*    return with carry clear, y = redbuf index
+\*  If piece is not visible:
+\*    return with carry set
+\*
+\*-------------------------------
+
+.check_no ldy #30
  sec
-]rts rts
-
-]above cmp scrnAbove
- bne ]rts
+.check_return
+ rts
+.check_above
+{
+ cmp scrnAbove
+ bne check_return
 
  lda trloc
  sec
@@ -1371,95 +1388,104 @@ redplate
 
  sec
  rts
+}
 
-*-------------------------------
-*  Check (trscrn, trloc)
-*-------------------------------
-check
+\*-------------------------------
+\*  Check (trscrn, trloc)
+\*-------------------------------
+
+.check
+{
  lda trscrn
  cmp VisScrn
- bne ]above
+ bne check_above
 
  ldy trloc
  cpy #30 ;i.e., "clc"
  rts
+}
 
-*-------------------------------
-*  Check piece to left of (trscrn,trloc)
-*-------------------------------
-checkleft
+\*-------------------------------
+\*  Check piece to left of (trscrn,trloc)
+\*-------------------------------
+
+.checkleft
+{
  lda trscrn
  cmp VisScrn
- bne :notonscrn
+ bne notonscrn
 ;piece is on this screen
  cpy #0
- beq ]no
+ beq check_no
  cpy #10
- beq ]no
+ beq check_no
  cpy #20
- beq ]no
+ beq check_no
 ;yes--piece is visible
  dey
  clc
  rts
 
-:notonscrn
+.notonscrn
  cmp scrnRight
- bne ]above
+ bne check_above
 ;piece is on screen to right
  ldy trloc
  cpy #0
- beq :yesr
+ beq yesr
  cpy #10
- beq :yesr
+ beq yesr
  cpy #20
- bne :yesr
+ bne yesr
 
-:yesr tya
+.yesr tya
  clc
  adc #9 ;mark corresponding right-edge piece
  tay ;on this screen
 
  clc
  rts
+}
 
-*-------------------------------
-*  Check piece to right of (trscrn,trloc)
-*-------------------------------
-checkright
+\*-------------------------------
+\*  Check piece to right of (trscrn,trloc)
+\*-------------------------------
+
+.checkright
+{
  lda trscrn
  cmp VisScrn
- bne :notonscrn
+ bne notonscrn
 ;piece is on this screen
  ldy trloc
  cpy #9
- beq ]no
+ beq check_no
 
  cpy #19
- beq ]no
+ beq check_no
 
  cpy #29
- beq ]no
+ beq check_no
 ;yes
  iny
  clc
  rts
 
-:notonscrn
+.notonscrn
  cmp scrnLeft
- bne ]above
+ bne check_above
 ;piece is on screen to left
  ldy trloc
  cpy #9
- beq :yesl
+ beq yesl
 
  cpy #19
- beq :yesl
+ beq yesl
 
  cpy #29
- bne ]no
+ bne local_no
 
-:yesl tya
+.yesl tya
  sec
  sbc #9 ;mark corresponding left-edge piece
  tay ;on this screen
@@ -1467,10 +1493,13 @@ checkright
  clc
  rts
 
-]no ldy #30
+.local_no ldy #30
  sec
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *  Check piece above & to right of (trscrn,trloc)
 *-------------------------------
@@ -2159,24 +2188,25 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Shake floors
-*
-* In: A = CharBlockY
-*
-*-------------------------------
-SHAKEM
+\*-------------------------------
+\*
+\* Shake floors
+\*
+\* In: A = CharBlockY
+\*
+\*-------------------------------
+
+.SHAKEM
+{
  ldx level
  cpx #13
- beq ]rts
+ beq return_18
 
  sta tempblocky
 
  lda VisScrn
  sta tempscrn
-ENDIF
+}
 
 .SHAKEM1
 {
