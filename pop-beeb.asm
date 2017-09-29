@@ -85,12 +85,60 @@ GUARD &800              ; sound workspace
 
 \ Move BSS here (e.g. imlists from eq.asm) when out of RAM
 
+\*-------------------------------
+\*
+\*  Image lists
+\*
+\*-------------------------------
+
+.genCLS skip 1
+
+.bgX skip maxback
+.bgY skip maxback
+.bgIMG skip maxback
+.bgOP skip maxback
+
+.fgX skip maxfore
+.fgY skip maxfore
+.fgIMG skip maxfore
+.fgOP skip maxfore
+
+.wipeX skip maxwipe
+.wipeY skip maxwipe
+.wipeH skip maxwipe
+
 ORG &900                ; envelope / speech / CFS / soft key / char defs
 GUARD &D00              ; NMI workspace
 
-.disksys_scratch        SKIP &300
-SCRATCH_RAM_ADDR = disksys_scratch
+\ Should be OK for disk scratch RAM to overlap run time workspace
+\ Need to be aware of disc catalogue caching though
+SCRATCH_RAM_ADDR = &900
 
+.wipeW skip maxwipe
+.wipeCOL skip maxwipe
+
+.peelX skip maxpeel*2
+.peelY skip maxpeel*2
+.peelIMGL skip maxpeel*2
+.peelIMGH skip maxpeel*2
+
+.midX skip maxmid
+.midOFF skip maxmid
+.midY skip maxmid
+.midIMG skip maxmid
+.midOP skip maxmid
+.midTYP skip maxmid
+.midCU skip maxmid
+.midCD skip maxmid
+.midCL skip maxmid
+.midCR skip maxmid
+.midTAB skip maxmid
+
+.objINDX skip maxobj
+.objX skip maxobj
+.objOFF skip maxobj
+.objY skip maxobj
+.objIMG skip maxobj
 
 \*-------------------------------
 ; CORE RAM
@@ -287,6 +335,11 @@ INCLUDE "game/topctrl.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/hires_core.asm"
 
+; PoP gameplay code moved from AUX memory
+
+INCLUDE "game/ctrl.asm"
+ctrl_end=P%
+
 .pop_beeb_core_end
 
 ; Data in CORE memory (always present)
@@ -352,6 +405,7 @@ INCLUDE "game/gameeq.asm"
 
 ; Core RAM stats
 
+PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "Core lib size = ", ~(pop_beeb_lib_end - pop_beeb_lib_start)
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -430,8 +484,6 @@ INCLUDE "game/auto.asm"
 auto_end=P%
 INCLUDE "game/ctrlsubs.asm"
 ctrlsubs_end=P%
-INCLUDE "game/ctrl.asm"
-ctrl_end=P%
 INCLUDE "game/coll.asm"
 coll_end=P%
 
@@ -475,7 +527,6 @@ PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "AUTO size = ", ~(auto_end-auto)
 PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
-PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "COLL size = ", ~(coll_end-coll)
 
 PRINT "Aux code size = ", ~(pop_beeb_aux_code_end - pop_beeb_aux_code_start)

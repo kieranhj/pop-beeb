@@ -37,7 +37,7 @@ framedefs.s - animation tables, data for each animation frame
 movedata.s - moveable objects definitions
 / mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
 / seqdata.s - animation state definitions
-. seqtable.s - animation state tables
+/ seqtable.s - animation state tables
 . sound.s - do sound effects
 / soundnames.s - sound & music definitions
 / specialk.s - special keys, freeze, restart, sound, save game etc., development keys

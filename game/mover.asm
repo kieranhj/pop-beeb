@@ -1729,11 +1729,11 @@ ENDIF
  beq null ;yes--fall on
 
  cmp #LO(-30) ;negative?
- bcs fallon ;yes--fall on
+ bcs local_fallon ;yes--fall on
 
  ldx moblevel
  cmp BlockAy+1,x
- bcc fallon
+ bcc local_fallon
 
 \* Passing thru floor plane--what to do?
 \* First see what's there
@@ -1790,7 +1790,7 @@ ENDIF
 
 .local_passthru
  jsr passthru
-.fallon
+.local_fallon
 .return rts
 
 \* Falling on null screen
