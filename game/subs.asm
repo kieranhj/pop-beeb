@@ -43,7 +43,7 @@ CheckTimer = 0
 .startkid1 jmp STARTKID1
 .gravity jmp GRAVITY
 .initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
-.mirappear BRK          ; jmp MIRAPPEAR
+.mirappear RTS          ; jmp MIRAPPEAR             BEEB TO DO
 .crumble RTS            ; jmp CRUMBLE               BEEB TO DO
 
 \*-------------------------------

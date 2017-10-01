@@ -84,8 +84,13 @@ INCLUDE "game/ctrlsubs.h.asm"
 ORG &300                ; VDU and language workspace
 GUARD &800              ; sound workspace
 
+\ Should be OK for disk scratch RAM to overlap run time workspace
+\ Need to be aware of disc catalogue caching though
+SCRATCH_RAM_ADDR = &400
+
 \ Move BSS here (e.g. imlists from eq.asm) when out of RAM
 
+IF 0
 \*-------------------------------
 \*
 \*  Image lists
@@ -107,16 +112,14 @@ GUARD &800              ; sound workspace
 .wipeX skip maxwipe
 .wipeY skip maxwipe
 .wipeH skip maxwipe
+ENDIF
 
 PAGE_ALIGN
 
 ORG &900                ; envelope / speech / CFS / soft key / char defs
 GUARD &D00              ; NMI workspace
 
-\ Should be OK for disk scratch RAM to overlap run time workspace
-\ Need to be aware of disc catalogue caching though
-SCRATCH_RAM_ADDR = &900
-
+IF 0
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
@@ -142,6 +145,7 @@ SCRATCH_RAM_ADDR = &900
 .objOFF skip maxobj
 .objY skip maxobj
 .objIMG skip maxobj
+ENDIF
 
 PAGE_ALIGN
 
@@ -153,12 +157,7 @@ CORE_START=&E00
 CORE_TOP=&3000
 
 ORG CORE_START
-GUARD &8000; CORE_TOP             ; bottom of SHADOW RAM
-
-;GUARD &4B80             ; eventually shrunk MODE 1
-;GUARD &5800             ; currently in full MODE 4
-;GUARD &65C0             ; now in shrunk MODE 4!
-;GUARD &8000             ; when testing high watermark
+GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .pop_beeb_start
 .pop_beeb_lib_start
@@ -175,6 +174,7 @@ INCLUDE "lib/print.asm"
 
 .main_filename EQUS "Main   $"
 .aux_filename  EQUS "Aux    $"
+.high_filename EQUS "High   $"
 
 .pop_beeb_entry
 {
@@ -220,6 +220,13 @@ INCLUDE "lib/print.asm"
     LDX #LO(aux_filename)
     LDY #HI(aux_filename)
     LDA #HI(pop_beeb_aux_start)
+    JSR disksys_load_file
+
+    \\ And Aux High
+
+    LDX #LO(high_filename)
+    LDY #HI(high_filename)
+    LDA #HI(pop_beeb_aux_high_start)
     JSR disksys_load_file
 
     \\ Remain in AUX...
@@ -340,15 +347,20 @@ INCLUDE "game/topctrl.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/hires_core.asm"
 
+; PoP gameplay code moved from AUX memory
+
+INCLUDE "game/misc.asm"
+misc_end=P%
+
 .pop_beeb_core_end
 
 .pop_beeb_data_start
 
 ; Data in CORE memory (always present)
-INCLUDE "game/seqtable.asm"
-seqtab_end=P%
 
-; This data could be dumped after boot!
+; PoP gameplay data moved from AUX memory
+
+; Following data could be dumped after boot!
 
 .beeb_crtcregs
 {
@@ -420,11 +432,11 @@ PRINT "Core RAM free = ", ~(CORE_TOP - P%)
 \*-------------------------------
 
 MAIN_START = &3000
-MAIN_TOP = &8000
+MAIN_TOP = beeb_screen_addr
 
 CLEAR 0, &FFFF
 ORG MAIN_START
-GUARD beeb_screen_addr
+GUARD MAIN_TOP
 
 .pop_beeb_main_start
 
@@ -460,14 +472,12 @@ AUX_TOP = &8000
 
 CLEAR 0, &FFFF
 ORG AUX_START
-GUARD &FFFF; AUX_TOP
+GUARD AUX_TOP
 
 .pop_beeb_aux_start
 .pop_beeb_aux_code_start
 
 ; Code in AUX RAM (gameplay)
-
-; PoP gameplay code moved from AUX memory
 
 INCLUDE "game/ctrl.asm"
 ctrl_end=P%
@@ -477,20 +487,8 @@ INCLUDE "game/gamebg.asm"
 gamebg_end=P%
 INCLUDE "game/bgdata.asm"
 bgdata_end=P%
-INCLUDE "game/subs.asm"
-subs_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
-INCLUDE "game/mover.asm"
-mover_end=P%
-INCLUDE "game/misc.asm"
-misc_end=P%
-INCLUDE "game/auto.asm"
-auto_end=P%
-INCLUDE "game/ctrlsubs.asm"
-ctrlsubs_end=P%
-INCLUDE "game/coll.asm"
-coll_end=P%
 
 .pop_beeb_aux_code_end
 
@@ -498,6 +496,8 @@ coll_end=P%
 
 .pop_beeb_aux_data_start
 
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
 INCLUDE "game/framedefs.asm"
 framedef_end=P%
 INCLUDE "game/tables.asm"
@@ -549,9 +549,12 @@ PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
 ; Construct MOS RAM
 \*-------------------------------
 
+MOS_RAM_START = &8000
+MOS_RAM_TOP = &9000
+
 CLEAR 0, &FFFF
-ORG &8000
-GUARD &9000
+ORG MOS_RAM_START
+GUARD MOS_RAM_TOP
 .peelbuf1
 SKIP &800
 .peelbuf2
@@ -562,15 +565,19 @@ SKIP &800
 ; Construct ROMS
 \*-------------------------------
 
-CLEAR 0, &FFFF
-ORG &8000
-GUARD &C000
-
 BEEB_SWRAM_SLOT_LEVELBG = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 2
 BEEB_SWRAM_SLOT_CHTAB4 = 3
-BEEB_SWRAM_SLOT_CHTAB67 = 3             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
+BEEB_SWRAM_SLOT_CHTAB67 = 4             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
+BEEB_SWRAM_SLOT_AUX_HIGH = 3
+
+SWRAM_START = &8000
+SWRAM_TOP = &C000
+
+CLEAR 0, &FFFF
+ORG SWRAM_START
+GUARD SWRAM_TOP
 
 ; BANK 0
 
@@ -579,69 +586,116 @@ BEEB_SWRAM_SLOT_CHTAB67 = 3             ; BEEB - NOT SURE WHERE THIS WILL GO YET
 SKIP 9185           ; max size of IMG.BGTAB1.XXX        BEEB ACTUALLY LESS
 ALIGN &100
 .bgtable2
-SKIP 4593           ; max size of IMG.BGTAB2.XXX        BEEB ACTUALLY LESS
+SKIP 4593           ; max size of IMG.BGTAB2.XXX
 .bank0_end
+
+PRINT "BANK 0 size = ", ~(bank0_end - bank0_start)
+PRINT "BANK 0 free = ", ~(SWRAM_TOP - bank0_end)
 
 ; BANK 1
 
 CLEAR 0, &FFFF
-ORG &8000
-GUARD &C000
+ORG SWRAM_START
+GUARD SWRAM_TOP
 
 .bank1_start
 .chtable1
 SKIP 9165           ; size of IMG.CHTAB1        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable3
-SKIP 5985           ; size of IMG.CHTAB3        BEEB ACTUALLY LESS
+SKIP 5985           ; size of IMG.CHTAB3
 ALIGN &100
 .bank1_end
+
+PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
+PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 
 ; BANK 2
 
 CLEAR 0, &FFFF
-ORG &8000
-GUARD &C000
+ORG SWRAM_START
+GUARD SWRAM_TOP
 
 .bank2_start
 .chtable2
 SKIP 9189           ; size of IMG.CHTAB2        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable5
-SKIP 6134           ; size of IMG.CHTAB5        BEEB ACTUALLY LESS
+SKIP 6134           ; size of IMG.CHTAB5
 ALIGN &100
 .bank2_end
+
+PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
+PRINT "BANK 2 free = ", ~(SWRAM_TOP - bank2_end)
 
 ; BANK 3
 
 CLEAR 0, &FFFF
-ORG &8000
-GUARD &C000
+ORG SWRAM_START
+GUARD SWRAM_TOP
 
 .bank3_start
 .chtable4
-SKIP 5281           ; size of largest IMG.CHTAB4.X internal file pointer - file size 8999b?
+SKIP 5281           ; size of largest IMG.CHTAB4.X
 ALIGN &100
+
+; Additional AUX code located higher up in SWRAM
+
+.pop_beeb_aux_high_start
+
+INCLUDE "game/subs.asm"
+subs_end=P%
+INCLUDE "game/mover.asm"
+mover_end=P%
+INCLUDE "game/auto.asm"
+auto_end=P%
+INCLUDE "game/ctrlsubs.asm"
+ctrlsubs_end=P%
+INCLUDE "game/coll.asm"
+coll_end=P%
+
+.pop_beeb_aux_high_end
+
+.bank3_end
+
+; Save executable code for Aux High RAM
+
+SAVE "High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
+
+PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
+PRINT "Aux High high watermark = ", ~P%
+
+PRINT "BANK 3 size = ", ~(bank3_end - bank3_start)
+PRINT "BANK 3 free = ", ~(SWRAM_TOP - bank3_end)
+
+\*-------------------------------
+; Construct overlay files
+; Not sure what this is going to overlay yet!
+\*-------------------------------
+
+CLEAR 0, &FFFF
+ORG SWRAM_START
+GUARD SWRAM_TOP
+
+.overlay_start
 .chtable6
 SKIP 9201           ; size of largest IMG.CHTAB6.X        BEEB ACTUALLY LESS
 ALIGN &100
 .chtable7
 SKIP 1155           ; size of IMG.CHTAB7
 ALIGN &100
-.bank3_end
+.overlay_end
 
-
-\*-------------------------------
-; Construct overlay files
-\*-------------------------------
-
-CLEAR 0, &FFFF
+PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
+PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 
 \*-------------------------------
 \*
 \*  Blueprint info
 \*
 \*-------------------------------
+
+CLEAR 0, &FFFF
 
 ORG blueprnt
 .BLUETYPE skip 24*30
@@ -682,7 +736,7 @@ PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
 PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
 PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
 PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
-PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
+;PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
 ;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
 ;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0

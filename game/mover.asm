@@ -23,7 +23,7 @@ PalaceEditor = 0
 .shakem jmp SHAKEM
 
 .trigslicer BRK         ; jmp TRIGSLICER
-.trigtorch BRK          ; jmp TRIGTORCH
+.trigtorch RTS          ; jmp TRIGTORCH             BEEB TO DO
 .getflameflame jmp GETFLAMEFRAME
 .smashmirror BRK        ; jmp SMASHMIRROR
 .jamspikes jmp JAMSPIKES

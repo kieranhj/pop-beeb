@@ -91,7 +91,11 @@
     LDA &FE34
     ORA #4
     STA &FE34
-    RTS
+
+\ Also page in AUX HIGH code in SWRAM bank
+
+    LDA #BEEB_SWRAM_SLOT_AUX_HIGH
+    JMP swr_select_slot
 }
 
 .beeb_core_vsync            ; *FX19

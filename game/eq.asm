@@ -10,47 +10,52 @@
 \*-------------------------------
 
 .imlists
-\ Moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
-\.genCLS skip 1
-\
-\.bgX skip maxback
-\.bgY skip maxback
-\.bgIMG skip maxback
-\.bgOP skip maxback
-\
-\.fgX skip maxfore
-\.fgY skip maxfore
-\.fgIMG skip maxfore
-\.fgOP skip maxfore
-\
-\.wipeX skip maxwipe
-\.wipeY skip maxwipe
-\.wipeH skip maxwipe
-\.wipeW skip maxwipe
-\.wipeCOL skip maxwipe
-\
-\.peelX skip maxpeel*2
-\.peelY skip maxpeel*2
-\.peelIMGL skip maxpeel*2
-\.peelIMGH skip maxpeel*2
-\
-\.midX skip maxmid
-\.midOFF skip maxmid
-\.midY skip maxmid
-\.midIMG skip maxmid
-\.midOP skip maxmid
-\.midTYP skip maxmid
-\.midCU skip maxmid
-\.midCD skip maxmid
-\.midCL skip maxmid
-\.midCR skip maxmid
-\.midTAB skip maxmid
-\
-\.objINDX skip maxobj
-\.objX skip maxobj
-\.objOFF skip maxobj
-\.objY skip maxobj
-\.objIMG skip maxobj
+\ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
+IF 1
+.genCLS skip 1
+
+.bgX skip maxback
+.bgY skip maxback
+.bgIMG skip maxback
+.bgOP skip maxback
+
+.fgX skip maxfore
+.fgY skip maxfore
+.fgIMG skip maxfore
+.fgOP skip maxfore
+
+.wipeX skip maxwipe
+.wipeY skip maxwipe
+.wipeH skip maxwipe
+ENDIF
+\ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
+IF 1
+.wipeW skip maxwipe
+.wipeCOL skip maxwipe
+
+.peelX skip maxpeel*2
+.peelY skip maxpeel*2
+.peelIMGL skip maxpeel*2
+.peelIMGH skip maxpeel*2
+
+.midX skip maxmid
+.midOFF skip maxmid
+.midY skip maxmid
+.midIMG skip maxmid
+.midOP skip maxmid
+.midTYP skip maxmid
+.midCU skip maxmid
+.midCD skip maxmid
+.midCL skip maxmid
+.midCR skip maxmid
+.midTAB skip maxmid
+
+.objINDX skip maxobj
+.objX skip maxobj
+.objOFF skip maxobj
+.objY skip maxobj
+.objIMG skip maxobj
+ENDIF
 
 .objFACE skip maxobj
 .objTYP skip maxobj

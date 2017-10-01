@@ -58,7 +58,7 @@
 .xminit BRK     ;jmp XMINIT
 
 .xmplay BRK     ;jmp XMPLAY
-.cutprincess BRK;jmp CUTPRINCESS
+.cutprincess RTS;jmp CUTPRINCESS                BEEB TO DO
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
 .reload BRK     ;jmp RELOAD
