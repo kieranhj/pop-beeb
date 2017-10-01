@@ -22,7 +22,7 @@
 .DrawKid jmp DRAWKID
 .DrawShad jmp DRAWSHAD
 
-.setupflame RTS     ; jmp SETUPFLAME            BEEB TO DO
+.setupflame jmp SETUPFLAME
 .continuemsg BRK    ; jmp CONTINUEMSG
 .addcharobj jmp ADDCHAROBJ
 .setobjindx jmp SETOBJINDX
@@ -34,8 +34,8 @@
 .DrawGuard BRK      ; jmp DRAWGUARD
 .DrawGuard2 BRK     ; jmp DRAWGUARD
 
-.setupflask RTS     ; jmp SETUPFLASK            BEEB TO DO
-.setupcomix BRK     ; jmp SETUPCOMIX
+.setupflask jmp SETUPFLASK
+.setupcomix RTS     ; jmp SETUPCOMIX            BEEB TO DO
 .psetupflame BRK    ; jmp PSETUPFLAME
 .drawpost BRK       ; jmp DRAWPOST
 .drawglass BRK      ; jmp DRAWGLASS
@@ -143,23 +143,25 @@ pmaski hex 2c,22
 
 starimage = $41
 startable = 0 ;chtable1
+ENDIF
 
-*-------------------------------
-* Torch animation frames
-*               0  1  2  3  4  5  6  7  8  9 10 11
-*              12 13 14 15 16 17
+\*-------------------------------
+\* Torch animation frames
+\*               0  1  2  3  4  5  6  7  8  9 10 11
+\*              12 13 14 15 16 17
 
-torchflame hex 52,53,54,55,56,61,62,63,64,52,54,56
- hex 63,61,55,53,64,62
+.torchflame EQUB $52,$53,$54,$55,$56,$61,$62,$63,$64,$52,$54,$56
+ EQUB $63,$61,$55,$53,$64,$62
 
-ptorchflame db 1,2,3,4,5,6,7,8,9,3,5,7,1,4,9,2,8,6
+.ptorchflame EQUB 1,2,3,4,5,6,7,8,9,3,5,7,1,4,9,2,8,6
 
-*-------------------------------
-* Bubbling flask frames
-*               0  1  2  3  4  5  6  7  8  9 10 11
+\*-------------------------------
+\* Bubbling flask frames
+\*               0  1  2  3  4  5  6  7  8  9 10 11
 
-bubble hex b2,af,b0,b1,b0,af,b1,b0,af
+.bubble EQUB $b2,$af,$b0,$b1,$b0,$af,$b1,$b0,$af
 
+IF _TODO
 *-------------------------------
 * Message data: YCO, XCO, OFFSET, IMAGE
 
@@ -268,7 +270,7 @@ TIMELEFTMSG
  jsr setupimage
  pla
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jmp addmsg ;replace "minutes" with "seconds"
 
@@ -361,7 +363,7 @@ FLIPDISKMSG
 superimage
  jsr setupimage
 superim1
- lda #sta.$40
+ lda #enum_sta.$40
  sta OPACITY
  jmp addmsg
 
@@ -532,7 +534,7 @@ DRAWKIDMETER
 
  lda #191
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  ldx #0
@@ -629,7 +631,7 @@ DRAWOPPMETER
 :1
  lda #191
  sta YCO
- lda #sta.$80 ;mirror
+ lda #enum_sta.$80 ;mirror
  sta OPACITY
 
  ldx #0
@@ -690,14 +692,15 @@ DRAWOPPMETER
  sta IMAGE
  ldx xsave
  jmp :drawimg
+ENDIF
 
-*-------------------------------
-*
-* Set up to draw bubbling flask
-*
-* In/out: same as SETUPFLAME
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Set up to draw bubbling flask
+\*
+\* In/out: same as SETUPFLAME
+\*
+\*-------------------------------
 EmptyPot = 0
 RefreshPot = %00100000
 BoostPot = %01000000
@@ -705,32 +708,33 @@ MystPot = %01100000
 
 boffset = 2
 
-SETUPFLASK
+.SETUPFLASK
+{
  lda #boffset
  sta OFFSET
 
  txa
  and #%11100000
  cmp #EmptyPot
- beq :0
+ beq label_0
  cmp #BoostPot
- beq :tall ;special flask (taller)
- bcc :cont
+ beq local_tall ;special flask (taller)
+ bcc cont
 
  inc OFFSET ;mystery potion (blue)
 
-:tall lda YCO
+.local_tall lda YCO
  sec
  sbc #4
  sta YCO
 
-:cont txa
+.cont txa
  and #%00011111
  tax
  cpx #bubbLast+1
- bcc :ok
+ bcc ok
  ldx #0
-:ok lda bubble,x
+.ok lda bubble,x
  sta IMAGE
 
  inc XCO
@@ -741,33 +745,37 @@ SETUPFLASK
  sbc #14
  sta YCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
- lda #bgtable2
+ lda #LO(bgtable2)
  sta TABLE
- lda #>bgtable2
+ lda #HI(bgtable2)
  sta TABLE+1
 
-]rts rts
+.return
+ rts
 
-:0 ldx #0
- beq :ok
+.label_0 ldx #0
+ beq ok
+}
 
-*-------------------------------
-*
-* Setup to draw flame
-*
-* In: XCO = blockxco
-*     YCO = Ay
-*     X   = spreced
-*
-* Out: ready to call ADDBACK (or FASTLAY)
-*
-*-------------------------------
-SETUPFLAME
+\*-------------------------------
+\*
+\* Setup to draw flame
+\*
+\* In: XCO = blockxco
+\*     YCO = Ay
+\*     X   = spreced
+\*
+\* Out: ready to call ADDBACK (or FASTLAY)
+\*
+\*-------------------------------
+
+.SETUPFLAME
+{
  cpx #torchLast+1
- bcs ]rts
+ bcs return
 
  lda torchflame,x
  sta IMAGE
@@ -779,43 +787,50 @@ SETUPFLAME
  sbc #43
  sta YCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
- lda #bgtable1
+ lda #LO(bgtable1)
  sta TABLE
- lda #>bgtable1
+ lda #HI(bgtable1)
  sta TABLE+1
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Setup to draw flame (Princess's room)
-*
-* In: XCO, YCO; X = frame #
-* Out: Ready to call ADDMID or LAY
-*
-*-------------------------------
-PSETUPFLAME
+\*-------------------------------
+\*
+\* Setup to draw flame (Princess's room)
+\*
+\* In: XCO, YCO; X = frame #
+\* Out: Ready to call ADDMID or LAY
+\*
+\*-------------------------------
+
+.PSETUPFLAME
+{
  cpx #torchLast+1
- bcs ]rts
+ bcs return
 
  lda ptorchflame,x
  sta IMAGE
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  jsr initlay
 
-]setch6 lda #chtable6
+.setch6 lda #LO(chtable6)
  sta TABLE
- lda #>chtable6
+ lda #HI(chtable6)
  sta TABLE+1
 
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Twinkle one of the stars outside Princess's window
@@ -875,7 +890,7 @@ DRAWGLASS
  sta YCO
  lda glassimg,x
  sta IMAGE
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jsr ]setch6
  jmp addback
@@ -964,7 +979,7 @@ FLOW
  sta OFFSET
  lda #flowy
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jsr ]setch6
  jmp lay ;<---DIRECT HIRES CALL

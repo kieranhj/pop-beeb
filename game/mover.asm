@@ -18,19 +18,19 @@ PalaceEditor = 0
 
 .animmobs jmp ANIMMOBS
 .addmobs jmp ADDMOBS
-.closeexit BRK          ; jmp CLOSEEXIT
+.closeexit jmp CLOSEEXIT
 .getspikes jmp GETSPIKES
 .shakem jmp SHAKEM
 
-.trigslicer BRK         ; jmp TRIGSLICER
-.trigtorch RTS          ; jmp TRIGTORCH             BEEB TO DO
+.trigslicer jmp TRIGSLICER
+.trigtorch jmp TRIGTORCH
 .getflameflame jmp GETFLAMEFRAME
-.smashmirror BRK        ; jmp SMASHMIRROR
+.smashmirror jmp SMASHMIRROR
 .jamspikes jmp JAMSPIKES
 
-.trigflask BRK          ; jmp TRIGFLASK
+.trigflask jmp TRIGFLASK
 .getflaskflame jmp GETFLASKFRAME
-.trigsword BRK          ; jmp TRIGSWORD
+.trigsword jmp TRIGSWORD
 .jampp jmp JAMPP
 
 \*-------------------------------
@@ -213,25 +213,26 @@ maxmob = mobspace-1
 .return_36
  rts
 
-IF _TODO
-*-------------------------------
-*
-*  Trigger slicer
-*
-*  In: A = initial state
-*
-*-------------------------------
-TRIGSLICER
+\*-------------------------------
+\*
+\*  Trigger slicer
+\*
+\*  In: A = initial state
+\*
+\*-------------------------------
+
+.TRIGSLICER
+{
  sta state ;temp
 
  lda (BlueSpec),y
- beq :ok
+ beq ok
  cmp #slicerRet
- bcc ]rts ;in mid-slice--don't interfere
+ bcc return_36 ;in mid-slice--don't interfere
 
-* Between slices--OK to trigger
+\* Between slices--OK to trigger
 
-:ok sty trloc
+.ok sty trloc
 
  lda state
  sta (BlueSpec),y
@@ -243,14 +244,17 @@ TRIGSLICER
  sta trdirec
 
  jmp addtrob ;add slicer to trans list
+}
 
-*-------------------------------
-*
-* Close exit
-* (Open it all the way & let it slam shut)
-*
-*-------------------------------
-CLOSEEXIT
+\*-------------------------------
+\*
+\* Close exit
+\* (Open it all the way & let it slam shut)
+\*
+\*-------------------------------
+
+.CLOSEEXIT
+{
  sty trloc
  sta trscrn
 
@@ -261,39 +265,49 @@ CLOSEEXIT
  sta trdirec
 
  jmp addtrob ;add to trans list
+}
 
-*-------------------------------
-SMASHMIRROR
+\*-------------------------------
+
+.SMASHMIRROR
+{
  lda #86
  sta (BlueSpec),y
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Trigger flask
-*
-*-------------------------------
-TRIGFLASK
+\*-------------------------------
+\*
+\* Trigger flask
+\*
+\*-------------------------------
+
+.TRIGFLASK
+{
  sty trloc
  sta trscrn
 
  lda #1
  sta trdirec
 
-* Get rnd starting frame
+\* Get rnd starting frame
 
  jsr rnd
  and #7
  ora (BlueSpec),y
  sta (BlueSpec),y
  jmp addtrob
+}
 
-*-------------------------------
-*
-* Trigger sword
-*
-*-------------------------------
-TRIGSWORD
+\*-------------------------------
+\*
+\* Trigger sword
+\*
+\*-------------------------------
+
+.TRIGSWORD
+{
  sty trloc
  sta trscrn
  lda #1
@@ -302,26 +316,29 @@ TRIGSWORD
  and #$1f
  sta (BlueSpec),y
  jmp addtrob
+}
 
-*-------------------------------
-*
-* Trigger torch
-*
-*-------------------------------
-TRIGTORCH
+\*-------------------------------
+\*
+\* Trigger torch
+\*
+\*-------------------------------
+
+.TRIGTORCH
+{
  sty trloc
  sta trscrn
 
  lda #1
  sta trdirec
 
-* Get rnd starting frame
+\* Get rnd starting frame
 
  jsr rnd
  and #$f
  sta (BlueSpec),y
  jmp addtrob
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -416,11 +433,11 @@ ENDIF
 
  lda (BlueType),y
  and #reqmask ;required floorpiece?
- bne return_36 ;yes--blocked below
+ bne return_42 ;yes--blocked below
 
  lda (BlueSpec),y
  bmi ok ;wiggling
- bne return_36 ;already triggered
+ bne return_42 ;already triggered
 
 .ok lda state
  sta (BlueSpec),y

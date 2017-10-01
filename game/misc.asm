@@ -23,10 +23,10 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .unholy RTS         ; jmp UNHOLY                        BEEB TO DO
 .reflection RTS     ; jmp REFLECTION                    BEEB TO DO
 
-.MarkKidMeter BRK   ; jmp MARKKIDMETER
+.MarkKidMeter RTS   ; jmp MARKKIDMETER                  BEEB TO DO
 .MarkOppMeter BRK   ; jmp MARKOPPMETER
 .bonesrise RTS      ; jmp BONESRISE                     BEEB TO DO
-.decstr RTS         ; jmp DECSTR                        BEEB TO DO
+.decstr jmp DECSTR
 .DoSaveGame BRK     ; jmp DOSAVEGAME
 
 .LoadLevelX jmp LOADLEVELX
@@ -692,18 +692,21 @@ BONESRISE
  jmp SaveShad ;save ShadVars
 
 ENDIF
+ENDIF
 
-*-------------------------------
-*
-* Decrease strength by A (non-0)
-*
-* Out: non-0 if char lives, 0 if he dies
-*      ChgStrength
-*
-*-------------------------------
-DECSTR
+\*-------------------------------
+\*
+\* Decrease strength by A (non-0)
+\*
+\* Out: non-0 if char lives, 0 if he dies
+\*      ChgStrength
+\*
+\*-------------------------------
+
+.DECSTR
+{
  ldx CharID
- bne :enemy
+ bne local_enemy
 
  cmp KidStrength
  bcs killkid
@@ -714,7 +717,7 @@ DECSTR
  sta ChgKidStr
  rts
 
-:enemy
+.local_enemy
  cmp OppStrength
  bcs killopp
 
@@ -723,31 +726,40 @@ DECSTR
  adc #1
  sta ChgOppStr
  rts
+}
 
-*-------------------------------
-* Kill character (or opponent)
-* Return A = 0
-*-------------------------------
-killkid
+\*-------------------------------
+\* Kill character (or opponent)
+\* Return A = 0
+\*-------------------------------
+
+.killkid
+{
  lda #0
  sec
  sbc KidStrength
  sta ChgKidStr
 
  lda #0
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-killopp
+\*-------------------------------
+
+.killopp
+{
  lda #0
  sec
  sbc OppStrength
  sta ChgOppStr
 
  lda #0
-]rts rts
+.return
+ rts
+}
 
-
+IF _TODO
 *-------------------------------
 * Save current game to disk
 *
