@@ -11,7 +11,7 @@
 
 .PlayerCtrl jmp PLAYERCTRL
 .checkfloor jmp CHECKFLOOR
-.ShadCtrl BRK         ; jmp SHADCTRL
+.ShadCtrl jmp SHADCTRL
 .rereadblocks jmp REREADBLOCKS
 .checkpress jmp CHECKPRESS
 
@@ -535,42 +535,43 @@ stairthres = 30
  jmp reland
 }
 
-IF _TODO
-*-------------------------------
-*
-*  S H A D O W   C O N T R O L
-*
-*-------------------------------
-SHADCTRL
+\*-------------------------------
+\*
+\*  S H A D O W   C O N T R O L
+\*
+\*-------------------------------
+
+.SHADCTRL
+{
  lda CharID
  cmp #24 ;mouse?
- bne :1
+ bne label_1
  jmp AutoCtrl
 
-:1 lda CharLife
- bpl :dead
+.label_1 lda CharLife
+ bpl local_dead
 ;Has char's life run out?
  lda OppStrength
- bne :cont
+ bne cont
  lda #0
  sta CharLife
  jsr deadenemy
 
-:dead lda CharID
+.local_dead lda CharID
  cmp #1 ;shadow man?
- bne :cont
+ bne cont
  jmp VanishChar
 
-:cont lda ManCtrl
- bne :manualctrl
+.cont lda ManCtrl
+ bne manualctrl
 
  jsr AutoCtrl
 
  jmp GenCtrl
 
-* Manual ctrl: enemy controlled by deselected device
+\* Manual ctrl: enemy controlled by deselected device
 
-:manualctrl
+.manualctrl
  jsr LoadDesel
 
  jsr getdesel
@@ -580,7 +581,7 @@ SHADCTRL
  jsr UserCtrl
 
  jmp SaveDesel
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -796,7 +797,7 @@ ENDIF
  bmi local_engarde
  bpl local_turn
 
-.local_engarde jmp DoEngarde
+.local_engarde jmp ctrl_DoEngarde
 
 .local_turn lda #1
  sta clrD
@@ -880,7 +881,7 @@ ENDIF
  lda #gdpatience
  sta gdtimer
 
-.label_11 jsr DoStrike
+.label_11 jsr ctrl_DoStrike
 
  lda clrbtn
  cmp #1
@@ -939,9 +940,9 @@ ENDIF
 .return
  rts
 
-.local_fwd jmp DoAdvance
-.local_up jmp DoBlock
-.local_back jmp DoRetreat
+.local_fwd jmp ctrl_DoAdvance
+.local_up jmp ctrl_DoBlock
+.local_back jmp ctrl_DoRetreat
 }
 
 \*-------------------------------
@@ -954,7 +955,7 @@ ENDIF
 
 \*-------------------------------
 
-.DoBlock
+.ctrl_DoBlock
 {
  ldx CharPosn
  cpx #158 ;ready
@@ -1013,14 +1014,14 @@ ENDIF
  jmp jumpseq
 .blockmiss
  lda CharID
- bne DoRetreat ;enemy doesn't waste blocks
+ bne ctrl_DoRetreat ;enemy doesn't waste blocks
  lda #readyblock
  bne doit
 }
 
 \*-------------------------------
 
-.DoStrike
+.ctrl_DoStrike
 {
  cpx #157
  beq label_1
@@ -1057,7 +1058,7 @@ ENDIF
 
 \*-------------------------------
 
-.DoRetreat
+.ctrl_DoRetreat
 {
  ldx CharPosn
  cpx #158
@@ -1077,7 +1078,7 @@ ENDIF
 
 \*-------------------------------
 
-.DoAdvance
+.ctrl_DoAdvance
 {
  ldx CharPosn
  cpx #158
@@ -1127,7 +1128,7 @@ ENDIF
  bpl label_1
  lda clrF
  bpl label_1
- jmp DoEngarde
+ jmp ctrl_DoEngarde
 
 \* If opponent is within range, go en garde
 \* (For kid only)
@@ -1165,9 +1166,9 @@ ENDIF
  bcc local_engarde
  cmp #118
  bcc local_safe ;let shadow land
-.local_engarde jmp DoEngarde
+.local_engarde jmp ctrl_DoEngarde
 
-.local_behindyou jmp DoTurn
+.local_behindyou jmp ctrl_DoTurn
 
 .local_safe lda #0
  sta offguard
@@ -1220,8 +1221,8 @@ ENDIF
 .standing_fwd jmp DoStartrun
 .standing_fwdB jmp DoStepfwd
 
-.standing_back jmp DoTurn
-.standing_backB jmp DoTurn
+.standing_back jmp ctrl_DoTurn
+.standing_backB jmp ctrl_DoTurn
 
 .standing_fwdup jmp DoStandjump
 
@@ -1670,7 +1671,7 @@ ENDIF
  jmp jumpseq ;...start running
 }
 
-.DoTurn
+.ctrl_DoTurn
 {
  jsr clrall
  sta clrB
@@ -1725,7 +1726,7 @@ ENDIF
  rts
 }
 
-.DoEngarde
+.ctrl_DoEngarde
 {
  jsr clrall
  sta clrF

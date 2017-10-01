@@ -19,7 +19,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 .potioneffect BRK   ; jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE
-.stabchar brk       ; jmp STABCHAR
+.StabChar jmp STABCHAR
 .unholy RTS         ; jmp UNHOLY                        BEEB TO DO
 .reflection RTS     ; jmp REFLECTION                    BEEB TO DO
 
@@ -384,42 +384,46 @@ MOUSERESCUE
  jsr animchar
 
  jmp SaveShad
+ENDIF
 
-*-------------------------------
-*
-* Stab character
-*
-*-------------------------------
-STABCHAR
+\*-------------------------------
+\*
+\* Stab character
+\*
+\*-------------------------------
+
+.STABCHAR
+{
  lda CharLife
- bpl ]rts ;already dead
+ bpl return ;already dead
  lda CharSword
  cmp #2
- bne :DL ;defenseless
+ bne local_DL ;defenseless
  lda CharID
  cmp #4
- beq :wounded ;skel has no life points
+ beq local_wounded ;skel has no life points
 
  lda #1
  jsr decstr
- bne :wounded
+ bne local_wounded
 
  ldx CharID
- beq :killed
+ beq local_killed
 
  ldx CharID
  cpx #4 ;skeleton
- bne :killed
+ bne local_killed
  lda #0
  sta ChgOppStr ;skel is invincible
-]rts rts
+.return
+ rts
 
-:killed jsr getbehind
+.local_killed jsr getbehind
  cmp #space
- bne :onground
+ bne local_onground
  jsr getdist ;to EOB
  cmp #4
- bcc :onground
+ bcc local_onground
 ;if char is killed at edge, knock him off
  sec
  sbc #14
@@ -428,33 +432,35 @@ STABCHAR
  inc CharBlockY
  lda #fightfall
  jsr jumpseq
- jmp :3
+ jmp label_3
 
-:onground lda #stabkill
- bne :2
+.local_onground lda #stabkill
+ bne label_2
 
-:wounded lda #stabbed
-:2 jsr jumpseq
+.local_wounded lda #stabbed
+.label_2 jsr jumpseq
 
-:1 ldx CharBlockY
+.label_1 ldx CharBlockY
  lda FloorY+1,x
  sta CharY
  lda #0
  sta CharYVel
 
-:3 lda #Splat
+.label_3 lda #Splat
  jsr addsound
 
  jmp animchar
 
-* stabbed when defenseless
+\* stabbed when defenseless
 
-:DL lda #100
+.local_DL lda #100
  jsr decstr
 
  lda #stabkill ;dropdead?
- jmp :killed
+ jmp local_killed
+}
 
+IF _TODO
 *-------------------------------
 *
 * If shadow dies, you die (& vice versa)

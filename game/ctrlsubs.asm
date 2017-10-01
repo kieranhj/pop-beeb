@@ -55,9 +55,9 @@
 .addreflobj jmp ADDREFLOBJ
 
 .LoadKid jmp LOADKID
-.LoadShad BRK           ; jmp LOADSHAD
+.LoadShad jmp LOADSHAD
 .SaveKid jmp SAVEKID
-.SaveShad BRK           ; jmp SAVESHAD
+.SaveShad jmp SAVESHAD
 .setupchar jmp SETUPCHAR
 
 .GetFrameInfo jmp GETFRAMEINFO
@@ -79,19 +79,19 @@
 .get2infront jmp GET2INFRONT
 
 .checkspikes jmp CHECKSPIKES
-.rechargemeter BRK      ; jmp RECHARGEMETER
+.rechargemeter jmp RECHARGEMETER
 .addfcharx jmp ADDFCHARX
 .facedx jmp FACEDX
 .jumpseq jmp JUMPSEQ
 
 .GetBaseBlock jmp GETBASEBLOCK
 .LoadKidwOp jmp LOADKIDWOP
-.SaveKidwOp BRK         ; jmp SAVEKIDWOP
+.SaveKidwOp jmp SAVEKIDWOP
 .getopdist jmp GETOPDIST
-.LoadShadwOp BRK        ; jmp LOADSHADWOP
+.LoadShadwOp jmp LOADSHADWOP
 
-.SaveShadwOp BRK        ; jmp SAVESHADWOP
-.boostmeter BRK         ; jmp BOOSTMETER
+.SaveShadwOp jmp SAVESHADWOP
+.boostmeter jmp BOOSTMETER
 .getunderft jmp GETUNDERFT
 .getinfront jmp GETINFRONT
 .getbehind jmp GETBEHIND
@@ -2121,28 +2121,30 @@ numvars = 16
  rts
 }
 
-IF _TODO
-LOADSHAD
+.LOADSHAD
+{
  ldx #numvars-1
 
-:loop lda Shad,x
+.loop lda Shad,x
  sta Char,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
+}
 
-
-SAVESHAD
+.SAVESHAD
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Shad,x
 
  dex
- bpl :loop
+ bpl loop
  rts
-ENDIF
+}
 
 \*  Load kid w/ opponent
 
@@ -2176,63 +2178,72 @@ ENDIF
  rts
 }
 
-IF _TODO
-* Load shadowman w/ opponent
+\* Load shadowman w/ opponent
 
-LOADSHADWOP
+.LOADSHADWOP
+{
  ldx #numvars-1
 
-:loop lda Shad,x
+.loop lda Shad,x
  sta Char,x
 
  lda Kid,x
  sta Op,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-SAVESHADWOP
+.SAVESHADWOP
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Shad,x
 
  lda Op,x
  sta Kid,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-*
-* Recharge strength meter to max
-*
-*-------------------------------
-RECHARGEMETER
+\*-------------------------------
+\*
+\* Recharge strength meter to max
+\*
+\*-------------------------------
+
+.RECHARGEMETER
+{
  lda MaxKidStr
  sec
  sbc KidStrength
  sta ChgKidStr
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Boost strength meter max by 1 and recharge
-*
-*-------------------------------
-BOOSTMETER
+\*-------------------------------
+\*
+\* Boost strength meter max by 1 and recharge
+\*
+\*-------------------------------
+
+.BOOSTMETER
+{
  lda MaxKidStr
  cmp #maxmaxstr
- bcs :1
+ bcs label_1
 
  clc
  adc #1
  sta MaxKidStr
 
-:1 jmp RECHARGEMETER
-ENDIF
+.label_1 jmp RECHARGEMETER
+}
 
 \*-------------------------------
 \*
