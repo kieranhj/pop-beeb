@@ -44,10 +44,11 @@
 .twinkle BRK        ; jmp TWINKLE
 .flow BRK           ; jmp FLOW
 .pmask BRK          ; jmp PMASK
-.yellow BRK         ; jmp YELLOW
 
-.setrecheck0 BRK    ; jmp SETRECHECK0
-.recheckyel BRK     ; jmp RECHECKYEL
+\ NOT BEEB COPY PROTECTION
+\.yellow BRK         ; jmp YELLOW
+\.setrecheck0 BRK    ; jmp SETRECHECK0
+\.recheckyel BRK     ; jmp RECHECKYEL
 \ ds 3
 \ ds 3
 \ ds 3

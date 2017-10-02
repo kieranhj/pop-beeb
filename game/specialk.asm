@@ -84,35 +84,28 @@ game_time_limit = 60 ;game time limit
 
 \*  Player control keys
 
-;kleft = 'j'+&80
-;kdown = 'k'+&80
-;kright = 'l'+&80
-;kupleft = 'u'+&80
-;kup = 'i'+&80
-;kupright = 'o'+&80
+kleft = IKN_z
+kdown = IKN_slash
+kright = IKN_x
+kupleft = IKN_semi
+kup = IKN_colon
+kupright = IKN_rsb
 
-kleft = 'z'+&80
-kdown = '/'+&80
-kright = 'x'+&80
-kupleft = ';'+&80
-kup = ':'+&80
-kupright = ']'+&80
+\*  Special keys (legit) - all require CTRL
 
-\*  Special keys (legit)
-
-kfreeze = ESC
-krestart = 'r'-CTRL
-kabort = 'a'-CTRL
-\ksound = 's'-CTRL
-\kmusic = 'n'-CTRL
-ksetkbd = 'k'-CTRL
-ksetjstk = 'j'-CTRL
-ksavegame = 'g'-CTRL
-kversion = 'v'-CTRL
-kreturn = 'm'-CTRL ;editor disk only
-kshowtime = ' '
-kflipx = 'x'-CTRL
-kflipy = 'y'-CTRL
+kfreeze = IKN_p OR &80
+krestart = IKN_r OR &80
+kabort = IKN_a OR &80
+\ksound = IKN_s OR &80
+\kmusic = IKN_m OR &80
+ksetkbd = IKN_k OR &80
+ksetjstk = IKN_j OR &80
+ksavegame = IKN_g OR &80
+kversion = IKN_v OR &80
+kreturn = IKN_e  OR &80;editor disk only
+kshowtime = IKN_space OR &80
+kflipx = IKN_x OR &80
+kflipy = IKN_y OR &80
 
 \*  Special keys (development)
 
@@ -173,7 +166,7 @@ kerasegame = '*'
 .return_35
  rts
 
-.beeb_strobe EQUB 0
+.beeb_ctrl_key EQUB 0
 
 .KEYS1
 {
@@ -181,17 +174,34 @@ kerasegame = '*'
 \lda $C000 ;ASCII value of last keypress
  ;(Hibit is keyboard strobe)
 
-\ BEEB
- LDA #&81
- LDX #0
- LDY #0
+\ Check CTRL
+ LDA #&79
+ LDX #IKN_ctrl EOR &80
  JSR osbyte
-\ X=ASCII value if pressed
- BCC key_pressed 
+
+ TXA
+ AND #&80
+ STA beeb_ctrl_key
+
+\ Scan keys beyond Return
+ LDA #&79
+ LDX #IKN_return+1
+ JSR osbyte
+
+ CPX #&FF
+ BNE key_pressed 
+
+\ No key pressed above return - try lower keys
+ LDA #&79
+ LDX #&2
+ JSR osbyte
+
+ CPX #&FF
+ BNE key_pressed 
 
 \ No key pressed
  LDA #0
- STA beeb_strobe
+ STA keydown
  JMP KEYS2
 
 .key_pressed
@@ -199,11 +209,11 @@ kerasegame = '*'
   TXA
   AND #&7F
 
-  LDY beeb_strobe
+  LDY keydown
   BNE stale_press
 
   LDY #&80
-  STY beeb_strobe
+  STY keydown
 
   \ If strobe 0 then fresh press
   ORA #&80
@@ -216,8 +226,7 @@ kerasegame = '*'
 \ NOT BEEB
 \ lda $C010 ;Hibit is any-key-down flag
  ;(Clears keyboard strobe)
- LDA beeb_strobe
- sta keydown
+\ sta keydown
 
  jsr KREAD ;Keyboard control
 
@@ -308,9 +317,9 @@ kerasegame = '*'
  jsr DevelKeys
 
  jsr TempDevel
-
- rts
 }
+.return_51
+ rts
 
 \*-------------------------------
 \*
@@ -320,6 +329,10 @@ kerasegame = '*'
 
 .LegitKeys
 {
+\ BEEB must hold down CTRL
+ LDA beeb_ctrl_key
+ BEQ return_51
+
  lda keypress
  cmp #kfreeze
  bne label_1
@@ -801,7 +814,8 @@ ENDIF
  ldx keydown
  bpl return ;No fresh press & no key down
 
- ora #$80 ;stale press, key still down
+\ NOT BEEB
+\ ora #$80 ;stale press, key still down
 .cont
  cmp #kleft
  beq local_left

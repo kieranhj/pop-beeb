@@ -517,9 +517,10 @@ ENDIF
 .cut1 lda #1
 .label_pcut pha
 .repeat jsr cutprincess ;cut to princess's room...
- jsr setrecheck0
- jsr recheckyel ;if wrong-disk error, recheck track 0
- bne repeat ;& repeat
+\ NOT BEEB
+\ jsr setrecheck0
+\ jsr recheckyel ;if wrong-disk error, recheck track 0
+\ bne repeat ;& repeat
  pla
  jsr playcut ;& play cut #1
  jmp cont

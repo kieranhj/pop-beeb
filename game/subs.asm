@@ -31,7 +31,7 @@ CheckTimer = 0
 .addslicers RTS         ; jmp ADDSLICERS            BEEB TO DO
 .pause jmp PAUSE
 \ jmp bonesrise
-.deadenemy BRK          ; jmp DEADENEMY
+.deadenemy jmp DEADENEMY
 .playcut BRK            ; jmp PLAYCUT
 
 .addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TO DO SOUND
@@ -43,7 +43,7 @@ CheckTimer = 0
 .startkid1 jmp STARTKID1
 .gravity jmp GRAVITY
 .initialguards jmp INITIALGUARDS
-.mirappear RTS          ; jmp MIRAPPEAR             BEEB TO DO
+.mirappear jmp MIRAPPEAR
 .crumble RTS            ; jmp CRUMBLE               BEEB TO DO
 
 \*-------------------------------
@@ -1729,36 +1729,37 @@ WtlessGravity = 1
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Newly dead enemy--play music (or whatever)
-*
-* In: Char vars
-*
-*-------------------------------
-DEADENEMY
+\*-------------------------------
+\*
+\* Newly dead enemy--play music (or whatever)
+\*
+\* In: Char vars
+\*
+\*-------------------------------
+
+.DEADENEMY
+{
  lda level
- beq :demo
+ beq local_demo
  cmp #13
- beq :wingame
+ beq wingame
 
  lda CharID
  cmp #1
- beq ]rts ;shadow
+ beq return ;shadow
  lda #s_Vict
  ldx #25
  jsr cuesong
-]rts rts
+.return rts
 
-:demo lda #1
+.local_demo lda #1
  sta milestone ;start demo, part 2
  lda #0
  sta PreRecPtr
  sta PlayCount
  rts
 
-:wingame lda #s_Upstairs
+.wingame lda #s_Upstairs
  ldx #25
  jsr cuesong
 
@@ -1777,18 +1778,21 @@ DEADENEMY
  ldy #0
  jsr rdblock
  jmp pushpp ;open exit
+}
 
-*-------------------------------
-*  Mirror appears (called by MOVER when exit opened)
-*-------------------------------
-MIRAPPEAR
+\*-------------------------------
+\*  Mirror appears (called by MOVER when exit opened)
+\*-------------------------------
+
+.MIRAPPEAR
+{
  IF DemoDisk
  rts
  ELSE
 
  lda level
  cmp #4
- bne ]rts
+ bne return
 
  lda #mirscrn
  ldx #mirx
@@ -1796,11 +1800,10 @@ MIRAPPEAR
  jsr rdblock
  lda #mirror
  sta (BlueType),y
+.return
  rts
-
  ENDIF
-
-ENDIF
+}
 
 \*-------------------------------
 \ lst
