@@ -884,3 +884,20 @@ PoP sprite plotting modes need adjusting for MODE 2
 AND means remove background using sprite as a mask
 ORA means add to background but think this means regular MASK in MODE 2
 If bg always AND followed by ORA might be replaced by a single MASK call instead?
+
+Notes on Apple II I/O device addresses:
+
+http://apple2.org.za/gswv/a2zine/faqs/csa2pfaq.html
+KEYBOARD = $C000 ;keyboard data (latched) (Read) 
+                 ;Bit 7 is set to indicate a keypress 
+                 ;is waiting, with the ASCII 
+                 ;code in bits 6-0. 
+OPNAPPLE = $C061 ;open apple (command) key data (read) 
+CLSAPPLE = $C062 ;closed apple (option) key data (read) 
+These are actually the first two game Pushbutton inputs (PB0 
+and PB1) which are borrowed by the Open Apple and Closed Apple 
+keys. Bit 7 is set (=1) in these locations if the game switch or 
+corresponding key is pressed. 
+PB2 =      $C063 ;game Pushbutton 2 (read) 
+This input has an option to be connected to the shift key on 
+the keyboard. (See info on the 'shift key mod'.) 

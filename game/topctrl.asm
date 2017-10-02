@@ -139,7 +139,15 @@ ENDIF
  cpx #locals_top      ; BEEB don't zero all ZP
  bne loop
 
- jsr setcenter ;Center joystick
+\ BEEB TO DO JOYSTICK
+\ jsr setcenter ;Center joystick
+
+\ BEEB set keyboard mode
+ LDA #0
+ STA joyon
+ sta jvert
+ sta jhoriz
+ sta jbtns ;set normal params
 
 \ NOT BEEB
 \ jsr setfastaux ;bgtable in auxmem

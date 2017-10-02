@@ -29,7 +29,7 @@ DebugKeys = 0
  .LoadDesel jmp LOADDESEL
  .initinput jmp INITINPUT
 
- .demokeys RTS    ;jmp DEMOKEYS         BEEB TO DO
+ .demokeys jmp DEMOKEYS
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
  .getminleft BRK  ;jmp GETMINLEFT
@@ -1104,35 +1104,43 @@ ADDSOUND
 
 :rts ldx ]temp1
  rts
+ENDIF
 
-*-------------------------------
-*
-*  Demo keys (Call immediately after regular KEYS routine)
-*
-*  All keys interrupt demo except ESC and CTRL-S
-*
-*  Out: FF if interrupt, else 00
-*
-*-------------------------------
-DEMOKEYS
+\*-------------------------------
+\*
+\*  Demo keys (Call immediately after regular KEYS routine)
+\*
+\*  All keys interrupt demo except ESC and CTRL-S
+\*
+\*  Out: FF if interrupt, else 00
+\*
+\*-------------------------------
+
+.DEMOKEYS
+{
  lda level
- bne :cont ;not in demo
+ bne cont ;not in demo
 
- lda $c061
- ora $c062 ;button?
- bmi :interrupt
+\ BEEB
+ LDA BTN0
+ ORA BTN1
+\ lda $c061
+\ ora $c062 ;button?
+ bmi interrupt
  lda keypress
- bpl :cont
+ bpl cont
  cmp #ESC
- beq :cont
+ beq cont
  cmp #ksound
- beq :cont
-:interrupt
+ beq cont
+.interrupt
  lda #$ff
  rts
-:cont lda #0
+.cont lda #0
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Special routine for use by BURN

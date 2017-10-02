@@ -35,7 +35,7 @@ CheckTimer = 0
 .playcut BRK            ; jmp PLAYCUT
 
 .addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TO DO SOUND
-.RemoveObj BRK          ; jmp REMOVEOBJ
+.RemoveObj jmp REMOVEOBJ
 .addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
 .startkid jmp STARTKID
@@ -1418,15 +1418,18 @@ ADDLOWERSOUND
 
 :y lda #LoweringGate
  jmp addsound
+ENDIF
 
-*-------------------------------
-*
-* Remove object
-*
-* In: A = lastpotion
-*
-*-------------------------------
-REMOVEOBJ
+\*-------------------------------
+\*
+\* Remove object
+\*
+\* In: A = lastpotion
+\*
+\*-------------------------------
+
+.REMOVEOBJ
+{
  sta lastpotion
 
  ldx #1
@@ -1444,7 +1447,7 @@ REMOVEOBJ
  clc
  jsr markwipe
  jmp markred
-ENDIF
+}
 
 \*-------------------------------
 \*

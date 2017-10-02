@@ -99,7 +99,7 @@
 .guardprog skip 1
 .ManCtrl skip 1
 .mergetimer skip 1
-;.lastpotion skip 1
+.lastpotion skip 1
 .origstrength skip 1
 ;.jmpaddr skip 2
 .alertguard skip 1

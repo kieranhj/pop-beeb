@@ -17,13 +17,13 @@
 \
 .gr BRK         ;jmp GR
 .drawall jmp DRAWALL
-.controller RTS ;jmp CONTROLLER     BEEB TO DO JOYSTICK
+.controller jmp CONTROLLER
 \ jmp dispversion
 .saveblue BRK   ;jmp SAVEBLUE
 \
 .reloadblue BRK ;jmp RELOADBLUE
 .movemem BRK    ;jmp MOVEMEM
-.buttons BRK    ;jmp BUTTONS ;ed    EDITOR
+.buttons jmp BUTTONS ;ed
 .gtone BRK      ;jmp GTONE          SOUND
 .setcenter RTS  ;jmp SETCENTER      BEEB TO DO JOYSTICK
 \
@@ -1142,30 +1142,36 @@ range = 36*7 ;largest multiple of 7 under 256
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Read controller (jstk & buttons)
-*
-*  Out: joyX-Y, BTN0-1
-*
-*-------------------------------
-CONTROLLER
- jsr JREAD ;read jstk
+\*-------------------------------
+\*
+\*  Read controller (jstk & buttons)
+\*
+\*  Out: joyX-Y, BTN0-1
+\*
+\*-------------------------------
+
+.CONTROLLER
+{
+\ BEEB TEMP comment out JOYSTICK
+\ jsr JREAD ;read jstk
 
  jmp BREAD ;& btns
+}
 
-*-------------------------------
-*
-*  Read joystick
-*
-*  Out: joyX-Y
-*
-*  joyX: -1 = left, 0 = center, +1 = right
-*  joyY: -1 = up, 0 = center, +1 = down
-*
-*-------------------------------
-JREAD
+\*-------------------------------
+\*
+\*  Read joystick
+\*
+\*  Out: joyX-Y
+\*
+\*  joyX: -1 = left, 0 = center, +1 = right
+\*  joyY: -1 = up, 0 = center, +1 = down
+\*
+\*-------------------------------
+
+IF  _TODO
+.JREAD
+{
  lda joyon
  beq return
  jsr PREAD ;read game pots
@@ -1175,55 +1181,76 @@ JREAD
  inx
  jsr cvtpdl
 
-* Reverse joyY?
+\* Reverse joyY?
 
  lda jvert
- beq :1
+ beq label_1
 
  lda #0
  sec
  sbc joyY
  sta joyY
 
-* Reverse joyX?
+\* Reverse joyX?
 
-:1 lda jhoriz
+.label_1 lda jhoriz
  beq return
 
  lda #0
  sec
  sbc joyX
  sta joyX
-return rts
+.return
+ rts
+}
+ENDIF
 
-*-------------------------------
-*
-*  Read buttons
-*
-*  Out: BTN0-1
-*
-*-------------------------------
-BREAD
+\*-------------------------------
+\*
+\*  Read buttons
+\*
+\*  Out: BTN0-1
+\*
+\*-------------------------------
+
+.BREAD
+{
  lda jbtns
- bne :1 ;buttons switched
+ bne label_1 ;buttons switched
 
- lda $c061
- ldx $c062
-:2 sta BTN0
+\ lda $c061
+\ ldx $c062
+
+ LDA #&79
+ LDX #IKN_return EOR &80
+ JSR osbyte
+ TXA
+
+.label_2 sta BTN0
  stx BTN1
  rts
 
-:1 ldx $c062
- lda $c061
- jmp :2
+.label_1
+\ ldx $c062
+\ lda $c061
 
-*-------------------------------
-*
-*  (Temp routine--for builder only)
-*
-*-------------------------------
-BUTTONS
- do EditorDisk
+ LDA #&79
+ LDX #IKN_return EOR &80
+ JSR osbyte
+ TXA
+
+ jmp label_2
+}
+
+\*-------------------------------
+\*
+\*  (Temp routine--for builder only)
+\*
+\*-------------------------------
+
+.BUTTONS
+{
+IF EditorDisk
  ldx BTN0 ;"raw"
  lda #0
  sta BUTT0
@@ -1246,10 +1273,13 @@ BUTTONS
  bmi return
  lda #0
  sta JSTKUP ;jstk is not up--clear JSTKUP
- fin
+ENDIF
 
-return rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Convert raw counter value (approx. 0-70) to -1/0/1

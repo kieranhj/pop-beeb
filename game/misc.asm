@@ -17,7 +17,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .firstguard jmp FIRSTGUARD
 .markmeters RTS     ; jmp MARKMETERS                    BEEB TO DO
 
-.potioneffect BRK   ; jmp POTIONEFFECT
+.potioneffect jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE
 .StabChar jmp STABCHAR
 .unholy RTS         ; jmp UNHOLY                        BEEB TO DO
@@ -199,22 +199,22 @@ ENDIF
 {
  lda EnemyAlert
  cmp #2
- bcc return
+ bcc return_50
  lda CharSword
- bne return
+ bne return_50
  lda OpSword
- beq return
+ beq return_50
  lda OpAction
  cmp #2
- bcs return
+ bcs return_50
 
  lda CharFace
  cmp OpFace
- beq return
+ beq return_50
 
  jsr getopdist
  cmp #LO(-15)
- bcc return
+ bcc return_50
 
 \* Bump off guard
 
@@ -224,10 +224,9 @@ ENDIF
  lda #bump
  jsr jumpseq
  jmp animchar
-
-.return
- rts
 }
+.return_50
+ rts
 
 IF _TODO
 *-------------------------------
@@ -258,24 +257,26 @@ MARKOPPMETER
  ldy #28
  bne Mark2
  rts
+ENDIF
 
-*-------------------------------
-*
-* Potion takes effect
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Potion takes effect
+\*
+\*-------------------------------
 wtlesstimer = 200
 vibetimer = 3
 
-POTIONEFFECT
+.POTIONEFFECT
+{
  lda CharID
- bne ]rts
+ bne return_50
 
  ldx lastpotion
- beq ]rts
- bpl :notswd
+ beq return_50
+ bpl notswd
 
-* Sword (-1)
+\* Sword (-1)
 
  lda #1
  sta gotsword
@@ -288,14 +289,14 @@ POTIONEFFECT
  sta lightning ;3 white flashes
  rts
 
-* Recharge meter (1)
+\* Recharge meter (1)
 
-:notswd cpx #1
- bne :2
+.notswd cpx #1
+ bne label_2
 
  lda KidStrength
  cmp MaxKidStr
- beq ]rts ;already at full strength
+ beq return ;already at full strength
 
  lda #$99
  sta lightcolor
@@ -308,10 +309,10 @@ POTIONEFFECT
  sta ChgKidStr
  rts
 
-* Boost meter (2)
+\* Boost meter (2)
 
-:2 cpx #2
- bne :3
+.label_2 cpx #2
+ bne label_3
  lda #$99
  sta lightcolor
  lda #5
@@ -321,10 +322,10 @@ POTIONEFFECT
  jsr cuesong
  jmp boostmeter
 
-* Weightless (3)
+\* Weightless (3)
 
-:3 cpx #3
- bne :4
+.label_3 cpx #3
+ bne label_4
  lda #s_ShortPot
  ldx #25
  jsr cuesong
@@ -334,10 +335,10 @@ POTIONEFFECT
  sta vibes
  rts
 
-* Upside down (4)
+\* Upside down (4)
 
-:4 cpx #4
- bne :5
+.label_4 cpx #4
+ bne label_5
  lda invert
  eor #$ff
  sta invert
@@ -345,18 +346,21 @@ POTIONEFFECT
  sta redrawflg
  jmp inverty
 
-* Yecch (5)
+\* Yecch (5)
 
-:5 cpx #5
- bne :6
+.label_5 cpx #5
+ bne label_6
  lda #Splat ;yecch
  jsr addsound
- lda #-1
+ lda #LO(-1)
  sta ChgKidStr
  rts
-:6
-]rts rts
+.label_6
+.return
+  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Mouse rescues you
