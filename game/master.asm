@@ -484,7 +484,9 @@ ENDIF
 \ NOT BEEB
 \ jmp driveoff
 
-\ BEEB
+\ Ensure BEEB select full Aux memory after load
+ JSR beeb_shadow_select_aux
+
  RTS
 }
 
@@ -562,8 +564,8 @@ EQUS "DUN1   $"
 
 .rdbg1
 {
-\ BEEB TEMP comment out
     ldx newBGset1
+\ BEEB TEMP
 \    cpx BGset1
 \    beq return
     stx BGset1
@@ -618,8 +620,8 @@ EQUS "DUN2   $"
 
 .rdbg2
 {
-\ BEEB TEMP comment out
     ldx newBGset2
+\ BEEB TEMP
 \    cpx BGset2
 \    beq return
     stx BGset2
@@ -707,8 +709,8 @@ EQUS "VIZ    $"
 
 .rdch4
 {
-\ BEEB TEMP comment out
     ldx newCHset
+\ BEEB TEMP
 \    cpx CHset
 \    beq return
     stx CHset

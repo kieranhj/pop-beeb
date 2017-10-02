@@ -21,7 +21,7 @@
 .AutoPlayback BRK       ; jmp AUTOPLAYBACK
 .cutcheck jmp CUTCHECK
 
-.cutguard RTS           ; jmp CUTGUARD              BEEB TO DO
+.cutguard jmp CUTGUARD
 .addguard jmp ADDGUARD
 .cut jmp CUT
 
@@ -1430,8 +1430,7 @@ ENDIF
 
 \* Leave him behind
 
-\ BEEB TEMP comment out
-.update RTS ;jmp updateguard 
+.update jmp updateguard 
 }
 
 \*-------------------------------
@@ -1459,7 +1458,6 @@ ENDIF
  rts
 }
 
-IF _TODO
 \*-------------------------------
 \*
 \* Leaving guard behind on old screen--
@@ -1468,6 +1466,7 @@ IF _TODO
 \*-------------------------------
 
 .updateguard
+{
  lda ShadFace
  cmp #86
  beq return ;no guard
@@ -1476,7 +1475,7 @@ IF _TODO
  beq return ;not for shadman
  cmp #24
  beq return ;or mouse
-:gd
+.gd
  lda #0 ;arbitrary--ADDGUARD will reconstruct
  sta tempblockx ;CharBlockX from CharX
  lda ShadBlockY
@@ -1496,32 +1495,36 @@ IF _TODO
  sta GdStartProg-1,x
 
  lda ShadLife
- bpl :ok
+ bpl ok
  lda #0
  sta GdStartSeqH-1,x
- beq :cont
+ beq cont
 
-:ok lda ShadSeq
+.ok lda ShadSeq
  sta GdStartSeqL-1,x
  lda ShadSeq+1
  sta GdStartSeqH-1,x
 
-* and deactivate enemy char
+\* and deactivate enemy char
 
-:cont lda #86
+.cont lda #86
  sta ShadFace
 
  lda #0
  sta OppStrength
-return rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* If enemy has fallen to screen below, catch him before
-* he wraps around to top of VisScrn
-*
-*-------------------------------
-CUTGUARD
+\*-------------------------------
+\*
+\* If enemy has fallen to screen below, catch him before
+\* he wraps around to top of VisScrn
+\*
+\*-------------------------------
+
+.CUTGUARD
+{
  lda ShadFace
  cmp #86
  beq return
@@ -1530,46 +1533,47 @@ CUTGUARD
  cmp #BotCutEdge
  bcc return
 
-* If guard, remove him altogether
+\* If guard, remove him altogether
 
  lda ShadID
  cmp #4
- beq :skel
+ beq local_skel
  cmp #1
- beq :shad
+ beq local_shad
 
-]RemoveGd
+.CUTGUARD_RemoveGd
  jsr deadenemy ;music, etc.
 
  ldx VisScrn
- lda #-1
+ lda #LO(-1)
  sta GdStartBlock-1,x
  lda #86
  sta ShadFace
  lda #0
  sta OppStrength
- lda #-1
+ lda #LO(-1)
  sta ChgOppStr
-return rts
+.return
+ rts
 
-* If shad, vanish him
+\* If shad, vanish him
 
-:shad lda ShadAction
+.local_shad lda ShadAction
  cmp #4
  bne return
  jsr LoadShad
  jsr VanishChar
  jmp SaveShad
 
-* If skel, change scrn
+\* If skel, change scrn
 
-:skel lda ShadScrn
+.local_skel lda ShadScrn
  jsr getdown
  sta ShadScrn
  cmp #3
- bne ]RemoveGd
+ bne CUTGUARD_RemoveGd
 
-* Skel lands on scrn 3
+\* Skel lands on scrn 3
 
  lda #Splat
  jsr addsound
@@ -1579,10 +1583,10 @@ return rts
  sta ShadBlockY
  lda #0
  sta ShadFace
- lda #-1
+ lda #LO(-1)
  sta ShadLife
  jmp updateguard
-ENDIF
+}
 
 \*-------------------------------
 \*

@@ -1114,8 +1114,7 @@ stairthres = 30
  bpl noclick
  lda btn
  bpl noclick
-\ BEEB TEMP comment out
-\ jsr TryPickup
+ jsr TryPickup
  bne return ;yes
 
 .noclick
@@ -1362,8 +1361,7 @@ stairthres = 30
  lda clrbtn
  bpl noclick
 
-\ BEEB TEMP comment out
-\ jsr TryPickup
+ jsr TryPickup
  bne return_24
 
 \* Still crouching?

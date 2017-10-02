@@ -20,11 +20,11 @@ Background pieces are going to become 7x63 bytes = 441 bytes each
 / auto.s - AI for guard
 / bgdata.s - bg piece definitions and lookups, maps chtab entries to a/b/c/d in a piece (I think)
 X boot.s - entry, check machine type & memory
-/ coll.s - collision detection, vertical barriers, left, right, slicer, gate
-/ crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
-ctrlsubs.s - misc subroutines relating to character cotrol & movement
+! coll.s - collision detection, vertical barriers, left, right, slicer, gate
+! crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
+! ctrlsubs.s - misc subroutines relating to character cotrol & movement
 / eq.s - global constants, zero page, global vars, jump tables, image lists, blueprint info
-/ frameadv.s - draw screen, draw block, draw objects, load objects, piece drawing logic, object sorting
+! frameadv.s - draw screen, draw block, draw objects, load objects, piece drawing logic, object sorting
 framedefs.s - animation tables, data for each animation frame
 / gamebg.s - draw all special case objects, text boxes, strength meter, character objects
 / gameeq.s - game constants, zero page, vars, jump tables, character vars, types
@@ -35,7 +35,7 @@ framedefs.s - animation tables, data for each animation frame
 / master.s - main, first boot, init system, attract loop, load music, save game, load character set, load level, epilogue, splash, credits, prologue, demo sequence, start game, disk error
 / misc.s - player misc, potion fx, mouse, stab, shadow, reflection, skeletons, health, save game, load level, version
 movedata.s - moveable objects definitions
-/ mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
+! mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
 / seqdata.s - animation state definitions
 / seqtable.s - animation state tables
 . sound.s - do sound effects

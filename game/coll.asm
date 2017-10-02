@@ -26,7 +26,7 @@
 .checkgate jmp CHECKGATE
 \ jmp firstguard ;temp
 
-.enemycoll BRK      ; jmp ENEMYCOLL
+.enemycoll jmp ENEMYCOLL
 
 \*-------------------------------
 \ lst
@@ -44,7 +44,7 @@
 \ dum $f0
 \ztemp ds 1
 \coll_CollFace ds 1
-\tempobjid ds 1
+\coll_tempobjid ds 1
 \tempstate ds 1
 \ dend
 
@@ -982,7 +982,7 @@ gatemargin = 6 ;higher = more generous
 \*
 \* Get distance to barrier
 \*
-\* In: rdblock results; tempobjid
+\* In: rdblock results; coll_tempobjid
 \*     Must have called setupchar/getedges
 \* Out: A = distance to barrier (- if barr is behind char)
 \*
@@ -1470,54 +1470,56 @@ gatemargin = 6 ;higher = more generous
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Limited collision detection for enemies
-* (backing into wall or gate while fighting)
-*
-*-------------------------------
-ENEMYCOLL
+\*-------------------------------
+\*
+\* Limited collision detection for enemies
+\* (backing into wall or gate while fighting)
+\*
+\*-------------------------------
+
+.ENEMYCOLL
+{
  lda AMtimer ;antimatter timer
- bne ]rts
+ bne return
 
  lda CharAction
  cmp #1
- bne ]rts ;must be on ground
+ bne return ;must be on ground
  lda CharLife
- bpl ]rts ;& alive
+ bpl return ;& alive
  lda CharSword
  cmp #2
- bcc ]rts ;& en garde
+ bcc return ;& en garde
 
  jsr getunderft
  cmp #block
- beq :collide
+ beq local_collide
  cmp #panelwif
- beq :collide
+ beq local_collide
  cmp #gate
- bne :1
- jsr gatebarr?
- bcc :collide
+ bne label_1
+ jsr gatebarr
+ bcc local_collide
 
-* If facing R, check block behind too
+\* If facing R, check block behind too
 
-:1 lda CharFace
- bmi ]rts
+.label_1 lda CharFace
+ bmi return
  dec tempblockx
  jsr rdblock1
  cmp #panelwif
- beq :collide
+ beq local_collide
  cmp #gate
- bne ]rts
- jsr gatebarr?
- bcc :collide
-]rts rts
+ bne return
+ jsr gatebarr
+ bcc local_collide
+.return
+ rts
 
-* Char is en garde & trying to back into barrier
-* Put him right at edge
+\* Char is en garde & trying to back into barrier
+\* Put him right at edge
 
-:collide
+.local_collide
  jsr setupchar
  jsr getedges ;get edges
 
@@ -1525,13 +1527,13 @@ ENEMYCOLL
  ldx tempblockx
  ldy tempblocky
  jsr rdblock
- sta tempobjid
+ sta coll_tempobjid
  jsr checkcoll
- bcc ]rts
+ bcc return
 
  jsr DBarr2 ;get A = dist to barrier
  tax
- bpl ]rts
+ bpl return
  eor #$ff
  clc
  adc #1
@@ -1542,27 +1544,30 @@ ENEMYCOLL
  jsr jumpseq
  jsr animchar ;get new frame
  jmp rereadblocks
+}
 
-*-------------------------------
-*
-* Special version of DBarr for enemy collisions
-*
-* In: checkcoll results; tempobjid
-*     Must have called setupchar/getedges
+\*-------------------------------
+\*
+\* Special version of DBarr for enemy collisions
+\*
+\* In: checkcoll results; coll_tempobjid
+\*     Must have called setupchar/getedges
 \* Out: A = distance to barrier (- if barr is behind char)
-*
-*-------------------------------
-DBarr2
+\*
+\*-------------------------------
+
+.DBarr2
+{
  lda CharFace
- bpl :checkL ;Note: reversed from DBarr
+ bpl checkL ;Note: reversed from DBarr
 
-* Char's back facing R -- get distance to barrier
+\* Char's back facing R -- get distance to barrier
 
-:checkR
- lda tempobjid ;block ID
+.checkR
+ lda coll_tempobjid ;block ID
 
  jsr cmpbarr ;return A = barrier code #
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1574,16 +1579,16 @@ DBarr2
  sbc CDRightEj
  rts ;If -, barr is behind char
 
-:clr lda #-1
+.local_clr lda #LO(-1)
  rts
 
-* Char facing L -- get distance to barr
+\* Char facing L -- get distance to barr
 
-:checkL
- lda tempobjid
+.checkL
+ lda coll_tempobjid
 
  jsr cmpbarr
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1597,8 +1602,9 @@ DBarr2
  sec
  sbc ztemp
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst

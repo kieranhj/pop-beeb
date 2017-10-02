@@ -412,13 +412,13 @@ ENDIF
 
  jsr FrameAdv ;Draw next frame & show it
 
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds
  jsr zerosound ;& zero sound table
 
  jsr flashoff
 
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOND
 \ jsr songcues ;Play music
 
  lda NextLevel
@@ -554,11 +554,10 @@ ENDIF
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
 .label_1
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOUND
 \ jsr addsfx ;Add additional sound fx
 
-\ BEEB TEMP comment out
-\ jsr chgmeters ;Change strength meters
+ jsr chgmeters ;Change strength meters
 
  jsr cutcheck ;Has kid moved offscreen?
  jsr PrepCut ;If so, prepare to cut to new screen
@@ -797,8 +796,7 @@ ENDIF
 .addchars
 {
  jsr topctrl_reflection
-\ BEEB TEMP comment out
-\ jsr topctrl_shadowman
+ jsr topctrl_shadowman
  jsr topctrl_kid
 
  jsr checkmeters
@@ -1049,7 +1047,7 @@ ENDIF
  jsr fast ;Assemble image lists (including objects
 ;from obj list and necessary portions of bg)
 
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out MESSAGES
 \ jsr dispmsg ;Superimpose message (if any)
 .label_1
  jmp drawall ;Dump contents of image lists to screen
@@ -1198,7 +1196,7 @@ ENDIF
 
  lda CharLife
  bne label_inc
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOUND
 \ jsr deathsong ;cue death music
 
 .label_inc lda CharLife
@@ -1413,55 +1411,57 @@ ENDIF
  jmp MarkOppMeter
 }
 
-IF _TODO
-*-------------------------------
-*
-* Change strength meters as specified
-*
-*-------------------------------
-chgmeters
+\*-------------------------------
+\*
+\* Change strength meters as specified
+\*
+\*-------------------------------
+
+.chgmeters
+{
  lda level
  cmp #12
- bne :cont
+ bne cont
  lda OpID
  ora CharID
  cmp #1 ;kid vs. shadowman?
- bne :cont
+ bne cont
  ;yes
  lda ChgKidStr
- bpl :1
+ bpl label_1
  sta ChgOppStr
- bne :cont
+ bne cont
 
-:1 lda ChgOppStr
- bpl :cont
+.label_1 lda ChgOppStr
+ bpl cont
  sta ChgKidStr
 
-* Kid's meter
+\* Kid's meter
 
-:cont lda KidStrength
+.cont lda KidStrength
  clc
  adc ChgKidStr
 
  cmp MaxKidStr
- beq :ok1
- bcs :opp
+ beq ok1
+ bcs opp
 
-:ok1 sta KidStrength
+.ok1 sta KidStrength
 
-* Opponent's meter
+\* Opponent's meter
 
-:opp lda OppStrength
+.opp lda OppStrength
  clc
  adc ChgOppStr
 
  cmp MaxOppStr
- beq :ok2
- bcs ]rts
+ beq ok2
+ bcs return
 
-:ok2 sta OppStrength
-]rts rts
-ENDIF
+.ok2 sta OppStrength
+.return
+ rts
+}
 
 \*-------------------------------
 \*

@@ -2247,24 +2247,24 @@ return_9=*
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* In builder: BlueSpec contains initial gadget settings
-*
-*-------------------------------
- do EditorDisk
-getobjbldr
+\*-------------------------------
+\*
+\* In builder: BlueSpec contains initial gadget settings
+\*
+\*-------------------------------
+IF EditorDisk
+.getobjbldr
+{
  lda (BlueType),y
  and #idmask
  pha
  jsr getinitobj1
- bcs :ok
+ bcs ok
  lda (BlueSpec),y
-:ok sta state
+.ok sta state
  pla
  rts
- fin
+}
 ENDIF
 
 \*-------------------------------

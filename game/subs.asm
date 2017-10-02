@@ -42,7 +42,7 @@ CheckTimer = 0
 
 .startkid1 jmp STARTKID1
 .gravity jmp GRAVITY
-.initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
+.initialguards jmp INITIALGUARDS
 .mirappear RTS          ; jmp MIRAPPEAR             BEEB TO DO
 .crumble RTS            ; jmp CRUMBLE               BEEB TO DO
 
@@ -1699,18 +1699,19 @@ WtlessGravity = 1
  jmp rereadblocks
 }
 
-IF _TODO
-*-------------------------------
-*
-* Set initial guard posns for entire level (call once)
-*
-*-------------------------------
-INITIALGUARDS
+\*-------------------------------
+\*
+\* Set initial guard posns for entire level (call once)
+\*
+\*-------------------------------
+
+.INITIALGUARDS
+{
  ldy #24 ;screen #
-:loop
+.loop
  lda GdStartBlock-1,y
  cmp #30
- bcs :nogd
+ bcs nogd
  jsr unindex ;A = blockx
  jsr getblockej
  clc
@@ -1719,10 +1720,13 @@ INITIALGUARDS
  lda #0
  sta GdStartSeqH-1,y
 
-:nogd dey
- bne :loop
-]rts rts
+.nogd dey
+ bne loop
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Newly dead enemy--play music (or whatever)

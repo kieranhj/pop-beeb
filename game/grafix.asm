@@ -219,10 +219,12 @@ cwidthy = 15 ;21
  sta bgY,X
 
  lda IMAGE
-\\ BEEB TEMP
+\ Bounds check image#
+IF _DEBUG
  BNE image_ok
  BRK
  .image_ok
+ENDIF
  sta bgIMG,X
 
  lda OPACITY
@@ -872,13 +874,19 @@ ENDIF
  sta TABLE
 
  lda IMAGE ;Bit 7: 0 = bgtable1, 1 = bgtable2
-\\ BEEB TEMP
- BNE image_ok
+IF _DEBUG
+ BNE image_ok1
  BRK
- .image_ok
+ .image_ok1
+ENDIF
  bpl bg1
 
  and #$7f
+IF _DEBUG
+ BNE image_ok2
+ BRK
+ .image_ok2
+ENDIF
  sta IMAGE
 
  lda #HI(bgtable2)

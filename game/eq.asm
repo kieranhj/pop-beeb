@@ -11,7 +11,7 @@
 
 .imlists
 \ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
-IF 1
+IF 0
 .genCLS skip 1
 
 .bgX skip maxback

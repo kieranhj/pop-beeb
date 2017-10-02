@@ -31,8 +31,8 @@
 .DrawOppMeter BRK   ; jmp DRAWOPPMETER
 .flipdiskmsg BRK    ; jmp FLIPDISKMSG
 .timeleftmsg BRK    ; jmp TIMELEFTMSG
-.DrawGuard BRK      ; jmp DRAWGUARD
-.DrawGuard2 BRK     ; jmp DRAWGUARD
+.DrawGuard jmp DRAWGUARD
+.DrawGuard2 jmp DRAWGUARD
 
 .setupflask jmp SETUPFLASK
 .setupcomix RTS     ; jmp SETUPCOMIX            BEEB TO DO

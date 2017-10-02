@@ -76,6 +76,7 @@ INCLUDE "game/grafix.h.asm"
 INCLUDE "game/coll.h.asm"
 INCLUDE "game/auto.h.asm"
 INCLUDE "game/ctrlsubs.h.asm"
+INCLUDE "game/misc.h.asm"
 
 \*-------------------------------
 ; BSS data in lower RAM
@@ -84,13 +85,9 @@ INCLUDE "game/ctrlsubs.h.asm"
 ORG &300                ; VDU and language workspace
 GUARD &800              ; sound workspace
 
-\ Should be OK for disk scratch RAM to overlap run time workspace
-\ Need to be aware of disc catalogue caching though
-SCRATCH_RAM_ADDR = &400
-
 \ Move BSS here (e.g. imlists from eq.asm) when out of RAM
 
-IF 0
+IF 1
 \*-------------------------------
 \*
 \*  Image lists
@@ -118,6 +115,10 @@ PAGE_ALIGN
 
 ORG &900                ; envelope / speech / CFS / soft key / char defs
 GUARD &D00              ; NMI workspace
+
+\ Should be OK for disk scratch RAM to overlap run time workspace
+\ Need to be aware of disc catalogue caching though
+SCRATCH_RAM_ADDR = &900
 
 IF 0
 .wipeW skip maxwipe
