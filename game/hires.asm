@@ -94,36 +94,36 @@
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .hires_CLS
 {
- BRK
-\ NOT BEEB
-\ lda PAGE ;00 = page 1; 20 = page 2
-\ clc
-\ adc #$20
-\ sta loop+2
-\ adc #$10
-\ sta smod+2
-\
-\ lda #$80 ;black2
-\
-\ ldx #$10
-\
-\ ldy #0
-\
-\.loop sta $2000,y
-\.smod sta $3000,y
-\ iny
-\ bne loop
-\
-\ inc loop+2
-\ inc smod+2
-\
-\ dex
-\ bne loop
-\
-\ rts
+ lda PAGE ;00 = page 1; 20 = page 2
+ clc
+ adc #$20
+ sta loop+2
+ adc #$10
+ sta smod+2
+
+ lda #$80 ;black2
+
+ ldx #$10
+
+ ldy #0
+
+.loop sta $2000,y
+.smod sta $3000,y
+ iny
+ bne loop
+
+ inc loop+2
+ inc smod+2
+
+ dex
+ bne loop
+
+ rts
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -135,23 +135,23 @@
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .hires_LRCLS
 {
- BRK
-\ NOT BEEB
-\ LDY #$F7
-\.label_2 STA $400,Y
-\ STA $500,Y
-\ STA $600,Y
-\ STA $700,Y
-\ DEY
-\ CPY #$7F
-\ BNE label_3
-\ LDY #$77
-\.label_3 CPY #$FF
-\ BNE label_2
-\ RTS
+ LDY #$F7
+.label_2 STA $400,Y
+ STA $500,Y
+ STA $600,Y
+ STA $700,Y
+ DEY
+ CPY #$7F
+ BNE label_3
+ LDY #$77
+.label_3 CPY #$FF
+ BNE label_2
+ RTS
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -454,6 +454,7 @@ ENDIF
 .return rts
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \* Shift offset 1 bit right or left
@@ -584,6 +585,8 @@ ENDIF
 
  JMP DONE
 }
+ENDIF
+
 .SKIPIT
 {
  lda #0
@@ -592,6 +595,7 @@ ENDIF
  JMP DONE
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \*  L A Y
@@ -772,6 +776,8 @@ ENDIF
 
 \*  Restore parameters
 }
+ENDIF
+
 \\ Drop through!
 .DONE
 {
@@ -786,6 +792,7 @@ ENDIF
  RTS
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \*  Mask, then OR
@@ -1953,8 +1960,9 @@ ENDIF
 
  rts
 }
+ENDIF
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  S E T F A S T   M A I N / A U X
@@ -1977,7 +1985,9 @@ SETFASTMAIN
 SETFASTAUX
  lda #$03 ;RAMRD aux
  bne ]setfast
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 *  F A S T B L A C K
@@ -2033,7 +2043,9 @@ FASTBLACK
  bne :outloop
 
  rts
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 *  C O P Y   S C R E E N
@@ -2078,7 +2090,9 @@ COPYSCRN
  bne :loop
 
  rts
+ENDIF
 
+IF _TODO
 *-------------------------------
 * Invert Y-tables
 *-------------------------------
@@ -2109,10 +2123,10 @@ INVERTY
  cpy #96
  bcc :loop
 ]rts rts
-
-*-------------------------------
- lst
- ds 1
- usr $a9,1,$0000,*-org
- lst off
 ENDIF
+
+\*-------------------------------
+\ lst
+\ ds 1
+\ usr $a9,1,$0000,*-org
+\ lst off

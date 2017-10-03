@@ -1424,8 +1424,6 @@ EQUS "CHTAB5 $"
     STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
-    \ Probably need to load gameplay code into SHADOW RAM here
-
     .return
     rts
 }

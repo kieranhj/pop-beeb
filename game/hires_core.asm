@@ -11,7 +11,7 @@
 
 ._lrcls brk         ;jmp hires_lrcls    \ is implemented but not safe to call!
 ._fastmask jmp hires_fastmask
-._fastblack BRK     ;jmp hires_fastblack
+._fastblack jmp hires_fastblack
 ._peel jmp hires_peel
 ._getwidth jmp hires_getwidth
 
@@ -35,6 +35,7 @@
 {
  jsr mainmem
  jsr beeb_CLS
+\ jsr hires_CLS
  jmp auxmem
 }
 
@@ -68,6 +69,7 @@
 .hires_lrcls
 {
  jsr mainmem
+ BRK
 \ jsr hires_LRCLS
  jmp auxmem
 }
@@ -83,11 +85,12 @@
  jmp auxmem
 }
 
-IF _TODO
-fastblack jsr mainmem
- jsr FASTBLACK
+.hires_fastblack
+{
+ jsr mainmem
+ jsr beeb_plot_wipe
  jmp auxmem
-ENDIF
+}
 
 .hires_peel
 {
@@ -137,7 +140,7 @@ ENDIF
 \ NOT BEEB
 \sta $c004 ;RAMWRT off
 \sta $c002 ;RAMRD off
- rts
+\rts
 }
 
 .auxmem
@@ -146,5 +149,5 @@ ENDIF
 \ NOT BEEB
 \sta $c005 ;RAMWRT on
 \sta $c003 ;RAMRD on
- rts
+\rts
 }

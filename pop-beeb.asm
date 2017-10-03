@@ -8,8 +8,9 @@
 \*-------------------------------
 
 CPU 1               ; MASTER ONLY
-_TODO = FALSE
+_TODO = FALSE       ; code still to be ported
 _DEBUG = TRUE       ; enable bounds checks
+_NOT_BEEB = FALSE   ; Apple II code to remove
 
 ; Helpful MACROs
 

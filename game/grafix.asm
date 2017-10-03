@@ -42,10 +42,10 @@
 .lay jmp LAY
 .fastlay jmp FASTLAY
 .layrsave jmp LAYRSAVE
-.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?
+.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?  USED FOR SCREEN FLASH
 .fastmask jmp FASTMASK
 \
-.fastblack BRK  ;jmp FASTBLACK
+.fastblack jmp FASTBLACK
 .peel jmp PEEL
 .getwidth jmp GETWIDTH
 .copy2000 BRK   ;jmp COPY2000
@@ -81,7 +81,7 @@
 .addmid jmp ADDMID
 .addmidez jmp ADDMIDEZ
 \
-.addwipe RTS    ;jmp ADDWIPE                        BEEB TO DO GFX
+.addwipe jmp ADDWIPE
 .addmsg BRK     ;jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
@@ -189,7 +189,8 @@ cwidthy = 15 ;21
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
  EQUB HI(chtable5),HI(chtable6),HI(chtable7)
 
-.dummy EQUB maxpeel,maxpeel
+\ NOT BEEB
+\.dummy EQUB maxpeel,maxpeel
 
 \*-------------------------------
 \*
@@ -299,27 +300,31 @@ ADDMSG ldx msgX
 
  stx msgX
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  A D D  W I P E
-*
-*  Add image to wipe list
-*
-*  In: XCO, YCO, height, width; A = color
-*
-*-------------------------------
-ADDWIPE ldx wipeX
+\*-------------------------------
+\*
+\*  A D D  W I P E
+\*
+\*  Add image to wipe list
+\*
+\*  In: XCO, YCO, height, width; A = color
+\*
+\*-------------------------------
+
+.ADDWIPE
+{
+ ldx wipeX
  inx
  cpx #maxwipe
  bcs return
 
  sta wipeCOL,x
  lda blackflag ;TEMP
- beq :1 ;
+ beq label_1 ;
  lda #$ff ;
  sta wipeCOL,x ;
-:1
+.label_1
  lda XCO
  sta wipeX,x
  lda YCO
@@ -331,8 +336,9 @@ ADDWIPE ldx wipeX
  sta wipeW,x
 
  stx wipeX
-return rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -542,16 +548,16 @@ ENDIF
 .DOGEN
 {
  lda genCLS
- beq label_1
+ beq return
  jsr cls
 
 \* purple copy-protection
-
-.label_1 ldx BGset1
- cpx #1
- bne return
- lda #0
- sta dummy-1,x
+\ NOT BEEB
+\.label_1 ldx BGset1
+\ cpx #1
+\ bne return
+\ lda #0
+\ sta dummy-1,x
 
 .return rts
 }

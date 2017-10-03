@@ -43,7 +43,7 @@
 
 \ BEEB TO DO
 \ Use original game ZP variables
-\ Implement special XOR
+\ Implement special XOR - this will be done by using a different palette
 
 .beeb_plot_start
 
@@ -249,6 +249,122 @@
     \ PEELBUF now updated on 
 
     JMP DONE                ; restore vars
+}
+
+\*-------------------------------
+\*
+\*  F A S T B L A C K
+\*
+\*  Wipe a rectangular area to black2
+\*
+\*  Width/height passed in IMAGE/IMAGE+1
+\*  (width in bytes, height in pixels)
+\*
+\*-------------------------------
+
+.beeb_plot_wipe
+{
+    \ OFFSET IGNORED
+    \ OPACITY IGNORED
+    \ MIRROR IGNORED
+    \ CLIPPING IGNORED
+    
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+
+    \ Convert to Beeb screen layout
+
+    \ Mask off Y offset
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    \ Look up Beeb screen address
+
+    LDX XCO
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA scrn_addr+1
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA scrn_addr+2
+
+    \ Simple Y clip
+    SEC
+    LDA YCO
+    SBC height
+    STA smTOP+1
+
+    \ Store height
+
+    LDA YCO
+    STA beeb_height
+
+    \ Y offset into character row
+
+    AND #&7
+    TAX
+    
+    \ Plot loop
+
+    LDA width
+    ASL A
+    STA VISWIDTH
+
+    .yloop
+    STX beeb_yoffset
+
+    LDA VISWIDTH
+    STA beeb_width          ; bytes_per_line_on_screen
+
+    CLC
+
+    .xloop
+
+    LDA OPACITY
+    .scrn_addr
+    STA &FFFF, X
+
+    TXA                     ; next char column [6c]
+    ADC #8    
+    TAX
+
+    DEC beeb_width
+    BNE xloop
+    
+    .done_x
+    LDA beeb_height
+    DEC A
+    .smTOP
+    CMP #0
+    BEQ done_y
+    STA beeb_height
+
+    \ Completed a line
+
+    \ Next scanline
+
+    LDX beeb_yoffset
+    DEX
+    BPL yloop
+
+    \ Next character row
+
+    SEC
+    LDA scrn_addr+1
+    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    STA scrn_addr+1
+    LDA scrn_addr+2
+    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    STA scrn_addr+2
+
+    LDX #7
+    BNE yloop
+    .done_y
+
+    RTS
 }
 
 \*-------------------------------

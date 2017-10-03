@@ -828,7 +828,7 @@ maxmob = mobspace-1
 .label_8 cmp #sword
  bne label_9
  jsr animsword
- jmp label_done
+ jmp done
 
 .label_9 jsr stopobj ;obj is none of these--purge it from trans list!
 
