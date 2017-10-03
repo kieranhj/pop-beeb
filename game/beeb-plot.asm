@@ -44,6 +44,11 @@
 \ BEEB TO DO
 \ Use original game ZP variables
 \ Implement special XOR - this will be done by using a different palette
+\ For MODE 2
+\ ORA probably has to become MASK
+\ AND needs implementing as separate case
+\ Need per sprite palette look up
+\ Optimise everything big time!
 
 .beeb_plot_start
 
@@ -331,9 +336,13 @@
     ADC #8    
     TAX
 
+    \ Should terminate loop based on X
+
     DEC beeb_width
     BNE xloop
     
+    \ Should keep track of Y in a register
+
     .done_x
     LDA beeb_height
     DEC A
@@ -526,30 +535,6 @@
     RTS
 }
 
-
-\*-------------------------------
-; Beeb screen multiplication tables
-
-IF 0
-.Mult7_LO
-FOR n,0,39,1
-EQUB LO(n*7)
-NEXT
-.Mult7_HI
-FOR n,0,39,1
-EQUB HI(n*7)
-NEXT
-ENDIF
-
-.Mult16_LO
-FOR n,0,39,1
-EQUB LO(n*16)
-NEXT
-.Mult16_HI          ; or shift...
-FOR n,0,39,1
-EQUB HI(n*16)
-NEXT
-
 \*-------------------------------
 ; New sprite routines - 2bpp expanded to MODE 2
 
@@ -674,12 +659,6 @@ NEXT
     TAX
 
     \ Self-mod code
-    \ BEEB TEMP until MASK implemented
-
-    CPX #enum_mask
-    BNE enum_ok
-    LDX #enum_sta
-    .enum_ok
 
     \ Not even sure this is correct for MODE 2?
 
@@ -872,7 +851,6 @@ NEXT
     .done_y
     JMP DONE
 }
-
 
 .beeb_plot_sprite_LayMask
 {
@@ -1549,27 +1527,6 @@ NEXT
 }
 
 
-PAGE_ALIGN
-.map_2bpp_to_mode2_pixel            ; background
-{
-    EQUB &00                        ; 00000000 either pixel logical 0
-    EQUB &10                        ; 000A000a right pixel logical 1
-    EQUB &20                        ; 00B000b0 left pixel logical 1
-
-    skip &0D
-
-    EQUB &40                        ; 000A000a right pixel logical 2
-    EQUB &50                        ; 000A000a right pixel logical 3
-
-    skip &0E
-
-    EQUB &80                        ; 00B000b0 left pixel logical 2
-    skip 1
-    EQUB &A0                        ; 00B000b0 left pixel logical 3
-}
-\\ Flip entries in this table when parity changes
-
-
 \*-------------------------------
 ; Clear Beeb screen buffer
 
@@ -1593,13 +1550,28 @@ PAGE_ALIGN
   rts
 }
 
-.bank_to_palette_temp
+\*-------------------------------
+; Exile palette tables
+
+PAGE_ALIGN
+.map_2bpp_to_mode2_pixel            ; background
 {
-    EQUB &71            \ bg
-    EQUB &72            \ chtab13
-    EQUB &72            \ chtab25
-    EQUB &72            \ chtab467
+    EQUB &00                        ; 00000000 either pixel logical 0
+    EQUB &10                        ; 000A000a right pixel logical 1
+    EQUB &20                        ; 00B000b0 left pixel logical 1
+
+    skip &0D
+
+    EQUB &40                        ; 000A000a right pixel logical 2
+    EQUB &50                        ; 000A000a right pixel logical 3
+
+    skip &0E
+
+    EQUB &80                        ; 00B000b0 left pixel logical 2
+    skip 1
+    EQUB &A0                        ; 00B000b0 left pixel logical 3
 }
+\\ Flip entries in this table when parity changes
 
 .palette_value_to_pixel_lookup
 {
@@ -1644,6 +1616,34 @@ PAGE_ALIGN
     equb $FC                        ; 11111100 14 14
     equb $FF                        ; 11111111 15 15
 }
+
+\*-------------------------------
+; Set palette per swram bank
+; Needs to be a palette per image bank
+; Or even better per sprite
+
+.bank_to_palette_temp
+{
+    EQUB &71            \ bg
+    EQUB &72            \ chtab13
+    EQUB &72            \ chtab25
+    EQUB &72            \ chtab467
+}
+
+\*-------------------------------
+; Beeb screen multiplication tables
+
+.Mult16_LO
+FOR n,0,39,1
+EQUB LO(n*16)
+NEXT
+.Mult16_HI          ; or shift...
+FOR n,0,39,1
+EQUB HI(n*16)
+NEXT
+
+\*-------------------------------
+; Very lazy table for turning MODE 2 black pixels into MASK
 
 PAGE_ALIGN
 .mask_table
