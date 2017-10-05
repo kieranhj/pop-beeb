@@ -233,106 +233,19 @@ INCLUDE "lib/print.asm"
 
     \\ Remain in AUX...
 
-IF 0
-    JSR loadperm
-
-    LDX #1
-    STX level
-    JSR LoadLevelX
-
-    JSR beeb_shadow_select_main
-
-    LDA #1
-    STA beeb_sprite_no
-
-    LDA #0
-    STA OFFSET
-
-    .sprite_loop
-    LDA beeb_sprite_no
-    AND #&1F
-    STA XCO
-
-    LDA #127
-    STA YCO
-
-    LDA beeb_sprite_no
-    STA IMAGE
-
-    LDA #LO(chtable1)
-    STA TABLE
-
-    LDA #HI(chtable1)
-    STA TABLE+1
-
-    LDA #BEEB_SWRAM_SLOT_CHTAB13
-    STA BANK
-
-    LDA #enum_sta
-    STA OPACITY
-
-    JSR beeb_plot_sprite_LayGen
-
-    ldx#100:ldy#0:lda#&81:jsr osbyte	
-
-    LDX OFFSET
-    INX
-    STX OFFSET
-    CPX #7
-    BCC sprite_loop
-
-    LDX #0
-    STX OFFSET    
-
-    LDX beeb_sprite_no
-    INX
-    CPX #128
-    BCS finished
-    STX beeb_sprite_no
-    JMP sprite_loop
-
-    .finished
-    RTS
+IF _DEBUG
+\    JMP beeb_test_load_all_levels
+\    JMP beeb_test_sprite_plot
 ENDIF
 
-IF 0
-    \\ Level load & plot test
-    LDX #1
-
-    .level_loop
-    STX level
-    JSR LoadLevelX
-
-    LDX #1
-    STX VisScrn
-
-    .scrn_loop
-    JSR getscrns
-    JSR DoSure
-
-    ldx#100:ldy#0:lda#&81:jsr osbyte	
-
-    LDX VisScrn
-    INX
-    CPX #25
-    STX VisScrn
-    BNE scrn_loop
-
-    LDX level
-    INX
-    CPX #15
-    BNE level_loop
-ELSE
     \\ Actual POP
     \\ Would have been entered directly by the boot loader on Apple II
 
     JSR _firstboot
 
-    \\ Not supposed to return but start our game directly
+    \\ Not supposed to return but start our game directly until attract mode done
 
     JSR _dostartgame
-
-ENDIF
 
     .return
     RTS
@@ -557,9 +470,9 @@ MOS_RAM_TOP = &9000
 CLEAR 0, &FFFF
 ORG MOS_RAM_START
 GUARD MOS_RAM_TOP
-.peelbuf1
-SKIP &800
 .peelbuf2
+SKIP &800
+.peelbuf1
 SKIP &800
 
 

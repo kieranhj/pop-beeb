@@ -901,3 +901,149 @@ corresponding key is pressed.
 PB2 =      $C063 ;game Pushbutton 2 (read) 
 This input has an option to be connected to the shift key on 
 the keyboard. (See info on the 'shift key mod'.) 
+
+ v123
+abcdef
+
+654321
+abcdef
+
+Normally all pixels are pushed onto the stack from right most to left most
+
+Regular plot reads these upwards from the bottom to the top to plot left to right
+Crop just offset sprite data from left-hand side and push viswidth pixels
+
+Mirror plot reads these downwards from the top to the bottom to plot left to right
+For mirror crop
+Cropping left side means losing pixels from the top of the stack - the last thing pushed
+Means start from right most pixel and push less (viswidth)
+But this implies right most pixel always visible
+Need to start from right hand side less 
+
+Left crop = 1 then start reading one byte less than right most
+Continue viswidth bytes
+In theory could subtract left crop from image pointer?!
+
+Could also not have to reverse the stack read direction for mirror if unroll the pixels in opposite direction
+If this is quicker / easier?
+Exile prefers one sprite routine that can do mirroring in place
+
+OK, right hand cropping results in overrunning the edge of the line because of OFFSET
+There maybe 4 visible sprite bytes becoming 8 visible pixels
+But offset parity will add one more "visible" byte = 2 more visible pixels - potentially plot 10 pixels
+Plus when offset > 3 we move plot position along by a 2 more visible pixels...
+So potentially moved 2 more pixels from original start address = 12 pixels across in total
+Still need to clip to original 4 visible bytes = 8 visible pixels
+
+Still losing pixels at side of the screen when plotting with crop
+E.g. player drawn on left side before exiting at XCO -1 OFFSET 3
+Gets turns into XCO 0 with OFFSET still = 3
+
+So if clipping left we should 0 the OFFSET and add OFFSET/2 pixels to how many are drawn
+Maximum 3 pixels = 1 extra sprite byte
+
+(In theory could push three extra 0's onto the bototm of the stack and always draw from original XCO...)
+
+W=2
+XCO
+0   1   2   3
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        abcdefgh
+      0abcdefgh
+      abcdefgh
+    0abcdefgh0
+    abcdefgh
+  0abcdefgh0
+  abcdefgh
+0abcdefgh0
+abcdefgh
+
+XCO=0 OFFSET=6   WIDTH=W -> XC0=0 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=4|5 WIDTH=W -> XC0=0 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+XCO=0 OFFSET=2|3 WIDTH=W -> XCO=0 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=0|1 WIDTH=W -> XCO=0 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+
+(Could always push extra zero and compute appropriate stack start as PARTY ^ 1)
+BEEBPTR+=(OFFSET&4)*2
+SCRBYTES=VISPIXELS/2+PARITY
+
+W=2
+XCO
+-1  0   1   2
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        abcdefgh
+      0abcdefgh
+      abcdefgh
+    0abcdefgh0
+    abcdefgh            -> at the moment:....efgh (correct)
+  -.bcdefgh0            -> at the moment:..0efgh0
+  ..cdefgh              -> at the moment:..efgh
+-...defgh0              -> at the moment:0efgh0
+....efgh
+
+XCO=-1 OFFSET=0|1 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=(W-1)*2
+INCORRECT:
+XCO=-1 OFFSET=2|3 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=(W-1)*2+1
+XCO=-1 OFFSET=4|5 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=(W-1)*2
+XCO=-1 OFFSET=6   WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=(W-1)*2+1
+
+CORRECT:
+XCO=-1 OFFSET=2|3 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=4 SCRBYTES=3
+XCO=-1 OFFSET=4|5 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=2 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+1 STACKSTART=2 SCRBYTES=3
+XCO=-1 OFFSET=6   WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=3 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=2 SCRBYTES=4
+
+IF OFFLEFT && OFFSET THEN
+BEEBPTR+=0
+VISPIXELS=VISWIDTH*4+OFFSET/2
+SPRBYTES=VISWIDTH+1
+SCRBYTES=VISPIXELS/2+PARITY
+STACKSTART=4-(OFFSET&4)/2
+
+W=2
+XCO
+38  39  40  41
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        ........
+      0a.......-
+      ab......
+    0abc.....-          -> at the moment:....0abcd0
+    abcd....            -> at the moment:....abcd (correct)
+  0abcde...-            -> at the moment:..0abcdefgh0
+  abcdef..              -> at the moment:..abcdefgh
+0abcdefg..              -> at the moment:0abcdefgh0
+abcdefgh
+
+XC0=38 OFFSET=0|1 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+INCORRECT:
+XCO=38 OFFSET=2|3 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=38 OFFSET=4|5 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+XCO=38 OFFSET=6   WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+
+CORRECT:
+XCO=38 OFFSET=2|3 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=4
+XCO=38 OFFSET=4|5 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=3
+XCO=38 OFFSET=6   WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=3
+
+XC0=39 OFFSET=0|1 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=(W-1)*2
+
+XCO=39 OFFSET=2|3 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=2
+XCO=39 OFFSET=4|5 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=1
+XCO=39 OFFSET=6   WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=1
+
+IF OFFRIGHT && OFFSET THEN
+VISPIXELS=VISWITH*4-OFFSET/2
+SPRBYTES=VISWIDTH
+SCRBYTES=VISPIXELS/2+PARITY
+// works also when OFFSET=0

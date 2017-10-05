@@ -14,12 +14,8 @@
 
 .beeb_stack_ptr         SKIP 1
 
-\ To be removed
-.beeb_temp_y        SKIP 1
-.beeb_temp_width    SKIP 1
-.beeb_next_carry    SKIP 1
 .beeb_sprite_no  SKIP 1
 
 .beeb_rem        SKIP 1
-
 .beeb_data      SKIP 1
+.beeb_temp      SKIP 1

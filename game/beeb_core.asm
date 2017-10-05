@@ -98,10 +98,118 @@
     JMP swr_select_slot
 }
 
+\*-------------------------------
+; VSYNC code
+\*-------------------------------
+
 .beeb_core_vsync            ; *FX19
 {
     LDA #19
     JMP osbyte
 }
+
+\*-------------------------------
+; Test code
+\*-------------------------------
+
+IF _DEBUG
+.beeb_test_load_all_levels
+{
+    \\ Level load & plot test
+    LDX #1
+
+    .level_loop
+    STX level
+    JSR LoadLevelX
+
+    LDX #1
+    STX VisScrn
+
+    .scrn_loop
+    JSR getscrns
+    JSR DoSure
+
+\ Wait 1 second for keypress
+
+    ldx#100:ldy#0:lda#&81:jsr osbyte	
+
+    LDX VisScrn
+    INX
+    CPX #25
+    STX VisScrn
+    BNE scrn_loop
+
+    LDX level
+    INX
+    CPX #15
+    BNE level_loop
+    RTS
+}
+ENDIF
+
+IF _DEBUG
+.beeb_test_sprite_plot
+{
+    JSR loadperm
+
+    LDX #1
+    STX level
+    JSR LoadLevelX
+
+    JSR beeb_shadow_select_main
+
+    LDA #1
+    STA beeb_sprite_no
+
+    LDA #0
+    STA OFFSET
+
+    .sprite_loop
+    LDA beeb_sprite_no
+    AND #&1F
+    STA XCO
+
+    LDA #127
+    STA YCO
+
+    LDA beeb_sprite_no
+    STA IMAGE
+
+    LDA #LO(chtable1)
+    STA TABLE
+
+    LDA #HI(chtable1)
+    STA TABLE+1
+
+    LDA #BEEB_SWRAM_SLOT_CHTAB13
+    STA BANK
+
+    LDA #enum_sta
+    STA OPACITY
+
+    JSR beeb_plot_sprite_LayGen
+
+    ldx#100:ldy#0:lda#&81:jsr osbyte	
+
+    LDX OFFSET
+    INX
+    STX OFFSET
+    CPX #7
+    BCC sprite_loop
+
+    LDX #0
+    STX OFFSET    
+
+    LDX beeb_sprite_no
+    INX
+    CPX #128
+    BCS finished
+    STX beeb_sprite_no
+    JMP sprite_loop
+
+    .finished
+    RTS
+}
+ENDIF
 
 .beeb_core_end
