@@ -41,14 +41,7 @@
 \*
 \*-------------------------------
 
-\ BEEB TO DO
-\ Use original game ZP variables
 \ Implement special XOR - this will be done by using a different palette
-\ For MODE 2
-\ ORA probably has to become MASK
-\ AND needs implementing as separate case
-\ Need per sprite palette look up
-\ Optimise everything big time!
 
 .beeb_plot_start
 
@@ -177,7 +170,8 @@
 
     LDA VISWIDTH
     ASL A                   ; bytes_per_line_on_screen
-    STA VISWIDTH
+    STA smWIDTH+1
+    STA smYMAX+1
 
     \ Y offset into character row
 
@@ -188,9 +182,6 @@
     .yloop
     STX beeb_yoffset
 
-    LDA VISWIDTH
-    STA beeb_width
-
     LDY #0                  ; would be nice (i.e. faster) to do all of this backwards
     CLC
 
@@ -200,25 +191,28 @@
     LDA &FFFF,X
 
     STA (PEELBUF),Y
-    INY
 
     TXA                     ; next char column [6c]
     ADC #8    
     TAX
 
-    DEC beeb_width
-    BNE xloop
+    INY
+
+    .smYMAX
+    CPY #0                  ; VISWIDTH*2
+    BCC xloop
     
     .done_x
 
     \ Update PEELBUF as we go along
     CLC
     LDA PEELBUF
-    ADC VISWIDTH
+    .smWIDTH
+    ADC #0                  ; VISWIDTH=WIDTH*2
     STA PEELBUF
-    LDA PEELBUF+1
-    ADC #0
-    STA PEELBUF+1
+    BCC no_carry
+    INC PEELBUF+1
+    .no_carry
 
     \ Have we done all lines?
     DEC beeb_height
@@ -242,7 +236,7 @@
     BNE yloop
     .done
 
-    \ PEELBUF now updated on 
+    \ PEELBUF now updated
 
     JMP DONE                ; restore vars
 }
@@ -304,36 +298,41 @@ ENDIF
     \ Simple Y clip
     SEC
     LDA YCO
-    SBC height
-    STA smTOP+1
 
     \ Store height
 
-    LDA YCO
-    STA beeb_height
+    TAY
+    SBC height
+    STA smTOP+1
+
+    TYA
 
     \ Y offset into character row
 
     AND #&7
     TAX
     
+    \ Set opacity
+
+    LDA OPACITY
+    STA smOPACITY+1
+
     \ Plot loop
 
     LDA width
     ASL A
-    STA VISWIDTH
+    ASL A:ASL A: ASL A      ; x8
+    STA smXMAX+1
 
     .yloop
     STX beeb_yoffset
-
-    LDA VISWIDTH
-    STA beeb_width          ; bytes_per_line_on_screen
 
     CLC
 
     .xloop
 
-    LDA OPACITY
+    .smOPACITY
+    LDA #0                  ; OPACITY
     .scrn_addr
     STA &FFFF, X
 
@@ -341,32 +340,19 @@ ENDIF
     ADC #8    
     TAX
 
-    \ Should terminate loop based on X
+    .smXMAX
+    CPX #0                  ; do this backwards...
+    BCC xloop
 
-    DEC beeb_width
-    BNE xloop
-    
     \ Should keep track of Y in a register
 
     .done_x
-    LDA beeb_height
-    DEC A
+    DEY
     .smTOP
-    CMP #0
+    CPY #0
     BEQ done_y
-    STA beeb_height
 
     \ Completed a line
-
-\ Bounds check write to screen
-IF _DEBUG
-{
-    LDA scrn_addr+2
-    BPL addr_ok
-    BRK
-    .addr_ok
-}
-ENDIF
 
     \ Next scanline
 
@@ -501,13 +487,11 @@ ENDIF
 
     LDA WIDTH
     ASL A
-    STA VISWIDTH
+    STA smYMAX+1
+    STA smWIDTH+1
 
     .yloop
     STX beeb_yoffset
-
-    LDA VISWIDTH
-    STA beeb_width          ; bytes_per_line_on_screen
 
     LDY #0
     CLC
@@ -515,7 +499,6 @@ ENDIF
     .xloop
 
     LDA (beeb_readptr), Y
-    INY
 
     .scrn_addr
     STA &FFFF, X
@@ -524,36 +507,29 @@ ENDIF
     ADC #8    
     TAX
 
-    DEC beeb_width
-    BNE xloop
+    INY
+    .smYMAX
+    CPY #0
+    BCC xloop
     
     .done_x
-    LDA beeb_height
-    DEC A
+    LDY beeb_height
+    DEY
     .smTOP
-    CMP #0
+    CPY #0
     BEQ done_y
-    STA beeb_height
+    STY beeb_height
 
     \ Completed a line - next row of sprite data
 
-\ Bounds check write to screen
-IF _DEBUG
-{
-    LDA scrn_addr+2
-    BPL addr_ok
-    BRK
-    .addr_ok
-}
-ENDIF
-
     CLC
     LDA beeb_readptr
-    ADC VISWIDTH
+    .smWIDTH
+    ADC #0                  ; WIDTH*2
     STA beeb_readptr
-    LDA beeb_readptr+1
-    ADC #0
-    STA beeb_readptr+1
+    BCC no_carry
+    INC beeb_readptr+1
+    .no_carry
 
     \ Next scanline
 
