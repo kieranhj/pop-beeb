@@ -235,7 +235,7 @@ INCLUDE "lib/print.asm"
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
-\    JMP beeb_test_sprite_plot
+    JMP beeb_test_sprite_plot
 ENDIF
 
     \\ Actual POP

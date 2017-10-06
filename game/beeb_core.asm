@@ -164,9 +164,19 @@ IF _DEBUG
     LDA #0
     STA OFFSET
 
+    LDA #0
+    STA LEFTCUT
+    STA TOPCUT
+    LDA #40
+    STA RIGHTCUT
+    LDA #192
+    STA BOTCUT
+
+
     .sprite_loop
     LDA beeb_sprite_no
     AND #&1F
+    LDA #41
     STA XCO
 
     LDA #127
@@ -184,10 +194,10 @@ IF _DEBUG
     LDA #BEEB_SWRAM_SLOT_CHTAB13
     STA BANK
 
-    LDA #enum_sta
+    LDA #enum_mask OR &80
     STA OPACITY
 
-    JSR beeb_plot_sprite_LayGen
+    JSR beeb_plot_sprite_MLayMask
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
 

@@ -670,7 +670,7 @@ ENDIF
     LDA OFFSET
     LSR A
     AND #&1
-    STA beeb_rem                ; this is parity
+    STA beeb_parity                ; this is parity
 
     ROR A
     ROR A           ; put parity into &80
@@ -767,7 +767,7 @@ ENDIF
 
 \ If parity push an extra blank
 
-    LDA beeb_rem
+    LDA beeb_parity
     BEQ no_extra
     LDA #0
     PHA
@@ -891,7 +891,7 @@ ENDIF
 }
 
 \ IN: XCO, YCO
-\ OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_rem (parity)
+\ OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
 .beeb_plot_calc_screen_addr
 {
     \ XCO & YCO are screen coordinates
@@ -920,19 +920,11 @@ ENDIF
 \ Handle OFFSET
 
     LDA OFFSET
-    AND #&04
-    ASL A
-    CLC
-    ADC beeb_writeptr
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    ADC #0
-    STA beeb_writeptr+1
-
-    LDA OFFSET
     LSR A
+    STA beeb_mode2_offset
+
     AND #&1
-    STA beeb_rem                ; this is parity
+    STA beeb_parity                ; this is parity
 
     ROR A                       ; return parity in C
     RTS
@@ -959,27 +951,9 @@ ENDIF
 
     JSR CROP
     bpl cont
+    .nothing_to_do
     jmp DONE
     .cont
-
-    \ Check LEFT clip
-
-    LDA OFFLEFT
-    BEQ no_offleft
-    LDA OFFSET
-    BEQ no_offleft
-    INC VISWIDTH
-    DEC OFFLEFT
-    LDA #0
-    STA OFFSET
-    .no_offleft
-
-    \ Check NULL sprite
-
-    LDA VISWIDTH
-    BNE width_ok
-    JMP DONE
-    .width_ok
 
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
@@ -993,13 +967,94 @@ ENDIF
 
     .no_swap
 
+    \ Do we have a partial clip on left side?
+    LDX #0
+    LDA OFFLEFT
+    BEQ no_partial_left
+    LDA OFFSET
+    BEQ no_partial_left
+    INX
+    DEC OFFLEFT
+    .no_partial_left
+;   STX beeb_partial_left
+
     \ No self mod code as we know we're masking
+
+    \ Calculate all variables
+
+    LDA VISWIDTH
+    {
+        CPX #0:BEQ no_partial_left
+        INC A                   ; need extra byte of sprite data for left clip
+        .no_partial_left
+    }
+    STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
+    CMP #0                      ; zero flag already set from CPX
+    BEQ nothing_to_do        ; nothing to plot
+
+    LDA VISWIDTH
+    ASL A: ASL A
+    {
+        CPX #0:BEQ no_partial_left
+        CLC
+        ADC beeb_mode2_offset   ; have this many extra pixels on left side
+        .no_partial_left
+        LDY OFFRIGHT:BEQ no_partial_right
+        SEC
+        SBC beeb_mode2_offset
+        .no_partial_right
+    }
+    STA beeb_vispixels          ; we have W*4 pixels on screen
+
+    LSR A
+    CLC
+    ADC beeb_parity             ; vispixels/2 + parity
+    STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
+
+    LDA beeb_bytes_per_line_in_sprite
+    ASL A: ASL A                  ; we have W*4 pixels to unroll
+    CLC
+    ADC #2
+    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
+
+    {
+        CPX #0:BEQ no_partial_left        ; left partial clip
+
+        \ Left clip special stack start
+
+        SEC
+        LDA #5
+        SBC beeb_mode2_offset
+        STA beeb_stack_start
+        BNE same_char_column
+
+        .no_partial_left
+        LDA beeb_parity
+        EOR #1
+        STA beeb_stack_start        ; stack read will start here
+
+        \ If we're on the next character column, move our write pointer
+
+        LDA beeb_mode2_offset
+        AND #&2
+        BEQ same_char_column
+
+        ASL A
+        ASL A
+        CLC
+        ADC beeb_writeptr
+        STA beeb_writeptr
+        LDA beeb_writeptr+1
+        ADC #0
+        STA beeb_writeptr+1
+        .same_char_column
+    }
 
     \ Set sprite data address 
 
     CLC
     LDA IMAGE
-    ADC OFFLEFT                 ; sprite data always offset by this many bytes
+    ADC OFFLEFT
     STA sprite_addr+1
     LDA IMAGE+1
     ADC #0
@@ -1009,12 +1064,17 @@ ENDIF
     
     TSX
     STX beeb_stack_ptr          ; use this to reset stack
+    TXA
+    SEC
+    SBC beeb_stack_depth
+    STA smSTACK1+1
+    STA smSTACK2+1
 
 .plot_lines_loop
 
-\ If we're clipped left side then start that many bytes into our sprite data
+\ Start at the end of the sprite data
 
-    LDY VISWIDTH
+    LDY beeb_bytes_per_line_in_sprite
     DEY                         ; bytes_per_line_in_sprite
 
 \ Decode a line of sprite data using Exile method!
@@ -1061,50 +1121,19 @@ ENDIF
 
     BPL line_loop
 
-\ How many bytes to plot?
+\ Always push the extra zero - or set it directly ahead of the loop
 
-    LDA VISWIDTH
-    ASL A           ; bytes_per_line_on_screen - can precompute
-    STA beeb_width
-
-\ If parity push an extra blank
-
-    LDA beeb_rem
-    BEQ no_extra
     LDA #0
     PHA
-    INC beeb_width  ; and extra byte BUT ONLY IF IT WOULDN'T RESULT IN A CLIP...
-    .no_extra
 
-\ Icky - if clip right remove any OFFSET/2 bytes from plot
-{
-    LDA OFFRIGHT
-    BEQ no_offright
+\ How many bytes to plot
 
-    LDA OFFSET
-    LSR A
-    STA beeb_temp
-
-    SEC
-    LDA beeb_width
-    SBC beeb_temp
+    LDA beeb_bytes_per_line_on_screen
     STA beeb_width
-
-    .no_offright
-}
-
-\ Not sure how Exile does this?
-\ Precompute with or without parity then just always push the extra zero above
-
-    TSX
-    STX smSTACK1+1
-    STX smSTACK2+1
-
-\ None of this needs to happen each loop!
 
 \ Sort out where to start in the stack lookup
 
-    LDX #0
+    LDX beeb_stack_start
 
 \ Now plot that data to the screen left to right
 
@@ -1121,18 +1150,18 @@ ENDIF
 .smSTACK2
     ORA &100,X
 
-    STA load_mask+1             \ not storing in a register
+;    STA load_mask+1             \ not storing in a register
     .load_mask
-    LDA mask_table
+;    LDA mask_table
     
 \ Plotting mode here
 
     .smod
-    AND (beeb_writeptr), Y
+;    AND (beeb_writeptr), Y
 
 \ OR in sprite byte
 
-    ORA load_mask+1
+;    ORA load_mask+1
 
 \ Write to screen
 
@@ -1147,18 +1176,12 @@ ENDIF
     DEC beeb_width
     BNE plot_screen_loop
 
-\ Bounds check write to screen
-IF _DEBUG
-{
-    LDA beeb_writeptr+1
-    BPL addr_ok
-    BRK
-    .addr_ok
-}
-ENDIF
+\ Reset the stack pointer
 
     LDX beeb_stack_ptr
     TXS
+
+\ Have we completed all rows?
 
     LDA YCO
     DEC A
@@ -1263,15 +1286,9 @@ ENDIF
 
     JSR CROP
     bpl cont
+    .nothing_to_do
     jmp DONE
     .cont
-
-    \ Check NULL sprite
-
-    LDA VISWIDTH
-    BNE width_ok
-    JMP DONE
-    .width_ok
 
     \ Beeb screen address
 
@@ -1285,32 +1302,110 @@ ENDIF
 
     .no_swap
 
-    \ Self-mod code
+    \ Do we have a partial clip on left side?
+    LDX #0
+    LDA OFFLEFT
+    BEQ no_partial_left
+    LDA OFFSET
+    BEQ no_partial_left
+    INX
+    DEC OFFLEFT
+    .no_partial_left
+;   STX beeb_partial_left
 
-    \ Not even sure this is correct for MODE 2?
+    \ Calculate all variables
 
-\    lda OPCODE,x
-\    sta smod
+    LDA VISWIDTH
+    {
+        CPX #0:BEQ no_partial_left
+        INC A                   ; need extra byte of sprite data for left clip
+        .no_partial_left
+    }
+    STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
+    CMP #0                      ; zero flag already set from CPX
+    BEQ nothing_to_do        ; nothing to plot
+
+    LDA VISWIDTH
+    ASL A: ASL A
+    {
+        CPX #0:BEQ no_partial_left
+        CLC
+        ADC beeb_mode2_offset   ; have this many extra pixels on left side
+        .no_partial_left
+        LDY OFFRIGHT:BEQ no_partial_right
+        SEC
+        SBC beeb_mode2_offset
+        .no_partial_right
+    }
+    STA beeb_vispixels          ; we have W*4 pixels on screen
+
+    LSR A
+    CLC
+    ADC beeb_parity             ; vispixels/2 + parity
+    STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
+
+    LDA beeb_bytes_per_line_in_sprite
+    ASL A: ASL A                  ; we have W*4 pixels to unroll
+    CLC
+    ADC #2
+    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
+
+    {
+        CPX #0:BEQ no_partial_left        ; left partial clip
+
+        \ Left clip special stack start
+
+        SEC
+        LDA #5
+        SBC beeb_mode2_offset
+        STA beeb_stack_start
+        BNE same_char_column
+
+        .no_partial_left
+        LDA beeb_parity
+        EOR #1
+        STA beeb_stack_start        ; stack read will start here
+
+        \ If we're on the next character column, move our write pointer
+
+        LDA beeb_mode2_offset
+        AND #&2
+        BEQ same_char_column
+
+        ASL A
+        ASL A
+        CLC
+        ADC beeb_writeptr
+        STA beeb_writeptr
+        LDA beeb_writeptr+1
+        ADC #0
+        STA beeb_writeptr+1
+        .same_char_column
+    }
 
     \ Set sprite data address 
 
     CLC
     LDA IMAGE
-    ADC #0
+    ADC RMOST              ; NOT OFFLEFT because actually we want to lose our right-hand pixels
     STA sprite_addr+1
     LDA IMAGE+1
     ADC #0
     STA sprite_addr+2
 
-\ Remember stack
-
+    \ Remember where the stack is now
+    
     TSX
     STX beeb_stack_ptr          ; use this to reset stack
+    TXA
+    SEC
+    SBC beeb_stack_depth
+    STA smSTACK1+1
+    STA smSTACK2+1
 
 .plot_lines_loop
 
-    LDY VISWIDTH
-    DEY                     ; bytes_per_line_in_sprite
+    LDY #0                  ; bytes_per_line_in_sprite
 
 \ Decode a line of sprite data using Exile method!
 
@@ -1324,81 +1419,58 @@ ENDIF
     .sprite_addr
     LDA &FFFF, Y
     STA beeb_data
+
+    LSR A
+    LSR A
+    STA beeb_temp
+
+    AND #&22
+    TAX
+.smPIXELA
+    LDA map_2bpp_to_mode2_pixel,X
+    PHA
+
+    LDA beeb_temp
     AND #&11
     TAX
-.smPIXELD
-    LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
-    PHA                                 ; [3c]
+.smPIXELB
+    LDA map_2bpp_to_mode2_pixel,X
+    PHA
+
     LDA beeb_data
     AND #&22
     TAX
 .smPIXELC
     LDA map_2bpp_to_mode2_pixel,X
     PHA
+
     LDA beeb_data
-    LSR A
-    LSR A
-    STA beeb_data
     AND #&11
     TAX
-.smPIXELB
-    LDA map_2bpp_to_mode2_pixel,X
-    PHA
-    LDA beeb_data
-    AND #&22
-    TAX
-.smPIXELA
-    LDA map_2bpp_to_mode2_pixel,X
-    PHA
-    DEY
-    BPL line_loop
+.smPIXELD
+    LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+    PHA                                 ; [3c]
 
-\ How many bytes to plot?
+    INY
+    CPY beeb_bytes_per_line_in_sprite
 
-    LDA VISWIDTH
-    ASL A           ; bytes_per_line_on_screen - can precompute
-    STA beeb_width
+\ Stop when we reach the left edge of the sprite data
 
-\ If parity push an extra blank
+    BNE line_loop
 
-    LDA beeb_rem
-    BEQ no_extra
+\ Always push the extra zero - or set it directly ahead of the loop
+
     LDA #0
     PHA
-    INC beeb_width  ; and extra byte
-    .no_extra
 
-\ Not sure how Exile does this?
+\ How many bytes to plot
 
-    TSX
-    STX smSTACK1+1
-    STX smSTACK2+1
-
-\ None of this needs to happen each loop!
+    LDA beeb_bytes_per_line_on_screen
+    STA beeb_width
 
 \ Sort out where to start in the stack lookup
 
-    LDA beeb_width
-    ASL A
-    INC A
-    TAX
-
-\ Icky - if clip right remove any OFFSET/2 bytes from plot screen loop
-{
-    LDA OFFRIGHT
-    BEQ no_offright
-
-    LDA OFFSET
-    LSR A
-    STA beeb_temp
-
-    SEC
-    LDA beeb_width
-    SBC beeb_temp
-    STA beeb_width
-
-    .no_offright
-}
+    LDX beeb_stack_start
 
 \ Now plot that data to the screen
 
@@ -1407,26 +1479,26 @@ ENDIF
 
 .plot_screen_loop
 
-    DEX
+    INX
 .smSTACK1
     LDA &100,X
 
-    DEX
+    INX
 .smSTACK2
     ORA &100,X
 
-    STA load_mask+1
+;    STA load_mask+1
     .load_mask
-    LDA mask_table
+;    LDA mask_table
     
 \ Plotting mode here
 
     .smod
-    AND (beeb_writeptr), Y
+;    AND (beeb_writeptr), Y
 
 \ OR in sprite byte
 
-    ORA load_mask+1
+;    ORA load_mask+1
 
 \ Write to screen
 
@@ -1441,18 +1513,12 @@ ENDIF
     DEC beeb_width
     BNE plot_screen_loop
 
-\ Bounds check write to screen
-IF _DEBUG
-{
-    LDA beeb_writeptr+1
-    BPL addr_ok
-    BRK
-    .addr_ok
-}
-ENDIF
+\ Reset the stack pointer
 
     LDX beeb_stack_ptr
     TXS
+
+\ Have we completed all rows?
 
     LDA YCO
     DEC A
@@ -1570,7 +1636,7 @@ ENDIF
     LDA OFFSET
     LSR A
     AND #&1
-    STA beeb_rem                ; this is parity
+    STA beeb_parity                ; this is parity
 
     ROR A
     ROR A           ; put parity into &80
@@ -1680,7 +1746,7 @@ ENDIF
 
 \ If parity push an extra blank
 
-    LDA beeb_rem
+    LDA beeb_parity
     BEQ no_extra
     LDA #0
     PHA
