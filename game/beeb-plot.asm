@@ -978,9 +978,7 @@ ENDIF
     .no_partial_left
 ;   STX beeb_partial_left
 
-    \ No self mod code as we know we're masking
-
-    \ Calculate all variables
+    \ Calculate how many bytes of sprite data to unroll
 
     LDA VISWIDTH
     {
@@ -991,6 +989,8 @@ ENDIF
     STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
     CMP #0                      ; zero flag already set from CPX
     BEQ nothing_to_do        ; nothing to plot
+
+    \ Calculate number of pixels visible on screen
 
     LDA VISWIDTH
     ASL A: ASL A
@@ -1006,21 +1006,25 @@ ENDIF
     }
     STA beeb_vispixels          ; we have W*4 pixels on screen
 
+    \ Calculate how many bytes we'll need to write to the screen
+
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
     STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
 
+    \ Calculate how deep our stack will be
+
     LDA beeb_bytes_per_line_in_sprite
     ASL A: ASL A                  ; we have W*4 pixels to unroll
-    CLC
-    ADC #2
+    INC A
     STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
+    \ Calculate where to start reading data from stack
     {
         CPX #0:BEQ no_partial_left        ; left partial clip
 
-        \ Left clip special stack start
+        \ If clipping left start a number of bytes into the stack
 
         SEC
         LDA #5
@@ -1029,6 +1033,9 @@ ENDIF
         BNE same_char_column
 
         .no_partial_left
+
+        \ If not clipping left then stack start is based on parity
+
         LDA beeb_parity
         EOR #1
         STA beeb_stack_start        ; stack read will start here
@@ -1039,18 +1046,16 @@ ENDIF
         AND #&2
         BEQ same_char_column
 
-        ASL A
-        ASL A
         CLC
-        ADC beeb_writeptr
+        LDA beeb_writeptr
+        ADC #8
         STA beeb_writeptr
-        LDA beeb_writeptr+1
-        ADC #0
-        STA beeb_writeptr+1
+        BCC same_char_column
+        INC beeb_writeptr+1
         .same_char_column
     }
 
-    \ Set sprite data address 
+    \ Set sprite data address skipping any bytes clipped off left
 
     CLC
     LDA IMAGE
@@ -1060,10 +1065,18 @@ ENDIF
     ADC #0
     STA sprite_addr+2
 
+    \ Push a zero on the top of the stack in case of parity
+
+    LDA #0
+    PHA
+
     \ Remember where the stack is now
     
     TSX
     STX beeb_stack_ptr          ; use this to reset stack
+
+    \ Calculate bottom of the stack and 
+
     TXA
     SEC
     SBC beeb_stack_depth
@@ -1074,51 +1087,53 @@ ENDIF
 
 \ Start at the end of the sprite data
 
-    LDY beeb_bytes_per_line_in_sprite
+    LDY beeb_bytes_per_line_in_sprite       ; const could be smod
     DEY                         ; bytes_per_line_in_sprite
 
 \ Decode a line of sprite data using Exile method!
-
-\ Push a zero on the end in case of parity
-
-    LDA #0
-    PHA
+\ Current per pixel unroll: 3c+2c+4c=9c
+\ Exile ZP: 2c+4c+3c=9c am I missing something?
 
     .line_loop
 
     .sprite_addr
     LDA &FFFF, Y
     STA beeb_data
+
     AND #&11
     TAX
 .smPIXELD
     LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
     PHA                                 ; [3c]
+
     LDA beeb_data
     AND #&22
     TAX
 .smPIXELC
     LDA map_2bpp_to_mode2_pixel,X
     PHA
+
     LDA beeb_data
     LSR A
     LSR A
     STA beeb_data
+
     AND #&11
     TAX
 .smPIXELB
     LDA map_2bpp_to_mode2_pixel,X
     PHA
+
     LDA beeb_data
     AND #&22
     TAX
 .smPIXELA
     LDA map_2bpp_to_mode2_pixel,X
     PHA
-    DEY
 
 \ Stop when we reach the left edge of the sprite data
 
+    DEY
     BPL line_loop
 
 \ Always push the extra zero - or set it directly ahead of the loop
@@ -1128,12 +1143,12 @@ ENDIF
 
 \ How many bytes to plot
 
-    LDA beeb_bytes_per_line_on_screen
+    LDA beeb_bytes_per_line_on_screen       ; const could be smod
     STA beeb_width
 
 \ Sort out where to start in the stack lookup
 
-    LDX beeb_stack_start
+    LDX beeb_stack_start                    ; const could be smod
 
 \ Now plot that data to the screen left to right
 
@@ -1173,7 +1188,7 @@ ENDIF
     ADC #8
     TAY
 
-    DEC beeb_width
+    DEC beeb_width                          ; or check Y value < 8*beeb_bytes_per_line_on_screen
     BNE plot_screen_loop
 
 \ Reset the stack pointer
@@ -1185,20 +1200,21 @@ ENDIF
 
     LDA YCO
     DEC A
-    .smTOP
     CMP TOPEDGE
     STA YCO
     BEQ done_y
 
 \ Move to next sprite data row
 
-    CLC
-    LDA sprite_addr+1
-    ADC WIDTH
-    STA sprite_addr+1
-    LDA sprite_addr+2
-    ADC #0
-    STA sprite_addr+2
+    {
+        CLC
+        LDA sprite_addr+1
+        ADC WIDTH
+        STA sprite_addr+1
+        BCC no_carry
+        INC sprite_addr+2
+        .no_carry
+    }
 
 \ Next scanline
 
@@ -1221,9 +1237,11 @@ ENDIF
     STY beeb_yoffset
     JMP plot_lines_loop
 
+    .done_y
+
 \ Reset stack before we leave
 
-    .done_y
+    PLA
     JMP DONE
 }
 
@@ -1313,7 +1331,7 @@ ENDIF
     .no_partial_left
 ;   STX beeb_partial_left
 
-    \ Calculate all variables
+    \ Calculate how many bytes of sprite data to unroll
 
     LDA VISWIDTH
     {
@@ -1324,6 +1342,8 @@ ENDIF
     STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
     CMP #0                      ; zero flag already set from CPX
     BEQ nothing_to_do        ; nothing to plot
+
+    \ Calculate number of pixels visible on screen
 
     LDA VISWIDTH
     ASL A: ASL A
@@ -1339,15 +1359,18 @@ ENDIF
     }
     STA beeb_vispixels          ; we have W*4 pixels on screen
 
+    \ Calculate how many bytes we'll need to write to the screen
+
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
     STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
 
+    \ Calculate how deep our stack will be
+
     LDA beeb_bytes_per_line_in_sprite
     ASL A: ASL A                  ; we have W*4 pixels to unroll
-    CLC
-    ADC #2
+    INC A
     STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     {
@@ -1372,14 +1395,12 @@ ENDIF
         AND #&2
         BEQ same_char_column
 
-        ASL A
-        ASL A
         CLC
-        ADC beeb_writeptr
+        LDA beeb_writeptr
+        ADC #8
         STA beeb_writeptr
-        LDA beeb_writeptr+1
-        ADC #0
-        STA beeb_writeptr+1
+        BCC same_char_column
+        INC beeb_writeptr+1
         .same_char_column
     }
 
@@ -1392,6 +1413,11 @@ ENDIF
     LDA IMAGE+1
     ADC #0
     STA sprite_addr+2
+
+\ Push a zero on the end in case of parity
+
+    LDA #0
+    PHA
 
     \ Remember where the stack is now
     
@@ -1409,16 +1435,14 @@ ENDIF
 
 \ Decode a line of sprite data using Exile method!
 
-\ Push a zero on the end in case of parity
-
-    LDA #0
-    PHA
-
     .line_loop
 
     .sprite_addr
     LDA &FFFF, Y
     STA beeb_data
+
+\ For mirror sprites we decode pixels left to right and push them onto the stack
+\ Therefore bottom of the stack will be the right-most pixel to be drawn on left hand side
 
     LSR A
     LSR A
@@ -1522,20 +1546,21 @@ ENDIF
 
     LDA YCO
     DEC A
-    .smTOP
     CMP TOPEDGE
     STA YCO
     BEQ done_y
 
 \ Move to next sprite data row
 
-    CLC
-    LDA sprite_addr+1
-    ADC WIDTH
-    STA sprite_addr+1
-    LDA sprite_addr+2
-    ADC #0
-    STA sprite_addr+2
+    {
+        CLC
+        LDA sprite_addr+1
+        ADC WIDTH
+        STA sprite_addr+1
+        BCC no_carry
+        INC sprite_addr+2
+        .no_carry
+    }
 
 \ Next scanline
 
@@ -1558,9 +1583,11 @@ ENDIF
     STY beeb_yoffset
     JMP plot_lines_loop
 
+    .done_y
+
 \ Reset stack before we leave
 
-    .done_y
+    PLA
     JMP DONE
 }
 

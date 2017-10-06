@@ -176,7 +176,7 @@ IF _DEBUG
     .sprite_loop
     LDA beeb_sprite_no
     AND #&1F
-    LDA #41
+    LDA #20
     STA XCO
 
     LDA #127
