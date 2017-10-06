@@ -1098,3 +1098,6 @@ So bottom of stack is right-most pixel with top of stack left most pixel
 But for mirror purposes this is correct
 Everything else should be as before for clipping etc.
 Always start at 0
+
+Player is min 24 lines max 40 lines for sprite
+Loadig ZP + STA abs = 7c to save 1c per line = 24c

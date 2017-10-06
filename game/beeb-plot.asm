@@ -1007,14 +1007,14 @@ ENDIF
         SBC beeb_mode2_offset
         .no_partial_right
     }
-    STA beeb_vispixels          ; we have W*4 pixels on screen
+    ; A contains number of visible pixels
 
     \ Calculate how many bytes we'll need to write to the screen
 
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
-    STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
+    ; A contains beeb_bytes_per_line_on_screen
 
     \ Self-mod code to save a cycle per line
     ASL A: ASL A: ASL A         ; x8
@@ -1074,6 +1074,12 @@ ENDIF
     ADC #0
     STA sprite_addr+2
 
+    \ Save a cycle per line - player typically min 24 lines
+    LDA WIDTH
+    STA smWIDTH+1
+    LDA TOPEDGE
+    STA smTOPEDGE+1
+
     \ Push a zero on the top of the stack in case of parity
 
     LDA #0
@@ -1082,7 +1088,7 @@ ENDIF
     \ Remember where the stack is now
     
     TSX
-    STX beeb_stack_ptr          ; use this to reset stack
+    STX smSTACKTOP+1          ; use this to reset stack
 
     \ Calculate bottom of the stack and self-mod read address
 
@@ -1197,7 +1203,7 @@ ENDIF
 
     TYA
     ADC #8
-    TAY
+    TAY                         ; do it all backwards?!
 
     .smYMAX
     CPY #0
@@ -1209,28 +1215,29 @@ ENDIF
 
 \ Reset the stack pointer
 
-    LDX beeb_stack_ptr          ; const could be smod
+    .smSTACKTOP
+    LDX #0                 ; beeb_stack_ptr
     TXS
 
 \ Have we completed all rows?
 
     LDY YCO
     DEY
-    CPY TOPEDGE
+    .smTOPEDGE
+    CPY #0                 ; TOPEDGE
     STY YCO
     BEQ done_y
 
 \ Move to next sprite data row
 
-    {
-        CLC
-        LDA sprite_addr+1
-        ADC WIDTH               ; const could be smod
-        STA sprite_addr+1
-        BCC no_carry
-        INC sprite_addr+2
-        .no_carry
-    }
+    CLC
+    LDA sprite_addr+1
+    .smWIDTH
+    ADC #0                  ; WIDTH
+    STA sprite_addr+1
+    BCC no_carry
+    INC sprite_addr+2
+    .no_carry
 
 \ Next scanline
 
@@ -1328,6 +1335,7 @@ ENDIF
 
     JSR beeb_plot_calc_screen_addr
 
+    \ Returns parity in Carry
     BCS no_swap     ; mirror reverses parity
 
 \ L&R pixels need to be swapped over
@@ -1375,14 +1383,14 @@ ENDIF
         SBC beeb_mode2_offset
         .no_partial_right
     }
-    STA beeb_vispixels          ; we have W*4 pixels on screen
+    ; A contains number of visible pixels
 
     \ Calculate how many bytes we'll need to write to the screen
 
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
-    STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
+    ; A contains beeb_bytes_per_line_on_screen
 
     \ Self-mod code to save a cycle per line
     ASL A: ASL A: ASL A         ; x8
@@ -1438,7 +1446,13 @@ ENDIF
     ADC #0
     STA sprite_addr+2
 
-\ Push a zero on the end in case of parity
+    \ Save a cycle per line - player typically min 24 lines
+    LDA WIDTH
+    STA smWIDTH+1
+    LDA TOPEDGE
+    STA smTOPEDGE+1
+
+    \ Push a zero on the end in case of parity
 
     LDA #0
     PHA
@@ -1446,7 +1460,7 @@ ENDIF
     \ Remember where the stack is now
     
     TSX
-    STX beeb_stack_ptr          ; use this to reset stack
+    STX smSTACKTOP+1          ; use this to reset stack
 
     \ Calculate bottom of the stack and self-mod read address
 
@@ -1573,28 +1587,29 @@ ENDIF
 
 \ Reset the stack pointer
 
-    LDX beeb_stack_ptr
+    .smSTACKTOP
+    LDX #0                      ; beeb_stack_ptr
     TXS
 
 \ Have we completed all rows?
 
     LDY YCO
     DEY
-    CPY TOPEDGE
+    .smTOPEDGE
+    CPY #0                      ; TOPEDGE
     STY YCO
     BEQ done_y
 
 \ Move to next sprite data row
 
-    {
-        CLC
-        LDA sprite_addr+1
-        ADC WIDTH               ; const could be smod
-        STA sprite_addr+1
-        BCC no_carry
-        INC sprite_addr+2
-        .no_carry
-    }
+    CLC
+    LDA sprite_addr+1
+    .smWIDTH
+    ADC #0                      ; WIDTH
+    STA sprite_addr+1
+    BCC no_carry
+    INC sprite_addr+2
+    .no_carry
 
 \ Next scanline
 

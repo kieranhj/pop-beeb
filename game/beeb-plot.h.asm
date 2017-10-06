@@ -19,7 +19,5 @@
 .beeb_temp       SKIP 1
 
 .beeb_mode2_offset  SKIP 1
-.beeb_vispixels     SKIP 1
-.beeb_bytes_per_line_on_screen SKIP 1
 .beeb_bytes_per_line_in_sprite SKIP 1
 .beeb_stack_depth SKIP 1
