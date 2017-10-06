@@ -976,7 +976,6 @@ ENDIF
     INX
     DEC OFFLEFT
     .no_partial_left
-;   STX beeb_partial_left
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -989,6 +988,10 @@ ENDIF
     STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
     CMP #0                      ; zero flag already set from CPX
     BEQ nothing_to_do        ; nothing to plot
+
+    \ Self-mod code to save a cycle per line
+    DEC A
+    STA smSpriteBytes+1
 
     \ Calculate number of pixels visible on screen
 
@@ -1013,6 +1016,10 @@ ENDIF
     ADC beeb_parity             ; vispixels/2 + parity
     STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
 
+    \ Self-mod code to save a cycle per line
+    ASL A: ASL A: ASL A         ; x8
+    STA smYMAX+1
+
     \ Calculate how deep our stack will be
 
     LDA beeb_bytes_per_line_in_sprite
@@ -1029,7 +1036,8 @@ ENDIF
         SEC
         LDA #5
         SBC beeb_mode2_offset
-        STA beeb_stack_start
+        \ Self-mod code to save a cycle per line
+        STA smStackStart+1
         BNE same_char_column
 
         .no_partial_left
@@ -1038,7 +1046,8 @@ ENDIF
 
         LDA beeb_parity
         EOR #1
-        STA beeb_stack_start        ; stack read will start here
+        \ Self-mod code to save a cycle per line
+        STA smStackStart+1
 
         \ If we're on the next character column, move our write pointer
 
@@ -1075,7 +1084,7 @@ ENDIF
     TSX
     STX beeb_stack_ptr          ; use this to reset stack
 
-    \ Calculate bottom of the stack and 
+    \ Calculate bottom of the stack and self-mod read address
 
     TXA
     SEC
@@ -1087,12 +1096,12 @@ ENDIF
 
 \ Start at the end of the sprite data
 
-    LDY beeb_bytes_per_line_in_sprite       ; const could be smod
-    DEY                         ; bytes_per_line_in_sprite
+    .smSpriteBytes
+    LDY #0      ;beeb_bytes_per_line_in_sprite-1
 
 \ Decode a line of sprite data using Exile method!
-\ Current per pixel unroll: 3c+2c+4c=9c
-\ Exile ZP: 2c+4c+3c=9c am I missing something?
+\ Current per pixel unroll: STA ZP 3c+ TAX 2c+ LDA,X 4c=9c
+\ Exile ZP: TAX 2c+ STA 4c+ LDA zp 3c=9c am I missing something?
 
     .line_loop
 
@@ -1103,7 +1112,7 @@ ENDIF
     AND #&11
     TAX
 .smPIXELD
-    LDA map_2bpp_to_mode2_pixel,X         ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+    LDA map_2bpp_to_mode2_pixel,X       ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
     PHA                                 ; [3c]
 
     LDA beeb_data
@@ -1136,19 +1145,21 @@ ENDIF
     DEY
     BPL line_loop
 
-\ Always push the extra zero - or set it directly ahead of the loop
+\ Always push the extra zero
+\ Can't set it directly in case the loop gets interrupted and a return value pushed onto stack
 
     LDA #0
     PHA
 
-\ How many bytes to plot
+\ How many bytes to plot - don't need this, track Y terminator instead
 
-    LDA beeb_bytes_per_line_on_screen       ; const could be smod
-    STA beeb_width
+;    LDA beeb_bytes_per_line_on_screen       ; const could be smod
+;    STA beeb_width
 
 \ Sort out where to start in the stack lookup
 
-    LDX beeb_stack_start                    ; const could be smod
+    .smStackStart
+    LDX #0  ;beeb_stack_start
 
 \ Now plot that data to the screen left to right
 
@@ -1188,20 +1199,25 @@ ENDIF
     ADC #8
     TAY
 
-    DEC beeb_width                          ; or check Y value < 8*beeb_bytes_per_line_on_screen
-    BNE plot_screen_loop
+    .smYMAX
+    CPY #0
+    BCC plot_screen_loop
+
+; Previous loop terminator - now check Y value < 8*beeb_bytes_per_line_on_screen
+;    DEC beeb_width
+;    BNE plot_screen_loop
 
 \ Reset the stack pointer
 
-    LDX beeb_stack_ptr
+    LDX beeb_stack_ptr          ; const could be smod
     TXS
 
 \ Have we completed all rows?
 
-    LDA YCO
-    DEC A
-    CMP TOPEDGE
-    STA YCO
+    LDY YCO
+    DEY
+    CPY TOPEDGE
+    STY YCO
     BEQ done_y
 
 \ Move to next sprite data row
@@ -1209,7 +1225,7 @@ ENDIF
     {
         CLC
         LDA sprite_addr+1
-        ADC WIDTH
+        ADC WIDTH               ; const could be smod
         STA sprite_addr+1
         BCC no_carry
         INC sprite_addr+2
@@ -1329,7 +1345,6 @@ ENDIF
     INX
     DEC OFFLEFT
     .no_partial_left
-;   STX beeb_partial_left
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -1342,6 +1357,9 @@ ENDIF
     STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
     CMP #0                      ; zero flag already set from CPX
     BEQ nothing_to_do        ; nothing to plot
+
+    \ Self-mod code to save a cycle per line
+    STA smSpriteBytes+1
 
     \ Calculate number of pixels visible on screen
 
@@ -1366,6 +1384,10 @@ ENDIF
     ADC beeb_parity             ; vispixels/2 + parity
     STA beeb_bytes_per_line_on_screen       ; we'll plot this many bytes
 
+    \ Self-mod code to save a cycle per line
+    ASL A: ASL A: ASL A         ; x8
+    STA smYMAX+1
+
     \ Calculate how deep our stack will be
 
     LDA beeb_bytes_per_line_in_sprite
@@ -1381,13 +1403,15 @@ ENDIF
         SEC
         LDA #5
         SBC beeb_mode2_offset
-        STA beeb_stack_start
+        \ Self-mod code to save a cycle per line
+        STA smStackStart+1
         BNE same_char_column
 
         .no_partial_left
         LDA beeb_parity
         EOR #1
-        STA beeb_stack_start        ; stack read will start here
+        \ Self-mod code to save a cycle per line
+        STA smStackStart+1
 
         \ If we're on the next character column, move our write pointer
 
@@ -1423,6 +1447,9 @@ ENDIF
     
     TSX
     STX beeb_stack_ptr          ; use this to reset stack
+
+    \ Calculate bottom of the stack and self-mod read address
+
     TXA
     SEC
     SBC beeb_stack_depth
@@ -1476,25 +1503,27 @@ ENDIF
     PHA                                 ; [3c]
 
     INY
-    CPY beeb_bytes_per_line_in_sprite
+    .smSpriteBytes
+    CPY #0              ; beeb_bytes_per_line_in_sprite
 
 \ Stop when we reach the left edge of the sprite data
 
     BNE line_loop
 
-\ Always push the extra zero - or set it directly ahead of the loop
+\ Always push the extra zero - can't set directly in case of interrupts
 
     LDA #0
     PHA
 
-\ How many bytes to plot
+\ How many bytes to plot - don't need this, track Y terminator instead
 
-    LDA beeb_bytes_per_line_on_screen
-    STA beeb_width
+;    LDA beeb_bytes_per_line_on_screen       ; const could be smod
+;    STA beeb_width
 
 \ Sort out where to start in the stack lookup
 
-    LDX beeb_stack_start
+    .smStackStart
+    LDX #0  ;beeb_stack_start
 
 \ Now plot that data to the screen
 
@@ -1534,8 +1563,13 @@ ENDIF
     ADC #8
     TAY
 
-    DEC beeb_width
-    BNE plot_screen_loop
+    .smYMAX
+    CPY #0
+    BCC plot_screen_loop
+
+; Previous loop terminator - now check Y value < 8*beeb_bytes_per_line_on_screen
+;    DEC beeb_width
+;    BNE plot_screen_loop
 
 \ Reset the stack pointer
 
@@ -1544,10 +1578,10 @@ ENDIF
 
 \ Have we completed all rows?
 
-    LDA YCO
-    DEC A
-    CMP TOPEDGE
-    STA YCO
+    LDY YCO
+    DEY
+    CPY TOPEDGE
+    STY YCO
     BEQ done_y
 
 \ Move to next sprite data row
@@ -1555,7 +1589,7 @@ ENDIF
     {
         CLC
         LDA sprite_addr+1
-        ADC WIDTH
+        ADC WIDTH               ; const could be smod
         STA sprite_addr+1
         BCC no_carry
         INC sprite_addr+2
