@@ -1,6 +1,9 @@
 ; beeb_core.asm
 ; Beeb specific routines that need to be in Core memory
 
+TIMER_latch = 20000-2				; 20ms = 1x vsync :)
+TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
+
 .beeb_core_start
 
 \*-------------------------------
@@ -102,11 +105,80 @@
 ; VSYNC code
 \*-------------------------------
 
-.beeb_core_vsync            ; *FX19
+.beeb_wait_vsync
 {
+IF _ENABLE_IRQ_VSYNC
+    LDA beeb_vsync_count
+    .wait_loop
+    CMP beeb_vsync_count
+    BEQ wait_loop
+
+    RTS
+ELSE
     LDA #19
     JMP osbyte
+ENDIF
 }
+
+\*-------------------------------
+; IRQ code
+\*-------------------------------
+
+IF _ENABLE_IRQ_VSYNC
+.beeb_irq_init
+{
+	SEI
+	LDA IRQ1V:STA old_irqv
+	LDA IRQ1V+1:STA old_irqv+1
+
+	LDA #LO(beeb_irq_handler):STA IRQ1V
+	LDA #HI(beeb_irq_handler):STA IRQ1V+1		; set interrupt handler
+
+	LDA #64						; A=00000000
+	STA &FE4B					; R11=Auxillary Control Register (timer 1 latched mode)
+
+	LDA #&C0					; A=11000000
+	STA &FE4E					; R14=Interrupt Enable (enable timer 1 interrupt)
+
+	LDA #LO(TIMER_start)
+	STA &FE44					; R4=T1 Low-Order Latches (write)
+	LDA #HI(TIMER_start)
+	STA &FE45					; R5=T1 High-Order Counter
+	
+	LDA #LO(TIMER_latch)
+	STA &FE46
+	LDA #HI(TIMER_latch)
+	STA &FE47
+	CLI
+
+	RTS
+}
+
+.old_irqv
+EQUW &FFFF
+
+.beeb_irq_handler
+{
+	LDA &FC
+	PHA
+
+	LDA &FE4D
+	AND #&40			; timer 1
+	BEQ return_to_os
+
+	\\ Acknowledge timer1 interrupt
+	STA &FE4D
+
+	\\ Increment vsync counter
+	INC beeb_vsync_count
+
+	\\ Pass on to OS IRQ handler
+	.return_to_os
+	PLA
+	STA &FC
+	JMP (old_irqv)		; RTI
+}
+ENDIF
 
 \*-------------------------------
 ; Test code

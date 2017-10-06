@@ -21,3 +21,5 @@
 .beeb_mode2_offset  SKIP 1
 .beeb_bytes_per_line_in_sprite SKIP 1
 .beeb_stack_depth SKIP 1
+
+.beeb_vsync_count SKIP 1

@@ -109,7 +109,7 @@
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vblank RTS     ;JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \

@@ -1058,6 +1058,10 @@ ENDIF
 
 \ BEEB TEMP comment out MESSAGES
 \ jsr dispmsg ;Superimpose message (if any)
+
+\ BEEB TEMP TEST
+ JSR beeb_wait_vsync
+
 .label_1
  jmp drawall ;Dump contents of image lists to screen
 }

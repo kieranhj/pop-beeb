@@ -7,10 +7,11 @@
 ; Defines
 \*-------------------------------
 
-CPU 1               ; MASTER ONLY
-_TODO = FALSE       ; code still to be ported
-_DEBUG = TRUE       ; enable bounds checks
-_NOT_BEEB = FALSE   ; Apple II code to remove
+CPU 1                       ; MASTER ONLY
+_TODO = FALSE               ; code still to be ported
+_DEBUG = FALSE              ; enable bounds checks
+_NOT_BEEB = FALSE           ; Apple II code to remove
+_ENABLE_IRQ_VSYNC = FALSE   ; remove irq code if doubtful
 
 ; Helpful MACROs
 
@@ -232,6 +233,13 @@ INCLUDE "lib/print.asm"
     JSR disksys_load_file
 
     \\ Remain in AUX...
+
+    LDA #0
+    STA beeb_vsync_count
+
+    IF _ENABLE_IRQ_VSYNC
+    JSR beeb_irq_init
+    ENDIF
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
