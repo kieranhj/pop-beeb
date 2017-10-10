@@ -397,8 +397,22 @@ ENDIF
 \*  Main loop
 \*
 \*-------------------------------
+IF _DEBUG
+.temp_last_count EQUB 0
+.temp_vsync_diff EQUB 0
+ENDIF
+
 .MainLoop
 {
+IF _DEBUG
+ SEC
+ LDA beeb_vsync_count
+ TAY
+ SBC temp_last_count
+ STA temp_vsync_diff
+ STY temp_last_count
+ENDIF
+
  jsr rnd
 
  lda #0
@@ -419,6 +433,7 @@ ENDIF
  jsr flashon
 
  jsr FrameAdv ;Draw next frame & show it
+
 
 \ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds

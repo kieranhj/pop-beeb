@@ -1101,3 +1101,108 @@ Always start at 0
 
 Player is min 24 lines max 40 lines for sprite
 Loadig ZP + STA abs = 7c to save 1c per line = 24c
+
+Sprite savings
+Move to MODE 5 or MODE 4 :(
+Would need to rewrite sprite plot functions (again) and figure out per-pixel offset
+
+Could half the number of sprite frames and store in more convenient format
+Need to take advantage of the fact that background sprites are plotted without offset
+
+For masked sprites EOR to screen with 3:4 palette setup - avoid layrsave & peel
+Peel becomes plot same sprite but with previous coordinates
+Hard to do this as fg sprites can only be on top of bg - can't have mid
+Need to have moving bg objects - falling floor etc.
+Hard to get flames drawing as bg objects because of palette
+Can't plot & erase fg sprites on top of each other with EOR without them clashing
+Flames could be special cased to draw last but only if nothing else there
+
+
+Profiling
+Standing still at start
+64 lines layrsave, 64 lines peel
+Min 128 lines sprite LAY
+128 lines of image lists
+Min 128 lines of gameplay
+
+Runs 2 vsyncs standing still
+Runs at 3-4 vsyncs when moving around
+Can go as low as 8 vsyncs when multiple sprites are active - loose floor / spikes etc.
+That's 320k cycles - seems like a lot?!
+
+objX = 1 (player) + falling objects etc. <- not an imagelist drawn in midX
+
+Image lists
+wipeX = 0 standing still
+bgX = 2 standing still (flames) - up to 16 whilst moving! (all bg sections marked as dirty)
+midX = 1 (player) + falling floor etc. - only MID objects do layrsave & peel
+fgX = 0 + pillars in front of player, debris on floor etc.
+
+1. erase mid objects (copy back layrsaved screen buffers for mid objects) - peel
+2. draw wipes (used to blank transitional bg sprites before next draw) - wipe
+3. draw bg sprites - fastlay (can be masked)
+4. draw mid objects - optionally layrsave screen buffer area first - layrsave and lay
+5. draw fg objects in front of player etc. - lay
+
+Need to count cycles for all functions
+Setup cost plus cost per typical bg, mid & fg sprite
+Cost of layrsave & peel
+
+Compare equivalent cost on Apple II for same operation
+
+Could implement a save & mask function so save screen buffer data into layrsave at same
+time as writing masked sprite on top of background
+
+We do know all possible objects in the game, so OK to special case them as required
+Player is the most important sprite
+
+Background sprites are always plotted with fastlay
+Foreground sprites are always plotted with fastmask
+
+\*  F A S T L A Y
+\*
+\*  Streamlined LAY routine
+\*
+\*  No offset - no clipping - no mirroring - no masking -
+\*  no EOR - trashes IMAGE - may crash if overtaxed -
+\*  but it's fast.
+\*
+\*  10/3/88: OK for images to protrude PARTLY off top
+
+Must be able to convert directly from MODE 5 packed 2bpp into left & right MODE 2 pixel pairs
+Remember that the Exile sprite plot routine was optimised for RAM space over speed
+We can use more memory and lookups to increase speed
+
+Instead of unrolling sprite data and pushing onto stack shouldn't need any stack at all:
+
+STX beeb_sprite_index
+LDA &FFFF, X    ; sprite data
+STA beeb_data
+AND #&CC
+TAX
+LDA 2bpp_to_paletteN, X
+STA (beeb_writeptr), Y
+TYA:ADC #8:TAY
+LDA beeb_data
+AND #&33
+LDA 2bpp_to_paletteN, X
+STA (beeb_writeptr), Y
+LDX beeb_sprite_index
+INX
+TYA:ADC #8:TAY
+CPX #smYMAX
+BCC loop
+
+\\ Actually just an expanded palette to 256 bytes
+
+.2bpp_to_paletteN
+FOR byte,0,255,1
+; map &88 to left pixel for colours 0,1,2,3
+; map &44 to right pixel for colours 0,1,2,3
+; map &22 to left pixel for colours 0,1,2,3
+; map &11 to right pixel for colours 0,1,2,3
+NEXT
+
+\\ Set palette by writing palette address to code
+
+Could still use 4:3 colour setup with this method or keep different (expensive) palettes

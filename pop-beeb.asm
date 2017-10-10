@@ -9,9 +9,9 @@
 
 CPU 1                       ; MASTER ONLY
 _TODO = FALSE               ; code still to be ported
-_DEBUG = FALSE              ; enable bounds checks
+_DEBUG = TRUE              ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
-_ENABLE_IRQ_VSYNC = FALSE   ; remove irq code if doubtful
+_ENABLE_IRQ_VSYNC = TRUE   ; remove irq code if doubtful
 
 ; Helpful MACROs
 

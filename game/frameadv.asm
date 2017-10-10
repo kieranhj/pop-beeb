@@ -1424,7 +1424,7 @@ return_7=*
  lda Dy
  sta YCO
 
- lda #$80
+ lda #$00           \ BEEB (was $80)
  jmp addwipe
 }
 .return_21
