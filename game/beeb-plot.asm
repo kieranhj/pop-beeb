@@ -103,7 +103,7 @@
     BEQ no_offset
     inc WIDTH ;extra byte to cover shift right
     .no_offset
-    
+
     \ on Beeb we could skip a column of bytes if offset>3
 
     jsr CROP
@@ -184,7 +184,7 @@
     AND #&7
     TAX
 
-   .yloop
+    .yloop
     STX beeb_yoffset
 
     LDY #0                  ; would be nice (i.e. faster) to do all of this backwards
@@ -326,8 +326,13 @@ ENDIF
     
     \ Set opacity
 
+IF _DEBUG
     LDA OPACITY
-    STA smOPACITY+1
+;   STA smOPACITY+1
+    BEQ is_black
+    BRK
+    .is_black
+ENDIF
 
     \ Plot loop
 
@@ -343,10 +348,11 @@ ENDIF
 
     .xloop
 
-    .smOPACITY
-    LDA #0                  ; OPACITY
+;    .smOPACITY
+;    LDA #0                  ; OPACITY
+\ ONLY BLACK
     .scrn_addr
-    STA &FFFF, X
+    STZ &FFFF, X
 
     TXA                     ; next char column [6c]
     ADC #8    

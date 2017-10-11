@@ -882,7 +882,7 @@ ENDIF
 
 .label_6
 }
-return_1=*
+.return_1
  rts
 
 
@@ -945,7 +945,7 @@ return_1=*
  bcc return_2 ;C-section is hidden
 .vis sec ;C-section is visible
 }
-return_2=*
+.return_2
  rts
 
 \*-------------------------------
@@ -993,7 +993,7 @@ return_2=*
 .label_1 lda blockc,y
  bne cont
 }
-return_3=*
+.return_3
  rts
 
 
@@ -1073,7 +1073,7 @@ ENDIF
  lda panelb,y
  bne drawb_cont1
 }
-return_4=*
+.return_4
  rts
 
 .drawb_block
@@ -1162,7 +1162,7 @@ return_4=*
  sta YCO
  jsr add
  lda #$ff
-return_5=*
+.return_5
  rts
 
 \* Block handling
@@ -1233,7 +1233,7 @@ return_5=*
  lda #HI(addmidezfast)
  sta add+2
 }
-return_6=*
+.return_6
  rts
 
 .maddfore
@@ -1305,7 +1305,7 @@ return_6=*
  bne label_5
  jmp drawsworda
 .label_5
-return_7=*
+.return_7
  rts
 }
 
@@ -1545,7 +1545,7 @@ ENDIF
  lda #1
 .ok tay
 }
-return_11=*
+.return_11
  rts
 
 \*-------------------------------
@@ -1723,7 +1723,7 @@ ENDIF
  jmp maddfore
 .label_2
 }
-return_9=*
+.return_9
  rts
 
 
