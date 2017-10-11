@@ -99,8 +99,11 @@
     STA XCO
 
     .normal
+    LDA OFFSET
+    BEQ no_offset
     inc WIDTH ;extra byte to cover shift right
-
+    .no_offset
+    
     \ on Beeb we could skip a column of bytes if offset>3
 
     jsr CROP
