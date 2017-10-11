@@ -2659,11 +2659,7 @@ ENDIF
 
     LDA WIDTH
     STA smWIDTH+1
-
-    \ Self-mod code to save a cycle per line
-    ASL A
-    ASL A: ASL A: ASL A         ; x8
-    STA smYMAX+1
+    STA smXMAX+1
 
     \ Set sprite data address skipping any bytes NO CLIP
 
@@ -2697,11 +2693,11 @@ ENDIF
 
     .sprite_addr
     LDA &FFFF, X
-    STA beeb_data
+    STA beeb_data                   ; 3c
 
 \ Lookup pixels D & C
 
-    AND #&CC
+    AND #&CC                        ; 2c
     TAX
 
 \ Convert pixel data to mask
@@ -2726,9 +2722,9 @@ ENDIF
 
 \ Lookup pixels B & A
 
-    LDA beeb_data
-    AND #&33
-    TAX
+    LDA beeb_data                   ; 3c
+    AND #&33                        ; 2c
+    TAX                             ; 2c
 
 \ Convert pixel data to mask
 
@@ -2746,17 +2742,17 @@ ENDIF
 
     STA (beeb_writeptr), Y
 
+\ Next screen byte across
+
+    TYA:ADC #8:TAY
+
 \ Increment sprite index
 
     LDX beeb_temp
     INX
 
-\ Next screen byte across
-
-    TYA:ADC #8:TAY
-
-    .smYMAX
-    CPY #0
+    .smXMAX
+    CPX #0
     BCC line_loop
 
 \ Have we completed all rows?
@@ -2822,11 +2818,7 @@ ENDIF
 
     LDA WIDTH
     STA smWIDTH+1
-
-    \ Self-mod code to save a cycle per line
-    ASL A
-    ASL A: ASL A: ASL A         ; x8
-    STA smYMAX+1
+    STA smXMAX+1
 
     \ Set sprite data address skipping any bytes NO CLIP
 
@@ -2895,17 +2887,17 @@ ENDIF
 
     STA (beeb_writeptr), Y
 
+\ Next screen byte across
+
+    TYA:ADC #8:TAY
+
 \ Increment sprite index
 
     LDX beeb_temp
     INX
 
-\ Next screen byte across
-
-    TYA:ADC #8:TAY
-
-    .smYMAX
-    CPY #0
+    .smXMAX
+    CPX #0
     BCC line_loop
 
 \ Have we completed all rows?
@@ -2971,11 +2963,7 @@ ENDIF
 
     LDA WIDTH
     STA smWIDTH+1
-
-    \ Self-mod code to save a cycle per line
-    ASL A
-    ASL A: ASL A: ASL A         ; x8
-    STA smYMAX+1
+    STA smXMAX+1
 
     \ Set sprite data address skipping any bytes NO CLIP
 
@@ -3036,17 +3024,17 @@ ENDIF
 
     STA (beeb_writeptr), Y
 
+\ Next screen byte across
+
+    TYA:ADC #8:TAY
+
 \ Increment sprite index
 
     LDX beeb_temp
     INX
 
-\ Next screen byte across
-
-    TYA:ADC #8:TAY
-
-    .smYMAX
-    CPY #0
+    .smXMAX
+    CPX #0
     BCC line_loop
 
 \ Have we completed all rows?

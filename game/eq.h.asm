@@ -181,8 +181,8 @@ width = IMAGE+1
 ;.b0down skip 1
 ;.b1down skip 1
 .SINGSTEP skip 1
-.blackflag skip 1
-.SCRNUM skip 1
+.blackflag skip 1               \ BEEB TO DO - remove me
+.SCRNUM skip 1 
 .BlueType skip 2
 .BlueSpec skip 2
 .CUTTIMER skip 1

@@ -1206,3 +1206,11 @@ NEXT
 \\ Set palette by writing palette address to code
 
 Could still use 4:3 colour setup with this method or keep different (expensive) palettes
+
+Other observations for performance:
+Layrsave is always in multiple of 2 bytes as aligned to Apple II byte = 2x MODE 2 bytes
+Typically between 6 and 12 bytes copied - could be unrolled in some way?
+Hard to use smod code when unrolled
+
+Wipe is always 4 Apple II bytes wide = 8 Beeb MODE 2 bytes - can unroll?
+Maybe but note that can't use STZ indirect
