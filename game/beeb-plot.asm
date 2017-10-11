@@ -463,10 +463,10 @@ ENDIF
     CLC
     LDA IMAGE
     ADC #2
-    STA beeb_readptr
+    STA sprite_addr+1
     LDA IMAGE+1
     ADC #0
-    STA beeb_readptr+1
+    STA sprite_addr+2
 
     \ Simple Y clip
     SEC
@@ -503,7 +503,8 @@ ENDIF
 
     .xloop
 
-    LDA (beeb_readptr), Y
+    .sprite_addr
+    LDA &FFFF, Y
 
     .scrn_addr
     STA &FFFF, X
@@ -528,12 +529,12 @@ ENDIF
     \ Completed a line - next row of sprite data
 
     CLC
-    LDA beeb_readptr
+    LDA sprite_addr+1
     .smWIDTH
     ADC #0                  ; WIDTH*2
-    STA beeb_readptr
+    STA sprite_addr+1
     BCC no_carry
-    INC beeb_readptr+1
+    INC sprite_addr+2
     .no_carry
 
     \ Next scanline
