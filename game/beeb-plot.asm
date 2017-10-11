@@ -881,11 +881,6 @@ ENDIF
     LDA #0
     PHA
 
-\ How many bytes to plot - don't need this, track Y terminator instead
-
-;    LDA beeb_bytes_per_line_on_screen       ; const could be smod
-;    STA beeb_width
-
 \ Sort out where to start in the stack lookup
 
     .smStackStart
@@ -933,10 +928,6 @@ ENDIF
     .smYMAX
     CPY #0
     BCC plot_screen_loop
-
-; Previous loop terminator - now check Y value < 8*beeb_bytes_per_line_on_screen
-;    DEC beeb_width
-;    BNE plot_screen_loop
 
 \ Reset the stack pointer
 
@@ -1877,11 +1868,6 @@ ENDIF
     LDA #0
     PHA
 
-\ How many bytes to plot - don't need this, track Y terminator instead
-
-;    LDA beeb_bytes_per_line_on_screen       ; const could be smod
-;    STA beeb_width
-
 \ Sort out where to start in the stack lookup
 
     .smStackStart
@@ -1929,10 +1915,6 @@ ENDIF
     .smYMAX
     CPY #0
     BCC plot_screen_loop
-
-; Previous loop terminator - now check Y value < 8*beeb_bytes_per_line_on_screen
-;    DEC beeb_width
-;    BNE plot_screen_loop
 
 \ Reset the stack pointer
 
@@ -2313,6 +2295,10 @@ ENDIF
 
 .beeb_plot_sprite_MLaySTA
 {
+IF _DEBUG
+    BRK             ; not convinced this function is used!
+ENDIF
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
