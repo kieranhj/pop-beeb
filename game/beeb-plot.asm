@@ -162,13 +162,13 @@
 
     \ Increment (w,h) header to start of image data
 
-    LDA PEELBUF
     CLC
+    LDA PEELBUF
     ADC #2
-    STA PEELBUF
+    STA peel_addr+1         ; +1c
     LDA PEELBUF+1
     ADC #0
-    STA PEELBUF+1
+    STA peel_addr+2         ; +1c
 
     LDA VISWIDTH
     ASL A                   ; bytes_per_line_on_screen
@@ -190,9 +190,12 @@
     .xloop
 
     .scrn_addr
-    LDA &FFFF,X
+    LDA &FFFF, X
 
-    STA (PEELBUF),Y
+\ 16c + 2c per line to save a cycle per byte copied - as player is > 16 lines high this is a win
+
+    .peel_addr
+    STA &FFFF, Y            ; -1c vs STA (PEELBUF),Y
 
     TXA                     ; next char column [6c]
     ADC #8    
@@ -204,16 +207,14 @@
     CPY #0                  ; VISWIDTH*2
     BCC xloop
     
-    .done_x
-
     \ Update PEELBUF as we go along
     CLC
-    LDA PEELBUF
+    LDA peel_addr+1         ; +1c
     .smWIDTH
     ADC #0                  ; VISWIDTH=WIDTH*2
-    STA PEELBUF
+    STA peel_addr+1         ; +1c
     BCC no_carry
-    INC PEELBUF+1
+    INC peel_addr+2         ; +1c
     .no_carry
 
     \ Have we done all lines?
@@ -238,7 +239,12 @@
     BNE yloop
     .done
 
-    \ PEELBUF now updated
+    \ Update PEELBUF
+    LDA peel_addr+1         ; +4c
+    STA PEELBUF             ; +3c
+    LDA peel_addr+2         ; +4c
+    STA PEELBUF+1           ; +3c
+
 ;BBC_SETBGCOL PAL_black
 
     JMP DONE                ; restore vars
@@ -349,7 +355,6 @@ ENDIF
 
     \ Should keep track of Y in a register
 
-    .done_x
     DEY
     .smTOP
     CPY #0
@@ -518,7 +523,6 @@ ENDIF
     CPY #0
     BCC xloop
     
-    .done_x
     LDY beeb_height
     DEY
     .smTOP
@@ -2641,7 +2645,6 @@ ENDIF
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
     \ Don't carry about Carry
-    CLC
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -2691,13 +2694,10 @@ ENDIF
 
     AND #&CC
     TAX
-    LDA map_2bpp_to_mode2_palN, X
 
 \ Convert pixel data to mask
 
-    STA load_mask1+1             \ not storing in a register
-    .load_mask1
-    LDA mask_table
+    LDA map_2bpp_to_mask, X
 
 \ AND mask with screen
 
@@ -2705,7 +2705,7 @@ ENDIF
 
 \ OR in sprite byte
 
-    ORA load_mask1+1
+    ORA map_2bpp_to_mode2_palN, X
 
 \ Write to screen
 
@@ -2720,13 +2720,10 @@ ENDIF
     LDA beeb_data
     AND #&33
     TAX
-    LDA map_2bpp_to_mode2_palN, X
 
 \ Convert pixel data to mask
 
-    STA load_mask2+1             \ not storing in a register
-    .load_mask2
-    LDA mask_table
+    LDA map_2bpp_to_mask, X
 
 \ AND mask with screen
 
@@ -2734,7 +2731,7 @@ ENDIF
 
 \ OR in sprite byte
 
-    ORA load_mask2+1
+    ORA map_2bpp_to_mode2_palN, X
 
 \ Write to screen
 
@@ -2811,7 +2808,6 @@ ENDIF
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
     \ Don't carry about Carry
-    CLC
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -2961,7 +2957,6 @@ ENDIF
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
     \ Don't carry about Carry
-    CLC
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -3298,6 +3293,7 @@ ENDIF
 
 NEXT
 
+PAGE_ALIGN
 .map_2bpp_to_mode2_palN
 FOR byte,0,&CC,1
 D=(byte AND &80)>>6 OR (byte AND &8)>>3
@@ -3348,5 +3344,34 @@ ENDIF
 
 EQUB pA OR pB OR pC OR pD
 NEXT
+
+; This table turns MODE 5 2bpp packed data directly into MODE 2 mask bytes
+
+PAGE_ALIGN
+.map_2bpp_to_mask
+FOR byte,0,&CC,1
+left=(byte AND &88) OR (byte AND &22)
+right=(byte AND &44) OR (byte AND &11)
+
+IF left = 0
+
+    IF right = 0
+        EQUB &FF
+    ELSE
+        EQUB &AA
+    ENDIF
+
+ELSE
+
+    IF right = 0
+        EQUB &55
+    ELSE
+        EQUB &00
+    ENDIF
+
+ENDIF
+
+NEXT
+
 
 .beeb_plot_end

@@ -1142,7 +1142,7 @@ fgX = 0 + pillars in front of player, debris on floor etc.
 2. draw wipes (used to blank transitional bg sprites before next draw) - wipe
 3. draw bg sprites - fastlay (can be masked)
 4. draw mid objects - optionally layrsave screen buffer area first - layrsave and lay
-5. draw fg objects in front of player etc. - lay
+5. draw fg objects in front of player etc. - fastlay
 
 Need to count cycles for all functions
 Setup cost plus cost per typical bg, mid & fg sprite
