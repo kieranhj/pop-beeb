@@ -831,6 +831,7 @@ ENDIF
 \ Decode a line of sprite data using Exile method!
 \ Current per pixel unroll: STA ZP 3c+ TAX 2c+ LDA,X 4c=9c
 \ Exile ZP: TAX 2c+ STA 4c+ LDA zp 3c=9c am I missing something?
+\ Save 2 cycles per loop when shifting bytes down TXA vs LDA zp
 
     .line_loop
 
@@ -851,10 +852,10 @@ ENDIF
     LDA map_2bpp_to_mode2_pixel,X
     PHA
 
-    LDA beeb_data
+    LDA beeb_data                       ; +1c
     LSR A
     LSR A
-    STA beeb_data
+    STA beeb_data                       ; +1c
 
     AND #&11
     TAX
@@ -907,9 +908,9 @@ ENDIF
 
 \ Convert pixel data to mask
 
-    STA load_mask+1             \ not storing in a register
+    STA load_mask+1             \ 4c not storing in a register
     .load_mask
-    LDA mask_table
+    LDA mask_table              ; 4c
 
 \ AND mask with screen
 
@@ -917,7 +918,7 @@ ENDIF
 
 \ OR in sprite byte
 
-    ORA load_mask+1
+    ORA load_mask+1             ; 4c
 
 \ Write to screen
 
@@ -1468,6 +1469,12 @@ ENDIF
     STA smSTACK1+1
     STA smSTACK2+1
 
+    \ +14c vs using beeb_writeptr
+    LDA beeb_writeptr
+    STA scrn_addr+1
+    LDA beeb_writeptr+1
+    STA scrn_addr+2
+
 .plot_lines_loop
 
 \ Start at the end of the sprite data
@@ -1549,13 +1556,14 @@ ENDIF
 
 \ Write to screen
 
-    STA (beeb_writeptr), Y
+    .scrn_addr
+    STA &FFFF, Y            ; -1c vs STA (beeb_writeptr), Y
 
 \ Next screen byte across
 
     TYA
     ADC #8
-    TAY                         ; do it all backwards?!
+    TAY                     ; do it all backwards?!
 
     .smYMAX
     CPY #0
@@ -1597,12 +1605,12 @@ ENDIF
 
     .next_char_row
     SEC
-    LDA beeb_writeptr
+    LDA scrn_addr+1         ; +1c beeb_writeptr
     SBC #LO(BEEB_SCREEN_ROW_BYTES)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
+    STA scrn_addr+1         ; +1c beeb_writeptr
+    LDA scrn_addr+2         ; +1c beeb_writeptr+1
     SBC #HI(BEEB_SCREEN_ROW_BYTES)
-    STA beeb_writeptr+1
+    STA scrn_addr+2         ; +1c beeb_writeptr+1
 
     LDY #7
     STY beeb_yoffset
