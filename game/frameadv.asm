@@ -768,6 +768,7 @@
  cpx #slicer
  bne label_11
  jmp drawslicerf
+
 .label_11 cpx #flask
  bne label_1
  lda state
@@ -782,6 +783,7 @@
 .label_1 ldx objid
  lda fronti,x
  beq return_1
+
 .label_12 sta IMAGE
 
  lda Ay
@@ -809,6 +811,7 @@ ENDIF
 
  cpx #posts
  beq label_sta ;for dungeon bg set
+
 .ndunj cpx #block
  beq local_block
 
@@ -820,6 +823,7 @@ ENDIF
  cpy #numblox
  bcc label_2
  ldy #0
+
 .label_2 lda blockfr,y
  sta IMAGE
 
@@ -1238,9 +1242,12 @@ ENDIF
 
 .maddfore
 {
- ldx #enum_mask
- stx OPACITY
- jsr addfore
+\ BEEB GFX PERF
+; ldx #enum_mask
+; stx OPACITY
+; jsr addfore
+\ I think I'm doing this in one operation?
+\ In POP enum_mask means generate a mask from the pixel data but I need this for ORA anyway
  ldx #enum_ora
  stx OPACITY
  jmp addfore

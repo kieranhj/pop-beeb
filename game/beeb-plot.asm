@@ -987,10 +987,18 @@ ENDIF
 
 \*-------------------------------
 \* LAY AND
+\* Only used by transitional moving objects. OFFSET always 0?
 \*-------------------------------
 
 .beeb_plot_sprite_LayAND
 {
+IF _DEBUG
+    LDA OFFSET
+    BEQ offset_zero
+    BRK
+    .offset_zero
+ENDIF
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
@@ -1301,10 +1309,18 @@ ENDIF
 
 \*-------------------------------
 \* LAY STA
+\* Only used for transitional moving objects - OFFSET always 0?
 \*-------------------------------
 
 .beeb_plot_sprite_LaySTA
 {
+IF _DEBUG
+    LDA OFFSET
+    BEQ offset_zero
+    BRK
+    .offset_zero
+ENDIF
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
@@ -1978,6 +1994,10 @@ ENDIF
 
 .beeb_plot_sprite_MLayAND
 {
+IF _DEBUG
+    BRK             ; not convinced this function is used!
+ENDIF
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
