@@ -3248,15 +3248,28 @@ PAGE_ALIGN
 }
 \\ Flip entries in this table when parity changes
 
+MODE2_LEFT_MASK=&AA
+MODE2_RIGHT_MASK=&55
+
+MODE2_BLACK_PAIR=&00
+MODE2_RED_PAIR=&03
+MODE2_GREEN_PAIR=&0C
+MODE2_YELLOW_PAIR=&0F
+MODE2_BLUE_PAIR=&30
+MODE2_MAGENTA_PAIR=&33
+MODE2_CYAN_PAIR=&3C
+MODE2_WHITE_PAIR=&3F
+
+MACRO MODE2_PIXELS left_pair, right_pair
+    EQUB (left_pair AND MODE2_LEFT_MASK) OR (right_pair AND MODE2_RIGHT_MASK)
+ENDMACRO
+
 .palette_value_to_pixel_lookup
 {
-    EQUB &07                        ; red / yellow
-    EQUB &34                        ; blue / cyan
-    EQUB &23                        ; magenta / red
-\    equb $CA                        ; yellow bg, black bg
-\    equb $C9                        ; green bg, red bg
-\    equb $E3                        ; magenta bg, red bg
-    equb $E9                        ; cyan bg, red bg
+    MODE2_PIXELS    MODE2_RED_PAIR, MODE2_YELLOW_PAIR
+    MODE2_PIXELS    MODE2_BLUE_PAIR, MODE2_CYAN_PAIR
+    MODE2_PIXELS    MODE2_MAGENTA_PAIR, MODE2_RED_PAIR
+    MODE2_PIXELS    MODE2_MAGENTA_PAIR, MODE2_BLUE_PAIR
     equb $EB                        ; white bg, red bg
     equb $CE                        ; yellow bg, green bg
     equb $F8                        ; cyan bg, blue bg
@@ -3302,7 +3315,7 @@ PAGE_ALIGN
     EQUB &71            \ bg
     EQUB &72            \ chtab13
     EQUB &72            \ chtab25
-    EQUB &72            \ chtab467
+    EQUB &73            \ chtab467
 }
 
 \*-------------------------------
@@ -3346,8 +3359,7 @@ ENDIF
 
 NEXT
 
-PAGE_ALIGN
-.map_2bpp_to_mode2_palN
+MACRO MAP_2BPP_TO_MODE2 col1, col2, col3
 FOR byte,0,&CC,1
 D=(byte AND &80)>>6 OR (byte AND &8)>>3
 C=(byte AND &40)>>5 OR (byte AND &4)>>2
@@ -3358,45 +3370,50 @@ A=(byte AND &10)>>3 OR (byte AND &1)>>0
 IF D=0
     pD=0
 ELIF D=1
-    pD=&02          ; red left
+    pD=col1 AND MODE2_LEFT_MASK
 ELIF D=2
-    pD=&08          ; yellow left
+    pD=col2 AND MODE2_LEFT_MASK
 ELSE
-    pD=&2A          ; white left
+    pD=col3 AND MODE2_LEFT_MASK
 ENDIF
 
 IF C=0
     pC=0
 ELIF C=1
-    pC=&01          ; red right
+    pC=col1 AND MODE2_RIGHT_MASK
 ELIF C=2
-    pC=&04          ; yellow right
+    pC=col2 AND MODE2_RIGHT_MASK
 ELSE
-    pC=&15          ; white right
+    pC=col3 AND MODE2_RIGHT_MASK
 ENDIF
 
 IF B=0
     pB=0
 ELIF B=1
-    pB=&02          ; red left
+    pB=col1 AND MODE2_LEFT_MASK
 ELIF B=2
-    pB=&08          ; yellow left
+    pB=col2 AND MODE2_LEFT_MASK
 ELSE
-    pB=&2A          ; white left
+    pB=col3 AND MODE2_LEFT_MASK
 ENDIF
 
 IF A=0
     pA=0
 ELIF A=1
-    pA=&01          ; red right
+    pA=col1 AND MODE2_RIGHT_MASK
 ELIF A=2
-    pA=&04          ; yellow right
+    pA=col2 AND MODE2_RIGHT_MASK
 ELSE
-    pA=&15          ; white right
+    pA=col3 AND MODE2_RIGHT_MASK
 ENDIF
 
 EQUB pA OR pB OR pC OR pD
 NEXT
+ENDMACRO
+
+PAGE_ALIGN
+.map_2bpp_to_mode2_palN
+MAP_2BPP_TO_MODE2 MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR
 
 ; This table turns MODE 5 2bpp packed data directly into MODE 2 mask bytes
 
@@ -3425,6 +3442,5 @@ ELSE
 ENDIF
 
 NEXT
-
 
 .beeb_plot_end
