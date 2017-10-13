@@ -32,7 +32,11 @@ CheckTimer = 0
 .pause jmp PAUSE
 \ jmp bonesrise
 .deadenemy jmp DEADENEMY
+IF _ALL_LEVELS
+.playcut RTS            ; jmp PLAYCUT               BEEB TO DO
+ELSE
 .playcut BRK            ; jmp PLAYCUT
+ENDIF
 
 .addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TO DO SOUND
 .RemoveObj jmp REMOVEOBJ

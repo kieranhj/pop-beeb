@@ -41,7 +41,8 @@
 \*
 \*-------------------------------
 
-\ Implement special XOR - this will be done by using a different palette
+_USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
+_REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
 .beeb_plot_start
 
@@ -1011,6 +1012,10 @@ ENDIF
     jmp DONE
     .cont
 
+IF _USE_FASTLAY
+    \ BEEB GFX PERF - test CROP+FASTLAY as NO OFFSET
+    JMP beeb_plot_sprite_FASTLAYAND_PP
+ELSE
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
@@ -1029,6 +1034,9 @@ ENDIF
     BEQ no_partial_left
     LDA OFFSET
     BEQ no_partial_left
+IF _DEBUG
+    BRK         ; don't believe there will be clipping
+ENDIF
     INX
     DEC OFFLEFT
     .no_partial_left
@@ -1036,6 +1044,12 @@ ENDIF
     \ Calculate how many bytes of sprite data to unroll
 
     LDA VISWIDTH
+IF _DEBUG
+    CMP WIDTH   ; don't believe there will be clippinng
+    BEQ width_ok
+    BRK
+    .width_ok
+ENDIF
     {
         CPX #0:BEQ no_partial_left
         INC A                   ; need extra byte of sprite data for left clip
@@ -1305,6 +1319,7 @@ ENDIF
     PLA
 ;BBC_SETBGCOL PAL_black
     JMP DONE
+ENDIF
 }
 
 \*-------------------------------
@@ -1333,6 +1348,10 @@ ENDIF
     jmp DONE
     .cont
 
+IF _USE_FASTLAY
+    \ BEEB GFX PERF - test CROP+FASTLAY as NO OFFSET
+    JMP beeb_plot_sprite_FASTLAYSTA_PP
+ELSE
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
@@ -1351,6 +1370,9 @@ ENDIF
     BEQ no_partial_left
     LDA OFFSET
     BEQ no_partial_left
+IF _DEBUG
+    BRK         ; don't believe there will be clipping
+ENDIF
     INX
     DEC OFFLEFT
     .no_partial_left
@@ -1358,6 +1380,12 @@ ENDIF
     \ Calculate how many bytes of sprite data to unroll
 
     LDA VISWIDTH
+IF _DEBUG
+    CMP WIDTH   ; don't believe there will be clippinng
+    BEQ width_ok
+    BRK
+    .width_ok
+ENDIF
     {
         CPX #0:BEQ no_partial_left
         INC A                   ; need extra byte of sprite data for left clip
@@ -1630,6 +1658,7 @@ ENDIF
     PLA
 ;BBC_SETBGCOL PAL_black
     JMP DONE
+ENDIF
 }
 
 
@@ -1994,10 +2023,9 @@ ENDIF
 
 .beeb_plot_sprite_MLayAND
 {
-IF _DEBUG
+IF _REMOVE_MLAY
     BRK             ; not convinced this function is used!
-ENDIF
-
+ELSE
     \ Get sprite data address 
 
     JSR beeb_PREPREP
@@ -2307,6 +2335,7 @@ ENDIF
     PLA
 ;BBC_SETBGCOL PAL_black
     JMP DONE
+ENDIF
 }
 
 \*-------------------------------
@@ -2315,10 +2344,9 @@ ENDIF
 
 .beeb_plot_sprite_MLaySTA
 {
-IF _DEBUG
+IF _REMOVE_MLAY
     BRK             ; not convinced this function is used!
-ENDIF
-
+ELSE
     \ Get sprite data address 
 
     JSR beeb_PREPREP
@@ -2624,6 +2652,7 @@ ENDIF
     PLA
 ;BBC_SETBGCOL PAL_black
     JMP DONE
+ENDIF
 }
 
 
@@ -2816,12 +2845,18 @@ ENDIF
     JMP DONE
 }
 
+\*-------------------------------
+\* FASTLAY AND
+\*-------------------------------
+
 .beeb_plot_sprite_FASTLAYAND
 {
     \ Get sprite data address 
 
     JSR beeb_PREPREP
-
+}
+.beeb_plot_sprite_FASTLAYAND_PP
+{
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
@@ -2961,12 +2996,18 @@ ENDIF
     JMP DONE
 }
 
+\*-------------------------------
+\* FASTLAY STA
+\*-------------------------------
+
 .beeb_plot_sprite_FASTLAYSTA
 {
     \ Get sprite data address 
 
     JSR beeb_PREPREP
-
+}
+.beeb_plot_sprite_FASTLAYSTA_PP
+{
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
@@ -3101,6 +3142,7 @@ ENDIF
 
 \*-------------------------------
 ; Clear Beeb screen buffer
+\*-------------------------------
 
 .beeb_CLS
 {

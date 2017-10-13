@@ -12,6 +12,7 @@ _TODO = FALSE               ; code still to be ported
 _DEBUG = TRUE              ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
 _ENABLE_IRQ_VSYNC = TRUE   ; remove irq code if doubtful
+_ALL_LEVELS = TRUE          ; allow user to play all levels
 
 ; Helpful MACROs
 

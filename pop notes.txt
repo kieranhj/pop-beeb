@@ -1215,6 +1215,11 @@ Hard to use smod code when unrolled
 Wipe is always 4 Apple II bytes wide = 8 Beeb MODE 2 bytes - can unroll?
 Maybe but note that can't use STZ indirect
 
+Exile ZP
+Using X register to store temporary data saves 2 cycles in 
+
+Algorithm optimisation
+~~~
 Found that the plot routines often get called twice for same piece - opportunity to combine!
 Try and optimise by reducing number of sprites that get drawn rather than saving cycles!
 
@@ -1226,21 +1231,39 @@ Falling floor:
 No wonder it is so expensive!
 
 Can we at least change this to one layrsave?!
+Layrsaves: (w,h) 4,c + 4,4 + 3,c
+e.g. (x,y) $18,$50 + $18,$53 + $1c,$4f
+           $0c,$44 + $0c,$47 + $10,$43
+
+Always have to save (XCO,YCO+3) to (XCO+4,YCO-12) and (XCO+4,YCO-4) to (XCO+8,YCO+8)
+= 4 x 15 + 4 x 12 = 60 + 48 = 108 bytes but in three blocks :(  Actually x2 because MODE 2
+
+This would benefit from a peel + lay function
+Unfortunately Layrsave goes to MOS 4K RAM whilst sprite comes from SWRAM :(
+Hard to do this anyway because stride of saved screen buffer is double that of sprite data
+Becomes a juggling act of indices.
+
+Layrsave is weird because it only ever puts back the exact same screen data in the same place
+Despite saving it as sprite data that can theoretically be plotted back anywhere on screen
+Is there a way to speed up the inner & outer loop of the layrsave & peel functions for Beeb?
 
 AND/MASKING
 If we know that calling plot with AND operation is only for masking then can we optimise this?
 Don't need to look up pixel colours as always going to be white for mask
+ - set solid white palette - doesn't need swapping
 Only two types of floor masks - maska table and maskb table
 Points to sprite# 3 and 4 in background set - removes floor piece
 And/or optimise AND function for two main mask sprites (store them uncompressed?)
 
 Plot function usage
 ~~~
-LayMask - used for player
-MLayMask - used for player etc.
+LayMask - used for player & guard
+MLayMask - used for player & guard
 
 LayAND is used by falling floor but bet this is OFFSET 0 - probably just need crop?
 LaySTA ditto
+Also used for flasks with OFFSET hardcoded to 2 or 3 for alt colour - can fix for Beeb
+Looks like we can replace these two with FastLay equivalents as they are safe for top/bottom crop
 
 MLayAND - not used?
 MLaySTA - not used?
@@ -1248,3 +1271,17 @@ MLaySTA - not used?
 FastLaySTA - used for background and foreground pieces
 FastLayAND - used for drawing the background
 FastMask - only use for foreground pieces
+
+ORA only used after explicit AND so can probably separate ORA from MASK
+
+Double-buffering
+~~~
+Not enough RAM to add second MODE2 screen in Main/Core - would need PAGE=&800 NMI=&D00 :(
+If move 2nd screen buffer to SHADOW then need to find room for &3D00 of code + data
+Current free = &A00  + &400 + &400 + &400 + &200 + &300 = &1B00 :(
+Can steal 4K MOS RAM but still only ann extra &1000
+(Also would be prohibitively difficult with complex bank switching.)
+
+Only render fns access sprite data - not true as collision detection system asks for sprite width
+Could potentially use top 8K FS RAM but only during level as would be nuked by disk access
+Not even sure if this needs to be preserved between FS calls?

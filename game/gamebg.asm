@@ -469,7 +469,7 @@ ENDIF
 .DrawShifted
 {
  lda #1
- jsr chgoffset
+ jsr chgoffset          ; BEEB TO DO - replace with palette swap
 
  lda #enum_mask
  sta OPACITY
@@ -482,7 +482,7 @@ ENDIF
 
 .DrawEored
 {
- lda #enum_eor
+ lda #enum_eor          ; BEEB TO DO - replace with palette swap
  sta OPACITY
 
  lda #UseLayrsave OR UseCharTable
@@ -707,7 +707,7 @@ RefreshPot = %00100000
 BoostPot = %01000000
 MystPot = %01100000
 
-boffset = 2
+boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or equiv
 
 .SETUPFLASK
 {
@@ -722,7 +722,7 @@ boffset = 2
  beq local_tall ;special flask (taller)
  bcc cont
 
- inc OFFSET ;mystery potion (blue)
+ inc OFFSET ;mystery potion (blue)      ; BEEB TO DO - different palette
 
 .local_tall lda YCO
  sec

@@ -819,7 +819,8 @@ ENDIF
 
 \* Special handling for block
 
-.local_block ldy state
+.local_block
+ ldy state
  cpy #numblox
  bcc label_2
  ldy #0
