@@ -241,7 +241,7 @@ Mark2 jsr Mark1 ;mark 2 blocks
 Mark1 lda #4
  sta height
  clc
- lda #2
+ lda #REDRAW_FRAMES
  jsr markwipe
  jmp markred
 
@@ -645,7 +645,7 @@ BONESRISE
  sta (BlueType),y
  lda #24
  sta height
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jsr markwipe
  iny

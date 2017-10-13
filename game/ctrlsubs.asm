@@ -1342,7 +1342,7 @@ thinner = 3
  sta tempblocky
 
  jsr indexblock ;lower block
- lda #2
+ lda #REDRAW_FRAMES
 .marksm1 jsr markhalf
 
  lda topblock

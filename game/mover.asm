@@ -1370,11 +1370,11 @@ maxmob = mobspace-1
 .redtrobj
 {
  jsr check
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jsr markwipe
  jsr checkright
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jmp markwipe
 }
@@ -1387,7 +1387,7 @@ maxmob = mobspace-1
 .redtorch
 {
  jsr checkright
- lda #2
+ lda #REDRAW_FRAMES
  jmp markmove
 }
 
@@ -1399,7 +1399,7 @@ maxmob = mobspace-1
 .redflask
 {
  jsr check
- lda #2
+ lda #REDRAW_FRAMES
  jmp markmove
 }
 
@@ -1422,11 +1422,11 @@ maxmob = mobspace-1
 .redgate
 {
  jsr checkright ;mark piece to right of gate
- lda #2
+ lda #REDRAW_FRAMES
  jsr markmove
  jsr markfred
  jsr checkabover ;& piece to right of gate panel
- lda #2
+ lda #REDRAW_FRAMES
  jmp markmove
 }
 
@@ -1452,7 +1452,7 @@ maxmob = mobspace-1
  lda #slicerwipe
  sta height
  jsr check
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jmp markwipe
 }
@@ -2074,14 +2074,14 @@ maxmob = mobspace-1
  sta height
 
  jsr indexblock
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jsr markwipe
 
  inc tempblockx
 
  jsr indexblock
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jsr markfred
  jmp markwipe
@@ -2251,7 +2251,7 @@ maxmob = mobspace-1
  inc tempblockx
  jsr indexblock  ;block to R
 
- lda #2
+ lda #REDRAW_FRAMES
  jsr markfloor
  jsr markfred
 
@@ -2265,7 +2265,7 @@ maxmob = mobspace-1
  sta tempblocky
  jsr indexblock ;block to U.R.
 
- lda #2
+ lda #REDRAW_FRAMES
  jsr markfloor
  jsr markfred
 .same

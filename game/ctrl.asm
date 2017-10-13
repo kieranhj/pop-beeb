@@ -367,7 +367,7 @@ stairthres = 30
 .yes lda #floor
  sta (BlueType),y
  jsr indexblock
- lda #2
+ lda #REDRAW_FRAMES
  jsr sub
  iny
 .sub jsr markwipe

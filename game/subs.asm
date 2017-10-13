@@ -1447,7 +1447,7 @@ ENDIF
  lda #35 ;TEMP
  sta height
 
- lda #2
+ lda #REDRAW_FRAMES
  clc
  jsr markwipe
  jmp markred

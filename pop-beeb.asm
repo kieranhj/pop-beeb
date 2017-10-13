@@ -14,6 +14,8 @@ _NOT_BEEB = FALSE           ; Apple II code to remove
 _ENABLE_IRQ_VSYNC = TRUE   ; remove irq code if doubtful
 _ALL_LEVELS = TRUE          ; allow user to play all levels
 
+REDRAW_FRAMES = 1           ; needs to be 2 if double-buffering
+
 ; Helpful MACROs
 
 MACRO PAGE_ALIGN

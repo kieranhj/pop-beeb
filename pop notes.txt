@@ -1278,10 +1278,122 @@ Double-buffering
 ~~~
 Not enough RAM to add second MODE2 screen in Main/Core - would need PAGE=&800 NMI=&D00 :(
 If move 2nd screen buffer to SHADOW then need to find room for &3D00 of code + data
-Current free = &A00  + &400 + &400 + &400 + &200 + &300 = &1B00 :(
-Can steal 4K MOS RAM but still only ann extra &1000
+Current free = &A00  + &400 + &400 + &400 + &200 + &500 = &1D00 :(
+Can steal 4K MOS RAM but still only an extra &1000
 (Also would be prohibitively difficult with complex bank switching.)
 
-Only render fns access sprite data - not true as collision detection system asks for sprite width
+Only render fns access sprite data? - not true as collision detection system asks for sprite width
 Could potentially use top 8K FS RAM but only during level as would be nuked by disk access
 Not even sure if this needs to be preserved between FS calls?
+
+Multi-pass
+~~~
+Naive approach to multi-pass doesn't work because required to peel all sprites before layrsave
+Gah!  Would require double peel lists per pass...
+
+RAM
+~~~
+Can save 1262 bytes from bgset 1 by removing the messge boxes and numbers etc.
+
+
+C64 sprite routines are optimised (unrolled) for 2/3/4 byte widths
+~~~
+draw2ColumnsOpaque: 
+{
+        ldx #$00
+        {
+            lda BgImageBuffer+2,x   ; read byte from image
+            ldy #$00
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            lda BgImageBuffer+2,x   ; read byte from image
+            ldy #$08
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+            
+            lda BitmapPtr
+            and #$07
+            beq oneRowUp
+            
+            dec BitmapPtr
+            dec BlockImageVisibleHeight
+            bne _cont
+            jmp endDraw
+
+oneRowUp:               
+            lda BitmapPtr               ; move one char row up
+            sec
+            sbc #$39
+            sta BitmapPtr
+            
+            lda BitmapPtr+1
+            sbc #$01
+            sta BitmapPtr+1
+        
+            dec BlockImageVisibleHeight
+            bne _cont
+        }
+
+        jmp endDraw
+;----------------------------------
+}
+
+;----------------------------------
+draw3ColumnsNormal:
+{
+        ldx #$00
+        {
+            ldy #$00
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$00
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            ldy #$08
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$08
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            ldy #$10
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$10
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            lda BitmapPtr
+            and #$07
+            beq oneRowUp                
+
+            dec BitmapPtr
+            dec BlockImageVisibleHeight
+            bne _cont
+            jmp endDraw
+
+oneRowUp:               
+            lda BitmapPtr               ; move one char row up
+            sec
+            sbc #$39
+            sta BitmapPtr
+            
+            lda BitmapPtr+1
+            sbc #$01
+            sta BitmapPtr+1
+        
+            dec BlockImageVisibleHeight
+            bne _cont
+        }
+
+        jmp endDraw
+;----------------------------------
+}
