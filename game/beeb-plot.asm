@@ -1,8 +1,5 @@
 ; beeb-plot
 ; BBC Micro plot functions
-; Works directly on Apple II sprite data
-
-; need to know where we're locating this code!
 
 \*-------------------------------
 \*
@@ -353,30 +350,30 @@ ENDIF
 ;    LDA #0                  ; OPACITY
 \ ONLY BLACK
     .scrn_addr
-    STZ &FFFF, X
+    STZ &FFFF, X            ; 5c
 
     TXA                     ; next char column [6c]
     ADC #8    
-    TAX
+    TAX                     ; 6c
 
     .smXMAX
-    CPX #0                  ; do this backwards...
-    BCC xloop
+    CPX #0                  ; 2c do this backwards...
+    BCC xloop               ; 3c
 
     \ Should keep track of Y in a register
 
-    DEY
+    DEY                     ; 2c
     .smTOP
-    CPY #0
-    BEQ done_y
+    CPY #0                  ; 2c
+    BEQ done_y              ; 2c
 
     \ Completed a line
 
     \ Next scanline
 
-    LDX beeb_yoffset
-    DEX
-    BPL yloop
+    LDX beeb_yoffset        ; 2c
+    DEX                     ; 2c
+    BPL yloop               ; 3c
 
     \ Next character row
 
@@ -394,6 +391,7 @@ ENDIF
 
     RTS
 }
+\\ 5+6+2+5=18c*2=36c per abyte + 6+7=13c per line
 
 \*-------------------------------
 \*

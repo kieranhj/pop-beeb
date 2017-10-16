@@ -371,6 +371,7 @@ GUARD MAIN_TOP
 INCLUDE "game/hires.asm"
 INCLUDE "game/hrtables.asm"
 INCLUDE "game/beeb-plot.asm"
+INCLUDE "game/beeb-plot-wipe.asm"
 
 .pop_beeb_main_end
 

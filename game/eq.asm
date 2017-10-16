@@ -33,6 +33,7 @@ IF 1
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
+\ BEEB GFX PERF - can make these *1 if single buffered
 .peelX skip maxpeel*2
 .peelY skip maxpeel*2
 .peelIMGL skip maxpeel*2

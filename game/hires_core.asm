@@ -88,7 +88,7 @@
 .hires_fastblack
 {
  jsr mainmem
- jsr beeb_plot_wipe
+ jsr beeb_plot_wipe_expanded        ; BEEB TEST
  jmp auxmem
 }
 

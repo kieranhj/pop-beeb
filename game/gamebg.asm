@@ -722,7 +722,8 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
- inc OFFSET ;mystery potion (blue)      ; BEEB TO DO - different palette
+\ BEEB TEMP - comment out
+\ inc OFFSET ;mystery potion (blue)      ; BEEB TO DO - different palette
 
 .local_tall lda YCO
  sec

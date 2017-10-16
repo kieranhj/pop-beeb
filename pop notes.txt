@@ -1397,3 +1397,6 @@ oneRowUp:
         jmp endDraw
 ;----------------------------------
 }
+
+Store layrsave in character mapped arrangement
+So step in 8 byte increments and skip a width*8 number of bytes when moving row
