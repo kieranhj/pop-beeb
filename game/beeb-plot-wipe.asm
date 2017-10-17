@@ -91,7 +91,8 @@ ENDIF
 
     .done_y
     RTS    
-}   // 2+16c per abyte + 4+7+8=19c per line
+}
+\\ 2+16c per abyte + 4+7+8=19c per line
 
 .beeb_plot_wipe_2bytes   ; 2 Apple bytes = 4 Beeb bytes
 {

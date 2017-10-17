@@ -61,7 +61,7 @@
 .hires_layrsave
 {
  jsr mainmem
- jsr beeb_plot_layrsave
+ jsr beeb_plot_layrsave_expanded
 \ jsr hires_LAYRSAVE
  jmp auxmem
 }
@@ -95,7 +95,7 @@
 .hires_peel
 {
  jsr mainmem
- jsr beeb_plot_peel
+ jsr beeb_plot_peel_expanded
 \ jsr hires_PEEL
  jmp auxmem
 }

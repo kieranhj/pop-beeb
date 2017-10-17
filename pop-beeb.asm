@@ -272,6 +272,7 @@ INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/hires_core.asm"
+INCLUDE "game/hires.asm"
 
 ; PoP gameplay code moved from AUX memory
 
@@ -368,10 +369,11 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
-INCLUDE "game/hires.asm"
 INCLUDE "game/hrtables.asm"
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
+INCLUDE "game/beeb-plot-layrsave.asm"
+INCLUDE "game/beeb-plot-peel.asm"
 
 .pop_beeb_main_end
 

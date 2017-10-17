@@ -78,6 +78,7 @@ _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these ar
 \*
 \*-------------------------------
 
+IF 0
 .beeb_plot_layrsave
 {
     JSR beeb_PREPREP
@@ -250,6 +251,7 @@ _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these ar
 
     JMP DONE                ; restore vars
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -262,6 +264,7 @@ _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these ar
 \*
 \*-------------------------------
 
+IF 0
 .beeb_plot_wipe
 {
     \ OFFSET IGNORED
@@ -392,6 +395,7 @@ ENDIF
     RTS
 }
 \\ 5+6+2+5=18c*2=36c per abyte + 6+7=13c per line
+ENDIF
 
 \*-------------------------------
 \*
@@ -412,6 +416,7 @@ ENDIF
 \* 
 \*-------------------------------
 
+IF 0
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
@@ -517,19 +522,19 @@ ENDIF
     .xloop
 
     .sprite_addr
-    LDA &FFFF, Y
+    LDA &FFFF, Y            ; 4c
 
     .scrn_addr
-    STA &FFFF, X
+    STA &FFFF, X            ; 4c
 
     TXA                     ; next char column [6c]
     ADC #8    
-    TAX
+    TAX                     ; 6c
 
-    INY
+    INY                     ; 2c
     .smYMAX
-    CPY #0
-    BCC xloop
+    CPY #0                  ; 2c
+    BCC xloop               ; 3c
     
     LDY beeb_height
     DEY
@@ -573,6 +578,8 @@ ENDIF
 
     RTS
 }
+\\ 21*2-1=41c per Apple byte + ~14c per row
+ENDIF
 
 \ IN: XCO, YCO
 \ OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
@@ -3226,26 +3233,6 @@ ENDIF
 \*-------------------------------
 ; Exile palette tables
 
-PAGE_ALIGN
-.map_2bpp_to_mode2_pixel            ; background
-{
-    EQUB &00                        ; 00000000 either pixel logical 0
-    EQUB &10                        ; 000A000a right pixel logical 1
-    EQUB &20                        ; 00B000b0 left pixel logical 1
-
-    skip &0D
-
-    EQUB &40                        ; 000A000a right pixel logical 2
-    EQUB &50                        ; 000A000a right pixel logical 3
-
-    skip &0E
-
-    EQUB &80                        ; 00B000b0 left pixel logical 2
-    skip 1
-    EQUB &A0                        ; 00B000b0 left pixel logical 3
-}
-\\ Flip entries in this table when parity changes
-
 MODE2_LEFT_MASK=&AA
 MODE2_RIGHT_MASK=&55
 
@@ -3440,5 +3427,25 @@ ELSE
 ENDIF
 
 NEXT
+
+PAGE_ALIGN
+.map_2bpp_to_mode2_pixel            ; background
+{
+    EQUB &00                        ; 00000000 either pixel logical 0
+    EQUB &10                        ; 000A000a right pixel logical 1
+    EQUB &20                        ; 00B000b0 left pixel logical 1
+
+    skip &0D
+
+    EQUB &40                        ; 000A000a right pixel logical 2
+    EQUB &50                        ; 000A000a right pixel logical 3
+
+    skip &0E
+
+    EQUB &80                        ; 00B000b0 left pixel logical 2
+    skip 1
+    EQUB &A0                        ; 00B000b0 left pixel logical 3
+}
+\\ Flip entries in this table when parity changes
 
 .beeb_plot_end
