@@ -30,6 +30,8 @@ EQUB LO(beeb_plot_peel_5bytes)
 EQUB LO(beeb_plot_peel_6bytes)
 EQUB LO(beeb_plot_peel_7bytes)
 EQUB LO(beeb_plot_peel_8bytes)
+EQUB LO(beeb_plot_peel_9bytes)
+EQUB LO(beeb_plot_peel_10bytes)
 
 .peel_table_HI
 EQUB HI(beeb_plot_peel_1byte)
@@ -40,6 +42,8 @@ EQUB HI(beeb_plot_peel_5bytes)
 EQUB HI(beeb_plot_peel_6bytes)
 EQUB HI(beeb_plot_peel_7bytes)
 EQUB HI(beeb_plot_peel_8bytes)
+EQUB HI(beeb_plot_peel_9bytes)
+EQUB HI(beeb_plot_peel_10bytes)
 
 .beeb_plot_peel_expanded
 {
@@ -51,10 +55,13 @@ EQUB HI(beeb_plot_peel_8bytes)
 
     ldy #0
     lda (IMAGE),y
-    BNE width_not_zero
-    RTS
 
+IF _DEBUG
+    BNE width_not_zero
+    BRK
     .width_not_zero
+ENDIF
+
     sta WIDTH
 
     iny
@@ -88,11 +95,21 @@ EQUB HI(beeb_plot_peel_8bytes)
     ADC #0
     STA beeb_readptr+1
 
+    LDA beeb_writeptr
+    AND #&07
+    EOR #&07
+    CLC
+    ADC beeb_readptr
+    STA beeb_readptr
+    BCC no_carry2
+    INC beeb_readptr+1
+    .no_carry2
+
     \\ Jump to function
     LDX WIDTH
     DEX
 IF _DEBUG
-    CPX #8
+    CPX #BEEB_MAX_LAYRSAVE_WIDTH-1
     BCC width_ok
     BRK
 .width_ok
@@ -726,6 +743,244 @@ ENDIF
     CLC
     LDA beeb_readptr
     ADC #(8*2*8) - 7          ; VISWIDTH*2*8
+    STA beeb_readptr
+    BCC no_carry
+    INC beeb_readptr+1
+    .no_carry
+
+    JMP y_loop
+
+    .done_y
+
+    RTS
+}
+
+.beeb_plot_peel_9bytes
+{
+    LDX HEIGHT
+
+    .y_loop
+
+    LDY #0
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #8
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #16
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #24
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #32
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #40
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #48
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #56
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #64
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #72
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #80
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #88
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #96
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #104
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #112
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #120
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #128
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #136
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    DEX
+    BEQ done_y
+
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC beeb_readptr                     ; can't overflow as in multiples of 8
+
+    BRA y_loop
+
+    .one_row_up
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    CLC
+    LDA beeb_readptr
+    ADC #(9*2*8) - 7          ; VISWIDTH*2*8
+    STA beeb_readptr
+    BCC no_carry
+    INC beeb_readptr+1
+    .no_carry
+
+    JMP y_loop
+
+    .done_y
+
+    RTS
+}
+
+.beeb_plot_peel_10bytes
+{
+    LDX HEIGHT
+
+    .y_loop
+
+    LDY #0
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #8
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #16
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #24
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #32
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #40
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #48
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #56
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #64
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #72
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #80
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #88
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #96
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #104
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #112
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #120
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #128
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #136
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #144
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    LDY #152
+    LDA (beeb_readptr), Y
+    STA (beeb_writeptr), Y
+
+    DEX
+    BEQ done_y
+
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC beeb_readptr                     ; can't overflow as in multiples of 8
+
+    JMP y_loop
+
+    .one_row_up
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    CLC
+    LDA beeb_readptr
+    ADC #(10*2*8) - 7          ; VISWIDTH*2*8
     STA beeb_readptr
     BCC no_carry
     INC beeb_readptr+1

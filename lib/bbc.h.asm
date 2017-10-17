@@ -132,6 +132,19 @@ MODE7_separated = 154
 MODE7_black_bg = 156
 MODE7_new_bg = 157
 
+\\ MODE 2
+MODE2_LEFT_MASK=&AA
+MODE2_RIGHT_MASK=&55
+
+MODE2_BLACK_PAIR=&00
+MODE2_RED_PAIR=&03
+MODE2_GREEN_PAIR=&0C
+MODE2_YELLOW_PAIR=&0F
+MODE2_BLUE_PAIR=&30
+MODE2_MAGENTA_PAIR=&33
+MODE2_CYAN_PAIR=&3C
+MODE2_WHITE_PAIR=&3F
+
 \\ Macro to reset any mapped characters
 \\ since BeebASM doesn't have any feature for this
 \\ Actually it does :)

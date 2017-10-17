@@ -123,9 +123,9 @@ GUARD &D00              ; NMI workspace
 
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
-SCRATCH_RAM_ADDR = &900
+SCRATCH_RAM_ADDR = &300
 
-IF 0
+IF 1
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
@@ -145,7 +145,8 @@ IF 0
 .midCL skip maxmid
 .midCR skip maxmid
 .midTAB skip maxmid
-
+ENDIF
+IF 0
 .objINDX skip maxobj
 .objX skip maxobj
 .objOFF skip maxobj
@@ -160,7 +161,7 @@ PAGE_ALIGN
 \*-------------------------------
 
 CORE_START=&E00
-CORE_TOP=&3000
+CORE_TOP=&8000;&3000
 
 ORG CORE_START
 GUARD CORE_TOP             ; bottom of SHADOW RAM
@@ -272,7 +273,11 @@ INCLUDE "game/master.asm"
 INCLUDE "game/topctrl.asm"
 INCLUDE "game/grafix.asm"
 INCLUDE "game/hires_core.asm"
+
+; Used to be in Main but unrolled code pushed it out
+
 INCLUDE "game/hires.asm"
+INCLUDE "game/hrtables.asm"
 
 ; PoP gameplay code moved from AUX memory
 
@@ -369,7 +374,6 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
-INCLUDE "game/hrtables.asm"
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"

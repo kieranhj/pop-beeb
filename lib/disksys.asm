@@ -119,8 +119,8 @@ EQUB 0
     ldy #HI(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+1
     jsr disksys_read_sectors    
 
-    LDA #&FF
-    STA disksys_catalogue_read
+;    LDA #&FF
+;    STA disksys_catalogue_read
     .return
     rts
 }

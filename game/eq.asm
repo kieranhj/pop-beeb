@@ -29,7 +29,7 @@ IF 0
 .wipeH skip maxwipe
 ENDIF
 \ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
-IF 1
+IF 0
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
@@ -50,7 +50,8 @@ IF 1
 .midCL skip maxmid
 .midCR skip maxmid
 .midTAB skip maxmid
-
+ENDIF
+IF 1
 .objINDX skip maxobj
 .objX skip maxobj
 .objOFF skip maxobj

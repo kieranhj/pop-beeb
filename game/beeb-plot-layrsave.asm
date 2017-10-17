@@ -17,6 +17,8 @@
 \*
 \*-------------------------------
 
+BEEB_MAX_LAYRSAVE_WIDTH=10
+
 .layrsave_table_LO
 EQUB LO(beeb_plot_layrsave_1byte)
 EQUB LO(beeb_plot_layrsave_2bytes)
@@ -26,6 +28,8 @@ EQUB LO(beeb_plot_layrsave_5bytes)
 EQUB LO(beeb_plot_layrsave_6bytes)
 EQUB LO(beeb_plot_layrsave_7bytes)
 EQUB LO(beeb_plot_layrsave_8bytes)
+EQUB LO(beeb_plot_layrsave_9bytes)
+EQUB LO(beeb_plot_layrsave_10bytes)
 
 .layrsave_table_HI
 EQUB HI(beeb_plot_layrsave_1byte)
@@ -36,6 +40,8 @@ EQUB HI(beeb_plot_layrsave_5bytes)
 EQUB HI(beeb_plot_layrsave_6bytes)
 EQUB HI(beeb_plot_layrsave_7bytes)
 EQUB HI(beeb_plot_layrsave_8bytes)
+EQUB HI(beeb_plot_layrsave_9bytes)
+EQUB HI(beeb_plot_layrsave_10bytes)
 
 .beeb_plot_layrsave_expanded
 {
@@ -55,11 +61,10 @@ EQUB HI(beeb_plot_layrsave_8bytes)
     SBC WIDTH
     STA XCO
 
+    \ Do we always need this?
+
     .normal
-    LDA OFFSET
-    BEQ no_offset
     inc WIDTH ;extra byte to cover shift right
-    .no_offset
 
     \ on Beeb we could skip a column of bytes if offset>3
 
@@ -84,11 +89,10 @@ EQUB HI(beeb_plot_layrsave_8bytes)
     ADC YHI,Y
     STA beeb_writeptr+1
 
-
     LDA VISWIDTH
 IF _DEBUG
     BEQ skipit
-    CMP #8
+    CMP #BEEB_MAX_LAYRSAVE_WIDTH
     BCC width_ok
     BRK
 ELSE
@@ -118,6 +122,16 @@ ENDIF
     BCC no_carry
     INC PEELBUF+1
     .no_carry
+
+    LDA beeb_writeptr
+    AND #&07
+    EOR #&07
+    CLC
+    ADC PEELBUF
+    STA PEELBUF
+    BCC no_carry2
+    INC PEELBUF+1
+    .no_carry2
 
     \\ Jump to function
     LDX VISWIDTH
@@ -187,6 +201,14 @@ ENDIF
         .no_carry
     }
 
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
+
     JMP DONE                ; restore vars
 }
 
@@ -254,6 +276,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -330,6 +360,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -414,6 +452,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -506,6 +552,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -608,6 +662,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -718,6 +780,14 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
@@ -836,6 +906,290 @@ ENDIF
         INC PEELBUF+1
         .no_carry
     }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
+
+    JMP DONE                ; restore vars
+}
+
+.beeb_plot_layrsave_9bytes
+{
+    LDX beeb_height
+
+    .y_loop
+
+    LDY #0
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #8
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #16
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #24
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #32
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #40
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #48
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #56
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #64
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #72
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #80
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #88
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #96
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #104
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #112
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #120
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #128
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #136
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    DEX
+    BEQ done_y
+
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC PEELBUF                     ; can't overflow as in multiples of 8
+
+    BRA y_loop
+
+    .one_row_up
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    {
+        CLC
+        LDA PEELBUF
+        ADC #(9*2*8) - 7          ; VISWIDTH*2*8
+        STA PEELBUF
+        BCC no_carry
+        INC PEELBUF+1
+    }
+    .no_carry
+
+    JMP y_loop
+
+    .done_y
+    {
+        CLC
+        LDA PEELBUF
+        ADC #(9*2*8)            ; VISWIDTH*2*8
+        STA PEELBUF
+        BCC no_carry
+        INC PEELBUF+1
+        .no_carry
+    }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
+
+    JMP DONE                ; restore vars
+}
+
+.beeb_plot_layrsave_10bytes
+{
+    LDX beeb_height
+
+    .y_loop
+
+    LDY #0
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #8
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #16
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #24
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #32
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #40
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #48
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #56
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #64
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #72
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #80
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #88
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #96
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #104
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #112
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #120
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #128
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #136
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #144
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    LDY #152
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    DEX
+    BEQ done_y
+
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC PEELBUF                     ; can't overflow as in multiples of 8
+
+    JMP y_loop
+
+    .one_row_up
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    {
+        CLC
+        LDA PEELBUF
+        ADC #(10*2*8) - 7          ; VISWIDTH*2*8
+        STA PEELBUF
+        BCC no_carry
+        INC PEELBUF+1
+    }
+    .no_carry
+
+    JMP y_loop
+
+    .done_y
+    {
+        CLC
+        LDA PEELBUF
+        ADC #(10*2*8)            ; VISWIDTH*2*8
+        STA PEELBUF
+        BCC no_carry
+        INC PEELBUF+1
+        .no_carry
+    }
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #&90
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
 
     JMP DONE                ; restore vars
 }
