@@ -1400,3 +1400,38 @@ oneRowUp:
 
 Store layrsave in character mapped arrangement
 So step in 8 byte increments and skip a width*8 number of bytes when moving row
+
+18/10/17
+~~~
+Unrolling sprite loops has proven very fruitful
+Layrsave & Peel functions now store sprite data in Beeb screen character row format
+Uses more memory but much quicker as sharing a single index
+Unrolled up to 10 Apple byte width - 20 bytes across in MODE 2 - big!
+
+Unrolling FASTLAY function also easy and provides speed improvement
+Unfortunately each unrolled set of functions expands to at least 4 pages (or more)
+Desperately running out of memory again...
+Plenty free in AUX and some pockets of SWRAM
+
+Could put layrsave & peel functions into MOS 4K RAM where the peel buffer is stored...
+
+Slowest function is the fully clipped & masked plot routine used for the player
+There is a lot of setup but also a lot of work done inside the loop
+For the player would need variations up to 10 bytes wide...
+
+Could mix & match unrolled functions with looped variant depending on frequency of use
+E.g. 1 byte FASTSTA function used by flames animated each frame
+Also 4 byte variants used for most background pieces
+Anything that is foreground plotted needs to be unrolled
+
+If unrolling main sprite plot, do we still need the stack?
+Preamble can be shared to do clipping and calculate screen size etc.
+Challenge is that have to decode a given number of sprite bytes but might not plot all of them
+Stack helps here as we decode those bytes into pixels on the stack then plot the ones we need
+
+Unrolling decode doesn't help much - would be better to move palette to ZP to save 2 cycles
+per sprite byte - this is as much as 10 bytes = 20c per row for some player sprites
+
+Actually player is max 8 bytes across so why does layrsave go up to 10?
+Should only be max 9 as need +1 byte for offset...
+

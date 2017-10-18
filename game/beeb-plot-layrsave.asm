@@ -17,7 +17,7 @@
 \*
 \*-------------------------------
 
-BEEB_MAX_LAYRSAVE_WIDTH=10
+BEEB_MAX_LAYRSAVE_WIDTH=9
 
 .layrsave_table_LO
 EQUB LO(beeb_plot_layrsave_1byte)
@@ -29,7 +29,7 @@ EQUB LO(beeb_plot_layrsave_6bytes)
 EQUB LO(beeb_plot_layrsave_7bytes)
 EQUB LO(beeb_plot_layrsave_8bytes)
 EQUB LO(beeb_plot_layrsave_9bytes)
-EQUB LO(beeb_plot_layrsave_10bytes)
+;EQUB LO(beeb_plot_layrsave_10bytes)
 
 .layrsave_table_HI
 EQUB HI(beeb_plot_layrsave_1byte)
@@ -41,7 +41,7 @@ EQUB HI(beeb_plot_layrsave_6bytes)
 EQUB HI(beeb_plot_layrsave_7bytes)
 EQUB HI(beeb_plot_layrsave_8bytes)
 EQUB HI(beeb_plot_layrsave_9bytes)
-EQUB HI(beeb_plot_layrsave_10bytes)
+;EQUB HI(beeb_plot_layrsave_10bytes)
 
 .beeb_plot_layrsave_expanded
 {
@@ -90,18 +90,12 @@ EQUB HI(beeb_plot_layrsave_10bytes)
     STA beeb_writeptr+1
 
     LDA VISWIDTH
-IF _DEBUG
-    BEQ skipit
-    CMP #BEEB_MAX_LAYRSAVE_WIDTH
-    BCC width_ok
-    BRK
-ELSE
-    BNE width_ok
-ENDIF
+    BNE width_not_zero
+
     .skipit
     JMP SKIPIT
 
-    .width_ok
+    .width_not_zero
     LDY #0
     STA (PEELBUF), Y
 
@@ -136,6 +130,12 @@ ENDIF
     \\ Jump to function
     LDX VISWIDTH
     DEX
+IF _DEBUG
+    CPX #BEEB_MAX_LAYRSAVE_WIDTH
+    BCC width_ok
+    BRK
+.width_ok
+ENDIF
     LDA layrsave_table_LO,X
     STA jmp_addr+1
     LDA layrsave_table_HI,X
@@ -1052,6 +1052,7 @@ ENDIF
     JMP DONE                ; restore vars
 }
 
+IF 0
 .beeb_plot_layrsave_10bytes
 {
     LDX beeb_height
@@ -1193,3 +1194,4 @@ ENDIF
 
     JMP DONE                ; restore vars
 }
+ENDIF

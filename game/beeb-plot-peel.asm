@@ -31,7 +31,7 @@ EQUB LO(beeb_plot_peel_6bytes)
 EQUB LO(beeb_plot_peel_7bytes)
 EQUB LO(beeb_plot_peel_8bytes)
 EQUB LO(beeb_plot_peel_9bytes)
-EQUB LO(beeb_plot_peel_10bytes)
+;EQUB LO(beeb_plot_peel_10bytes)
 
 .peel_table_HI
 EQUB HI(beeb_plot_peel_1byte)
@@ -43,7 +43,7 @@ EQUB HI(beeb_plot_peel_6bytes)
 EQUB HI(beeb_plot_peel_7bytes)
 EQUB HI(beeb_plot_peel_8bytes)
 EQUB HI(beeb_plot_peel_9bytes)
-EQUB HI(beeb_plot_peel_10bytes)
+;EQUB HI(beeb_plot_peel_10bytes)
 
 .beeb_plot_peel_expanded
 {
@@ -109,7 +109,7 @@ ENDIF
     LDX WIDTH
     DEX
 IF _DEBUG
-    CPX #BEEB_MAX_LAYRSAVE_WIDTH-1
+    CPX #BEEB_MAX_LAYRSAVE_WIDTH
     BCC width_ok
     BRK
 .width_ok
@@ -870,6 +870,7 @@ ENDIF
     RTS
 }
 
+IF 0
 .beeb_plot_peel_10bytes
 {
     LDX HEIGHT
@@ -992,3 +993,4 @@ ENDIF
 
     RTS
 }
+ENDIF

@@ -815,7 +815,7 @@ ENDIF
     LDY #0      ;beeb_bytes_per_line_in_sprite-1
 
 \ Decode a line of sprite data using Exile method!
-\ Current per pixel unroll: STA ZP 3c+ TAX 2c+ LDA,X 4c=9c
+\ Current per pixel decode: STA ZP 3c+ TAX 2c+ LDA,X 4c=9c
 \ Exile ZP: TAX 2c+ STA 4c+ LDA zp 3c=9c am I missing something?
 \ Save 2 cycles per loop when shifting bytes down TXA vs LDA zp
 
@@ -3185,7 +3185,5 @@ ENDIF
 
     RTS    
 }
-
-
 
 .beeb_plot_end
