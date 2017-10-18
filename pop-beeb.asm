@@ -161,7 +161,7 @@ PAGE_ALIGN
 \*-------------------------------
 
 CORE_START=&E00
-CORE_TOP=&8000;&3000
+CORE_TOP=&3000
 
 ORG CORE_START
 GUARD CORE_TOP             ; bottom of SHADOW RAM
@@ -378,6 +378,7 @@ INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
 INCLUDE "game/beeb-plot-peel.asm"
+INCLUDE "game/beeb-plot-fastlay.asm"
 
 .pop_beeb_main_end
 

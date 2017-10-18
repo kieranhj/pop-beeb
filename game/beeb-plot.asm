@@ -1335,7 +1335,7 @@ ENDIF
 
 IF _USE_FASTLAY
     \ BEEB GFX PERF - test CROP+FASTLAY as NO OFFSET
-    JMP beeb_plot_sprite_FASTLAYSTA_PP
+    JMP beeb_plot_fastlaysta_expanded_PP    ;beeb_plot_sprite_FASTLAYSTA_PP
 ELSE
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
@@ -2665,7 +2665,7 @@ ENDIF
 
 .label_2 cmp #enum_sta
  bne label_3
- jmp beeb_plot_sprite_FASTLAYSTA
+ jmp beeb_plot_fastlaysta_expanded  ;beeb_plot_sprite_FASTLAYSTA
 
 .label_3
 \\ DROP THROUGH TO MASK for ORA, EOR & MASK
@@ -2985,6 +2985,7 @@ ENDIF
 \* FASTLAY STA
 \*-------------------------------
 
+IF 0
 .beeb_plot_sprite_FASTLAYSTA
 {
     \ Get sprite data address 
@@ -3123,7 +3124,7 @@ ENDIF
 
     JMP DONE
 }
-
+ENDIF
 
 \*-------------------------------
 \*
