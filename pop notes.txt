@@ -1435,3 +1435,9 @@ per sprite byte - this is as much as 10 bytes = 20c per row for some player spri
 Actually player is max 8 bytes across so why does layrsave go up to 10?
 Should only be max 9 as need +1 byte for offset...
 
+Maybe leave decode loop in place and push pixels onto the stack but unroll the number of bytes
+to plot to the screen. smod a JSR in the loop to the correct function.
+
+Change byte plot loop to use low byte increment approach first and verify
+Convert stack_depth and stack_start into an index from &100
+(Just add stack_depth to stack_start surely?)

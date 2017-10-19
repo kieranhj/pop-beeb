@@ -379,6 +379,7 @@ INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
 INCLUDE "game/beeb-plot-peel.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
+INCLUDE "game/beeb-plot-lay.asm"
 
 .pop_beeb_main_end
 
@@ -490,7 +491,7 @@ CLEAR 0, &FFFF
 ORG MOS_RAM_START
 GUARD MOS_RAM_TOP
 .peelbuf2
-SKIP &800
+SKIP &400   ; was &800
 .peelbuf1
 SKIP &800
 

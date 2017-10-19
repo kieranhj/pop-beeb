@@ -2,6 +2,7 @@
 ; BBC Micro plot functions
 ; Specialisations of fastlay permutations
 
+IF 0
 BEEB_MAX_FASTLAY_WIDTH=6
 
 .fastlaysta_table_LO
@@ -709,3 +710,4 @@ ENDIF
     .done_y
     JMP DONE
 }
+ENDIF
