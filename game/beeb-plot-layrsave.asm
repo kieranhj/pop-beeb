@@ -17,6 +17,7 @@
 \*
 \*-------------------------------
 
+IF _UNROLL_LAYRSAVE
 BEEB_MAX_LAYRSAVE_WIDTH=9
 
 .layrsave_table_LO
@@ -43,7 +44,7 @@ EQUB HI(beeb_plot_layrsave_8bytes)
 EQUB HI(beeb_plot_layrsave_9bytes)
 ;EQUB HI(beeb_plot_layrsave_10bytes)
 
-.beeb_plot_layrsave_expanded
+.beeb_plot_layrsave
 {
     JSR beeb_PREPREP
 
@@ -1194,4 +1195,6 @@ ENDIF
 
     JMP DONE                ; restore vars
 }
+ENDIF
+
 ENDIF

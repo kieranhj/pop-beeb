@@ -41,6 +41,11 @@
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
+_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
+_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
+_UNROLL_LAYMASK = FALSE      ; unrolled versions of LayMask full-fat sprite plot
+
 .beeb_plot_start
 
 \*-------------------------------
@@ -58,7 +63,7 @@ _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these ar
 \*
 \*-------------------------------
 
-IF 0
+IF _UNROLL_LAYRSAVE = FALSE
 .beeb_plot_layrsave
 {
     JSR beeb_PREPREP
@@ -244,7 +249,7 @@ ENDIF
 \*
 \*-------------------------------
 
-IF 0
+IF _UNROLL_WIPE = FALSE
 .beeb_plot_wipe
 {
     \ OFFSET IGNORED
@@ -396,7 +401,7 @@ ENDIF
 \* 
 \*-------------------------------
 
-IF 0
+IF _UNROLL_LAYRSAVE = FALSE
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
@@ -643,15 +648,17 @@ ENDIF
  jmp beeb_plot_sprite_LaySTA
 
 .label_3
+IF _UNROLL_LAYMASK
+ JMP beeb_plot_sprite_LayMask
+ENDIF
 \\ DROP THROUGH TO MASK for ORA, EOR & MASK
- JMP beeb_plot_sprite_LayMask_expanded
 }
 
 \*-------------------------------
 \* LAY MASK
 \*-------------------------------
 
-IF 0
+IF _UNROLL_LAYMASK = FALSE
 .beeb_plot_sprite_LayMask
 {
     \ Get sprite data address 
@@ -1679,11 +1686,13 @@ ENDIF
  jmp beeb_plot_sprite_MLaySTA
 
 .label_3
+IF _UNROLL_LAYMASK
+ JMP beeb_plot_sprite_MLayMask
+ENDIF
 \\ DROP THROUGH TO MASK for ORA, EOR & MASK
-    JMP beeb_plot_sprite_MLayMask_expanded
 }
 
-IF 0
+IF _UNROLL_LAYMASK = FALSE
 .beeb_plot_sprite_MLayMask
 {
     \ Get sprite data address 
@@ -2991,7 +3000,7 @@ ENDIF
 \* FASTLAY STA
 \*-------------------------------
 
-IF 1
+IF _UNROLL_FASTLAY = FALSE
 .beeb_plot_sprite_FASTLAYSTA
 {
     \ Get sprite data address 

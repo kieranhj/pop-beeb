@@ -2,7 +2,7 @@
 ; Beeb specific routines that need to be in Core memory
 
 TIMER_latch = 20000-2				; 20ms = 1x vsync :)
-TIMER_start = (3*TIMER_latch /4)		; some % down the frame is our vsync point
+TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 .beeb_core_start
 
@@ -269,7 +269,7 @@ IF _DEBUG
     LDA #enum_mask OR &80
     STA OPACITY
 
-    JSR beeb_plot_sprite_MLayMask_expanded
+    JSR beeb_plot_sprite_MLayMask
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
 

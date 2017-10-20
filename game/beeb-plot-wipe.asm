@@ -13,6 +13,8 @@
 \*
 \*-------------------------------
 
+IF _UNROLL_WIPE
+
 .wipe_table_LO
 EQUB LO(beeb_plot_wipe_1byte)
 EQUB LO(beeb_plot_wipe_2bytes)
@@ -25,7 +27,7 @@ EQUB HI(beeb_plot_wipe_2bytes)
 EQUB HI(beeb_plot_wipe_3bytes)
 EQUB HI(beeb_plot_wipe_4bytes)
 
-.beeb_plot_wipe_expanded
+.beeb_plot_wipe
 {
     LDY YCO
     LDX XCO
@@ -244,3 +246,5 @@ ENDIF
     .done_y
     RTS    
 }
+
+ENDIF

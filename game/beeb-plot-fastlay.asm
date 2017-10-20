@@ -2,7 +2,7 @@
 ; BBC Micro plot functions
 ; Specialisations of fastlay permutations
 
-IF 0
+IF _UNROLL_FASTLAY
 BEEB_MAX_FASTLAY_WIDTH=6
 
 .fastlaysta_table_LO
@@ -21,13 +21,13 @@ EQUB HI(beeb_plot_fastlaysta_4bytes)
 EQUB HI(beeb_plot_fastlaysta_5bytes)
 EQUB HI(beeb_plot_fastlaysta_6bytes)
 
-.beeb_plot_fastlaysta_expanded
+.beeb_plot_sprite_FASTLAYSTA
 {
     \ Get sprite data address 
 
     JSR beeb_PREPREP
 }
-.beeb_plot_fastlaysta_expanded_PP
+.beeb_plot_sprite_FASTLAYSTA_PP
 {
     \ Calc screen address
 

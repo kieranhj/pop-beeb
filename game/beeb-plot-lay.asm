@@ -2,6 +2,8 @@
 ; BBC Micro plot functions
 ; Specialisations of lay permutations
 
+IF _UNROLL_LAYMASK
+
 BEEB_MAX_LAY_WIDTH=10
 
 MACRO BEEB_PLOT_LAYMASK_BYTES x_byte
@@ -17,7 +19,7 @@ MACRO BEEB_PLOT_LAYMASK_BYTES x_byte
 }
 ENDMACRO
 
-.beeb_plot_sprite_LayMask_expanded
+.beeb_plot_sprite_LayMask
 {
     \ Get sprite data address 
 
@@ -371,7 +373,7 @@ EQUB HI(laymask_unrolled_start + n*&17)
 NEXT
 }
 
-.beeb_plot_sprite_MLayMask_expanded
+.beeb_plot_sprite_MLayMask
 {
     \ Get sprite data address 
 
@@ -724,3 +726,5 @@ FOR n,0,BEEB_MAX_LAY_WIDTH*2,1
 EQUB HI(mlaymask_unrolled_start + n*&17)
 NEXT
 }
+
+ENDIF

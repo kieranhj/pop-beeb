@@ -1441,3 +1441,88 @@ to plot to the screen. smod a JSR in the loop to the correct function.
 Change byte plot loop to use low byte increment approach first and verify
 Convert stack_depth and stack_start into an index from &100
 (Just add stack_depth to stack_start surely?)
+
+Memory
+~~~
+Screen buffer = &3C
+Core: &22 total, < 1 page free
+Main: &50 total = &13 code/data + &3C screen = <1 page free
+Aux: &50 total = &1D code + &17 data + &9 BSS = &13 free
+Bank0: &40 total = &24 + &12 = &36 sprites = &A free
+Bank1: &40 total = &24 + &18 = &3C sprites = &4 free
+Bank2: &40 total = &24 + &18 = &3C sprites = &4 free
+Bank3: &40 total = &15 sprites + &27 code = &4 free
+
+IF could move &15 sprites from Bank3 to Bank0/1/2 then code move max &19 code from Aux
+Aux: &50 total = &4 code + &17 data + &9 BSS = &2C free
+If could put BSS (BlueSpec) into FS 8K slot then:
+Aux: &50 total = &4 code + &17 data = &35 free
+Need to find another &7 pages elsewhere.
+MOS 4K RAM currently:
+MOS4K (ANDY): &10 total = &C peel buffer = &4 free <- could be an option as peelbuf supposed to be &8 pages
+
+FS 8K RAM aka HAZEL:
+&C000 - &DBFF = &1C pages = Sideways ROM workspace (DFS uses first &4 pages before boot)
+&DC00 - &DCFF = &1 page = OSCLI string buffer (can use)
+&DD00 - &DEFF = &2 pages = transient command workspace (can use)
+&DF00 - &DFFF = &1 page = filing system control variables (can't use)
+
+Notes: DFS tramples &C2 when loading?
+Ha! Looks like C000 & C100 contain the first two sectors of the disc so we don't need to store this ourselves
+Could either use the DFS version directly or perhaps just load our own over the top...
+Because we're handling loading ourselves no more writes to HAZEL after !BOOT
+To be safe could use pages &C500 upwards but likely could go lower...
+Minimum &DF - &C5 = &1A pages, maximum &1F pages  :)
+
+Not sure if HAZEL will stay paged in all the time?
+If not then can put a sprite bank in here as we know exactly when we need to page it in
+Could put both a sprite bank and BlueSpec data here?
+Should be OK to force map HAZEL in when switching to AUX
+Unless OS pages itself in on interupt?
+
+Could put all AUX data into HAZEL (&93 bytes over - although &63 of this is lost by PAGE ALIGNMENT)
+Aux: &50 total = &1D code = &33 free - still not enough!
+Ideally would move all gameplay code to SWRAM bank and run from there
+But need &1D + &27 = &44 pages for gameplay code and not finished yet!
+Also need second peel buffer which could be larger than Apple II peel because of MODE 2 requirements
+Would have to put screen buffer + peel buffer in SHADOW space
+Say &3C + &C = &48 w/ 2 pages spare for tables that might be duplicated?
+Put rendering code in ANDY
+
+Still need to get &15 guard sprite + &44 gameplay code + &17 data + &9 bluespec into RAM = &79
+&40 SWRAM + &1F HAZEL + &A BANK0 + &4 BANK1 + &4 BANK2 = &71 so 8 pages = 2K short :(((
+
+Might be able to crunch some tables :S
+Amount & size of unrolling in plot functions still TBD
+Could reduce size of render tables - max values seem very high?
+maxback = 200
+maxfore = 100
+maxwipe = 20
+maxpeel = 46
+maxmid = 46
+maxobj = 20
+maxmsg = 32
+If there were 46 active peels on the screen it would run at one frame every 5 seconds!
+For back there are 30 pieces - are there 6 separate sections per piece - 4 plus masking?
+Need to run code to track the peak values and assert in _DEBUG
+Can remove &4 pages from BG1 sprite set so BANK0 could have upto &E pages free
+This would be just enough to split the guard sprite set across all 3 banks...
+Might be easier to split large BG1 sprite set into three smaller sets as this is already split
+Currently switched on high bit but could hijack the setbgimg function
+
+BGSET1 goes from &24 pages to &19 + &4 + &4
+Image#111 onwards are cut
+Image#102-110 < &4 pages
+Image#87-101 < &4 pages
+Perhaps!!
+
+Now need to squeeze &44 gameplay code + &17 data + &9 bluespec into RAM = &64
+&40 SWRAM + &1F HAZEL = &5F = 5 pages short :(
+And need room free for more gameplay code + music!!
+Roll back unrolled loops for the time being and move graphics tables out of core
+4x pages of tables used (mostly) by grafix module
+
+Can't put sprite plotting code in ANDY as this overlaps SWRAM needed for sprite banks
+Can't use ANDY for double peel buffers if they are going to be larger than &4 pages each
+Not sure if I can put peel buffer in same bank as screen as need to plot one set of saves back from
+two frames ago then save a new set - might work out would need to check the code
