@@ -107,24 +107,24 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 .beeb_wait_vsync
 {
-IF _ENABLE_IRQ_VSYNC
+IF _IRQ_VSYNC
     LDA beeb_vsync_count
     .wait_loop
     CMP beeb_vsync_count
     BEQ wait_loop
-
-    RTS
 ELSE
     LDA #19
     JMP osbyte
 ENDIF
+
+    RTS
 }
 
 \*-------------------------------
 ; IRQ code
 \*-------------------------------
 
-IF _ENABLE_IRQ_VSYNC
+IF _IRQ_VSYNC
 .beeb_irq_init
 {
 	SEI

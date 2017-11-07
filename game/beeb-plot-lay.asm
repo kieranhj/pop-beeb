@@ -222,6 +222,8 @@ ENDMACRO
 
 \ Start at the end of the sprite data
 
+RASTER_COL PAL_cyan
+
     .smSpriteBytes
     LDY #0      ;beeb_bytes_per_line_in_sprite-1
 
@@ -278,6 +280,8 @@ ENDMACRO
 
     LDA #0
     PHA
+
+RASTER_COL PAL_yellow
 
 \ Sort out where to start in the stack lookup
 
@@ -347,7 +351,7 @@ ENDMACRO
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
 
     \ Poke in JMP instuction
     LDY #0
@@ -576,6 +580,8 @@ NEXT
 
 .plot_lines_loop
 
+RASTER_COL PAL_cyan
+
     LDY #0                  ; bytes_per_line_in_sprite
 
 \ Decode a line of sprite data using Exile method!
@@ -632,6 +638,8 @@ NEXT
 
     LDA #0
     PHA
+
+RASTER_COL PAL_yellow
 
 \ Sort out where to start in the stack lookup
 
@@ -701,7 +709,7 @@ NEXT
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
 
     \ Poke in JMP instuction
     LDY #0

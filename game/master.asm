@@ -558,9 +558,9 @@ ENDIF
 \:rts rts
 
 .bgset1_to_name
-EQUS "DUN1   $"
-EQUS "PAL1   $"
-EQUS "DUN1   $"
+EQUS "DUN1X  $"
+EQUS "PAL1X  $"
+EQUS "DUN1X  $"
 
 .rdbg1
 {
@@ -570,33 +570,85 @@ EQUS "DUN1   $"
 \    beq return
     stx BGset1
 
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
-
     \ index into table for filename
 ;    txa
     LDA BGset1
     asl a:asl a:asl a       ; x8
     clc
     adc #LO(bgset1_to_name)
-    tax
+    STA beeb_writeptr
     lda #HI(bgset1_to_name)
     adc #0
-    tay
+    STA beeb_writeptr+1
 
-    lda #HI(bgtable1)
+    \ Now need to load 3x blocks for BGTAB1
+
+    \ Poke C into filename
+    LDA #'C'
+    LDY #4
+    STA (beeb_writeptr), Y
+
+    \ Set BANK for C
+    lda #BEEB_SWRAM_SLOT_BGTAB1_C
+    jsr swr_select_slot
+
+    \ Load file C
+    LDX beeb_writeptr
+    LDY beeb_writeptr+1
+    lda #HI(bgtable1c)
     jsr disksys_load_file
 
     \ Relocate the IMG file
-    LDA #LO(bgtable1)
+    LDA #LO(bgtable1c)
     STA beeb_readptr
-    LDA #HI(bgtable1)
+    LDA #HI(bgtable1c)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+
+    \ Poke B into filename
+    LDA #'B'
+    LDY #4
+    STA (beeb_writeptr), Y
+
+    \ Set BANK for B
+    lda #BEEB_SWRAM_SLOT_BGTAB1_B
+    jsr swr_select_slot
+
+    \ Load file B
+    LDX beeb_writeptr
+    LDY beeb_writeptr+1
+    lda #HI(bgtable1b)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(bgtable1b)
+    STA beeb_readptr
+    LDA #HI(bgtable1b)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+
+    \ Poke A into filename
+    LDA #'A'
+    LDY #4
+    STA (beeb_writeptr), Y
+
+    \ Set BANK for A
+    lda #BEEB_SWRAM_SLOT_BGTAB1_A
+    jsr swr_select_slot
+
+    \ Load file B
+    LDX beeb_writeptr
+    LDY beeb_writeptr+1
+    lda #HI(bgtable1a)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(bgtable1a)
+    STA beeb_readptr
+    LDA #HI(bgtable1a)
+    STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -627,7 +679,7 @@ EQUS "DUN2   $"
     stx BGset2
 
     \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
+    lda #BEEB_SWRAM_SLOT_BGTAB2
     jsr swr_select_slot
 
     \ index into table for filename
@@ -649,10 +701,6 @@ EQUS "DUN2   $"
     STA beeb_readptr
     LDA #HI(bgtable2)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -738,10 +786,6 @@ EQUS "VIZ    $"
     STA beeb_readptr
     LDA #HI(chtable4)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -796,10 +840,6 @@ EQUS "VIZ    $"
     sta beeb_level_filename+5
 
     .do_load
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
-
     lda #HI(blueprnt)
     ldx #LO(beeb_level_filename)
     ldy #HI(beeb_level_filename)

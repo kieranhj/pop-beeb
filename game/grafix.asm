@@ -209,7 +209,13 @@ cwidthy = 15 ;21
  ldx bgX ;# images already in list
  inx
  cpx #maxback
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return ;list full (shouldn't happen)
+ENDIF
 
  lda XCO
  sta bgX,x
@@ -249,7 +255,13 @@ ENDIF
  ldx fgX
  inx
  cpx #maxfore
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return
+ENDIF
 
  lda XCO
  sta fgX,X
@@ -317,7 +329,13 @@ ENDIF
  ldx wipeX
  inx
  cpx #maxwipe
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return
+ENDIF
 
  sta wipeCOL,x
  lda blackflag ;TEMP
@@ -366,7 +384,13 @@ ENDIF
  ldx midX
  inx
  cpx #maxmid
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return
+ENDIF
 
  sta midTYP,x
 
@@ -422,7 +446,13 @@ ENDIF
  ldx midX
  inx
  cpx #maxmid
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return
+ENDIF
 
  sta midTYP,x
 
@@ -520,9 +550,13 @@ ENDIF
  lda blackflag ;TEMP
  bne label_1 ;
 
+RASTER_COL PAL_blue
+
  jsr SNGPEEL ;"Peel off" characters
 ;(using the peel list we
 ;set up 2 frames ago)
+
+RASTER_COL PAL_black
 
 .label_1 jsr ZEROPEEL ;Zero just-used peel list
 
@@ -775,12 +809,16 @@ ENDIF
  jmp Done
 
 .local_layrsave
+RASTER_COL PAL_red
+
  jsr setaddl ;set additional params for lay
 
  jsr layrsave ;save underlayer in peel buffer
  jsr ADDPEEL ;& add to peel list
 
+RASTER_COL PAL_magenta
  jsr lay ;then lay down image
+RASTER_COL PAL_black
 
  jmp Done
 
@@ -873,8 +911,7 @@ ENDIF
  tay
 
 \lda #3 ;auxmem
- lda #BEEB_SWRAM_SLOT_LEVELBG       ; BEEB BACKGROUND SWRAM SLOT
- sta BANK
+\sta BANK
 
  lda #0
  sta TABLE
@@ -895,10 +932,58 @@ IF _DEBUG
 ENDIF
  sta IMAGE
 
+\ BGTAB2
+
+ LDA #BEEB_SWRAM_SLOT_BGTAB2
+ STA BANK
+
  lda #HI(bgtable2)
  bne ok
 
-.bg1 lda #HI(bgtable1)
+.bg1
+
+\ BGTAB1
+
+ CMP #10
+ BCS not_A
+
+\ BGTAB A
+
+ LDA #BEEB_SWRAM_SLOT_BGTAB1_A
+ STA BANK
+
+ lda #HI(bgtable1a)
+ BNE ok
+
+ .not_A
+ CMP #23
+ BCS not_B
+
+\ BGTAB B
+
+ SEC
+ SBC #9
+ STA IMAGE
+
+ LDA #BEEB_SWRAM_SLOT_BGTAB1_B
+ STA BANK
+
+ lda #HI(bgtable1b)
+ BNE ok
+
+ .not_B
+
+\ BGTAB C
+
+ SEC
+ SBC #22
+ STA IMAGE
+
+ LDA #BEEB_SWRAM_SLOT_BGTAB1_C
+ STA BANK
+
+ lda #HI(bgtable1c)
+
 .ok sta TABLE+1
 
  tya

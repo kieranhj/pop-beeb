@@ -792,9 +792,9 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  lda #enum_sta
  sta OPACITY
 
- lda #LO(bgtable1)
+ lda #LO(bgtable1c)
  sta TABLE
- lda #HI(bgtable1)
+ lda #HI(bgtable1c)
  sta TABLE+1
 
 .return
@@ -1105,7 +1105,13 @@ ENDIF
  ldx objX ;# objects already in list
  inx
  cpx #maxobj
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  bcs return_27 ;list full (shouldn't happen)
+ENDIF
  stx objX
 
  sta objTYP,x

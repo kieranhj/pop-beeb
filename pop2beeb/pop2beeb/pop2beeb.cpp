@@ -224,7 +224,7 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 	return calc_image_width_from_colour(colour_data, pixel_width, pixel_height);
 }
 
-int calc_mode5_size(unsigned char *colour_data, int pixel_width, int pixel_height)
+int calc_mode5_size(unsigned char *colour_data, int pixel_width, int pixel_height, bool verbose)
 {
 	int expanded_width = 8 * pixel_width / 7;
 	int reduced_width = expanded_width / 2;
@@ -233,7 +233,10 @@ int calc_mode5_size(unsigned char *colour_data, int pixel_width, int pixel_heigh
 
 	int mode5_bytes = mode5_width * mode5_height;
 
-	printf("%d x %d = %d bytes, %d x %d pixels at 2bpp half width\n", mode5_width, mode5_height, mode5_bytes, reduced_width, pixel_height);
+	if( verbose )
+	{
+		printf("%d x %d = %d bytes, %d x %d pixels at 2bpp half width\n", mode5_width, mode5_height, mode5_bytes, reduced_width, pixel_height);
+	}
 
 	return mode5_bytes + 4;
 }
@@ -332,14 +335,17 @@ int get_pixel(unsigned char *pixel_data, int pixel_width, int pixel_height, int 
 	return pixel_data[y * pixel_width + x];
 }
 
-int calc_mode4_size(unsigned char *colour_data, int colour_width, int pixel_height)
+int calc_mode4_size(unsigned char *colour_data, int colour_width, int pixel_height, bool verbose)
 {
 	int mode4_width = (colour_width + 7) / 8;
 	int mode4_height = pixel_height;
 
 	int mode4_bytes = mode4_width * mode4_height;
 
-	printf("%d x %d = %d bytes, %d x %d pixels\n", mode4_width, mode4_height, mode4_bytes, colour_width, pixel_height);
+	if (verbose)
+	{
+		printf("%d x %d = %d bytes, %d x %d pixels\n", mode4_width, mode4_height, mode4_bytes, colour_width, pixel_height);
+	}
 
 	return mode4_bytes + 4;
 }
@@ -386,10 +392,13 @@ int main(int argc, char **argv)
 	cimg_usage("POP asset convertor.\n\nUsage : pop2beeb [options]");
 	const char *const inputname = cimg_option("-i", (char*)0, "Input filename");
 	const char *const outputname = cimg_option("-o", (char*)0, "Output filename");
-	const int mode = cimg_option("-mode", 4, "BBC MODE number");
+	const int mode = cimg_option("-mode", 5, "BBC MODE number");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
 	const bool simple = cimg_option("-simple", false, "Use simple colour conversion");
+	const bool verbose = cimg_option("-v", false, "Verbose output");
+	int start_image = cimg_option("-s", 1, "Start image #");
+	int end_image = cimg_option("-e", 127, "End image #");
 
 
 	if (cimg_option("-h", false, 0)) std::exit(0);
@@ -410,19 +419,25 @@ int main(int argc, char **argv)
 	int num_images = imagetab[0];
 
 	printf("Num images = %d\n", num_images);
-	printf("Image addresses:\n");
+	if (verbose)
+	{
+		printf("Image addresses:\n");
+	}
 
 	for (int i = 0; i < num_images; i++)
 	{
 		image_addrs[i] = GET_16BIT(imagetab + 1 + i * 2);
-		printf("[%d] 0x%x\n", i, image_addrs[i]);
+		if (verbose)
+		{
+			printf("[%d] 0x%x\n", i+1, image_addrs[i]);
+		}
 	}
 	image_addrs[num_images] = GET_16BIT(imagetab + 1 + num_images * 2);
-	printf("First free address = 0x%x\n", image_addrs[num_images]);
+	printf("First free address = 0x%x (%d)\n", image_addrs[num_images], image_addrs[num_images]-0x6000);
 
 	unsigned char *image_ptr = imagetab + 1 + num_images * 2 + 2;
 
-	int total_bytes = 0;
+	int total_bytes = 3;
 	int total_width = 0;
 	int max_height = 0;
 
@@ -437,7 +452,7 @@ int main(int argc, char **argv)
 		image_size[i][1] = *image_ptr++;
 
 		int bytes = image_size[i][0] * image_size[i][1];
-		total_bytes += bytes;
+		total_bytes += 4 + bytes;
 
 		for (int d = 0; d < bytes; d++)
 		{
@@ -452,7 +467,10 @@ int main(int argc, char **argv)
 
 		total_width += pixel_size[i][0] + 8;
 
-		printf("Image %d: %d x %d = %d bytes, %d x %d pixels\n", i, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1]);
+		if (verbose)
+		{
+			printf("Image %d: %d x %d = %d bytes, %d x %d pixels\n", i+1, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1]);
+		}
 
 		if( flip )
 		{
@@ -470,16 +488,24 @@ int main(int argc, char **argv)
 	}
 
 	printf("Total bytes = %d\n", total_bytes);
-	printf("Total colours:\n");
 
-	for (int c = 0; c < 8; c++)
+	if (verbose)
 	{
-		printf("[%d] %d\n", c, total_colours[c]);
+		printf("Total colours:\n");
+
+		for (int c = 0; c < 8; c++)
+		{
+			printf("[%d] %d\n", c, total_colours[c]);
+		}
+
 	}
 
 	if (test)
 	{
-		printf("Test: %d x %d\n", total_width, max_height);
+		if (verbose)
+		{
+			printf("Test: %d x %d\n", total_width, max_height);
+		}
 
 		CImg<unsigned char> img(total_width, max_height, 1, 3, 0);
 
@@ -516,24 +542,37 @@ int main(int argc, char **argv)
 	{
 		if (mode == 5)
 		{
-			printf("Image[%d]: MODE5=", i);
-			total_mode5 += calc_mode5_size(colours[i], pixel_size[i][0], pixel_size[i][1]);
+			if (verbose)
+			{
+				printf("Image[%d]: MODE5=", i+1);
+			}
+			total_mode5 += calc_mode5_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose);
 		}
 
 		if ( mode == 4)
 		{
-			printf("Image[%d]: MODE4=", i);
-			total_mode4 += calc_mode4_size(colours[i], pixel_size[i][0], pixel_size[i][1]);
+			if (verbose)
+			{
+				printf("Image[%d]: MODE4=", i+1);
+			}
+			total_mode4 += calc_mode4_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose);
 		}
 	}
 
 	printf("Original Apple bytes = %d\n", total_bytes);
 
-	printf("Total MODE5 bytes = %d\n", total_mode5);
-	printf("Size vs Apple = %f%%\n", 100.0f * total_mode5 / (float)total_bytes);
+	if (mode == 5)
+	{
+		printf("Total MODE5 bytes = %d\n", total_mode5);
+		printf("Size vs Apple = %f%%\n", 100.0f * total_mode5 / (float)total_bytes);
 
-	printf("Total MODE4 bytes = %d\n", total_mode4);
-	printf("Size vs Apple = %f%%\n", 100.0f * total_mode4 / (float)total_bytes);
+	}
+
+	if (mode == 4)
+	{
+		printf("Total MODE4 bytes = %d\n", total_mode4);
+		printf("Size vs Apple = %f%%\n", 100.0f * total_mode4 / (float)total_bytes);
+	}
 
 	if (outputname)
 	{
@@ -544,8 +583,16 @@ int main(int argc, char **argv)
 			unsigned char *beebdata = (unsigned char*)malloc((mode == 4 ? total_mode4 : total_mode5) + num_images * 4 + 3);
 			unsigned char *beebptr = beebdata;
 
+			if (end_image > num_images)
+				end_image = num_images;
+
+			num_images = end_image - start_image + 1;
+
+			printf("Output start image = %d\nOutput end image = %d\nOutput total images = %d\n", start_image, end_image, num_images);
+
 			*beebptr++ = num_images;
-			for (int i = 0; i < num_images; i++)
+
+			for (int i = start_image - 1; i < end_image; i++)
 			{
 				*beebptr++ = 0xff;
 				*beebptr++ = 0xff;		// don't know pointers yet
@@ -555,13 +602,12 @@ int main(int argc, char **argv)
 
 			// Write Beeb data
 
-			for (int i = 0; i < num_images; i++)
+			for (int j = 0, i = start_image - 1; i < end_image; i++, j++)
 			{
 				// Now we know our address
 
-				beebdata[1 + i * 2] = LO(beebptr - beebdata);
-				beebdata[2 + i * 2] = HI(beebptr - beebdata);
-
+				beebdata[1 + j * 2] = LO(beebptr - beebdata);
+				beebdata[2 + j * 2] = HI(beebptr - beebdata);
 
 				int bytes_written = 0;
 				
@@ -588,6 +634,8 @@ int main(int argc, char **argv)
 			fwrite(beebdata, 1, beebptr - beebdata, output);
 			fclose(output);
 			output = NULL;
+
+			printf("Output bytes written = %d\n", beebptr - beebdata);
 		}
 	}
 

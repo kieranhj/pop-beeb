@@ -41,10 +41,10 @@
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
-_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_FASTLAY = FALSE      ; unrolled versions of FASTLAY(STA) function
 _UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
 _UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
-_UNROLL_LAYMASK = FALSE      ; unrolled versions of LayMask full-fat sprite plot
+_UNROLL_LAYMASK = TRUE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
 
@@ -93,7 +93,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     jsr CROP
     bmi skipit
 
-;BBC_SETBGCOL PAL_red
+;RASTER_COL PAL_red
 
     lda PEELBUF ;PEELBUF: 2-byte pointer to 1st
     sta PEELIMG ;available byte in peel buffer
@@ -232,7 +232,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     LDA peel_addr+2         ; +4c
     STA PEELBUF+1           ; +3c
 
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
 
     JMP DONE                ; restore vars
 }
@@ -407,7 +407,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     \ Select MOS 4K RAM as our sprite bank
     JSR swr_select_mos4k
 
-;BBC_SETBGCOL PAL_green
+;RASTER_COL PAL_green
 
     \ Can't use PREPREP or setimage here as no TABLE!
     \ Assume IMAGE has been set correctly
@@ -559,7 +559,7 @@ ENDIF
     BNE yloop
     .done_y
 
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
 
     RTS
 }
@@ -625,7 +625,7 @@ ENDIF
 
 .beeb_plot_sprite_LAY
 {
-;BBC_SETBGCOL PAL_magenta
+;RASTER_COL PAL_magenta
 
  lda OPACITY
  bpl notmirr
@@ -818,6 +818,8 @@ IF _UNROLL_LAYMASK = FALSE
 
 .plot_lines_loop
 
+RASTER_COL PAL_cyan
+
 \ Start at the end of the sprite data
 
     .smSpriteBytes
@@ -875,6 +877,8 @@ IF _UNROLL_LAYMASK = FALSE
 
     LDA #0
     PHA
+
+RASTER_COL PAL_yellow
 
 \ Sort out where to start in the stack lookup
 
@@ -976,7 +980,7 @@ IF _UNROLL_LAYMASK = FALSE
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 }
 ENDIF
@@ -1312,7 +1316,7 @@ ENDIF
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 ENDIF
 }
@@ -1651,7 +1655,7 @@ ENDIF
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 ENDIF
 }
@@ -1855,6 +1859,8 @@ IF _UNROLL_LAYMASK = FALSE
 
 .plot_lines_loop
 
+RASTER_COL PAL_cyan
+
     LDY #0                  ; bytes_per_line_in_sprite
 
 \ Decode a line of sprite data using Exile method!
@@ -1911,6 +1917,8 @@ IF _UNROLL_LAYMASK = FALSE
 
     LDA #0
     PHA
+
+RASTER_COL PAL_yellow
 
 \ Sort out where to start in the stack lookup
 
@@ -2012,7 +2020,7 @@ IF _UNROLL_LAYMASK = FALSE
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 }
 ENDIF
@@ -2333,7 +2341,7 @@ ELSE
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 ENDIF
 }
@@ -2650,7 +2658,7 @@ ELSE
 \ Reset stack before we leave
 
     PLA
-;BBC_SETBGCOL PAL_black
+;RASTER_COL PAL_black
     JMP DONE
 ENDIF
 }

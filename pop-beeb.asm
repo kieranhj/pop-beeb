@@ -9,10 +9,11 @@
 
 CPU 1                       ; MASTER ONLY
 _TODO = FALSE               ; code still to be ported
-_DEBUG = TRUE              ; enable bounds checks
+_DEBUG = TRUE               ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
-_ENABLE_IRQ_VSYNC = TRUE   ; remove irq code if doubtful
+_IRQ_VSYNC = FALSE          ; remove irq code if doubtful
 _ALL_LEVELS = TRUE          ; allow user to play all levels
+_RASTERS = FALSE            ; debug raster for timing
 
 REDRAW_FRAMES = 1           ; needs to be 2 if double-buffering
 
@@ -21,6 +22,12 @@ REDRAW_FRAMES = 1           ; needs to be 2 if double-buffering
 MACRO PAGE_ALIGN
     PRINT "ALIGN LOST ", ~LO(((P% AND &FF) EOR &FF)+1), " BYTES"
     ALIGN &100
+ENDMACRO
+
+MACRO RASTER_COL col
+IF _RASTERS
+    LDA #&00+col:STA &FE21
+ENDIF
 ENDMACRO
 
 ; Original PoP global defines
@@ -185,6 +192,14 @@ INCLUDE "lib/print.asm"
 
 .pop_beeb_entry
 {
+    \\ Early system init
+
+    LDX #&FF:TXS                ; reset stack
+    SEI
+    LDA #&7F:STA &FE4E          ; disable all interupts
+    LDA #&82:STA &FE4E          ; enable vsync interupt
+    CLI
+
     \\ Should be MASTER test and exit with nice message
 
     \\ SWRAM init
@@ -241,7 +256,7 @@ INCLUDE "lib/print.asm"
     LDA #0
     STA beeb_vsync_count
 
-    IF _ENABLE_IRQ_VSYNC
+    IF _IRQ_VSYNC
     JSR beeb_irq_init
     ENDIF
 
@@ -500,10 +515,13 @@ SKIP &800
 ; Construct ROMS
 \*-------------------------------
 
-BEEB_SWRAM_SLOT_LEVELBG = 0
+BEEB_SWRAM_SLOT_BGTAB1_A = 2
+BEEB_SWRAM_SLOT_BGTAB1_B = 1
+BEEB_SWRAM_SLOT_BGTAB1_C = 0
+BEEB_SWRAM_SLOT_BGTAB2 = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 2
-BEEB_SWRAM_SLOT_CHTAB4 = 3
+BEEB_SWRAM_SLOT_CHTAB4 = 0
 BEEB_SWRAM_SLOT_CHTAB67 = 4             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
@@ -517,11 +535,17 @@ GUARD SWRAM_TOP
 ; BANK 0
 
 .bank0_start
-.bgtable1
-SKIP 9185           ; max size of IMG.BGTAB1.XXX        BEEB ACTUALLY LESS
-ALIGN &100
+.bgtable1c
+INCBIN "Images/BEEB.IMG.BGTAB1.DUNC.bin"            ; larger than PALC
+
+PAGE_ALIGN
 .bgtable2
-SKIP 4593           ; max size of IMG.BGTAB2.XXX
+INCBIN "Images/BEEB.IMG.BGTAB2.PAL.bin"            ; larger than DUN
+
+PAGE_ALIGN
+.chtable4
+INCBIN "Images/BEEB.IMG.CHTAB4.GD.bin"              ; largest of CHTAB4.X
+
 .bank0_end
 
 PRINT "BANK 0 size = ", ~(bank0_end - bank0_start)
@@ -535,11 +559,16 @@ GUARD SWRAM_TOP
 
 .bank1_start
 .chtable1
-SKIP 9165           ; size of IMG.CHTAB1        BEEB ACTUALLY LESS
-ALIGN &100
+INCBIN "Images/BEEB.IMG.CHTAB1.bin"
+
+PAGE_ALIGN
 .chtable3
-SKIP 5985           ; size of IMG.CHTAB3
-ALIGN &100
+INCBIN "Images/BEEB.IMG.CHTAB3.bin"
+
+PAGE_ALIGN
+.bgtable1b
+INCBIN "Images/BEEB.IMG.BGTAB1.PALB.bin"
+
 .bank1_end
 
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
@@ -553,11 +582,16 @@ GUARD SWRAM_TOP
 
 .bank2_start
 .chtable2
-SKIP 9189           ; size of IMG.CHTAB2        BEEB ACTUALLY LESS
-ALIGN &100
+INCBIN "Images/BEEB.IMG.CHTAB2.bin"
+
+PAGE_ALIGN
 .chtable5
-SKIP 6134           ; size of IMG.CHTAB5
-ALIGN &100
+INCBIN "Images/BEEB.IMG.CHTAB5.bin"
+
+PAGE_ALIGN
+.bgtable1a
+INCBIN "Images/BEEB.IMG.BGTAB1.PALA.bin"
+
 .bank2_end
 
 PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
@@ -570,9 +604,6 @@ ORG SWRAM_START
 GUARD SWRAM_TOP
 
 .bank3_start
-.chtable4
-SKIP 5281           ; size of largest IMG.CHTAB4.X
-ALIGN &100
 
 ; Additional AUX code located higher up in SWRAM
 
@@ -614,11 +645,12 @@ GUARD SWRAM_TOP
 
 .overlay_start
 .chtable6
-SKIP 9201           ; size of largest IMG.CHTAB6.X        BEEB ACTUALLY LESS
+INCBIN "Images/BEEB.IMG.CHTAB6.A.bin"           ; largest CHTAB6.X
+
 ALIGN &100
 .chtable7
-SKIP 1155           ; size of IMG.CHTAB7
-ALIGN &100
+INCBIN "Images/BEEB.IMG.CHTAB7.bin"
+
 .overlay_end
 
 PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
@@ -667,16 +699,22 @@ PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
 PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
 PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
 PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
-PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
-PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
-PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
-PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
+;PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
+;PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
+;PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
+;PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
 ;PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
 ;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
 ;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+\PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.DUNC.bin", "DUN1C", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
+\PUTFILE "Images/BEEB.IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.PALA.bin", "PAL1A", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.PALB.bin", "PAL1B", 0, 0
+PUTFILE "Images/BEEB.IMG.BGTAB1.PALC.bin", "PAL1C", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB4.FAT.bin", "FAT", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0

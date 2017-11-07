@@ -1516,6 +1516,23 @@ Image#102-110 < &4 pages
 Image#87-101 < &4 pages
 Perhaps!!
 
+DUN:
+Image#1-#9 = 759 bytes
+Image#10-#22 = 983 bytes
+Image#23-#111 = 5873 bytes
+
+PAL:
+Image#1-#9 = 917 bytes
+Image#10=#22 = 1017 bytes
+Image#23-#111 = 5827 bytes
+
+To do:
+- rearrange sprite banks to fit into 3x SWRAM banks
+- add 3x bg files to disc layout
+- loading of 3x bg files
+- additional code to switch swram bank based on bg sprite
+
+
 Now need to squeeze &44 gameplay code + &17 data + &9 bluespec into RAM = &64
 &40 SWRAM + &1F HAZEL = &5F = 5 pages short :(
 And need room free for more gameplay code + music!!
@@ -1526,3 +1543,13 @@ Can't put sprite plotting code in ANDY as this overlaps SWRAM needed for sprite 
 Can't use ANDY for double peel buffers if they are going to be larger than &4 pages each
 Not sure if I can put peel buffer in same bank as screen as need to plot one set of saves back from
 two frames ago then save a new set - might work out would need to check the code
+
+Timings
+~~~
+Player only in starting screen: ~40 scanlines for layrsave + ~40 scanlines for peel (restore)
+Looks like plotting the player is taking ~128 scanlines!
+Actually more like 7*64/3 = 150 scanlines!!
+When unrolled this is still 6.5*64/3 = 140 scanline..
+Sometimes a hefty chunk of the same colour (maybe 20 scanlines) during player plot - but this
+changes colour (between different parts of the loop) - is this a stall during interupts?
+Can we turn all unnecessary interupts off?  Yes, that seems to work.
