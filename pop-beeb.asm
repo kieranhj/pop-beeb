@@ -55,6 +55,9 @@ GUARD zp_top
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
 
+PRINT "Zero page high watermark = ", ~P%
+PRINT "Zero page free = ", ~(zp_top - P%)
+
 ; POP defines
 
 INCLUDE "game/soundnames.h.asm"
@@ -94,20 +97,21 @@ INCLUDE "game/misc.h.asm"
 ; BSS data in lower RAM
 \*-------------------------------
 
-ORG &300                ; VDU and language workspace
-GUARD &800              ; sound workspace
+LANG_START=&300
+LANG_TOP=&800
+
+ORG LANG_START              ; VDU and language workspace
+GUARD LANG_TOP              ; sound workspace
 
 \ Move BSS here (e.g. imlists from eq.asm) when out of RAM
 
-IF 1
 \*-------------------------------
 \*
 \*  Image lists
 \*
 \*-------------------------------
 
-.genCLS skip 1
-
+IF 1
 .bgX skip maxback
 .bgY skip maxback
 .bgIMG skip maxback
@@ -121,18 +125,6 @@ IF 1
 .wipeX skip maxwipe
 .wipeY skip maxwipe
 .wipeH skip maxwipe
-ENDIF
-
-PAGE_ALIGN
-
-ORG &900                ; envelope / speech / CFS / soft key / char defs
-GUARD &D00              ; NMI workspace
-
-\ Should be OK for disk scratch RAM to overlap run time workspace
-\ Need to be aware of disc catalogue caching though
-SCRATCH_RAM_ADDR = &300
-
-IF 1
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
@@ -152,16 +144,38 @@ IF 1
 .midCL skip maxmid
 .midCR skip maxmid
 .midTAB skip maxmid
-ENDIF
-IF 0
+
 .objINDX skip maxobj
 .objX skip maxobj
 .objOFF skip maxobj
 .objY skip maxobj
 .objIMG skip maxobj
+.objFACE skip maxobj
+.objTYP skip maxobj
+.objCU skip maxobj
+ENDIF
+IF 0
+.objCD skip maxobj
+.objCL skip maxobj
+.objCR skip maxobj
+.objTAB skip maxobj
 ENDIF
 
-PAGE_ALIGN
+PRINT "Language workspace high watermark = ", ~P%
+PRINT "Language workspace RAM free = ", ~(LANG_TOP - P%)
+
+LOWER_START=&900
+LOWER_TOP=&D00
+
+ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
+GUARD LOWER_TOP                ; NMI workspace
+
+PRINT "Lower workspace high watermark = ", ~P%
+PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
+
+\ Should be OK for disk scratch RAM to overlap run time workspace
+\ Need to be aware of disc catalogue caching though
+SCRATCH_RAM_ADDR = &300
 
 \*-------------------------------
 ; CORE RAM
@@ -255,6 +269,15 @@ INCLUDE "lib/print.asm"
 
     LDA #0
     STA beeb_vsync_count
+    IF _DEBUG
+    STA bgTOP
+    STA fgTOP
+    STA wipeTOP
+    STA peelTOP
+    STA midTOP
+    STA objTOP
+    STA msgTOP
+    ENDIF
 
     IF _IRQ_VSYNC
     JSR beeb_irq_init
@@ -429,14 +452,6 @@ GUARD AUX_TOP
 
 ; Code in AUX RAM (gameplay)
 
-INCLUDE "game/ctrl.asm"
-ctrl_end=P%
-INCLUDE "game/frameadv.asm"
-frameadv_end=P%
-INCLUDE "game/gamebg.asm"
-gamebg_end=P%
-INCLUDE "game/bgdata.asm"
-bgdata_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
 
@@ -446,6 +461,8 @@ specialk_end=P%
 
 .pop_beeb_aux_data_start
 
+INCLUDE "game/bgdata.asm"
+bgdata_end=P%
 INCLUDE "game/seqtable.asm"
 seqtab_end=P%
 INCLUDE "game/framedefs.asm"
@@ -474,7 +491,6 @@ SKIP &900           ; all blueprints same size
 PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
 PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
-PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
 PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
 PRINT "MOVER size = ", ~(mover_end-mover)
@@ -485,6 +501,7 @@ PRINT "COLL size = ", ~(coll_end-coll)
 
 PRINT "Aux code size = ", ~(pop_beeb_aux_code_end - pop_beeb_aux_code_start)
 
+PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
 PRINT "TABLES size = ", ~(tables_end-tables)
 PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
 PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
@@ -609,6 +626,12 @@ GUARD SWRAM_TOP
 
 .pop_beeb_aux_high_start
 
+INCLUDE "game/ctrl.asm"
+ctrl_end=P%
+INCLUDE "game/frameadv.asm"
+frameadv_end=P%
+INCLUDE "game/gamebg.asm"
+gamebg_end=P%
 INCLUDE "game/subs.asm"
 subs_end=P%
 INCLUDE "game/mover.asm"

@@ -359,6 +359,14 @@ kerasegame = '*'
  bne label_30
  lda #0
  sta joyon
+
+\\ BEEB TEMP
+;zap guard down to 0
+ lda #0
+ sec
+ sbc OppStrength
+ sta ChgOppStr
+
 .label_sk1 jmp gtone
 
 .label_30 cmp #ksetjstk

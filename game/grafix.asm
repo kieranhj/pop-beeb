@@ -24,7 +24,7 @@
 .reloadblue BRK ;jmp RELOADBLUE
 .movemem BRK    ;jmp MOVEMEM
 .buttons jmp BUTTONS ;ed
-.gtone BRK      ;jmp GTONE          SOUND
+.gtone RTS      ;jmp GTONE          BEEB TO DO SOUND
 .setcenter RTS  ;jmp SETCENTER      BEEB TO DO JOYSTICK
 \
 .dimchar jmp DIMCHAR
@@ -208,12 +208,17 @@ cwidthy = 15 ;21
 {
  ldx bgX ;# images already in list
  inx
- cpx #maxback
 IF _DEBUG
+ CPX bgTOP
+ BCC top_ok
+ STX bgTOP
+ .top_ok
+ CPX #maxback
  BCC max_ok
  BRK
  .max_ok
 ELSE
+ cpx #maxback
  bcs return ;list full (shouldn't happen)
 ENDIF
 
@@ -254,12 +259,17 @@ ENDIF
 {
  ldx fgX
  inx
- cpx #maxfore
 IF _DEBUG
+ CPX fgTOP
+ BCC top_ok
+ STX fgTOP
+ .top_ok
+ CPX #maxfore
  BCC max_ok
  BRK
  .max_ok
 ELSE
+ cpx #maxfore
  bcs return
 ENDIF
 
@@ -328,12 +338,17 @@ ENDIF
 {
  ldx wipeX
  inx
- cpx #maxwipe
 IF _DEBUG
+ CPX wipeTOP
+ BCC top_ok
+ STX wipeTOP
+ CPX #maxwipe
+ .top_ok
  BCC max_ok
  BRK
  .max_ok
 ELSE
+ cpx #maxwipe
  bcs return
 ENDIF
 
@@ -383,12 +398,17 @@ ENDIF
 {
  ldx midX
  inx
- cpx #maxmid
 IF _DEBUG
+ CPX midTOP
+ BCC top_ok
+ STX midTOP
+ .top_ok
+ CPX #maxmid
  BCC max_ok
  BRK
  .max_ok
 ELSE
+ cpx #maxmid
  bcs return
 ENDIF
 
@@ -445,12 +465,17 @@ ENDIF
 {
  ldx midX
  inx
- cpx #maxmid
 IF _DEBUG
+ CPX midTOP
+ BCC top_ok
+ STX midTOP
+ .top_ok
+ CPX #maxmid
  BCC max_ok
  BRK
  .max_ok
 ELSE
+ cpx #maxmid
  bcs return
 ENDIF
 
@@ -501,12 +526,11 @@ ENDIF
  lda PAGE
  beq label_1
 
-IF CopyProtect
- ldx purpleflag ;should be 1!
- lda dummy,x
-ELSE
+\IF CopyProtect
+\ ldx purpleflag ;should be 1!
+\ lda dummy,x
+\ELSE
  lda #maxpeel
-ENDIF
 
 .label_1 sta sm+1 ;self-mod
 
@@ -514,8 +538,19 @@ ENDIF
  lda peelX,x ;# of images in peel list
  clc
  adc #1
+IF _DEBUG
+ CMP peelTOP
+ BCC top_ok
+ STA peelTOP
+ .top_ok
+ cmp #maxpeel
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
  cmp #maxpeel
  bcs return
+ENDIF
  sta peelX,x
  clc
 .sm adc #0 ;0/maxpeel
