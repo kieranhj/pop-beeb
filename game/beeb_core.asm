@@ -92,7 +92,7 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 .beeb_shadow_select_aux
 {
     LDA &FE34
-    ORA #4
+    ORA #&C             ; mask in bit 2 & 3 (for HAZEL)
     STA &FE34
 
 \ Also page in AUX HIGH code in SWRAM bank

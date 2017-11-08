@@ -1553,3 +1553,27 @@ When unrolled this is still 6.5*64/3 = 140 scanline..
 Sometimes a hefty chunk of the same colour (maybe 20 scanlines) during player plot - but this
 changes colour (between different parts of the loop) - is this a stall during interupts?
 Can we turn all unnecessary interupts off?  Yes, that seems to work.
+~~~
+
+Can we crunch any data?
+~~~
+BGDATA size =  &1EB - no, used all the time to draw floor pieces
+FRAMEDEFS size =  &7B7 - not really, possibly &215 bytes as overlay for altset2 (Princess & Vizer only)
+SEQTABLE size =  &9F1 - not really, possible &13A bytes as overlay for Princess & Vizer animations
+
+TABLES size =  &4F3 - potentially &4 pages worth of DIV & MOD tables:
+
+ByteTable = real screen x-coord (0-255) -> byte # (0-36) = X DIV 7
+OffsetTable = ByteTable remainder = X MOD 7
+BlockTable = screen x-coord (0-255) -> block number (-5 to 14) = (X + 12) DIV 14
+PixelTable = BlockTable remainder = (X + 12) MOD 14
+
+ByteTable & OffsetTable only used in CVTX in grafix.asm - only used by ADDCHAROBJ in gamebg.asm - kid/guard/sword - used once per frame per character object so could be replaced by division loop
+BlockTable & PixelTable only used in getblockx in ctrlsubs.asm - this fn used a lot in collision detection etc.
+
+HAZEL
+~~~
+Hmmm, doesn't look like we can use the first 2x pages of HAZEL and still load files from the disc :S
+But does mean that our direct file loader can just use though pages directly for the disc catalog maybe
+Still need a page of scratch space during load but that's fine
+Likely can't use last page either so total &1D pages available for AUX data + Blueprint

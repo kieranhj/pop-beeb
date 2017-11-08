@@ -176,11 +176,13 @@ PAGE_ALIGN
 \ --^
 \ db 36,36,36,36
 
+IF _DIV7_TABLES
 .ByteTable
 FOR n,0,35,1
 EQUB n,n,n,n,n,n,n
 NEXT
 EQUB 36,36,36,36
+ENDIF
 
 \*-------------------------------
 \* OffsetTable
@@ -196,11 +198,13 @@ EQUB 36,36,36,36
 \ db 0,1,2,3
 \ENDIF
 
+IF _DIV7_TABLES
 .OffsetTable
 FOR n,1,36,1
 EQUB 0,1,2,3,4,5,6
 NEXT
 EQUB 0,1,2,3
+ENDIF
 
 \*-------------------------------
 \* BlockTable

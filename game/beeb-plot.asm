@@ -71,7 +71,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     \ OK to page out sprite data now we have dimensions etc.
 
     \ Select MOS 4K RAM
-    JSR swr_select_mos4k
+    JSR swr_select_ANDY
 
     lda OPACITY
     bpl normal
@@ -405,7 +405,7 @@ IF _UNROLL_LAYRSAVE = FALSE
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
-    JSR swr_select_mos4k
+    JSR swr_select_ANDY
 
 ;RASTER_COL PAL_green
 

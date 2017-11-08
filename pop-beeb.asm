@@ -481,9 +481,9 @@ SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 
 .pop_beeb_aux_bss_start
 
-PAGE_ALIGN
-.blueprnt
-SKIP &900           ; all blueprints same size
+;PAGE_ALIGN
+;.blueprnt
+;SKIP &900           ; all blueprints same size
 
 .pop_beeb_aux_bss_end
 
@@ -681,13 +681,15 @@ PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 
 \*-------------------------------
 \*
-\*  Blueprint info
+\*  Blueprint info in HAZEL
 \*
 \*-------------------------------
 
 CLEAR 0, &FFFF
 
-ORG blueprnt
+ORG &C200
+GUARD &E000
+.blueprnt
 .BLUETYPE skip 24*30
 .BLUESPEC skip 24*30
 .LINKLOC skip 256

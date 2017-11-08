@@ -2,6 +2,8 @@
 ; Originally GRAFIX.S
 ; All Apple II hi-res graphics functions
 
+_DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
+
 .grafix
 \org = $400
 \ tr on
@@ -1121,7 +1123,10 @@ range = 36*7 ;largest multiple of 7 under 256
 
  bne loop
 
-.ok ldy XL
+.ok
+IF _DIV7_TABLES
+
+ ldy XL
  lda ByteTable,y
  clc
  adc grafix_temp
@@ -1129,7 +1134,28 @@ range = 36*7 ;largest multiple of 7 under 256
 
  lda OffsetTable,y
  sta OFFSET
- rts
+
+ELSE
+
+ LDA XL
+ LDY #0
+.loop2              ; worst case loop 36 times = 2c+2c+2c+2c+3c=11c*36=396c :(
+ CMP #7
+ BCC done_loop2
+ INY
+ \ Carry set
+ SBC #7
+ BRA loop2
+.done_loop2
+ STA OFFSET
+
+ TYA
+ adc grafix_temp
+ sta XCO
+
+ENDIF
+
+ RTS
 
 .negative
  lda grafix_temp

@@ -51,7 +51,7 @@ EQUB HI(beeb_plot_layrsave_9bytes)
     \ OK to page out sprite data now we have dimensions etc.
 
     \ Select MOS 4K RAM
-    JSR swr_select_mos4k
+    JSR swr_select_ANDY
 
     lda OPACITY
     bpl normal

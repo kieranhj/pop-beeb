@@ -111,7 +111,7 @@ ENDIF
     rts
 }
 
-.swr_select_mos4k
+.swr_select_ANDY
 {
     LDA &fe30
     ORA #&80

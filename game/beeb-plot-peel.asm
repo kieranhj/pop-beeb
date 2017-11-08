@@ -49,7 +49,7 @@ EQUB HI(beeb_plot_peel_9bytes)
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
-    JSR swr_select_mos4k
+    JSR swr_select_ANDY
 
     \ Can't use PREPREP or setimage here as no TABLE!
     \ Assume IMAGE has been set correctly

@@ -1403,10 +1403,6 @@ EQUS "CHTAB5 $"
     STA beeb_readptr
     LDA #HI(chtable1)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     \ index into table for filename
@@ -1420,10 +1416,6 @@ EQUS "CHTAB5 $"
     STA beeb_readptr
     LDA #HI(chtable3)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     \ Then CHTAB2 + 5
@@ -1441,10 +1433,6 @@ EQUS "CHTAB5 $"
     STA beeb_readptr
     LDA #HI(chtable2)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     \ index into table for filename
@@ -1458,10 +1446,6 @@ EQUS "CHTAB5 $"
     STA beeb_readptr
     LDA #HI(chtable5)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     .return
