@@ -51,12 +51,9 @@ locals_top = $e3
 zp_top = &a0
 
 ORG &0
-GUARD zp_top
+GUARD locals
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
-
-PRINT "Zero page high watermark = ", ~P%
-PRINT "Zero page free = ", ~(zp_top - P%)
 
 ; POP defines
 
@@ -79,6 +76,9 @@ BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
 INCLUDE "game/beeb-plot.h.asm"
+
+PRINT "Zero page high watermark = ", ~P%
+PRINT "Zero page free = ", ~(zp_top - P%)
 
 ; Local ZP variables only
 
@@ -513,20 +513,22 @@ PRINT "Aux high watermark = ", ~P%
 PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
 
 \*-------------------------------
-; Construct MOS RAM
+; Construct ANDY RAM
 \*-------------------------------
 
-MOS_RAM_START = &8000
-MOS_RAM_TOP = &9000
+ANDY_START = &8000
+ANDY_TOP = &9000
 
 CLEAR 0, &FFFF
-ORG MOS_RAM_START
-GUARD MOS_RAM_TOP
+ORG ANDY_START
+GUARD ANDY_TOP
 .peelbuf2
 SKIP &400   ; was &800
 .peelbuf1
 SKIP &800
 
+PRINT "ANDY high watermark = ", ~P%
+PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
 
 \*-------------------------------
 ; Construct ROMS
@@ -680,15 +682,22 @@ PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
 PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 
 \*-------------------------------
+; Construct ANDY RAM
+\*-------------------------------
+
+HAZEL_START=&C200       ; looks like first two pages are DFS catalog
+HAZEL_TOP=&DF00         ; looks like last page is FS control data
+
+CLEAR 0, &FFFF
+ORG HAZEL_START
+GUARD HAZEL_TOP
+
+\*-------------------------------
 \*
-\*  Blueprint info in HAZEL
+\*  Blueprint info
 \*
 \*-------------------------------
 
-CLEAR 0, &FFFF
-
-ORG &C200
-GUARD &E000
 .blueprnt
 .BLUETYPE skip 24*30
 .BLUESPEC skip 24*30
@@ -710,6 +719,10 @@ GUARD &E000
 .GdStartSeqL skip 24
 .GdStartProg skip 24
 .GdStartSeqH skip 24
+PAGE_ALIGN
+
+PRINT "HAZEL high watermark = ", ~P%
+PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
 
 
 \*-------------------------------
