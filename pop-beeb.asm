@@ -112,6 +112,8 @@ GUARD LANG_TOP              ; sound workspace
 \*-------------------------------
 
 IF 1
+.genCLS skip 1
+
 .bgX skip maxback
 .bgY skip maxback
 .bgIMG skip maxback
@@ -170,6 +172,8 @@ LOWER_TOP=&D00
 ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
 GUARD LOWER_TOP                ; NMI workspace
 
+INCLUDE "game/lower.asm"
+
 PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 
@@ -200,9 +204,10 @@ INCLUDE "lib/print.asm"
 .swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
 .swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
 
-.main_filename EQUS "Main   $"
-.aux_filename  EQUS "Aux    $"
-.high_filename EQUS "High   $"
+.main_filename  EQUS "Main   $"
+.aux_filename   EQUS "Aux    $"
+.high_filename  EQUS "High   $"
+.hazel_filename EQUS "Hazel  $"
 
 .pop_beeb_entry
 {
@@ -258,11 +263,18 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_aux_start)
     JSR disksys_load_file
 
-    \\ And Aux High
+    \\ And Aux High (SWRAM)
 
     LDX #LO(high_filename)
     LDY #HI(high_filename)
     LDA #HI(pop_beeb_aux_high_start)
+    JSR disksys_load_file
+
+    \\ And Aux HAZEL
+
+    LDX #LO(hazel_filename)
+    LDY #HI(hazel_filename)
+    LDA #HI(pop_beeb_aux_hazel_data_start)
     JSR disksys_load_file
 
     \\ Remain in AUX...
@@ -315,20 +327,25 @@ INCLUDE "game/hires_core.asm"
 ; Used to be in Main but unrolled code pushed it out
 
 INCLUDE "game/hires.asm"
-INCLUDE "game/hrtables.asm"
 
 ; PoP gameplay code moved from AUX memory
 
 INCLUDE "game/misc.asm"
 misc_end=P%
+INCLUDE "game/specialk.asm"
+specialk_end=P%
 
 .pop_beeb_core_end
 
 .pop_beeb_data_start
 
 ; Data in CORE memory (always present)
+INCLUDE "game/hrtables.asm"
 
 ; PoP gameplay data moved from AUX memory
+
+INCLUDE "game/bgdata.asm"
+bgdata_end=P%
 
 ; Following data could be dumped after boot!
 
@@ -452,23 +469,11 @@ GUARD AUX_TOP
 
 ; Code in AUX RAM (gameplay)
 
-INCLUDE "game/specialk.asm"
-specialk_end=P%
-
 .pop_beeb_aux_code_end
 
 ; Data in AUX RAM (gameplay)
 
 .pop_beeb_aux_data_start
-
-INCLUDE "game/bgdata.asm"
-bgdata_end=P%
-INCLUDE "game/seqtable.asm"
-seqtab_end=P%
-INCLUDE "game/framedefs.asm"
-framedef_end=P%
-INCLUDE "game/tables.asm"
-tables_end=P%
 
 .pop_beeb_aux_data_end
 .pop_beeb_aux_end
@@ -480,10 +485,6 @@ SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 ; BSS in AUX RAM (gameplay)
 
 .pop_beeb_aux_bss_start
-
-;PAGE_ALIGN
-;.blueprnt
-;SKIP &900           ; all blueprints same size
 
 .pop_beeb_aux_bss_end
 
@@ -512,6 +513,44 @@ PRINT "Aux BSS size = ", ~(pop_beeb_aux_bss_end - pop_beeb_aux_bss_start)
 PRINT "Aux high watermark = ", ~P%
 PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
 
+
+\*-------------------------------
+; Construct HAZEL RAM
+\*-------------------------------
+
+HAZEL_START=&C300       ; looks like first two pages are DFS catalog + scratch
+HAZEL_TOP=&DF00         ; looks like last page is FS control data
+
+CLEAR 0, &FFFF
+ORG HAZEL_START
+GUARD HAZEL_TOP
+
+.pop_beeb_aux_hazel_data_start
+
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
+INCLUDE "game/framedefs.asm"
+framedef_end=P%
+INCLUDE "game/tables.asm"
+tables_end=P%
+INCLUDE "game/bgdata_high.asm"
+
+.pop_beeb_aux_hazel_data_end
+
+PAGE_ALIGN
+.blueprnt
+SKIP &900
+
+; Save data for Aux HAZEL RAM
+
+SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_data_end, 0
+
+PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
+PRINT "HAZEL BSS size = ", ~(P% - blueprnt)
+PRINT "HAZEL high watermark = ", ~P%
+PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
+
+
 \*-------------------------------
 ; Construct ANDY RAM
 \*-------------------------------
@@ -529,6 +568,7 @@ SKIP &800
 
 PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
+
 
 \*-------------------------------
 ; Construct ROMS
@@ -681,16 +721,6 @@ INCBIN "Images/BEEB.IMG.CHTAB7.bin"
 PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
 PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 
-\*-------------------------------
-; Construct ANDY RAM
-\*-------------------------------
-
-HAZEL_START=&C200       ; looks like first two pages are DFS catalog
-HAZEL_TOP=&DF00         ; looks like last page is FS control data
-
-CLEAR 0, &FFFF
-ORG HAZEL_START
-GUARD HAZEL_TOP
 
 \*-------------------------------
 \*
@@ -698,7 +728,7 @@ GUARD HAZEL_TOP
 \*
 \*-------------------------------
 
-.blueprnt
+ORG blueprnt
 .BLUETYPE skip 24*30
 .BLUESPEC skip 24*30
 .LINKLOC skip 256
@@ -721,9 +751,6 @@ GUARD HAZEL_TOP
 .GdStartSeqH skip 24
 PAGE_ALIGN
 
-PRINT "HAZEL high watermark = ", ~P%
-PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
-
 
 \*-------------------------------
 ; Put files on the disk
@@ -736,7 +763,7 @@ PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
 PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
 PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
 PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
-PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
+;PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
 ;PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
 ;PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
 ;PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0

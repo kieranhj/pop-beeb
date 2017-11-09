@@ -2,6 +2,8 @@
 ; Originally SEQTABLE.S
 ; All animation state tables and data
 
+_COULD_BE_OVERLAID_IN_THEORY = TRUE
+
 .seqtab
 \org = $3000
 \ tr on ;TABS 15,20,40
@@ -128,6 +130,8 @@
 .seqtable_91 EQUW seqtable_pickupsword
 .seqtable_92 EQUW seqtable_resheathe
 .seqtable_93 EQUW seqtable_fastsheathe
+
+IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
 .seqtable_94 EQUW seqtable_Pstand
 .seqtable_95 EQUW seqtable_Vstand
 .seqtable_96 EQUW seqtable_Vwalk
@@ -149,6 +153,7 @@
 .seqtable_112 EQUW seqtable_Pcrouch
 .seqtable_113 EQUW seqtable_Pslump
 .seqtable_114 EQUW seqtable_Mraise
+ENDIF
 
 \*-------------------------------
 \* r u n n i n g
@@ -1495,6 +1500,8 @@ ENDIF
 .seqtable_climbstairs_loop EQUB 0,goto
  EQUW seqtable_climbstairs_loop
 
+IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
+
 \*-------------------------------
 \* Vizier: stand
 \*-------------------------------
@@ -1713,6 +1720,8 @@ ENDIF
  EQUB 186
  EQUB goto
  EQUW seqtable_Mclimb
+
+ENDIF
 
 \*-------------------------------
 \ lst

@@ -331,6 +331,8 @@
 \*-------------------------------
 \ ds altset2-*
 
+IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
+
 .altset2
 
 .ALTSET2_1 EQUB $8a,$40,0,0,$00 ;pslump-1
@@ -419,6 +421,7 @@
 .ALTSET2_84 EQUB $87,$80,2,0,$80 ;vcast-10b
 .ALTSET2_85 EQUB $88,$80,1,0,$00 ;vcast-1
 
+ENDIF
 
 \*-------------------------------
 \*

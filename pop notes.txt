@@ -1577,3 +1577,34 @@ Hmmm, doesn't look like we can use the first 2x pages of HAZEL and still load fi
 But does mean that our direct file loader can just use though pages directly for the disc catalog maybe
 Still need a page of scratch space during load but that's fine
 Likely can't use last page either so total &1D pages available for AUX data + Blueprint
+Can't use page &C200 either as seems to get trashed randomly by DFS
+
+Crunch time
+~~~
+Where can we save more memory?
+
+Core lib size =  &3AF 
+Core code size =  &17A0  <- includes several pages of palette tables 
+Core data size =  &1A4   <- hrtables.asm (missing above)
+Core BSS size =  &464    <- can be placed in lower RAM
+
+BGDATA size =  &1EB - no, used all the time to draw floor pieces
+FRAMEDEFS size =  &7B7 - not really, possibly &215 bytes as overlay for altset2 (Princess & Vizer only)
+SEQTABLE size =  &9F1 - not really, possible &13A bytes as overlay for Princess & Vizer animations
+TABLES size =  &2F3 - if removing the DIV/MOD 7 tables and replacing with loop
+
+Module sizes are massive!!  (All AUX)
+CTRL size =  &B5F 
+FRAMEADV size =  &B27 
+GAMEBG size =  &18C 
+SUBS size =  &239 
+SPECIALK size =  &37A 
+MOVER size =  &A94 
+MISC size =  &28F 
+AUTO size =  &963 
+CTRLSUBS size =  &93F 
+COLL size =  &751 
+
+&1 page free in HAZEL, &2 pages in bank 0, &1 page in bank 2
+Are there any tables etc. that are only accessed in limited place so can page in SWRAM?
+(Needs to be from CORE not AUX)

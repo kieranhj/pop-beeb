@@ -11,9 +11,9 @@
 
 .imlists
 \ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
+IF 0
 .genCLS skip 1
 
-IF 0
 .bgX skip maxback
 .bgY skip maxback
 .bgIMG skip maxback
@@ -57,6 +57,7 @@ IF 0
 .objTYP skip maxobj
 .objCU skip maxobj
 ENDIF
+IF 0
 IF 1
 .objCD skip maxobj
 .objCL skip maxobj
@@ -152,4 +153,5 @@ IF _DEBUG
 .midTOP     skip 1
 .objTOP     skip 1
 .msgTOP     skip 1 
+ENDIF
 ENDIF
