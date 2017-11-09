@@ -54,7 +54,7 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     LDX #0
     .loop
     INY
-    CLC
+\    CLC
 \    LDA (beeb_readptr), Y
 \    ADC #LO(bgtable1)
 \    STA (beeb_readptr), Y
@@ -83,22 +83,45 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 .beeb_shadow_select_main
 {
-    LDA &FE34
-    AND #&FB            ; mask out bit 2
-    STA &FE34
+\    LDA &FE34
+\    AND #&FB            ; mask out bit 2
+\    STA &FE34
     RTS
 }
 
 .beeb_shadow_select_aux
 {
     LDA &FE34
-    ORA #&C             ; mask in bit 2 & 3 (for HAZEL)
+    ORA #&8         ;&C          ; mask in bit 2 & 3 (for HAZEL)
     STA &FE34
 
 \ Also page in AUX HIGH code in SWRAM bank
 
     LDA #BEEB_SWRAM_SLOT_AUX_HIGH
     JMP swr_select_slot
+}
+
+; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
+.shadow_init_buffers
+{
+    lda &fe34
+    and #255-1  ; set D to 0
+    ora #4    	; set X to 1
+    sta &fe34
+    rts
+}
+
+; in double buffer mode, both display & main memory swap, but point to the opposite memory 
+.shadow_swap_buffers
+{
+    LDA PAGE
+    EOR #&20
+    STA PAGE
+
+    lda &fe34
+    eor #1+4	; invert bits 0 & 2
+    sta &fe34
+    rts
 }
 
 \*-------------------------------
@@ -382,19 +405,6 @@ ENDIF
 }
 
 \*-------------------------------
-; Set palette per swram bank
-; Needs to be a palette per image bank
-; Or even better per sprite
-
-.bank_to_palette_temp
-{
-    EQUB &71            \ bg
-    EQUB &72            \ chtab13
-    EQUB &72            \ chtab25
-    EQUB &73            \ chtab467
-}
-
-\*-------------------------------
 ; Beeb screen multiplication tables
 
 \*-------------------------------
@@ -539,5 +549,18 @@ PAGE_ALIGN
     EQUB &A0                        ; 00B000b0 left pixel logical 3
 }
 \\ Flip entries in this table when parity changes
+
+\*-------------------------------
+; Set palette per swram bank
+; Needs to be a palette per image bank
+; Or even better per sprite
+
+.bank_to_palette_temp
+{
+    EQUB &71            \ bg
+    EQUB &72            \ chtab13
+    EQUB &72            \ chtab25
+    EQUB &73            \ chtab467
+}
 
 .beeb_core_end

@@ -977,6 +977,7 @@ ELSE
 
 .DoCleanCut
 {
+IF _NOT_BEEB
  jsr fastspeed ;IIGS
 
  lda #$20
@@ -992,6 +993,16 @@ ELSE
 ;jsr vblank2
  jsr PageFlip
  jmp normspeed
+ELSE
+ jsr PageFlip
+ jsr drawbg ;draw bg on p2
+
+ jsr PageFlip
+ jsr drawbg ;draw bg on p2
+ jsr DoFast ;add chars
+
+ jmp PageFlip
+ENDIF
 }
 ENDIF
 
@@ -1075,7 +1086,7 @@ ENDIF
 \ jsr dispmsg ;Superimpose message (if any)
 
 \ BEEB TEMP TEST
- JSR beeb_wait_vsync
+\ JSR beeb_wait_vsync
 
 .label_1
  jmp drawall ;Dump contents of image lists to screen

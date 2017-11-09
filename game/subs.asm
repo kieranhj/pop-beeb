@@ -18,7 +18,7 @@ CheckTimer = 0
 
 .addtorches jmp ADDTORCHES
 .doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
-.PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
+.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
 .demo BRK               ; jmp DEMO
 .showtime RTS           ; jmp SHOWTIME              BEEB TO DO
 

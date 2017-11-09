@@ -15,7 +15,7 @@ _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
 _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 
-REDRAW_FRAMES = 1           ; needs to be 2 if double-buffering
+REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
 
@@ -247,12 +247,26 @@ INCLUDE "lib/print.asm"
 
     \\ Load Main
 
-    JSR beeb_shadow_select_main
+\    JSR beeb_shadow_select_main
+\ Ensure MAIN RAM is writeable
+    LDA &FE34:AND #&FB:STA &FE34
 
     LDX #LO(main_filename)
     LDY #HI(main_filename)
     LDA #HI(pop_beeb_main_start)
     JSR disksys_load_file
+
+\ Ensure SHADOW RAM is writeable
+    LDA &FE34:ORA #&4:STA &FE34
+
+    LDX #LO(main_filename)
+    LDY #HI(main_filename)
+    LDA #HI(pop_beeb_main_start)
+    JSR disksys_load_file
+
+\ Setup SHADOW buffers
+
+    JSR shadow_init_buffers
 
     \\ Load Aux
 
@@ -561,10 +575,10 @@ ANDY_TOP = &9000
 CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
-.peelbuf2
-SKIP &400   ; was &800
 .peelbuf1
 SKIP &800
+.peelbuf2
+SKIP &800   ; was &800
 
 PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)

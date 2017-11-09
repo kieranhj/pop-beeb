@@ -111,7 +111,7 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 .loadaltset BRK ;jmp LOADALTSET
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
-.vblank RTS     ;JMP beeb_core_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vblank JMP beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 \
@@ -1223,14 +1223,14 @@ ENDIF
 {
  lda #0
 \ NOT BEEB for now
-\ ldx PAGE
-\ beq page1
-\.page2 sta peelX+maxpeel
-\ lda #LO(peelbuf2)
-\ sta PEELBUF
-\ lda #HI(peelbuf2)
-\ sta PEELBUF+1
-\ rts
+ ldx PAGE
+ beq page1
+.page2 sta peelX+maxpeel
+ lda #LO(peelbuf2)
+ sta PEELBUF
+ lda #HI(peelbuf2)
+ sta PEELBUF+1
+ rts
 
 .page1 sta peelX
  lda #LO(peelbuf1)
