@@ -13,6 +13,8 @@
 \*
 \*-------------------------------
 
+.beeb_plot_wipe_start
+
 IF _UNROLL_WIPE
 
 .wipe_table_LO
@@ -248,3 +250,5 @@ ENDIF
 }
 
 ENDIF
+
+.beeb_plot_wipe_end

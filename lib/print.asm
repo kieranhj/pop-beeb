@@ -1,3 +1,4 @@
+.beeb_print_start
 
 .print_temp EQUB 0
 
@@ -341,3 +342,5 @@ ENDMACRO
 .done
     rts
 }
+
+.beeb_print_end

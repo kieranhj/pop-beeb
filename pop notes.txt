@@ -1608,3 +1608,38 @@ COLL size =  &751
 &1 page free in HAZEL, &2 pages in bank 0, &1 page in bank 2
 Are there any tables etc. that are only accessed in limited place so can page in SWRAM?
 (Needs to be from CORE not AUX)
+
+9/11/2017
+~~~
+Got double buffering working in MODE 2 - looks awesome!
+But seriously out of memory to finish the port :(
+
+Zero page free =  &19 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &84 
+Core RAM free =  &8D 
+Main RAM free =  &DC 
+HAZEL RAM free =  &0 
+ANDY RAM free =  &0 
+BANK 0 free =  &25F 
+BANK 1 free =  &7 
+BANK 2 free =  &16B 
+BANK 3 free =  &13D 
+Total RAM free = &714
+
+ALIGN LOST  &1  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &DF  BYTES 
+ALIGN LOST  &10  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &D9  BYTES 
+ALIGN LOST  &9F  BYTES 
+ALIGN LOST  &43  BYTES 
+ALIGN LOST  &A  BYTES 
+ALIGN LOST  &29  BYTES 
+Total bytes lost = &312
+
+Theoretical RAM remaining = &A26
+That's over 2K!! :S

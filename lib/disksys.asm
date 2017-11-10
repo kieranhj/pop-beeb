@@ -3,6 +3,8 @@
 ; http://chrisacorns.computinghistory.org.uk/docs/Acorn/Manuals/Acorn_DiscSystemUGI2.pdf
 ; Our SWR loader is 60% faster than *SRLOAD
 
+.beeb_disksys_start
+
 DISKSYS_DEBUG = FALSE
 DISKSYS_CATALOG_ADDR = SCRATCH_RAM_ADDR
 DISKSYS_BUFFER_ADDR = DISKSYS_CATALOG_ADDR+512 ; &1000 ; must be page aligned
@@ -511,4 +513,4 @@ ENDIF
 ; . . . and so on
 ; Repeated for up to 31 files
 
-
+.beeb_disksys_end

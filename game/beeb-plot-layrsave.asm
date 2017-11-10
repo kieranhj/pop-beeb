@@ -17,6 +17,8 @@
 \*
 \*-------------------------------
 
+.beeb_plot_layrsave_start
+
 IF _UNROLL_LAYRSAVE
 BEEB_MAX_LAYRSAVE_WIDTH=9
 
@@ -1198,3 +1200,5 @@ ENDIF
 ENDIF
 
 ENDIF
+
+.beeb_plot_layrsave_end

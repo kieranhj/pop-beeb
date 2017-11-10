@@ -1,3 +1,4 @@
+.beeb_swr_start
 
 .swr_ram_banks          SKIP 4   ; 4 slots, each containing the rom bank ID of each available SW RAM bank or FF if none 
 .swr_ram_banks_count    SKIP 1
@@ -119,3 +120,5 @@ ENDIF
     STA &fe30
     RTS
 }
+
+.beeb_swr_end

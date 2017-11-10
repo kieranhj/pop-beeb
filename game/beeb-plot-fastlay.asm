@@ -2,6 +2,8 @@
 ; BBC Micro plot functions
 ; Specialisations of fastlay permutations
 
+.beeb_plot_fastlay_start
+
 IF _UNROLL_FASTLAY
 BEEB_MAX_FASTLAY_WIDTH=6
 
@@ -711,3 +713,5 @@ ENDIF
     JMP DONE
 }
 ENDIF
+
+.beeb_plot_fastlay_end

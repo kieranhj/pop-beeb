@@ -21,6 +21,8 @@
 \* 
 \*-------------------------------
 
+.beeb_plot_peel_start
+
 IF _UNROLL_LAYRSAVE
 .peel_table_LO
 EQUB LO(beeb_plot_peel_1byte)
@@ -997,3 +999,5 @@ IF 0
 ENDIF
 
 ENDIF
+
+.beeb_plot_peel_end

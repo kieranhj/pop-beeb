@@ -77,8 +77,12 @@ beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
 INCLUDE "game/beeb-plot.h.asm"
 
+PRINT "--------"
+PRINT "ZERO PAGE"
+PRINT "--------"
 PRINT "Zero page high watermark = ", ~P%
 PRINT "Zero page free = ", ~(zp_top - P%)
+PRINT "--------"
 
 ; Local ZP variables only
 
@@ -103,68 +107,16 @@ LANG_TOP=&800
 ORG LANG_START              ; VDU and language workspace
 GUARD LANG_TOP              ; sound workspace
 
-\ Move BSS here (e.g. imlists from eq.asm) when out of RAM
+INCLUDE "game/beeb_lang.asm"
 
-\*-------------------------------
-\*
-\*  Image lists
-\*
-\*-------------------------------
-
-IF 1
-.genCLS skip 1
-
-.bgX skip maxback
-.bgY skip maxback
-.bgIMG skip maxback
-.bgOP skip maxback
-
-.fgX skip maxfore
-.fgY skip maxfore
-.fgIMG skip maxfore
-.fgOP skip maxfore
-
-.wipeX skip maxwipe
-.wipeY skip maxwipe
-.wipeH skip maxwipe
-.wipeW skip maxwipe
-.wipeCOL skip maxwipe
-
-.peelX skip maxpeel*2
-.peelY skip maxpeel*2
-.peelIMGL skip maxpeel*2
-.peelIMGH skip maxpeel*2
-
-.midX skip maxmid
-.midOFF skip maxmid
-.midY skip maxmid
-.midIMG skip maxmid
-.midOP skip maxmid
-.midTYP skip maxmid
-.midCU skip maxmid
-.midCD skip maxmid
-.midCL skip maxmid
-.midCR skip maxmid
-.midTAB skip maxmid
-
-.objINDX skip maxobj
-.objX skip maxobj
-.objOFF skip maxobj
-.objY skip maxobj
-.objIMG skip maxobj
-.objFACE skip maxobj
-.objTYP skip maxobj
-.objCU skip maxobj
-ENDIF
-IF 0
-.objCD skip maxobj
-.objCL skip maxobj
-.objCR skip maxobj
-.objTAB skip maxobj
-ENDIF
-
+PRINT "--------"
+PRINT "LANGUAGE Workspace"
+PRINT "--------"
 PRINT "Language workspace high watermark = ", ~P%
 PRINT "Language workspace RAM free = ", ~(LANG_TOP - P%)
+PRINT "--------"
+
+\\ What about PAGE &800 = sound workspace?!
 
 LOWER_START=&900
 LOWER_TOP=&D00
@@ -172,10 +124,14 @@ LOWER_TOP=&D00
 ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
 GUARD LOWER_TOP                ; NMI workspace
 
-INCLUDE "game/lower.asm"
+INCLUDE "game/beeb_lower.asm"
 
+PRINT "--------"
+PRINT "LOWER Workspace"
+PRINT "--------"
 PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
+PRINT "--------"
 
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
@@ -192,14 +148,14 @@ ORG CORE_START
 GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .pop_beeb_start
-.pop_beeb_lib_start
+
+.pop_beeb_core_start
 
 INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
 
-.pop_beeb_lib_end
-.pop_beeb_core_start
+.beeb_init_start
 
 .swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
 .swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
@@ -327,6 +283,8 @@ ENDIF
     RTS
 }
 
+.beeb_init_end
+
 ; Beeb source in CORE
 
 INCLUDE "game/beeb_core.asm"
@@ -334,13 +292,18 @@ INCLUDE "game/beeb_core.asm"
 ; PoP source in CORE memory (always present)
 
 INCLUDE "game/master.asm"
+master_end=P%
 INCLUDE "game/topctrl.asm"
+topctrl_end=P%
 INCLUDE "game/grafix.asm"
+grafix_end=P%
 INCLUDE "game/hires_core.asm"
+hires_core_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
 INCLUDE "game/hires.asm"
+hires_end=P%
 
 ; PoP gameplay code moved from AUX memory
 
@@ -353,54 +316,17 @@ specialk_end=P%
 
 .pop_beeb_data_start
 
+; Beeb specific data
+INCLUDE "game/beeb_core_data.asm"
+
 ; Data in CORE memory (always present)
 INCLUDE "game/hrtables.asm"
+hrtables_end=P%
 
 ; PoP gameplay data moved from AUX memory
 
 INCLUDE "game/bgdata.asm"
 bgdata_end=P%
-
-; Following data could be dumped after boot!
-
-.beeb_crtcregs
-{
-	EQUB 127 			; R0  horizontal total
-	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
-	EQUB 98				; R2  horizontal position
-	EQUB &28			; R3  sync width
-	EQUB 38				; R4  vertical total
-	EQUB 0				; R5  vertical total adjust
-	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
-	EQUB 34				; R7  vertical position; 35=top of screen
-	EQUB 0				; R8  interlace
-	EQUB 7				; R9  scanlines per row
-	EQUB 32				; R10 cursor start
-	EQUB 8				; R11 cursor end
-	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
-	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
-}
-
-.beeb_palette
-{
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
-
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
-}
 
 .pop_beeb_data_end
 .pop_beeb_end
@@ -420,13 +346,32 @@ INCLUDE "game/gameeq.asm"
 
 ; Core RAM stats
 
-PRINT "Core lib size = ", ~(pop_beeb_lib_end - pop_beeb_lib_start)
+PRINT "--------"
+PRINT "CORE Modules"
+PRINT "--------"
+PRINT "DISKSYS size = ", ~(beeb_disksys_end - beeb_disksys_start)
+PRINT "SWR size = ", ~(beeb_swr_end - beeb_swr_start)
+PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
+PRINT "INIT size = ", ~(beeb_init_end - beeb_init_start)
+PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
+PRINT "MASTER size = ", ~(master_end - master)
+PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
+PRINT "GRAFIX size = ", ~(grafix_end - grafix)
+PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
+PRINT "HIRES size = ", ~(hires_end - hires)
+PRINT "MISC size = ", ~(misc_end-misc)
+PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "--------"
+PRINT "BEEB CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
+PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
+PRINT "BGDATA (CORE) size = ", ~(bgdata_end-bgdata)
+PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
 PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
 PRINT "Core high watermark = ", ~P%
 PRINT "Core RAM free = ", ~(CORE_TOP - P%)
-
+PRINT "--------"
 
 \*-------------------------------
 ; Construct MAIN RAM (video & screen)
@@ -456,7 +401,17 @@ INCLUDE "game/beeb-plot-lay.asm"
 
 SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
 
-PRINT "Main code & data size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
+PRINT "--------"
+PRINT "MAIN Modules"
+PRINT "--------"
+PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
+PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
+PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
+PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
+PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
+PRINT "BEEB PLOT LAY size = ", ~(beeb_plot_lay_end - beeb_plot_lay_start)
+PRINT "--------"
+PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
 PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
@@ -466,6 +421,7 @@ PRINT "Main high watermark = ", ~P%
 PRINT "Screen buffer address = ", ~beeb_screen_addr
 PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
 PRINT "Main RAM free = ", ~(MAIN_TOP - P%)
+PRINT "--------"
 
 \*-------------------------------
 ; Construct  AUX (SHADOW) RAM
@@ -502,30 +458,16 @@ SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 
 .pop_beeb_aux_bss_end
 
-; High watermark for Main RAM
-PRINT "CTRL size = ", ~(ctrl_end-ctrl)
-PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
-PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
-PRINT "SUBS size = ", ~(subs_end-subs)
-PRINT "SPECIALK size = ", ~(specialk_end-specialk)
-PRINT "MOVER size = ", ~(mover_end-mover)
-PRINT "MISC size = ", ~(misc_end-misc)
-PRINT "AUTO size = ", ~(auto_end-auto)
-PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
-PRINT "COLL size = ", ~(coll_end-coll)
-
+PRINT "--------"
+PRINT "AUX (Deprecated)"
+PRINT "--------"
 PRINT "Aux code size = ", ~(pop_beeb_aux_code_end - pop_beeb_aux_code_start)
-
-PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
-PRINT "TABLES size = ", ~(tables_end-tables)
-PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
-PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
-
 PRINT "Aux data size = ", ~(pop_beeb_aux_data_end - pop_beeb_aux_data_start)
 PRINT "Aux BSS size = ", ~(pop_beeb_aux_bss_end - pop_beeb_aux_bss_start)
-
+PRINT "--------"
 PRINT "Aux high watermark = ", ~P%
 PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
+PRINT "--------"
 
 
 \*-------------------------------
@@ -548,6 +490,7 @@ framedef_end=P%
 INCLUDE "game/tables.asm"
 tables_end=P%
 INCLUDE "game/bgdata_high.asm"
+bgdata_high_end=P%
 
 .pop_beeb_aux_hazel_data_end
 
@@ -559,10 +502,19 @@ SKIP &900
 
 SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_data_end, 0
 
+PRINT "--------"
+PRINT "HAZEL Modules"
+PRINT "--------"
+PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
+PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
+PRINT "TABLES size = ", ~(tables_end-tables)
+PRINT "BGDATA (HIGH/HAZEL) size = ", ~(bgdata_high_end-tables_end)
+PRINT "--------"
 PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
 PRINT "HAZEL BSS size = ", ~(P% - blueprnt)
 PRINT "HAZEL high watermark = ", ~P%
 PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
+PRINT "--------"
 
 
 \*-------------------------------
@@ -580,8 +532,12 @@ SKIP &800
 .peelbuf2
 SKIP &800   ; was &800
 
+PRINT "--------"
+PRINT "ANDY Modules"
+PRINT "--------"
 PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
+PRINT "--------"
 
 
 \*-------------------------------
@@ -621,8 +577,10 @@ INCBIN "Images/BEEB.IMG.CHTAB4.GD.bin"              ; largest of CHTAB4.X
 
 .bank0_end
 
+PRINT "--------"
 PRINT "BANK 0 size = ", ~(bank0_end - bank0_start)
 PRINT "BANK 0 free = ", ~(SWRAM_TOP - bank0_end)
+PRINT "--------"
 
 ; BANK 1
 
@@ -644,8 +602,10 @@ INCBIN "Images/BEEB.IMG.BGTAB1.PALB.bin"
 
 .bank1_end
 
+PRINT "--------"
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
+PRINT "--------"
 
 ; BANK 2
 
@@ -667,8 +627,11 @@ INCBIN "Images/BEEB.IMG.BGTAB1.PALA.bin"
 
 .bank2_end
 
+PRINT "--------"
 PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
 PRINT "BANK 2 free = ", ~(SWRAM_TOP - bank2_end)
+PRINT "--------"
+
 
 ; BANK 3
 
@@ -707,11 +670,26 @@ coll_end=P%
 
 SAVE "High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
 
+PRINT "--------"
+PRINT "AUX High Modules"
+PRINT "--------"
+; High watermark for Main RAM
+PRINT "CTRL size = ", ~(ctrl_end-ctrl)
+PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
+PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
+PRINT "SUBS size = ", ~(subs_end-subs)
+PRINT "MOVER size = ", ~(mover_end-mover)
+PRINT "AUTO size = ", ~(auto_end-auto)
+PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
+PRINT "COLL size = ", ~(coll_end-coll)
+PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
-
+PRINT "--------"
 PRINT "BANK 3 size = ", ~(bank3_end - bank3_start)
 PRINT "BANK 3 free = ", ~(SWRAM_TOP - bank3_end)
+PRINT "--------"
+
 
 \*-------------------------------
 ; Construct overlay files
@@ -732,8 +710,10 @@ INCBIN "Images/BEEB.IMG.CHTAB7.bin"
 
 .overlay_end
 
+PRINT "--------"
 PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
 PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
+PRINT "--------"
 
 
 \*-------------------------------

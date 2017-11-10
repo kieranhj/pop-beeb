@@ -10,7 +10,9 @@
 \*-------------------------------
 
 .imlists
-\ Can be moved to pop-beeb.asm to exist in lower CORE memory (below &E00)
+
+\\ Moved to beeb-lang.asm to store in Language workspace area = &300 - &800
+
 IF 0
 .genCLS skip 1
 
@@ -57,6 +59,9 @@ IF 0
 .objTYP skip maxobj
 .objCU skip maxobj
 ENDIF
+
+\\ Moved to beeb-lower.asm to store in lower (below PAGE) RAM = &900 - &D00
+
 IF 0
 IF 1
 .objCD skip maxobj
@@ -125,14 +130,6 @@ pausetemp ds 1
 ENDIF
 .recheck0 skip 1
 
-\*-------------------------------
-\*
-\*  Blueprint info
-\*
-\*-------------------------------
-
-\\ Moved to pop-beeb.asm
-
 .redbufs
  ;skip 60 ;unused - why?
 .halfbuf skip 30
@@ -154,4 +151,13 @@ IF _DEBUG
 .objTOP     skip 1
 .msgTOP     skip 1 
 ENDIF
+
 ENDIF
+
+\*-------------------------------
+\*
+\*  Blueprint info
+\*
+\*-------------------------------
+
+\\ Moved to pop-beeb.asm as now stored in HAZEL

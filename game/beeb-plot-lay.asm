@@ -2,6 +2,8 @@
 ; BBC Micro plot functions
 ; Specialisations of lay permutations
 
+.beeb_plot_lay_start
+
 IF _UNROLL_LAYMASK
 
 BEEB_MAX_LAY_WIDTH=10
@@ -736,3 +738,5 @@ NEXT
 }
 
 ENDIF
+
+.beeb_plot_lay_end
