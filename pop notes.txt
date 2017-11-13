@@ -1652,19 +1652,43 @@ PRINT size =  &14 - shrunk
 INIT size =  &C9 
 BEEB CORE size =  &12D 
 
-MASTER size =  &230 - 3/12 fns implemented
-TOPCTRL size =  &63D - 3/5 fns implemented
-GRAFIX size =  &5A7 - 48 fns to implement
+MASTER size =  &230 - 5x TODO's (attract, demo, cutscenes, savegame)
+TOPCTRL size =  &63D - 2x TODO's (attract, savegame)
+GRAFIX size =  &5A7 - TODO's (sound, jouystick, cutscenes, flash, savegame, attract)
 HIRES (CORE) size =  &83 - can likely be removed
-HIRES size =  &10D - 1 fn to implement (InvertY)
-MISC size =  &28F - 6/17 fns implemented
-SPECIALK size =  &37A - 10/19 fns implemented
+HIRES size =  &10D - 1x TODO's (potion fx)
+MISC size =  &28F - 3x TODO's (meters, gameplay, savegame)
+SPECIALK size =  &37A - 5zx TODO's (sound, music, timer, keys, cheats)
 
 CTRL size =  &B5F - all implemented!
 FRAMEADV size =  &B27 - all implemented!
-GAMEBG size =  &18C - 9/24 implemented
-SUBS size =  &23B - 12/18 implemented
+GAMEBG size =  &18C - 5x TODO's (meters, messages, hit fx, princess fx)
+SUBS size =  &23B - 5x TODO's (flash, timer, cutscene, sound, demo)
 MOVER size =  &A94 - all implemented!
-AUTO size =  &963 - 2 TODO's (attract)
+AUTO size =  &963 - 1x TODO (music)
 CTRLSUBS size =  &92E - all implemented (ALTSET2 - probably in master)
 COLL size =  &751 - all implemented!
+
+TODO's
+
+IN-GAME
+- meters (energy bars)
+- hit fx
+- flash screen fx
+- game timer
+- potion fx (upside down screen :S)
+- level specific gameplay (unholy, reflection, bonesrise, mouse)
+- messages (time left, continue)
+
+PRE-GAME
+- cutscenes (princess, epilogue)
+- princess room fx (flame, post, hourglass, twinkle)
+- attract mode (intro sequence & music)
+- demo level
+
+SYSTEM
+- multiple keypress support & ctrl keys
+- sound effects
+- music
+- cheats
+- joystick support?

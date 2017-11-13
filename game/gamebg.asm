@@ -16,14 +16,14 @@
 \*-------------------------------
 \ org org
 
-.updatemeters RTS   ; jmp UPDATEMETERS          BEEB TO DO
+.updatemeters RTS   ; jmp UPDATEMETERS          BEEB TODO METERS
 .DrawKidMeter BRK   ; jmp DRAWKIDMETER
 .DrawSword jmp DRAWSWORD
 .DrawKid jmp DRAWKID
 .DrawShad jmp DRAWSHAD
 
 .setupflame jmp SETUPFLAME
-.continuemsg BRK    ; jmp CONTINUEMSG
+.continuemsg BRK    ; jmp CONTINUEMSG           BEEB TODO MESSAGES
 .addcharobj jmp ADDCHAROBJ
 .setobjindx jmp SETOBJINDX
 .printlevel BRK     ; jmp PRINTLEVEL
@@ -35,8 +35,8 @@
 .DrawGuard2 jmp DRAWGUARD
 
 .setupflask jmp SETUPFLASK
-.setupcomix RTS     ; jmp SETUPCOMIX            BEEB TO DO
-.psetupflame BRK    ; jmp PSETUPFLAME
+.setupcomix RTS     ; jmp SETUPCOMIX            BEEB TODO HIT FX
+.psetupflame BRK    ; jmp PSETUPFLAME           BEEB TODO PRINCESS
 .drawpost BRK       ; jmp DRAWPOST
 .drawglass BRK      ; jmp DRAWGLASS
 
@@ -985,91 +985,100 @@ FLOW
  sta OPACITY
  jsr ]setch6
  jmp lay ;<---DIRECT HIRES CALL
+ENDIF
 
-*-------------------------------
-* Save/restore FCharVars
+\*-------------------------------
+\* Save/restore FCharVars
 
-saveFChar
+IF _TODO
+.saveFChar
+{
  ldx #$f
-:loop lda FCharVars,x
+.loop lda FCharVars,x
  sta tempsave,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-restoreFChar
+.restoreFChar
+{
  ldx #$f
-:loop lda tempsave,x
+.loop lda tempsave,x
  sta FCharVars,x
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Draw "comix" star
-*
-* In: Char data
-*
-*-------------------------------
-SETUPCOMIX
+\*-------------------------------
+\*
+\* Draw "comix" star
+\*
+\* In: Char data
+\*
+\*-------------------------------
+
+.SETUPCOMIX
+{
  jsr saveFChar
- jsr :sub
+ jsr local_sub
  jmp restoreFChar
 
-:sub lda #$ff
+.local_sub lda #$ff
  sta FCharIndex
 
-* Get y-coord
+\* Get y-coord
 
  lda CharPosn
  cmp #185 ;dead
- beq :low
+ beq local_low
  cmp #177 ;impaled
- beq :imp
+ beq local_imp
  cmp #106
- bcc :80
+ bcc label_80
  cmp #111 ;crouching
- bcc :low
-:80 cmp #178 ;halved
- beq ]rts
+ bcc local_low
+.label_80 cmp #178 ;halved
+ beq return
 
- lda #-15
+ lda #LO(-15)
  ldx CharID
- beq :3
- lda #-11 ;kid strikes lower than opponent
-:3 clc
+ beq label_3
+ lda #LO(-11) ;kid strikes lower than opponent
+.label_3 clc
  adc FCharY
  sta FCharY
- jmp :8
+ jmp label_8
 
-:low lda #4
+.local_low lda #4
  clc
  adc FCharY
  sta FCharY
- jmp :8
+ jmp label_8
 
-* Get x-coord
+\* Get x-coord
 
-:imp lda #-5 impaled
- bne :9
-:8 lda #5
-:9 jsr addfcharx
+.local_imp lda #LO(-5)  ; impaled
+ bne label_9
+.label_8 lda #5
+.label_9 jsr addfcharx
 
-* Get color (kid red, opps blue)
+\* Get color (kid red, opps blue)
 
  lda CharID
- beq :2 ;kid: 0
+ beq label_2 ;kid: 0
  lda #1 ;opponents: 1
-:2
+.label_2
  eor FCharX
  eor FCharFace
  and #1 ;look only at low bits
- bne :1
+ bne label_1
  inc FCharX
- bne :1
+ bne label_1
  inc FCharX+1
-:1
+.label_1
  lda #starimage
  sta FCharImage
  lda #startable
@@ -1085,6 +1094,7 @@ SETUPCOMIX
 
  lda #TypeComix
  jmp addcharobj
+}
 ENDIF
 .return_27
  rts

@@ -15,19 +15,19 @@
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
 .firstguard jmp FIRSTGUARD
-.markmeters RTS     ; jmp MARKMETERS                    BEEB TO DO UI
+.markmeters RTS     ; jmp MARKMETERS                    BEEB TODO METERS
 
 .potioneffect jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE
 .StabChar jmp STABCHAR
-.unholy RTS         ; jmp UNHOLY                        BEEB TO DO
-.reflection RTS     ; jmp REFLECTION                    BEEB TO DO
+.unholy RTS         ; jmp UNHOLY                        BEEB TODO GAMEPLAY
+.reflection RTS     ; jmp REFLECTION                    BEEB TODO GAMEPLAY
 
-.MarkKidMeter RTS   ; jmp MARKKIDMETER                  BEEB TO DO UI
-.MarkOppMeter RTS   ; jmp MARKOPPMETER                  BEEB TO DO UI
-.bonesrise RTS      ; jmp BONESRISE                     BEEB TO DO
+.MarkKidMeter RTS   ; jmp MARKKIDMETER                  BEEB TODO METERS
+.MarkOppMeter RTS   ; jmp MARKOPPMETER                  BEEB TODO METERS
+.bonesrise RTS      ; jmp BONESRISE                     BEEB TODO GAMEPLAY
 .decstr jmp DECSTR
-.DoSaveGame BRK     ; jmp DOSAVEGAME
+.DoSaveGame BRK     ; jmp DOSAVEGAME                    BEEB TODO SAVEGAME
 
 .LoadLevelX jmp LOADLEVELX
 .checkalert jmp CHECKALERT

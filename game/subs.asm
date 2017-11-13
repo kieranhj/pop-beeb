@@ -17,28 +17,28 @@ CheckTimer = 0
 \ org org
 
 .addtorches jmp ADDTORCHES
-.doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
-.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
+.doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
+.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
 .demo BRK               ; jmp DEMO
-.showtime RTS           ; jmp SHOWTIME              BEEB TO DO
+.showtime RTS           ; jmp SHOWTIME              BEEB TODO TIMER
 
-.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TO DO
-.lrclse RTS             ; jmp LRCLSE                BEEB TO DO OR NOT NEEDED?
+.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
+.lrclse RTS             ; jmp LRCLSE                BEEB TODO REMOVE
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
 
-.addslicers RTS         ; jmp ADDSLICERS            BEEB TO DO
+.addslicers jmp ADDSLICERS
 .pause jmp PAUSE
 \ jmp bonesrise
 .deadenemy jmp DEADENEMY
 IF _ALL_LEVELS
-.playcut RTS            ; jmp PLAYCUT               BEEB TO DO
+.playcut RTS            ; jmp PLAYCUT               BEEB TODO CUTSCENE
 ELSE
 .playcut BRK            ; jmp PLAYCUT
 ENDIF
 
-.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TO DO SOUND
+.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TODO SOUND
 .RemoveObj jmp REMOVEOBJ
 .addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
@@ -48,7 +48,7 @@ ENDIF
 .gravity jmp GRAVITY
 .initialguards jmp INITIALGUARDS
 .mirappear jmp MIRAPPEAR
-.crumble RTS            ; jmp CRUMBLE               BEEB TO DO
+.crumble jmp CRUMBLE
 
 \*-------------------------------
 \ lst
@@ -67,7 +67,7 @@ ENDIF
 \ dum $f0
 \]Xcount ds 1
 \]Xend ds 1
-\tempstate ds 1
+\subs_tempstate ds 1
 \ dend
 
 \
@@ -104,50 +104,52 @@ ENDIF ;actual frame rate approx. 11 fps)
 \RAMRDaux = $c003
 \RAMRDmain = $c002
 
-IF _TODO
 \*-------------------------------
 \SceneCount ds 2
 
-*-------------------------------
-* Level 13 only:  When you enter, trigger loose floors on
-* screen above
-*-------------------------------
-]rts rts
+\*-------------------------------
+\* Level 13 only:  When you enter, trigger loose floors on
+\* screen above
+\*-------------------------------
 
-CRUMBLE
+.CRUMBLE
+{
  lda level
  cmp #13
- bne ]rts
+ bne return_52
  lda VisScrn
  cmp #23
- beq :1
+ beq label_1
  cmp #16
- bne ]rts
+ bne return_52
 ;Trigger blocks 2-7 on bottom row of scrn above
-:1 lda scrnAbove
+.label_1 lda scrnAbove
  sta tempscrn
  lda #2
  sta tempblocky
  ldx #7
-:loop stx tempblockx
- jsr :trigloose
+.loop stx tempblockx
+ jsr trigloose
  ldx tempblockx
  dex
  cpx #2
- bcs :loop
-]rts rts
+ bcs loop
+}
+.return_52
+ rts
 
-:trigloose
+.trigloose
+{
  jsr rdblock1
  cmp #loose
- bne ]rts
+ bne return_52
  jsr rnd
  and #$0f
  eor #$ff
  clc
  adc #1
  jmp breakloose1
-ENDIF
+}
 
 \*-------------------------------
 \* Add all flasks & torches on VisScrn to trans list
@@ -258,64 +260,71 @@ LRCLSE
  beq ]rts
 
  jmp lrcls
+ENDIF
 
-*-------------------------------
-* Add all slicers on CharBlockY to trans list
-*-------------------------------
-slicetimer = 15 ;from mover
+\*-------------------------------
+\* Add all slicers on CharBlockY to trans list
+\*-------------------------------
+;slicetimer = 15 ;from mover
 slicersync = 3 ;# frames out of sync
 
-ADDSLICERS
+.ADDSLICERS
+{
  lda #slicetimer
- sta tempstate
+ sta subs_tempstate
 
  lda CharScrn
  jsr calcblue
 
  ldy CharBlockY
  cpy #3
- bcs ]rts
+ bcs return
 
  lda Mult10,y
  tay
  clc
  adc #10
- sta :sm+1
-:loop
+ sta sm+1
+.loop
  lda (BlueType),y
  and #idmask
  cmp #slicer
- bne :cont
+ bne cont
 
  lda (BlueSpec),y
  tax
  and #$7f
- beq :ok
+ beq ok
  cmp #slicerRet
- bcc :cont ;in mid-slice--leave it alone
-:ok txa
+ bcc cont ;in mid-slice--leave it alone
+.ok txa
  and #$80 ;get hibit
- ora tempstate
+ ora subs_tempstate
  jsr trigslicer ;trigger slicer
  jsr getnextstate
 
-:cont iny
-:sm cpy #0
- bcc :loop
+.cont iny
+.sm cpy #0
+ bcc loop
 
-]rts rts
+.return
+ rts
+}
 
-getnextstate
- lda tempstate
+.getnextstate
+{
+ lda subs_tempstate
  sec
  sbc #slicersync
  cmp #slicerRet
- bcs :ok
+ bcs ok
  clc
  adc #slicetimer+1-slicerRet
-:ok sta tempstate
-]rts rts
+.ok sta subs_tempstate
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Special animation lists for princess's room

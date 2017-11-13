@@ -19,8 +19,8 @@ DebugKeys = 0
 
  .keys jmp KEYS
  .clrjstk jmp CLRJSTK
- .zerosound RTS ;jmp ZEROSOUND          BEEB TO DO SOUND
- .addsound RTS  ;jmp ADDSOUND           BEEB TO DO SOUND
+ .zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
+ .addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
  .facejstk jmp FACEJSTK
 
  .SaveSelect jmp SAVESELECT
@@ -33,10 +33,10 @@ DebugKeys = 0
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
  .getminleft BRK  ;jmp GETMINLEFT
- .keeptime RTS    ;jmp KEEPTIME         BEEB TO DO
+ .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
  .shortentime BRK ;jmp SHORTENTIME
- .cuesong RTS     ;jmp CUESONG          BEEB TO DO SOUND
+ .cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
  \jmp DoSaveGame
  \jmp LoadLevelX
  \jmp decstr

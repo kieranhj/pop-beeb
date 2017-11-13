@@ -12,3 +12,4 @@ GUARD locals_top
 .mover_pptype skip 1
 .mover_mobframe skip 1
 .mover_underFF skip 1
+.subs_tempstate skip 1

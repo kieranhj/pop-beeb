@@ -25,9 +25,9 @@
  ._reload BRK       ;jmp RELOAD
  ._loadstage2 BRK   ;jmp LoadStage2
  
- ._attractmode BRK  ;jmp ATTRACTMODE
- ._cutprincess BRK  ;jmp CUTPRINCESS
- ._savegame BRK     ;jmp SAVEGAME
+ ._attractmode BRK  ;jmp ATTRACTMODE            BEEB TODO ATTRACT & DEMO
+ ._cutprincess BRK  ;jmp CUTPRINCESS            BEEB TODO CUTSCENES
+ ._savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
  ._loadgame BRK     ;jmp LOADGAME
  ._dostartgame jmp DOSTARTGAME
 

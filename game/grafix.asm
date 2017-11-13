@@ -26,8 +26,8 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 .reloadblue BRK ;jmp RELOADBLUE
 .movemem BRK    ;jmp MOVEMEM
 .buttons jmp BUTTONS ;ed
-.gtone RTS      ;jmp GTONE          BEEB TO DO SOUND
-.setcenter RTS  ;jmp SETCENTER      BEEB TO DO JOYSTICK
+.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
+.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
 \
 .dimchar jmp DIMCHAR
 .cvtx jmp CVTX
@@ -60,7 +60,7 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 .xminit BRK     ;jmp XMINIT
 
 .xmplay BRK     ;jmp XMPLAY
-.cutprincess RTS;jmp CUTPRINCESS                BEEB TO DO
+.cutprincess RTS;jmp CUTPRINCESS                BEEB TODO CUTSCENES
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
 .reload BRK     ;jmp RELOAD
@@ -104,7 +104,7 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
-.musickeys BRK  ;jmp MUSICKEYS                      BEEB TO DO SOUND
+.musickeys BRK  ;jmp MUSICKEYS                      BEEB TODO SOUND
 .dostartgame BRK;jmp DOSTARTGAME
 \
 .epilog BRK     ;jmp EPILOG

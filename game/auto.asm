@@ -18,7 +18,7 @@
 .AutoCtrl jmp AUTOCTRL
 .checkstrike jmp CHECKSTRIKE
 .checkstab jmp CHECKSTAB
-.AutoPlayback BRK       ; jmp AUTOPLAYBACK
+.AutoPlayback jmp AUTOPLAYBACK
 .cutcheck jmp CUTCHECK
 
 .cutguard jmp CUTGUARD
@@ -42,7 +42,7 @@
 \ztemp ds 1
 \prob ds 1
 \auto_cutdir ds 1
-\ProgStart ds 2
+\auto_ProgStart ds 2
 \ dend
 
 \plus1 db -1,1
@@ -1253,90 +1253,92 @@ Release = 7
  EQUB 49,Fwd
  EQUB 255,EndProg
 
-IF _TODO
-*-------------------------------
-*
-*  Play back prerecorded movement sequence
-*
-*  In: A-X = program start addr
-*      PlayCount = frame #
-*      PreRecPtr = pointer to next command
-*
-*-------------------------------
-AUTOPLAYBACK
- sta ProgStart
- stx ProgStart+1
+\*-------------------------------
+\*
+\*  Play back prerecorded movement sequence
+\*
+\*  In: A-X = program start addr
+\*      PlayCount = frame #
+\*      PreRecPtr = pointer to next command
+\*
+\*-------------------------------
 
-* Inc frame counter
+.AUTOPLAYBACK
+{
+ sta auto_ProgStart
+ stx auto_ProgStart+1
+
+\* Inc frame counter
 
  lda PlayCount
  cmp #254
- bcs :rts
+ bcs return
  inc PlayCount
 
-* Look up time of next command
+\* Look up time of next command
 
  ldy PreRecPtr
 
  lda PlayCount
- cmp (ProgStart),y
- bcs :next
+ cmp (auto_ProgStart),y
+ bcs next
 
-* Not there yet--repeat last command
+\* Not there yet--repeat last command
 
  dey
- lda (ProgStart),y
- jmp :ex
+ lda (auto_ProgStart),y
+ jmp ex
 
-* We're there--
+\* We're there--
 
-:next iny
- lda (ProgStart),y ;command
+.next iny
+ lda (auto_ProgStart),y ;command
  iny
  sty PreRecPtr
 
-* Execute command
+\* Execute command
 
-:ex cmp #-1
- beq :enddemo
+.ex cmp #LO(-1)
+ beq enddemo
  cmp #0
- beq :ctr
+ beq local_ctr
  cmp #1
- beq :fwd
+ beq local_fwd
  cmp #2
- beq :back
+ beq local_back
  cmp #3
- beq :up
+ beq local_up
  cmp #4
- beq :down
+ beq local_down
  cmp #5
- beq :upfwd
+ beq local_upfwd
  cmp #6
- beq :press
+ beq local_press
  cmp #7
- beq :release
-:rts
-return rts
+ beq local_release
 
-* Commands
+.return
+ rts
 
-:ctr jmp DoRelease
-:fwd jmp DoFwd
-:back jmp DoBack
-:up jmp DoUp
-:down jmp DoDown
-:upfwd jsr DoUp
+\* Commands
+
+.local_ctr jmp DoRelease
+.local_fwd jmp DoFwd
+.local_back jmp DoBack
+.local_up jmp DoUp
+.local_down jmp DoDown
+.local_upfwd jsr DoUp
  jmp DoFwd
-:press jmp DoPress
-:release jmp DoRelBtn
+.local_press jmp DoPress
+.local_release jmp DoRelBtn
 
-:enddemo ; lda autopilot
+.enddemo ; lda autopilot
 ; bne :endpb
  jmp attractmode ;Game: end demo
-:endpb ; lda #0 ;Editor: end playback
+.endpb ; lda #0 ;Editor: end playback
 ; sta autopilot
 ; rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1764,7 +1766,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _TODO    ; MUSIC
 *-------------------------------
 * Level 13: Play Jaffar's Theme
 *-------------------------------
