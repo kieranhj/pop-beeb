@@ -157,8 +157,7 @@ INCLUDE "lib/print.asm"
 
 .beeb_init_start
 
-.swr_fail_text EQUS "No SWR banks found.", 13, 10, 0
-.swr_bank_text EQUS "Found %b", LO(swr_ram_banks_count), HI(swr_ram_banks_count), " SWR banks.", 13, 10, 0
+.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks.", 13, 0
 
 .main_filename  EQUS "Main   $"
 .aux_filename   EQUS "Aux    $"
@@ -167,6 +166,18 @@ INCLUDE "lib/print.asm"
 
 .pop_beeb_entry
 {
+    \\ Should be MASTER test and exit with nice message
+
+    \\ SWRAM init
+    jsr swr_init
+    cmp #4
+    bcs swr_ok
+
+    MPRINT swr_fail_text
+    rts
+
+.swr_ok
+
     \\ Early system init
 
     LDX #&FF:TXS                ; reset stack
@@ -174,21 +185,6 @@ INCLUDE "lib/print.asm"
     LDA #&7F:STA &FE4E          ; disable all interupts
     LDA #&82:STA &FE4E          ; enable vsync interupt
     CLI
-
-    \\ Should be MASTER test and exit with nice message
-
-    \\ SWRAM init
-    jsr swr_init
-    bne swr_ok
-
-    MPRINT swr_fail_text
-    rts
-
-.swr_ok
-
-    MPRINT    swr_bank_text
-
-    \\ Should be some sort of BEEB system init
 
     \\ MODE
     LDA #22
@@ -205,6 +201,7 @@ INCLUDE "lib/print.asm"
 
 \    JSR beeb_shadow_select_main
 \ Ensure MAIN RAM is writeable
+
     LDA &FE34:AND #&FB:STA &FE34
 
     LDX #LO(main_filename)
@@ -213,6 +210,7 @@ INCLUDE "lib/print.asm"
     JSR disksys_load_file
 
 \ Ensure SHADOW RAM is writeable
+
     LDA &FE34:ORA #&4:STA &FE34
 
     LDX #LO(main_filename)
@@ -228,10 +226,11 @@ INCLUDE "lib/print.asm"
 
     JSR beeb_shadow_select_aux
 
-    LDX #LO(aux_filename)
-    LDY #HI(aux_filename)
-    LDA #HI(pop_beeb_aux_start)
-    JSR disksys_load_file
+\\ AUX (Deprecated)
+\    LDX #LO(aux_filename)
+\    LDY #HI(aux_filename)
+\    LDA #HI(pop_beeb_aux_start)
+\    JSR disksys_load_file
 
     \\ And Aux High (SWRAM)
 
@@ -481,22 +480,22 @@ CLEAR 0, &FFFF
 ORG HAZEL_START
 GUARD HAZEL_TOP
 
+PAGE_ALIGN
+.blueprnt
+SKIP &900
+
 .pop_beeb_aux_hazel_data_start
 
-INCLUDE "game/seqtable.asm"
-seqtab_end=P%
-INCLUDE "game/framedefs.asm"
-framedef_end=P%
 INCLUDE "game/tables.asm"
 tables_end=P%
 INCLUDE "game/bgdata_high.asm"
 bgdata_high_end=P%
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
+INCLUDE "game/framedefs.asm"
+framedef_end=P%
 
 .pop_beeb_aux_hazel_data_end
-
-PAGE_ALIGN
-.blueprnt
-SKIP &900
 
 ; Save data for Aux HAZEL RAM
 
@@ -505,13 +504,13 @@ SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_data_end, 0
 PRINT "--------"
 PRINT "HAZEL Modules"
 PRINT "--------"
-PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
-PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
 PRINT "TABLES size = ", ~(tables_end-tables)
 PRINT "BGDATA (HIGH/HAZEL) size = ", ~(bgdata_high_end-tables_end)
+PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
+PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
 PRINT "--------"
+PRINT "HAZEL BSS (blueprint) size = ", ~(pop_beeb_aux_hazel_data_start - blueprnt)
 PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
-PRINT "HAZEL BSS size = ", ~(P% - blueprnt)
 PRINT "HAZEL high watermark = ", ~P%
 PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
 PRINT "--------"

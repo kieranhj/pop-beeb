@@ -341,6 +341,10 @@ ENDIF
   rts
 }
 
+\*-------------------------------
+; Additional PREP before sprite plotting for Beeb
+\*-------------------------------
+
 .beeb_PREPREP
 {
     \\ Must have a swram bank to select or assert

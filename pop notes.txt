@@ -1643,3 +1643,28 @@ Total bytes lost = &312
 
 Theoretical RAM remaining = &A26
 That's over 2K!! :S
+
+All code modules:
+
+DISKSYS size =  &178 
+SWR size =  &9A 
+PRINT size =  &14 - shrunk
+INIT size =  &C9 
+BEEB CORE size =  &12D 
+
+MASTER size =  &230 - 3/12 fns implemented
+TOPCTRL size =  &63D - 3/5 fns implemented
+GRAFIX size =  &5A7 - 48 fns to implement
+HIRES (CORE) size =  &83 - can likely be removed
+HIRES size =  &10D - 1 fn to implement (InvertY)
+MISC size =  &28F - 6/17 fns implemented
+SPECIALK size =  &37A - 10/19 fns implemented
+
+CTRL size =  &B5F - all implemented!
+FRAMEADV size =  &B27 - all implemented!
+GAMEBG size =  &18C - 9/24 implemented
+SUBS size =  &23B - 12/18 implemented
+MOVER size =  &A94 - all implemented!
+AUTO size =  &963 - 2 TODO's (attract)
+CTRLSUBS size =  &92E - all implemented (ALTSET2 - probably in master)
+COLL size =  &751 - all implemented!

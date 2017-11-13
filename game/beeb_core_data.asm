@@ -49,6 +49,27 @@
     equb $FF                        ; 11111111 15 15
 }
 
+.beeb_palette
+{
+    EQUB PAL_black
+    EQUB PAL_red
+    EQUB PAL_green
+    EQUB PAL_yellow
+    EQUB PAL_blue
+    EQUB PAL_magenta
+    EQUB PAL_cyan
+    EQUB PAL_white
+
+    EQUB PAL_black
+    EQUB PAL_red
+    EQUB PAL_green
+    EQUB PAL_yellow
+    EQUB PAL_blue
+    EQUB PAL_magenta
+    EQUB PAL_cyan
+    EQUB PAL_white
+}
+
 \*-------------------------------
 ; Very lazy table for turning MODE 2 black pixels into MASK
 ; Could / should be in MAIN
@@ -243,27 +264,6 @@ PAGE_ALIGN
 	EQUB 8				; R11 cursor end
 	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
-}
-
-.beeb_palette
-{
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
-
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
 }
 
 .beeb_core_data_end

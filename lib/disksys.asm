@@ -3,11 +3,19 @@
 ; http://chrisacorns.computinghistory.org.uk/docs/Acorn/Manuals/Acorn_DiscSystemUGI2.pdf
 ; Our SWR loader is 60% faster than *SRLOAD
 
+_USE_HAZEL_CATALOG = TRUE           ; this might not hold true for DataCentre and/or Turbo MMC etc.
+
 .beeb_disksys_start
 
 DISKSYS_DEBUG = FALSE
+
+IF _USE_HAZEL_CATALOG
+DISKSYS_CATALOG_ADDR = &C000    
+DISKSYS_BUFFER_ADDR = SCRATCH_RAM_ADDR
+ELSE
 DISKSYS_CATALOG_ADDR = SCRATCH_RAM_ADDR
 DISKSYS_BUFFER_ADDR = DISKSYS_CATALOG_ADDR+512 ; &1000 ; must be page aligned
+ENDIF
 DISKSYS_BUFFER_SIZE = 1 ; SECTORS TO READ, MUST BE ONE (for now)
 
 .osword_params
@@ -103,11 +111,12 @@ ENDIF
 ; Y = destination memory address MSB
 ; on exit
 ; 512 bytes written to buffer in X/Y
-.disksys_catalogue_read
-EQUB 0
 
 .disksys_read_catalogue
 {
+IF _USE_HAZEL_CATALOG
+    rts
+ELSE
     LDA disksys_catalogue_read
     BMI return
 
@@ -125,6 +134,10 @@ EQUB 0
 ;    STA disksys_catalogue_read
     .return
     rts
+
+    .disksys_catalogue_read
+    EQUB 0
+ENDIF
 }
 
 

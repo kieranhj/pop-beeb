@@ -22,6 +22,7 @@
 \\ Apple II hi-res
 \\ For Scanline y address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
 
+; Would ideally be PAGE_ALIGN
 .YLO
 FOR y,0,191,1
 \address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
@@ -43,6 +44,7 @@ NEXT
 \ hex 5050505050505050D0D0D0D0D0D0D0D0
 \ hex 5050505050505050D0D0D0D0D0D0D0D0
 
+; Would ideally be PAGE_ALIGN
 .YHI
 FOR y,0,191,1
 \address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
