@@ -1222,7 +1222,6 @@ ENDIF
 .ZEROPEEL
 {
  lda #0
-\ NOT BEEB for now
  ldx PAGE
  beq page1
 .page2 sta peelX+maxpeel

@@ -249,12 +249,12 @@ int get_colour(unsigned char *colour_data, int pixel_width, int pixel_height, in
 	return colour_data[y * pixel_width + x];
 }
 
-int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, unsigned char *beebptr)
+int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, int height_step, unsigned char *beebptr)
 {
 	int expanded_width = 8 * pixel_width / 7;
 	int reduced_width = expanded_width / 2;
 	int mode5_width = (reduced_width + 3) / 4;
-	int mode5_height = pixel_height;
+	int mode5_height = pixel_height / height_step;
 
 	int mode5_bytes = mode5_width * mode5_height;
 
@@ -263,14 +263,13 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 	if (beebptr)
 	{
 		*beebptr++ = mode5_width;
-		*beebptr++ = mode5_height;
+		*beebptr++ = pixel_height | (height_step > 1 ? 0x80 : 0);		// use top bit to indicate height altered but keep original height
 	}
 
 	int width_parity = mode5_width & 1;
 
-	for (int y = 0; y < mode5_height; y++)
+	for (int y = 0; y < pixel_height; y += height_step)
 	{
-
 		for (int x8 = 0; x8 < mode5_width; x8++)
 		{
 			int x_parity = x8 & 1;
@@ -324,7 +323,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 		}
 	}
 
-	return 2 + mode5_bytes;
+	return (beebptr - temp);
 }
 
 int get_pixel(unsigned char *pixel_data, int pixel_width, int pixel_height, int x, int y)
@@ -395,6 +394,7 @@ int main(int argc, char **argv)
 	const int mode = cimg_option("-mode", 5, "BBC MODE number");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
+	const bool halfv = cimg_option("-halfv", false, "Halve vertical resolution");
 	const bool simple = cimg_option("-simple", false, "Use simple colour conversion");
 	const bool verbose = cimg_option("-v", false, "Verbose output");
 	int start_image = cimg_option("-s", 1, "Start image #");
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
 
 				if (mode == 5)
 				{
-					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], beebptr);
+					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr);
 				}
 
 				beebptr += bytes_written;

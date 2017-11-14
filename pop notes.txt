@@ -1531,7 +1531,7 @@ To do:
 - add 3x bg files to disc layout
 - loading of 3x bg files
 - additional code to switch swram bank based on bg sprite
-
+DONE
 
 Now need to squeeze &44 gameplay code + &17 data + &9 bluespec into RAM = &64
 &40 SWRAM + &1F HAZEL = &5F = 5 pages short :(
@@ -1670,7 +1670,7 @@ CTRLSUBS size =  &92E - all implemented (ALTSET2 - probably in master)
 COLL size =  &751 - all implemented!
 
 TODO's
-
+~~~
 IN-GAME
 - meters (energy bars) _FEATURE_METERS = &148 bytes AUX
 - hit fx _FEATURE_HITFX = &B9 bytes AUX
@@ -1693,3 +1693,80 @@ SYSTEM
 - music
 - cheats
 - joystick support?
+
+BEEB
+- ask Dethmunk to redraw all sprites for MODE 2 resolution
+- pick palettes for all sprites (+ implement palette selection code for guards, shadow, etc.)
+- NULA implementation
+- disk layout optimisation
+
+RAM (again, again)
+~~~
+Realistically need up to 8K RAM to finish the game (perhaps more because of PEEL buffers)
+Unlikely to be able to chip away to find 8K in the system..
+~2K left over + alignment gaps
+1 page unused at &800 (sound workspace)
+4 pages in HAZEL that need to fight the FS for
+If move PEEL buffers to screen space this doesn't save us as definitely need enlarged buffers
+
+Drastic measures - shrink amount of RAM used for sprites as currently 48K
+
+Options:
+1/ Halve number of animation frames = ~14K for player alone
+    Pros: been done on other platforms, could be player and/or all sprites, keep 3bpp colours
+    Cons: might look crap, likely to mess with animation system & gameplay if not done correctly
+
+2/ Halve vertical resolution = ~14K for player alone
+    Pros: already reduced horizontal resolution so making pixels squarer, keep 3bpp colours, all anim frames
+    Cons: already reduced horizontal resolution so looks blocky, relies on artist to make look awesome
+
+3/ Halve colour depth
+    Pros: Apple II only used 4 colours anyway, would massively reduce RAM usage & increase peel speed
+    Cons: already reduced horizontal resolution, not competitive with other ported platforms
+
+4/ Aggresive compression of background sprites?
+    Pros: most background is static
+    Cons: still need to be able draw background pieces in realtime, what compression scheme?
+
+Exomiser compresses BGTAB1.DUN to 2685/8871 bytes = 30%
+
+14/11/2017
+~~~
+Zero page free =  &19 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &4 
+Core RAM free =  &14A 
+Main RAM free =  &DC 
+HAZEL RAM free =  &EF 
+BANK 0 free =  &25F 
+BANK 1 free =  &7 
+BANK 2 free =  &16B 
+BANK 3 free =  &37 
+
+Total = &737 bytes free
+
+ALIGN LOST  &D4  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &D9  BYTES 
+ALIGN LOST  &9F  BYTES 
+ALIGN LOST  &43  BYTES 
+ALIGN LOST  &A  BYTES 
+ALIGN LOST  &29  BYTES 
+
+Total = &2F6 bytes lost
+
+Possible
+Sound workspace @ &800 = &100
+Rest of HAZEL = &400
+Some of MOS page &200 <= &80
+Some of NMI page &D00 <= &80
+
+Total <= &700 bytes theoretical
+
+All up remaining = &102D bytes ~= 4K
+
+If were to go with half height player sprites how would the sprite banks be arranged in RAM?
+CHTAB1+2+3+5 = 4701 + 4747 + 3195 + 3195 = 15838 bytes = 1x SWRAM bank (depending on alignment)
