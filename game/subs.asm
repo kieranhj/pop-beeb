@@ -23,7 +23,7 @@ CheckTimer = 0
 .showtime RTS           ; jmp SHOWTIME              BEEB TODO TIMER
 
 .doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
-.lrclse RTS             ; jmp LRCLSE                BEEB TODO REMOVE
+.lrclse RTS             ; jmp LRCLSE                BEEB TODO FLASH
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection

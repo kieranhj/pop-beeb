@@ -1672,13 +1672,13 @@ COLL size =  &751 - all implemented!
 TODO's
 
 IN-GAME
-- meters (energy bars)
-- hit fx
-- flash screen fx
+- meters (energy bars) _FEATURE_METERS = &148 bytes AUX
+- hit fx _FEATURE_HITFX = &B9 bytes AUX
+- flash screen fx - needs bespoke Beeb implementation, probably set palette directly
 - game timer
-- potion fx (upside down screen :S)
-- level specific gameplay (unholy, reflection, bonesrise, mouse)
-- messages (time left, continue)
+- potion fx - upside down screen requires bespoke Beeb implementation :S
+- level specific gameplay (unholy, reflection, bonesrise, mouse) _FEATURE_GAMEPLAY = &100 bytes CORE
+- messages (time left, continue) - needs bespoke Beeb implementation, where does font come from?!
 
 PRE-GAME
 - cutscenes (princess, epilogue)
@@ -1687,6 +1687,7 @@ PRE-GAME
 - demo level
 
 SYSTEM
+- load cutscene overlays
 - multiple keypress support & ctrl keys
 - sound effects
 - music

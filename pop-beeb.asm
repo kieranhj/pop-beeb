@@ -15,6 +15,10 @@ _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
 _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 
+_FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM
+_FEATURE_HITFX = FALSE       ; compile code to support hit fx despite lack of RAM
+_FEATURE_GAMEPLAY = FALSE    ; compile missing gaameplay code despite lack of RAM
+
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
@@ -636,7 +640,7 @@ PRINT "--------"
 
 CLEAR 0, &FFFF
 ORG SWRAM_START
-GUARD SWRAM_TOP
+GUARD &FFFF; SWRAM_TOP
 
 .bank3_start
 

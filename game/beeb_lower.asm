@@ -154,8 +154,8 @@ IF 1
 ;.delay skip 1
 ;.XCOORD skip 2
 .savekidx skip 1
-;.mirrx skip 1
-;.dmirr skip 1
+.mirrx skip 1
+.dmirr skip 1
 ;.barrdist skip 1
 ;.barrcode skip 1
 .imwidth skip 1

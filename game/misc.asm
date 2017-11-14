@@ -15,17 +15,17 @@
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
 .firstguard jmp FIRSTGUARD
-.markmeters RTS     ; jmp MARKMETERS                    BEEB TODO METERS
+.markmeters jmp MARKMETERS
 
 .potioneffect jmp POTIONEFFECT
 .mouserescue BRK    ; jmp MOUSERESCUE
 .StabChar jmp STABCHAR
-.unholy RTS         ; jmp UNHOLY                        BEEB TODO GAMEPLAY
-.reflection RTS     ; jmp REFLECTION                    BEEB TODO GAMEPLAY
+.unholy jmp UNHOLY
+.reflection jmp REFLECTION
 
-.MarkKidMeter RTS   ; jmp MARKKIDMETER                  BEEB TODO METERS
-.MarkOppMeter RTS   ; jmp MARKOPPMETER                  BEEB TODO METERS
-.bonesrise RTS      ; jmp BONESRISE                     BEEB TODO GAMEPLAY
+.MarkKidMeter jmp MARKKIDMETER
+.MarkOppMeter jmp MARKOPPMETER
+.bonesrise jmp BONESRISE
 .decstr jmp DECSTR
 .DoSaveGame BRK     ; jmp DOSAVEGAME                    BEEB TODO SAVEGAME
 
@@ -228,36 +228,44 @@ ENDIF
 .return_50
  rts
 
-IF _TODO
-*-------------------------------
-*
-* Mark strength meters
-*
-*-------------------------------
-Mark3 jsr Mark1 ;mark 3 blocks
+\*-------------------------------
+\*
+\* Mark strength meters
+\*
+\*-------------------------------
+
+.Mark3 jsr Mark1 ;mark 3 blocks
  iny
-Mark2 jsr Mark1 ;mark 2 blocks
+.Mark2 jsr Mark1 ;mark 2 blocks
  iny
-Mark1 lda #4
+.Mark1
+{
+ lda #4
  sta height
  clc
  lda #REDRAW_FRAMES
  jsr markwipe
  jmp markred
+}
 
-MARKMETERS
+.MARKMETERS
+{
  jsr MARKKIDMETER
  jmp MARKOPPMETER
+}
 
-MARKKIDMETER
+.MARKKIDMETER
+{
  ldy #20
  bne Mark3
+}
 
-MARKOPPMETER
+.MARKOPPMETER
+{
  ldy #28
  bne Mark2
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -464,26 +472,28 @@ ENDIF
  jmp local_killed
 }
 
-IF _TODO
-*-------------------------------
-*
-* If shadow dies, you die (& vice versa)
-*
-*-------------------------------
-UNHOLY
+\*-------------------------------
+\*
+\* If shadow dies, you die (& vice versa)
+\*
+\*-------------------------------
+
+.UNHOLY
+{
+IF _FEATURE_GAMEPLAY
  lda level
  cmp #12
- bne ]rts
+ bne return_54
 
  lda OpID
  ora CharID
  cmp #1 ;kid & shadow?
- bne ]rts
+ bne return_54
 
  lda CharLife
- bpl ]rts
+ bpl return_54
  lda OpLife
- bmi ]rts
+ bmi return_54
 ;live char, dead opponent
  lda #$ff
  sta lightcolor
@@ -493,20 +503,20 @@ UNHOLY
  jsr addsound
  lda #100
  jmp decstr
-]rts rts
+ENDIF
+}
+.return_54
+ rts
 
-*-------------------------------
-*
-*  R E F L E C T I O N
-*
-*-------------------------------
-IF DemoDisk
-REFLECTION
-BONESRISE
- brk
-ELSE
+\*-------------------------------
+\*
+\*  R E F L E C T I O N
+\*
+\*-------------------------------
 
-REFLECTION
+.REFLECTION
+{
+IF _FEATURE_GAMEPLAY
  jsr LoadKid
  jsr GetFrameInfo
 
@@ -516,39 +526,45 @@ REFLECTION
 
  jsr getunderft
  cmp #mirror ;is kid standing before mirror?
-  bne ]rts ;no
+  bne return_54 ;no
 
  jsr getreflect ;get char data for reflection
 
  lda dmirr ;if kid is on wrong side of mirror,
- bmi ]rts ;don't draw reflection
+ bmi return_54 ;don't draw reflection
 
-*  Draw kid's reflection (as a pseudo-character)
+\*  Draw kid's reflection (as a pseudo-character)
 
  jsr setupchar
 
-*  Crop edges
+\*  Crop edges
 
  ldx CharBlockY
  inx
  lda BlockTop,x
  cmp FCharY
- bcs ]rts
+ bcs return_54
  sta FCharCU
 
  lda CharBlockX ;of mirror
- asl
- asl ;x 4
+ asl A
+ asl A;x 4
  clc
  adc #1
  sta FCharCL
 
  jmp addreflobj ;normal reflection
+ELSE
+ RTS
+ENDIF
+}
 
-*-------------------------------
-* Get char data for kid's reflection
+\*-------------------------------
+\* Get char data for kid's reflection
 
-getreflect
+IF _FEATURE_GAMEPLAY
+.getreflect
+{
  lda CharBlockX
  jsr getblockej
  clc
@@ -558,18 +574,18 @@ getreflect
  jsr getdist
 
  ldx CharFace
- bmi :left
+ bmi left
 
  eor #$ff ;facing right--
  clc
  adc #14 ;get dist to back of block
 
-:left sec
+.left sec
  sbc #2 ;another fudge factor
  sta dmirr ;distance from mirror
 
  lda mirrx
- asl
+ asl A
  sec
  sbc CharX
  sta CharX ;reflection x-coord
@@ -578,12 +594,15 @@ getreflect
  eor #$ff
  sta CharFace
 
-]rts rts
+}
+.return_55
+ rts
 
-*-------------------------------
-* Bring reflection to life as shadowman
+\*-------------------------------
+\* Bring reflection to life as shadowman
 
-CreateShad
+.CreateShad
+{
  jsr getreflect ;get char data for reflection
 
  lda #0
@@ -603,40 +622,44 @@ CreateShad
  lda #1
  sta KidStrength
  jmp markmeters
+}
+ENDIF
 
-*-------------------------------
-*
-* Bones rise
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Bones rise
+\*
+\*-------------------------------
 skelscrn = 1
 skelx = 5
 skely = 1
 skeltrig = 2
 skelprog = 2
 
-BONESRISE
+.BONESRISE
+IF _FEATURE_GAMEPLAY
+{
  lda level
  cmp #3
- bne ]rts
+ bne return_55
 
  lda ShadFace
  cmp #86
- bne ]rts
+ bne return_55
  lda VisScrn
  cmp #skelscrn
- bne ]rts
+ bne return_55
  lda exitopen
- beq ]rts
+ beq return_55
  lda KidBlockX
  cmp #skeltrig
- beq :trig
+ beq trig
  cmp #skeltrig+1
- bne ]rts
+ bne return_55
 
-* Remove dead skeleton
+\* Remove dead skeleton
 
-:trig lda VisScrn
+.trig lda VisScrn
  ldx #skelx
  ldy #skely
  jsr rdblock
@@ -653,9 +676,9 @@ BONESRISE
  jsr markwipe
  pla
  cmp #bones
- bne ]rts
+ bne return_55
 
-* Create live skeleton
+\* Create live skeleton
 
  lda VisScrn
  sta CharScrn
@@ -672,7 +695,7 @@ BONESRISE
  adc #angle+7
  sta CharX
 
- lda #-1 ;left
+ lda #LO(-1) ;left
  sta CharFace
 
  lda #arise
@@ -682,7 +705,7 @@ BONESRISE
  lda #skelprog
  sta guardprog
 
- lda #-1
+ lda #LO(-1)
  sta CharLife
  lda #3
  sta OppStrength
@@ -700,8 +723,9 @@ BONESRISE
  sta CharID
 
  jmp SaveShad ;save ShadVars
-
-ENDIF
+}
+ELSE
+ RTS
 ENDIF
 
 \*-------------------------------

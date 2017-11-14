@@ -16,8 +16,8 @@
 \*-------------------------------
 \ org org
 
-.updatemeters RTS   ; jmp UPDATEMETERS          BEEB TODO METERS
-.DrawKidMeter BRK   ; jmp DRAWKIDMETER
+.updatemeters jmp UPDATEMETERS
+.DrawKidMeter jmp DRAWKIDMETER
 .DrawSword jmp DRAWSWORD
 .DrawKid jmp DRAWKID
 .DrawShad jmp DRAWSHAD
@@ -28,14 +28,14 @@
 .setobjindx jmp SETOBJINDX
 .printlevel BRK     ; jmp PRINTLEVEL
 
-.DrawOppMeter BRK   ; jmp DRAWOPPMETER
+.DrawOppMeter jmp DRAWOPPMETER
 .flipdiskmsg BRK    ; jmp FLIPDISKMSG
 .timeleftmsg BRK    ; jmp TIMELEFTMSG
 .DrawGuard jmp DRAWGUARD
 .DrawGuard2 jmp DRAWGUARD
 
 .setupflask jmp SETUPFLASK
-.setupcomix RTS     ; jmp SETUPCOMIX            BEEB TODO HIT FX
+.setupcomix jmp SETUPCOMIX
 .psetupflame BRK    ; jmp PSETUPFLAME           BEEB TODO PRINCESS
 .drawpost BRK       ; jmp DRAWPOST
 .drawglass BRK      ; jmp DRAWGLASS
@@ -90,22 +90,28 @@ addr ds 2
 temp ds 1
 
  dend
+ENDIF
 
-tempsave ds $10
+IF _FEATURE_HITFX
+.gamebg_tempsave skip $10
+ENDIF
 
-*-------------------------------
-* Strength meters
+IF _FEATURE_METERS
+\*-------------------------------
+\* Strength meters
 
-KidStrX db 00,01,02,03,04,05,06,08,09,10,11,12
-KidStrOFF db 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
+.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-OppStrX db 39,38,37,36,35,34,32,31,30,29,28,27
-OppStrOFF db 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
-bline hex 89,8a,8b
+.bline EQUB $89,$8a,$8b
+ENDIF
 
+IF _TODO
 *-------------------------------
 * Post in Princess's room
 
@@ -138,13 +144,13 @@ flowimg hex 16,17,18 ;chtable6
 pmaskdx hex 00,00
 pmaskdy db -4,-33
 pmaski hex 2c,22
+ENDIF
 
-*-------------------------------
-* Comix
+\*-------------------------------
+\* Comix
 
 starimage = $41
 startable = 0 ;chtable1
-ENDIF
 
 \*-------------------------------
 \* Torch animation frames
@@ -506,32 +512,40 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Update strength meters
-*
-*-------------------------------
-UPDATEMETERS
+\*-------------------------------
+\*
+\* Update strength meters
+\*
+\*-------------------------------
+
+.UPDATEMETERS
+{
+IF _FEATURE_METERS
  lda redkidmeter
- beq :1
+ beq label_1
 
  jsr DrawKidMeter
 
-:1 lda redoppmeter
- beq ]rts
+.label_1 lda redoppmeter
+ beq return
 
  jmp DrawOppMeter
-]rts rts
+.return
+ENDIF
+ rts
+}
 
-*-------------------------------
-*
-* Draw kid's strength meter at lower left
-*
-*-------------------------------
-DRAWKIDMETER
+\*-------------------------------
+\*
+\* Draw kid's strength meter at lower left
+\*
+\*-------------------------------
+
+.DRAWKIDMETER
+IF _FEATURE_METERS
+{
  lda inbuilder
- bne ]rts
+ bne return_53
 
  lda #191
  sta YCO
@@ -541,159 +555,168 @@ DRAWKIDMETER
  ldx #0
  stx xsave ;# of bullets drawn so far
 
-:loop lda KidStrength
+.loop lda KidStrength
  sec
  sbc xsave ;# of bullets left to draw
- beq :darkpart
+ beq darkpart
  cmp #4
- bcs :draw3
+ bcs draw3
  cmp #3
- bcs :draw2
+ bcs draw2
  cmp #2
- bcc :drawlast
+ bcc drawlast
 ;Draw 1 bullet
-:draw1 ldy #1
- bne :drline
+.draw1 ldy #1
+ bne drline
  ;Draw 2 bullets
-:draw2 ldy #2
- bne :drline
+.draw2 ldy #2
+ bne drline
 ;Draw 3 bullets
-:draw3 ldy #3
- bne :drline
+.draw3 ldy #3
+ bne drline
 
-:drawlast lda KidStrength
+.drawlast lda KidStrength
  cmp #2
- bcs :steady
+ bcs steady
  lda PAGE
- beq :skip ;flashes when down to 1
-:steady lda #bullet
+ beq skip ;flashes when down to 1
+.steady lda #bullet
  ldy #1
- jsr :draw
-:skip jmp :darkpart
+ jsr draw
+.skip jmp darkpart
 
-* Draw line of 1-3 bullets
+\* Draw line of 1-3 bullets
 
-:drline lda bline-1,y ;image #
- jsr :draw
- jmp :loop
+.drline lda bline-1,y ;image #
+ jsr draw
+ jmp loop
 
-:draw sta IMAGE
+.draw sta IMAGE
  ldx xsave
  tya
  clc
  adc xsave
  sta xsave
 
-* In: IMAGE; x = unit # (0 = leftmost)
+\* In: IMAGE; x = unit # (0 = leftmost)
 
-:drawimg lda KidStrX,x
+.drawimg lda KidStrX,x
  sta XCO
  lda KidStrOFF,x
  sta OFFSET
  jmp addmsg
 
-* Draw blanks to limit of MaxKidStr
+\* Draw blanks to limit of MaxKidStr
 
-:darkpart
- lda #and
+.darkpart
+ lda #enum_and
  sta OPACITY
  lda #blank
  sta IMAGE
-:dloop ldx xsave
+.dloop ldx xsave
  cpx MaxKidStr
- bcs ]rts
- jsr :drawimg
+ bcs return_53
+ jsr drawimg
  inc xsave
- bne :dloop
-]rts rts
+ bne dloop
+}
+ENDIF
+.return_53
+ rts
 
-*-------------------------------
-*
-* Draw opp's strength meter at lower right
-*
-*-------------------------------
-DRAWOPPMETER
+\*-------------------------------
+\*
+\* Draw opp's strength meter at lower right
+\*
+\*-------------------------------
+
+.DRAWOPPMETER
+{
+IF _FEATURE_METERS
  lda inbuilder
- bne ]rts
+ bne return_53
 
  lda OppStrength
- beq ]rts
+ beq return_53
 
  lda ShadID
  cmp #24 ;mouse
- beq ]rts
+ beq return_53
  cmp #4 ;skel
- beq ]rts
+ beq return_53
  cmp #1 ;shadow
- bne :1
+ bne label_1
  lda level
  cmp #12
- bne ]rts ;shad strength shows only on level 12
-:1
+ bne return_53 ;shad strength shows only on level 12
+.label_1
  lda #191
  sta YCO
- lda #enum_sta.$80 ;mirror
+ lda #enum_sta OR $80 ;mirror
  sta OPACITY
 
  ldx #0
  stx xsave ;# of bullets drawn so far
 
-:loop lda OppStrength
+.loop lda OppStrength
  sec
  sbc xsave ;# of bullets left to draw
- beq :darkpart
+ beq darkpart
  cmp #4
- bcs :draw3
+ bcs draw3
  cmp #3
- bcs :draw2
+ bcs draw2
  cmp #2
- bcc :drawlast
+ bcc drawlast
 ;Draw 1 bullet
-:draw1 ldy #1
- bne :drline
+.draw1 ldy #1
+ bne drline
  ;Draw 2 bullets
-:draw2 ldy #2
- bne :drline
+.draw2 ldy #2
+ bne drline
 ;Draw 3 bullets
-:draw3 ldy #3
- bne :drline
+.draw3 ldy #3
+ bne drline
 
-:drawlast lda OppStrength
+.drawlast lda OppStrength
  cmp #2
- bcs :steady
+ bcs steady
  lda PAGE
- beq :darkpart ;flashes when down to 1
-:steady lda #bullet
+ beq darkpart ;flashes when down to 1
+.steady lda #bullet
  ldy #1
- jmp :draw
+ jmp draw
 
-* Draw line of 1-3 bullets
+\* Draw line of 1-3 bullets
 
-:drline lda bline-1,y ;image #
- jsr :draw
- jmp :loop
+.drline lda bline-1,y ;image #
+ jsr draw
+ jmp loop
 
-:draw sta IMAGE
+.draw sta IMAGE
  ldx xsave
  tya
  clc
  adc xsave
  sta xsave
 
-:drawimg lda OppStrX,x
+.drawimg lda OppStrX,x
  sta XCO
  lda OppStrOFF,x
  sta OFFSET
  jmp addmsg
 
-:darkpart
- lda #and.$80
+.darkpart
+ lda #enum_and OR $80
  sta OPACITY
  lda #blank
  sta IMAGE
  ldx xsave
- jmp :drawimg
+ jmp drawimg
+ELSE
+ RTS
 ENDIF
+}
 
 \*-------------------------------
 \*
@@ -990,12 +1013,12 @@ ENDIF
 \*-------------------------------
 \* Save/restore FCharVars
 
-IF _TODO
+IF _FEATURE_HITFX
 .saveFChar
 {
  ldx #$f
 .loop lda FCharVars,x
- sta tempsave,x
+ sta gamebg_tempsave,x
  dex
  bpl loop
  rts
@@ -1004,13 +1027,14 @@ IF _TODO
 .restoreFChar
 {
  ldx #$f
-.loop lda tempsave,x
+.loop lda gamebg_tempsave,x
  sta FCharVars,x
  dex
  bpl loop
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -1021,6 +1045,7 @@ IF _TODO
 \*-------------------------------
 
 .SETUPCOMIX
+IF _FEATURE_HITFX
 {
  jsr saveFChar
  jsr local_sub
@@ -1041,7 +1066,7 @@ IF _TODO
  cmp #111 ;crouching
  bcc local_low
 .label_80 cmp #178 ;halved
- beq return
+ beq return_27
 
  lda #LO(-15)
  ldx CharID
