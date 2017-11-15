@@ -41,10 +41,10 @@
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
-_UNROLL_FASTLAY = FALSE      ; unrolled versions of FASTLAY(STA) function
-_UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
+_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_LAYRSAVE = FALSE     ; unrolled versions of layrsave & peel function
 _UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
-_UNROLL_LAYMASK = TRUE     ; unrolled versions of LayMask full-fat sprite plot
+_UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
 
@@ -102,11 +102,8 @@ IF _UNROLL_LAYRSAVE = FALSE
 
     \ Mask off Y offset
 
-    LDA YCO
-    STA PEELYCO
-
-    AND #&F8
-    TAY    
+    LDY YCO
+    STY PEELYCO
 
     \ Look up Beeb screen address
 
@@ -116,16 +113,13 @@ IF _UNROLL_LAYRSAVE = FALSE
     CLC
     LDA Mult16_LO,X
     ADC YLO,Y
-    STA scrn_addr+1
+    STA beeb_writeptr
     LDA Mult16_HI,X
     ADC YHI,Y
-    STA scrn_addr+2
+    STA beeb_writeptr+1
 
-    \ Ignore clip for now
-    
     \ Make sprite
 
-    LDY #0
     LDA VISWIDTH
     BNE width_ok
 
@@ -135,6 +129,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     \ Store visible width
 
     .width_ok
+    LDY #0
     STA (PEELBUF), Y
 
     \ Calculate visible height
@@ -145,92 +140,105 @@ IF _UNROLL_LAYRSAVE = FALSE
     SBC TOPEDGE
     STA (PEELBUF),y ;Height of onscreen portion ("VISHEIGHT")
 
-    STA beeb_height
+    TAX             ; beeb_height
 
     \ Increment (w,h) header to start of image data
 
     CLC
     LDA PEELBUF
-    ADC #2
-    STA peel_addr+1         ; +1c
-    LDA PEELBUF+1
-    ADC #0
-    STA peel_addr+2         ; +1c
+    ADC #9
+    AND #&F8
+    STA PEELBUF
+    BCC no_carry
+    INC PEELBUF+1
+    .no_carry
+
+    LDA beeb_writeptr
+    AND #&07
+    EOR #&07
+    CLC
+    ADC PEELBUF
+    STA PEELBUF
+    BCC no_carry2
+    INC PEELBUF+1
+    .no_carry2
+
+    \ Calc extents
 
     LDA VISWIDTH
     ASL A                   ; bytes_per_line_on_screen
-    STA smWIDTH+1
+    ASL A                   ; 
+    ASL A                   ; 
+    ASL A                   ; x8
+    STA smPEELINC2+1
+    SEC
+    SBC #7
+    STA smPEELINC+1
+    DEC A
     STA smYMAX+1
 
-\ Y offset into character row
+    \ X=height
 
-    LDA YCO
-    AND #&7
-    TAX
-
-    .yloop
-    STX beeb_yoffset
-
-    LDY #0                  ; would be nice (i.e. faster) to do all of this backwards
-    CLC
-
-    .xloop
-
-    .scrn_addr
-    LDA &FFFF, X
-
-\ 16c + 2c per line to save a cycle per byte copied - as player is > 16 lines high this is a win
-
-    .peel_addr
-    STA &FFFF, Y            ; -1c vs STA (PEELBUF),Y
-
-    TXA                     ; next char column [6c]
-    ADC #8    
-    TAX
-
-    INY
+    .y_loop
 
     .smYMAX
-    CPY #0                  ; VISWIDTH*2
-    BCC xloop
-    
-    \ Update PEELBUF as we go along
-    CLC
-    LDA peel_addr+1         ; +1c
-    .smWIDTH
-    ADC #0                  ; VISWIDTH=WIDTH*2
-    STA peel_addr+1         ; +1c
-    BCC no_carry
-    INC peel_addr+2         ; +1c
-    .no_carry
+    LDY #0                  ; could be done backwards?
+    SEC
 
-    \ Have we done all lines?
-    DEC beeb_height
-    BEQ done
+    .x_loop
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    TYA
+    SBC #8    
+    TAY
+
+    BCS x_loop
+
+    DEX
+    BEQ done_y
 
     \ Next scanline
-    LDX beeb_yoffset
-    DEX
-    BPL yloop
 
-    \ Next character row
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC PEELBUF                     ; can't overflow as in multiples of 8
+
+    BRA y_loop
+
+    .one_row_up
+
     SEC
-    LDA scrn_addr+1
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
-    STA scrn_addr+1
-    LDA scrn_addr+2
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
-    STA scrn_addr+2
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
 
-    LDX #7
-    BNE yloop
-    .done
+    CLC
+    LDA PEELBUF
+    .smPEELINC
+    ADC #0                      ; VISWIDTH*2*8 - 7
+    STA PEELBUF
+    BCC no_carry3
+    INC PEELBUF+1
+    .no_carry3
 
-    \ Update PEELBUF
-    LDA peel_addr+1         ; +4c
-    STA PEELBUF             ; +3c
-    LDA peel_addr+2         ; +4c
-    STA PEELBUF+1           ; +3c
+    BRA y_loop
+
+    .done_y
+    CLC
+    LDA PEELBUF
+    .smPEELINC2
+    ADC #0                  ; VISWIDTH*2*8
+    STA PEELBUF
+    BCC no_carry4
+    INC PEELBUF+1
+    .no_carry4
 
 ;RASTER_COL PAL_black
 
@@ -432,16 +440,14 @@ IF _UNROLL_LAYRSAVE = FALSE
 
     \ Mask off Y offset
 
-    LDA YCO
+    LDY YCO
 \ Bounds check YCO
 IF _DEBUG
-    CMP #192
+    CPY #192
     BCC y_ok
     BRK
     .y_ok
 ENDIF
-    AND #&F8
-    TAY    
 
     \ Look up Beeb screen address
 
@@ -453,110 +459,102 @@ IF _DEBUG
     BRK
     .x_ok
 ENDIF
+
     CLC
     LDA Mult16_LO,X
     ADC YLO,Y
-    STA scrn_addr+1
+    STA beeb_writeptr
     LDA Mult16_HI,X
     ADC YHI,Y
-    STA scrn_addr+2
+    STA beeb_writeptr+1
 
     \ Set sprite data address 
 
     CLC
     LDA IMAGE
-    ADC #2
-    STA sprite_addr+1
+    ADC #9
+    AND #&F8
+    STA beeb_readptr
     LDA IMAGE+1
     ADC #0
-    STA sprite_addr+2
+    STA beeb_readptr+1
 
-    \ Simple Y clip
-    SEC
-    LDA YCO
-    SBC HEIGHT
-    BCS no_yclip
+    LDA beeb_writeptr
+    AND #&07
+    EOR #&07
+    CLC
+    ADC beeb_readptr
+    STA beeb_readptr
+    BCC no_carry2
+    INC beeb_readptr+1
+    .no_carry2
 
-    LDA #LO(-1)
-    .no_yclip
-    STA smTOP+1
+    \ No need for clip as not fastlay
 
-    \ Store height
-
-    LDA YCO
-    STA beeb_height
-
-    \ Y offset into character row
-
-    AND #&7
-    TAX
-
-    \ Plot loop
+    \ Extents
 
     LDA WIDTH
     ASL A
+    ASL A
+    ASL A
+    ASL A
+    SEC
+    SBC #7
+    STA smREADINC+1
+    DEC A
     STA smYMAX+1
-    STA smWIDTH+1
 
-    .yloop
-    STX beeb_yoffset
+    LDX HEIGHT
 
-    LDY #0
-    CLC
+    .y_loop
 
-    .xloop
-
-    .sprite_addr
-    LDA &FFFF, Y            ; 4c
-
-    .scrn_addr
-    STA &FFFF, X            ; 4c
-
-    TXA                     ; next char column [6c]
-    ADC #8    
-    TAX                     ; 6c
-
-    INY                     ; 2c
     .smYMAX
-    CPY #0                  ; 2c
-    BCC xloop               ; 3c
-    
-    LDY beeb_height
-    DEY
-    .smTOP
-    CPY #0
-    BEQ done_y
-    STY beeb_height
+    LDY #0                          ; 2c
+    SEC
 
-    \ Completed a line - next row of sprite data
+    .x_loop
+    LDA (beeb_readptr), Y           ; 5c
+    STA (beeb_writeptr), Y          ; 6c
 
-    CLC
-    LDA sprite_addr+1
-    .smWIDTH
-    ADC #0                  ; WIDTH*2
-    STA sprite_addr+1
-    BCC no_carry
-    INC sprite_addr+2
-    .no_carry
+    TYA                     ; next char column [6c]
+    SBC #8    
+    TAY                     ; 6c
 
-    \ Next scanline
+    BCS x_loop               ; 3c
 
-    LDX beeb_yoffset
-    DEX
-    BPL yloop
+    DEX                             ; 2c
+    BEQ done_y                      ; 2c
 
-    \ Next character row
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr               ; 5c
+    INC beeb_readptr                ; 5c     ; can't overflow as in multiples of 8
+
+    BRA y_loop                      ; 3c
+
+    .one_row_up
 
     SEC
-    LDA scrn_addr+1
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
-    STA scrn_addr+1
-    LDA scrn_addr+2
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
-    STA scrn_addr+2
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
 
-    LDX #7
-    BNE yloop
+    CLC
+    LDA beeb_readptr
+    .smREADINC
+    ADC #0                        ; VISWIDTH*2*8-7
+    STA beeb_readptr
+    BCC no_carry
+    INC beeb_readptr+1
+    .no_carry
+
+    BRA y_loop
+
     .done_y
 
 ;RASTER_COL PAL_black
@@ -900,6 +898,10 @@ RASTER_COL PAL_yellow
 .smSTACK2
     ORA &100,X
 
+\ Skip zero data
+
+    BEQ skip_zero
+
 \ Convert pixel data to mask
 
     STA load_mask+1             \ 4c not storing in a register
@@ -920,6 +922,7 @@ RASTER_COL PAL_yellow
 
 \ Next screen byte across
 
+    .skip_zero
     TYA
     ADC #8
     TAY                         ; do it all backwards?!

@@ -1770,3 +1770,54 @@ All up remaining = &102D bytes ~= 4K
 
 If were to go with half height player sprites how would the sprite banks be arranged in RAM?
 CHTAB1+2+3+5 = 4701 + 4747 + 3195 + 3195 = 15838 bytes = 1x SWRAM bank (depending on alignment)
+
+
+From crj:
+OK. Having put on my 8-bit Acorn hacker hat and suggested tricks for scavenging more RAM from the Master, I'll now take it off and instead put on my computer sciencist hat...
+
+I've not seen this code, but I assume that there's a large pool of sprites to plot, and a relatively small number of routines which do that plotting. I also assume that the amount of foreground is a small proportion of the toal screen area.
+
+If both those conditions are true, you could get sneaky. When plotting a sprite, don't actually write the data to screen memory. Instead, have two instances of a data structure that is:
+A linear buffer of blocks (screen address+size+mask+data) to be written to the screen
+A binary min-heap of pointers to those blocks, sorted by screen address
+For each frame, do the following:
+Perform all your sprite writes into the this-frame structure
+Wait for Vsync
+Commit the this-frame structure to screen in screen-address order.
+As you commit each block, save the data you overwrite as a block in the next-frame structure
+Swap which structure you're using as this-frame and which as next-frame
+That should be a (very) efficient way to get a mixture of removing the previous frame's sprites and applying this frame's sorted into a flicker-free order. And the resulting data structure would probably be a lot smaller than a second bank of screen memory.
+
+The commit routine would be the only thing that had to access screen memory. If you placed the structures in low memory, you could run most of the time with shadow memory in place, and code anywhere could add things to the this-frame structure.
+
+If that basically worked but wasn't compact enough, you could finesse things:
+Put the this-frame and next-frame heaps in the same block of memory, one ascending and the other descending.
+Only store masks when necessary.
+Directly refer to sprites rather than copying them into the buffer whenever they're suitably aligned and in appropriate memory.
+
+From RTW:
+Awesome Kieran, thanks! It does look undeniably awesome double buffered like that (in fact, I'm even wondering whether the frame rate is actually too fast most of the time, i.e. when there's not another character on-screen!).
+
+So back to your quandary. Seems to me that neither reducing screen bit depth or sprite vertical resolution are really good compromises. I know that the Beeb can do flicker-free sprite plotting for PoP with a single screen buffer (we have a double speed 6502 after all!), but I understand that this isn't trivial as it effectively means recoding the low-level layer (although I always imagined that a Beeb port would do that anyway).
+
+I'm happy to help any way I can if you decide to opt for this approach in the long term! Even just throwing ideas around. I was already contemplating routines to identify overlaps (by maintaining a <32 byte table, 1 bit per sprite which occupies that screen row) for quick collision detection, and putting sprites into non-overlapping groups so they can be erased/plotted one group at a time. If you can find a way to restructure the order that it plots things so you minimise the time between erase and replot, you've basically cracked it!
+
+But yeah, I can imagine that, now you've seen it working as intended with the double buffer, it must be psychologically difficult to go back. For me, the fun bit of doing the port would actually be working on the custom platform code, but I couldn't ever get through the drudgery of just getting someone else's code working - for this, you have my utmost respect 
+
+Side note: 40 scans seems like a long time to save or restore the background. If you're not already doing so, I'd do this as a straightforward character row aligned block copy, so you can just do a trivial LDA (),Y / STA (),Y in a loop for the bounding box width * 8.
+
+Are you making use of the 'plot at any horizontal pixel' facility of the Exile sprite routine? If not, you might find it better to plot column-wise, and then there's an extra simple bit of sprite compression which might be worthwhile, namely that any 00 byte in the sprite data is always followed by a byte count to skip, so you can avoid storing vertical runs of empty space.
+
+
+~~~
+Care most about player / moving characters (middle plane objects that layrsave)
+A peel will remove previous player sprite and need to plot new one back asap
+Rather than do all operations per layer, need to localise the draw operations to each moving object
+So for each middle plane (moving) object need to complete the operations in correct order that affect the sprite pot area
+
+Imagine a bounding box around the player sprite, for each peel/wipe/back/fore sprite that affects that bounding box - need to do those in order.  Worst case would be sword fighting a guard standing in front of a torch and behind a pillar (which happens all the time e.g. 1st level guard.)  Would have to combine the guard, player & sword objects into one bounding box which puts us back where we started in terms of essentially drawing everything on screen in layer/pass order.  Would be:
+
+Peel x4, update bg (flame), layrsave + mask x4, update fore (pillar)
+
+Only seems feasible if can remove redraw of foreground for a start.  Could use top-bit as foreground indicator, would need to ensure that all plot functions, including background & wipe didn't overwrite foreground (e.g. spikes next to a pillar)
+

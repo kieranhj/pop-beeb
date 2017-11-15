@@ -10,16 +10,18 @@ BEEB_MAX_LAY_WIDTH=10
 
 MACRO BEEB_PLOT_LAYMASK_BYTES x_byte
 {
-    INX:LDA &100,X
-    INX:ORA &100,X
-    STA load_mask+1
-    .load_mask LDA mask_table
-    LDY #(x_byte * 8)
-    AND (beeb_writeptr), Y
-    ORA load_mask+1
-    STA (beeb_writeptr), Y
-}
+    INX:LDA &100,X              ; 4b
+    INX:ORA &100,X              ; 4b
+    STA load_mask+1             ; 3b
+    .load_mask LDA mask_table   ; 3b
+    LDY #(x_byte * 8)           ; 2b
+    AND (beeb_writeptr), Y      ; 2b
+    ORA load_mask+1             ; 3b
+    STA (beeb_writeptr), Y      ; 2b
+}                               ; 23b=&17
 ENDMACRO
+
+BEEB_PLOT_LAYMASK_UNROLL_SIZE=&17
 
 .beeb_plot_sprite_LayMask
 {
@@ -728,12 +730,12 @@ RASTER_COL PAL_yellow
 
 .mlaymask_unrolled_LO
 FOR n,0,BEEB_MAX_LAY_WIDTH*2,1
-EQUB LO(mlaymask_unrolled_start + n*&17)
+EQUB LO(mlaymask_unrolled_start + n*BEEB_PLOT_LAYMASK_UNROLL_SIZE)
 NEXT
 
 .mlaymask_unrolled_HI
 FOR n,0,BEEB_MAX_LAY_WIDTH*2,1
-EQUB HI(mlaymask_unrolled_start + n*&17)
+EQUB HI(mlaymask_unrolled_start + n*BEEB_PLOT_LAYMASK_UNROLL_SIZE)
 NEXT
 }
 
