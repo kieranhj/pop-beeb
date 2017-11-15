@@ -43,7 +43,7 @@ _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these ar
 
 _UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
 _UNROLL_LAYRSAVE = FALSE     ; unrolled versions of layrsave & peel function
-_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
+_UNROLL_WIPE = FALSE         ; unrolled versions of wipe function
 _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
@@ -272,18 +272,14 @@ IF _UNROLL_WIPE = FALSE
 
     \ Mask off Y offset
 
-    LDA YCO
+    LDY YCO
 \ Bounds check YCO
 IF _DEBUG
-    CMP #192
+    CPY #192
     BCC y_ok
     BRK
     .y_ok
 ENDIF
-    AND #&F8
-    TAY    
-
-    \ Look up Beeb screen address
 
     LDX XCO
 \ Bounds check XCO
@@ -293,6 +289,9 @@ IF _DEBUG
     BRK
     .x_ok
 ENDIF
+
+    \ Look up Beeb screen address
+
     CLC
     LDA Mult16_LO,X
     ADC YLO,Y
@@ -300,23 +299,6 @@ ENDIF
     LDA Mult16_HI,X
     ADC YHI,Y
     STA scrn_addr+2
-
-    \ Simple Y clip
-    SEC
-    LDA YCO
-
-    \ Store height
-
-    TAY
-    SBC height
-    STA smTOP+1
-
-    TYA
-
-    \ Y offset into character row
-
-    AND #&7
-    TAX
     
     \ Set opacity
 
@@ -333,56 +315,54 @@ ENDIF
     LDA width
     ASL A
     ASL A:ASL A: ASL A      ; x8
+    SEC
+    SBC #8
     STA smXMAX+1
 
-    .yloop
-    STX beeb_yoffset
+    LDY height
 
-    CLC
-
-    .xloop
+    .y_loop
 
 ;    .smOPACITY
 ;    LDA #0                  ; OPACITY
 \ ONLY BLACK
-    .scrn_addr
-    STZ &FFFF, X            ; 5c
-
-    TXA                     ; next char column [6c]
-    ADC #8    
-    TAX                     ; 6c
 
     .smXMAX
-    CPX #0                  ; 2c do this backwards...
-    BCC xloop               ; 3c
+    LDX #0                          ; 2c
+    SEC
 
-    \ Should keep track of Y in a register
+    .x_loop
 
-    DEY                     ; 2c
-    .smTOP
-    CPY #0                  ; 2c
-    BEQ done_y              ; 2c
+    .scrn_addr
+    STZ &FFFF, X
 
-    \ Completed a line
+    TXA                     ; next char column [6c]
+    SBC #8    
+    TAX                     ; 6c
 
-    \ Next scanline
+    BCS x_loop               ; 3c
 
-    LDX beeb_yoffset        ; 2c
-    DEX                     ; 2c
-    BPL yloop               ; 3c
+    DEY                             ; 2c
+    BEQ done_y                      ; 2c
 
-    \ Next character row
+    LDA scrn_addr+1               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
 
+    DEC scrn_addr+1               ; 5c
+    BRA y_loop                      ; 3c
+
+    .one_row_up
     SEC
     LDA scrn_addr+1
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA scrn_addr+1
     LDA scrn_addr+2
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA scrn_addr+2
 
-    LDX #7
-    BNE yloop
+    BRA y_loop
+
     .done_y
 
     RTS
@@ -497,7 +477,7 @@ ENDIF
     ASL A
     ASL A
     ASL A
-    ASL A
+    ASL A       ; Mult16_LO
     SEC
     SBC #7
     STA smREADINC+1
@@ -900,7 +880,7 @@ RASTER_COL PAL_yellow
 
 \ Skip zero data
 
-    BEQ skip_zero
+    BEQ skip_zero               ; BEEB really need to check this is faster in the general case!
 
 \ Convert pixel data to mask
 
@@ -1943,6 +1923,10 @@ RASTER_COL PAL_yellow
 .smSTACK2
     ORA &100,X
 
+\ Don't blot blank bytes
+
+    BEQ skip_zero
+
 \ Convert sprite pixels to mask
 
     STA load_mask+1
@@ -1960,6 +1944,8 @@ RASTER_COL PAL_yellow
 \ Write to screen
 
     STA (beeb_writeptr), Y
+
+    .skip_zero
 
 \ Next screen byte across
 
@@ -2752,6 +2738,8 @@ ENDIF
 \ Lookup pixels D & C
 
     AND #&CC                        ; 2c
+    BEQ skip_zeroDC
+
     TAX
 
 \ Convert pixel data to mask
@@ -2772,12 +2760,15 @@ ENDIF
 
 \ Increment write pointer
 
+    .skip_zeroDC
     TYA:ADC #8:TAY
 
 \ Lookup pixels B & A
 
     LDA beeb_data                   ; 3c
     AND #&33                        ; 2c
+    BEQ skip_zeroBA
+
     TAX                             ; 2c
 
 \ Convert pixel data to mask
@@ -2798,6 +2789,7 @@ ENDIF
 
 \ Next screen byte across
 
+    .skip_zeroBA
     TYA:ADC #8:TAY
 
 \ Increment sprite index

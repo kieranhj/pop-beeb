@@ -55,13 +55,13 @@ EQUB HI(beeb_plot_fastlaysta_6bytes)
     STA beeb_height
 
     LDX WIDTH
+    DEX
 IF _DEBUG
     CPX #BEEB_MAX_FASTLAY_WIDTH
     BCC width_ok
     BRK
     .width_ok
 ENDIF
-    DEX
 
     LDA fastlaysta_table_LO,X
     STA jmp_addr+1
