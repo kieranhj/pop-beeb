@@ -461,8 +461,8 @@ ENDIF
 \*
 \*-------------------------------
 .ADDMIDEZ
- lda #0
- sta OFFSET
+; lda #0        ; bug that this zeroes A?
+ stz OFFSET
 .ADDMIDEZO
 {
  ldx midX

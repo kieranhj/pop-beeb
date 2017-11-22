@@ -12,7 +12,7 @@ _TODO = FALSE               ; code still to be ported
 _DEBUG = TRUE               ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
 _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
-_ALL_LEVELS = TRUE          ; allow user to play all levels
+_ALL_LEVELS = FALSE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 
 _FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM

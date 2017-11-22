@@ -41,12 +41,56 @@
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 _REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
-_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
-_UNROLL_LAYRSAVE = FALSE     ; unrolled versions of layrsave & peel function
-_UNROLL_WIPE = FALSE         ; unrolled versions of wipe function
-_UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
+_UNROLL_FASTLAY = FALSE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
+_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
+_UNROLL_LAYMASK = TRUE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
+
+\*-------------------------------
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+\*-------------------------------
+
+.beeb_plot_calc_screen_addr
+{
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
+
+    \ Mask off Y offset to get character row
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    LDX XCO
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
+
+    \ Handle OFFSET
+
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
+
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
+}
+
 
 \*-------------------------------
 \*
@@ -244,135 +288,10 @@ IF _UNROLL_LAYRSAVE = FALSE
 
     JMP DONE                ; restore vars
 }
-ENDIF
 
 \*-------------------------------
 \*
-\*  F A S T B L A C K
-\*
-\*  Wipe a rectangular area to black2
-\*
-\*  Width/height passed in IMAGE/IMAGE+1
-\*  (width in bytes, height in pixels)
-\*
-\*-------------------------------
-
-IF _UNROLL_WIPE = FALSE
-.beeb_plot_wipe
-{
-    \ OFFSET IGNORED
-    \ OPACITY IGNORED
-    \ MIRROR IGNORED
-    \ CLIPPING IGNORED
-    
-    \ XCO & YCO are screen coordinates
-    \ XCO (0-39) and YCO (0-191)
-
-    \ Convert to Beeb screen layout
-
-    \ Mask off Y offset
-
-    LDY YCO
-\ Bounds check YCO
-IF _DEBUG
-    CPY #192
-    BCC y_ok
-    BRK
-    .y_ok
-ENDIF
-
-    LDX XCO
-\ Bounds check XCO
-IF _DEBUG
-    CPX #70
-    BCC x_ok
-    BRK
-    .x_ok
-ENDIF
-
-    \ Look up Beeb screen address
-
-    CLC
-    LDA Mult16_LO,X
-    ADC YLO,Y
-    STA scrn_addr+1
-    LDA Mult16_HI,X
-    ADC YHI,Y
-    STA scrn_addr+2
-    
-    \ Set opacity
-
-IF _DEBUG
-    LDA OPACITY
-;   STA smOPACITY+1
-    BEQ is_black
-    BRK
-    .is_black
-ENDIF
-
-    \ Plot loop
-
-    LDA width
-    ASL A
-    ASL A:ASL A: ASL A      ; x8
-    SEC
-    SBC #8
-    STA smXMAX+1
-
-    LDY height
-
-    .y_loop
-
-;    .smOPACITY
-;    LDA #0                  ; OPACITY
-\ ONLY BLACK
-
-    .smXMAX
-    LDX #0                          ; 2c
-    SEC
-
-    .x_loop
-
-    .scrn_addr
-    STZ &FFFF, X
-
-    TXA                     ; next char column [6c]
-    SBC #8    
-    TAX                     ; 6c
-
-    BCS x_loop               ; 3c
-
-    DEY                             ; 2c
-    BEQ done_y                      ; 2c
-
-    LDA scrn_addr+1               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC scrn_addr+1               ; 5c
-    BRA y_loop                      ; 3c
-
-    .one_row_up
-    SEC
-    LDA scrn_addr+1
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA scrn_addr+1
-    LDA scrn_addr+2
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA scrn_addr+2
-
-    BRA y_loop
-
-    .done_y
-
-    RTS
-}
-\\ 5+6+2+5=18c*2=36c per abyte + 6+7=13c per line
-ENDIF
-
-\*-------------------------------
-\*
-\*  NOT QUITE F A S T L A Y
+\*  P E E L = (CUSTOM) F A S T L A Y
 \*
 \*  Streamlined LAY routine
 \*
@@ -389,7 +308,6 @@ ENDIF
 \* 
 \*-------------------------------
 
-IF _UNROLL_LAYRSAVE = FALSE
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
@@ -544,45 +462,131 @@ ENDIF
 \\ 21*2-1=41c per Apple byte + ~14c per row
 ENDIF
 
-\ IN: XCO, YCO
-\ OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
-.beeb_plot_calc_screen_addr
+
+\*-------------------------------
+\*
+\*  F A S T B L A C K
+\*
+\*  Wipe a rectangular area to black2
+\*
+\*  Width/height passed in IMAGE/IMAGE+1
+\*  (width in bytes, height in pixels)
+\*
+\*-------------------------------
+
+IF _UNROLL_WIPE = FALSE
+.beeb_plot_wipe
 {
+    \ OFFSET IGNORED
+    \ OPACITY IGNORED
+    \ MIRROR IGNORED
+    \ CLIPPING IGNORED
+    
     \ XCO & YCO are screen coordinates
     \ XCO (0-39) and YCO (0-191)
-    \ OFFSET (0-3) - maybe 0,1 or 8,9?
 
-    \ Mask off Y offset to get character row
+    \ Convert to Beeb screen layout
 
-    LDA YCO
-    AND #&F8
-    TAY    
+    \ Mask off Y offset
+
+    LDY YCO
+\ Bounds check YCO
+IF _DEBUG
+    CPY #192
+    BCC y_ok
+    BRK
+    .y_ok
+ENDIF
 
     LDX XCO
+\ Bounds check XCO
+IF _DEBUG
+    CPX #70
+    BCC x_ok
+    BRK
+    .x_ok
+ENDIF
+
+    \ Look up Beeb screen address
+
     CLC
     LDA Mult16_LO,X
     ADC YLO,Y
-    STA beeb_writeptr
+    STA scrn_addr+1
     LDA Mult16_HI,X
     ADC YHI,Y
-    STA beeb_writeptr+1
+    STA scrn_addr+2
+    
+    \ Set opacity
 
-    LDA YCO
-    AND #&7
-    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
+IF _DEBUG
+    LDA OPACITY
+;   STA smOPACITY+1
+    BEQ is_black
+    BRK
+    .is_black
+ENDIF
 
-    \ Handle OFFSET
+    \ Plot loop
 
-    LDA OFFSET
-    LSR A
-    STA beeb_mode2_offset
+    LDA width
+    ASL A
+    ASL A:ASL A: ASL A      ; x8
+    SEC
+    SBC #8
+    STA smXMAX+1
 
-    AND #&1
-    STA beeb_parity             ; this is parity
+    LDY height
 
-    ROR A                       ; return parity in C
+    .y_loop
+
+;    .smOPACITY
+;    LDA #0                  ; OPACITY
+\ ONLY BLACK
+
+    .smXMAX
+    LDX #0                          ; 2c
+    SEC
+
+    .x_loop
+
+    .scrn_addr
+    STZ &FFFF, X
+
+    TXA                     ; next char column [6c]
+    SBC #8    
+    TAX                     ; 6c
+
+    BCS x_loop               ; 3c
+
+    DEY                             ; 2c
+    BEQ done_y                      ; 2c
+
+    LDA scrn_addr+1               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC scrn_addr+1               ; 5c
+    BRA y_loop                      ; 3c
+
+    .one_row_up
+    SEC
+    LDA scrn_addr+1
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA scrn_addr+1
+    LDA scrn_addr+2
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA scrn_addr+2
+
+    BRA y_loop
+
+    .done_y
+
     RTS
 }
+\\ 5+6+2+5=18c*2=36c per abyte + 6+7=13c per line
+ENDIF
+
 
 \*-------------------------------
 \*

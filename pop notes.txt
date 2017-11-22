@@ -1,4 +1,4 @@
-POP notes
+﻿POP notes
 
 Apple II screen = 280 x 192 pixels = 40 x 192 bytes = 7.5k
 One byte = 7 pixels
@@ -1821,3 +1821,26 @@ Peel x4, update bg (flame), layrsave + mask x4, update fore (pillar)
 
 Only seems feasible if can remove redraw of foreground for a start.  Could use top-bit as foreground indicator, would need to ensure that all plot functions, including background & wipe didn't overwrite foreground (e.g. spikes next to a pillar)
 
+Tricky's suggestion for 2x 1bpp planes for player
+~~~
+Estimated memory usage:
+CHTAB1 = 5219 + 2668 vs 8999
+CHTAB2 = 5158 + 2177 vs 8893
+CHTAB3 = 3552 + 1700 vs 5985
+CHTAB5 = 3526 + 1830 vs 6134
+
+25830 vs 30011 saves 4K almost exactly
++2K slush + 2K remaining in the system :S
+
+Could save more by removing the socks!! - given John a memory limit?
+
+Player sprites
+~~~
+All sprite widths multiple of 4 pixels
+Worst case is 32 pixels wide = 8 bytes @ 2bpp
+Tallest sprite is 57 pixels high
+Largest single sprite is 287 bytes (28 x 41 pixels = 7 x 41 bytes)
+Currently 2bpp = 4 colours (black/mask, white, orange, blue) but could be reduced to 2 colours + mask
+Sprite plot requires a row of pixel data at a time
+Sprite plot supports mirroring so ideally want to decode from either end (but not essential)
+Sprite plot requires starting from any row due to clipping against top of screen
