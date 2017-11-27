@@ -1844,3 +1844,54 @@ Currently 2bpp = 4 colours (black/mask, white, orange, blue) but could be reduce
 Sprite plot requires a row of pixel data at a time
 Sprite plot supports mirroring so ideally want to decode from either end (but not essential)
 Sprite plot requires starting from any row due to clipping against top of screen
+
+MODE 5 sprite data = ABCDabcd
+But if only using 3x colours then never have colour 1=%01 in a combination
+
+So following are not possible:
+0BCD1bcd
+A0CDa1cd
+AB0Dab1d
+ABC0abc1
+81 valid pixel combinations - but player sprites use max 67 of them - could squeeze this down to 64 and store in 6 bits
+But even at 6 bits / 4 pixels (1.5bpp) the rounding up to whole bytes means only ~10% saving overall :\
+
+Now looking at 1bpp vs 2bpp lines and whether these can be interleaved in some way
+Most common width is 3 bytes with 2 and 4 bytes about equal
+So would need to reliably save 1 byte from a 3 byte width line to make a meaningful difference
+4 bytes = 16 pixels = 32 bits -> 3 bytes = 24/16 = 1.5 bpp (6 bits=4 pixels) <- achievable 'just about' lossless with 3 colours (3^4=81 but only 67 used max)
+3 bytes = 12 pixels = 24 bits -> 2 bytes = 16/12 = 1.333 bpp (4 bits=3 pixels) <- 27 possible combos - max used = 24 :\
+2 bytes = 8 pixels = 16 bits
+
+Could fix the bits used to encode 12 pixels into 2 bytes?
+Most likely that the outer bits will be black or white... - not true as players face is on left hand side
+00112233 44556677 8899aabb
+01233445 566778ab
+
+3 bytes = 12 pixels = 24 bits -> 2 bytes = 16/12 = 1.333 bpp - attribute mode? 12 bits for pixels then 4 bits for whether "on" pixels are white or orange in each row of 3?!
+So this would be each nibble = 1 bit attribute + 3 bits pixels.
+
+CHTAB1 = 6847 vs 8999
+CHTAB2 = 6885 vs 8893
+CHTAB3 = 4694 vs 5985
+CHTAB5 = 4547 vs 6134
+22971 vs 30011 ~= 77%
+Saving = 7040 bytes = 6.875K
+
+Tricky 2x bit planes
+Saving = 4K
+Pros: keep original full resolution without data loss
+Cons: new plot routine required, increased plot complexity (2 pass), slower plotting as have to overdraw, some authoring restrictions (orange in top half only)
+Highest quality, smallest saving
+
+Attribute mode
+Saving =  6.9K
+Pros: keep vertical & horizontal resolution
+Cons: some loss of data in horizontal resolution, fiddly authoring restrictions (white/orange in 3 pixel groups), new plot routine required, aretefacts not very beeb-like
+Medium quality, medium saving
+
+Half height mode
+Saving = 14K
+Pros: keep existing plot routine, could have faster plotting (two scanlines together), full 3 colours available, square pixels, keep horizontal resolution
+Cons: reduced vertical resolution, looks very chunky, not competitive with other 8-bit versions?
+Lowest quality, highest saving

@@ -17,8 +17,6 @@ static unsigned char pixels[256][10000];
 static unsigned char colours[256][10000];
 static int colour_width[256];
 
-static int total_colours[7];
-
 #define BLACK0 0
 #define PURPLE 1
 #define GREEN 2
@@ -228,10 +226,6 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 
 				colour_data[y*pixel_width + x] = colour;
 			}
-
-			// Colour use tracking - not that interesting now
-
-			total_colours[colour_data[y*pixel_width + x]]++;
 		}
 	}
 
@@ -412,8 +406,7 @@ int convert_pixels_to_mode4(unsigned char *pixel_data, int pixel_width, int pixe
 	return 2 + mode4_bytes;
 }
 
-#if 1
-int calc_colour6_size(unsigned char *colour_data, int pixel_width, int pixel_height, bool verbose, bool point)
+int calc_attribute6_size(unsigned char *colour_data, int pixel_width, int pixel_height, bool verbose, bool point)
 {
 	int expanded_width = 8 * pixel_width / 7;
 	int reduced_width = expanded_width / 2;
@@ -421,109 +414,25 @@ int calc_colour6_size(unsigned char *colour_data, int pixel_width, int pixel_hei
 	int mode5_width = (reduced_width + 3) / 4;
 	int mode5_height = pixel_height;
 
-	int minX = mode5_width;
-	int maxX = 0;
-	int minY = mode5_height;
-	int maxY = 0;
+	// We turn 3 pixels into 4 bits (1x attribute bit + 3x pixel bits)
 
-	for (int y = 0; y < pixel_height; y += 1)
-	{
-		for (int x8 = 0; x8 < mode5_width; x8++)
-		{
-			int c0, c1, c2, c3;
-
-			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c0, c1, c2, c3, point);
-
-			// Do we have any pixels of colour 6?
-
-			if ((c0 == 6 || c1 == 6 || c2 == 6 || c3 == 6))// && y>10) //to remove socks!?
-			{
-				if (x8 < minX)		minX = x8;
-				if (x8 > maxX)		maxX = x8;
-				if (y < minY)		minY = y;
-				if (y > maxY)		maxY = y;
-			}
-		}
-	}
-
-	int colour6_width = minX < maxX ? ((1 + (maxX - minX)) + 1)/2 : 0;
-	int colour6_height = minY < maxY ? (1 + (maxY - minY)) : 0;
-	int colour6_bytes = colour6_width * colour6_height;
+	int attr_bytes = (((((mode5_width * 4) + 2) / 3) + 1) / 2) * mode5_height;
 
 	if (verbose)
 	{
-		printf("(%d, %d) to (%d, %d) = %d x %d = %d bytes\n", minX, minY, maxX, maxY, colour6_width, colour6_height, colour6_bytes);
-//		printf("%d x %d = %d bytes, %d x %d pixels at 1bpp half width\n", mode4_width, mode4_height, mode4_bytes, reduced_width, pixel_height);
+		printf("%d x %d = %d bytes, %d x %d trixels at 1.333bpp\n", (((((mode5_width * 4) + 2) / 3) + 1) / 2), mode5_height, attr_bytes, ((mode5_width * 4) + 2) / 3, mode5_height);
 	}
 
-	return colour6_bytes + 4;
+	return attr_bytes + 4;
 }
-#else
-int calc_colour6_size(unsigned char *colour_data, int pixel_width, int pixel_height, bool verbose, bool point)
-{
-	int expanded_width = 8 * pixel_width / 7;
-	int reduced_width = expanded_width / 2;
 
-	int mode5_width = (reduced_width + 3) / 4;
-	int mode5_height = pixel_height;
-
-	int minX = mode5_width;
-	int maxX = 0;
-	int minY = mode5_height;
-	int maxY = 0;
-
-	int c[256];
-	int total_bytes = 0;
-
-	for (int y = 0; y < pixel_height; y += 1)
-	{
-		int span_bytes = 0;
-
-		for (int x8 = 0, x = 0; x8 < mode5_width; x8++, x += 4)
-		{
-			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point);
-		}
-
-		int current_colour = -1;
-		int colour_count = 0;
-
-		for (int x = 0; x < mode5_width * 4; x++)
-		{
-			if (c[x] != current_colour)
-			{
-				if (current_colour != -1)
-				{
-				//	printf("(%d,%d) ", current_colour, colour_count);
-					span_bytes++;
-				}
-
-				current_colour = c[x];
-				colour_count = 1;
-			}
-			else
-			{
-				colour_count++;
-			}
-		}
-
-//		printf("(%d, %d)\n", current_colour, colour_count);
-		span_bytes++;
-
-		total_bytes += span_bytes;
-	}
-
-	printf("=%d bytes\n", total_bytes);
-
-	return total_bytes + 4;
-}
-#endif
 
 int main(int argc, char **argv)
 {
 	cimg_usage("POP asset convertor.\n\nUsage : pop2beeb [options]");
 	const char *const inputname = cimg_option("-i", (char*)0, "Input filename");
 	const char *const outputname = cimg_option("-o", (char*)0, "Output filename");
-	const int mode = cimg_option("-mode", 5, "BBC MODE number");
+	const int mode = cimg_option("-mode", 5, "BBC MODE number (6='attribute' mode)");
 	const int remove = cimg_option("-remove", 0, "Remove Apple II colour # from data");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
@@ -575,11 +484,6 @@ int main(int argc, char **argv)
 	int total_width = 0;
 	int max_height = 0;
 
-	for (int c = 0; c < 8; c++)
-	{
-		total_colours[c] = 0;
-	}
-
 	for (int i = 0; i < num_images; i++)
 	{
 		image_size[i][0] = *image_ptr++;
@@ -623,18 +527,6 @@ int main(int argc, char **argv)
 
 	max_height += 2;
 
-	printf("Total bytes = %d\n", total_bytes);
-
-	if (verbose)
-	{
-		printf("Total colours:\n");
-
-		for (int c = 0; c < 8; c++)
-		{
-			printf("[%d] %d\n", c, total_colours[c]);
-		}
-
-	}
 
 	if (test)
 	{
@@ -643,7 +535,11 @@ int main(int argc, char **argv)
 			printf("Test: %d x %d\n", total_width, max_height);
 		}
 
-		CImg<unsigned char> img(total_width, max_height, 1, 3, 0);
+		int mode5_total_width = total_width - (num_images * 8);
+		mode5_total_width = 8 * mode5_total_width / 7;
+		mode5_total_width += num_images * 8;
+
+		CImg<unsigned char> img(mode5_total_width, max_height, 1, 3, 0);	// was total_width
 
 		int current_x = 4;
 
@@ -666,7 +562,11 @@ int main(int argc, char **argv)
 
 			img.draw_rectangle(current_x - 1, current_y - 1, current_x + width, current_y + height, color, 0.5f, 0xffffffff);
 
-			current_x += width + 8;
+			int expanded_width = 8 * width / 7;
+			int reduced_width = expanded_width / 2;
+			int mode5_width = (reduced_width + 3) / 4;
+			current_x += (mode5_width * 4 * 2) + 8;
+//			current_x += width + 8;
 		}
 
 		char testname[256];
@@ -674,7 +574,10 @@ int main(int argc, char **argv)
 		img.save(testname);
 	}
 
-	if (test)
+
+// This should really be dumped when writing MODE 5 data so is actual code being used to generate Beeb data //
+
+	if (test && mode == 5)
 	{
 		int mode5_total_width = total_width - (num_images * 8);
 		mode5_total_width = 8 * mode5_total_width / 7;
@@ -754,9 +657,108 @@ int main(int argc, char **argv)
 	}
 
 
+// This should really be dumped when writing ATTRIBUTE 6 data so is actual code being used to generate Beeb data //
+
+	if (test && mode == 6)
+	{
+		int mode5_total_width = total_width - (num_images * 8);
+		mode5_total_width = 8 * mode5_total_width / 7;
+		mode5_total_width += num_images * 8;
+
+		if (verbose)
+		{
+			printf("Test: %d x %d\n", mode5_total_width, max_height);
+		}
+
+		CImg<unsigned char> img(mode5_total_width, max_height, 1, 3, 0);
+
+		int current_x = 4;
+
+		for (int i = 0; i < num_images; i++)
+		{
+			int pixel_height = pixel_size[i][1];
+			int current_y = max_height - pixel_height - 1;
+			unsigned char color[] = { 255, 255, 255 };
+
+			int pixel_width = pixel_size[i][0];
+			int expanded_width = 8 * pixel_width / 7;
+			int reduced_width = expanded_width / 2;
+			int mode5_width = (reduced_width + 3) / 4;
+
+			for (int y = 0; y < pixel_height; y++)
+			{
+				int c[256];
+
+				for (int x8 = 0, x = 0; x8 < mode5_width; x8++, x += 4)
+				{
+					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point);
+				}
+
+				for(int p=0, x=0; p < (mode5_width*4); p += 3)
+				{
+					int num_white = 0;
+					int num_orange = 0;
+
+					for (int j = 0; j < 3; j++)
+					{
+						if (c[p + j] == ORANGE) num_orange++;
+						if (c[p + j] == WHITE1) num_white++;
+					}
+
+					// Choose attribute
+					int attribute = num_orange >= num_white ? ORANGE : WHITE1;
+
+					for (int j = 0; j < 3 && (p+j) < (mode5_width*4); j++)
+					{
+						int pixel = c[p + j] != BLACK1 ? attribute : BLACK1;
+
+						img(current_x + x, current_y + y, 0) = palette[pixel][0];
+						img(current_x + x, current_y + y, 1) = palette[pixel][1];
+						img(current_x + x, current_y + y, 2) = palette[pixel][2];
+
+						if (halfv && y < pixel_height - 1)
+						{
+							img(current_x + x, current_y + y + 1, 0) = palette[pixel][0];
+							img(current_x + x, current_y + y + 1, 1) = palette[pixel][1];
+							img(current_x + x, current_y + y + 1, 2) = palette[pixel][2];
+
+						}
+
+						x++;
+
+						img(current_x + x, current_y + y, 0) = palette[pixel][0];
+						img(current_x + x, current_y + y, 1) = palette[pixel][1];
+						img(current_x + x, current_y + y, 2) = palette[pixel][2];
+
+						if (halfv && y < pixel_height - 1)
+						{
+							img(current_x + x, current_y + y + 1, 0) = palette[pixel][0];
+							img(current_x + x, current_y + y + 1, 1) = palette[pixel][1];
+							img(current_x + x, current_y + y + 1, 2) = palette[pixel][2];
+
+						}
+						
+						x++;
+					}
+				}
+
+				if (halfv)	y++;
+			}
+
+			img.draw_rectangle(current_x - 1, current_y - 1, current_x + (mode5_width * 4 * 2), current_y + pixel_height, color, 0.5f, 0xffffffff);
+
+			current_x += (mode5_width * 4 * 2) + 8;
+		}
+
+		char testname[256];
+		sprintf(testname, "%s.mode5.attr.png", inputname);
+		img.save(testname);
+	}
+
+
 	int total_mode5 = 3;		// num_images + free ptr
 	int total_mode4 = 3;
-	int total_colour6 = 3;
+	int total_attr6 = 3;
 
 	for (int i = 0; i < num_images; i++)
 	{
@@ -769,7 +771,7 @@ int main(int argc, char **argv)
 			total_mode5 += calc_mode5_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose);
 		}
 
-		if ( mode == 4)
+		if (mode == 4)
 		{
 			if (verbose)
 			{
@@ -778,14 +780,14 @@ int main(int argc, char **argv)
 			total_mode4 += calc_mode4_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose);
 		}
 
-		if ( mode == 6)
+		if (mode == 6)
 		{
 			if (verbose)
 			{
-				printf("Image [%d]: COLOR6=", i + 1);
+				printf("Image [%d]: ATTR6=", i + 1);
 			}
 
-			total_colour6 += calc_colour6_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose, point);
+			total_attr6 += calc_attribute6_size(colours[i], pixel_size[i][0], pixel_size[i][1], verbose, point);
 		}
 	}
 
@@ -806,8 +808,8 @@ int main(int argc, char **argv)
 
 	if (mode == 6)
 	{
-		printf("Total COLOUR6 bytes = %d\n", total_colour6);
-		printf("Size vs Apple = %f%%\n", 100.0f * total_colour6 / (float)total_bytes);
+		printf("Total ATTRIBUTE6 bytes = %d\n", total_attr6);
+		printf("Size vs Apple = %f%%\n", 100.0f * total_attr6 / (float)total_bytes);
 	}
 
 	if (outputname)
@@ -857,6 +859,12 @@ int main(int argc, char **argv)
 					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
 				}
 
+				if (mode == 6)
+				{
+				// TODO
+				//	bytes_written += convert_colour_to_attr6(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
+				}
+
 				beebptr += bytes_written;
 			}
 
@@ -872,6 +880,7 @@ int main(int argc, char **argv)
 			output = NULL;
 
 			printf("Output bytes written = %d\n", beebptr - beebdata);
+			printf("Size vs original = %f%%\n", 100.0f * (beebptr - beebdata) / (float)total_bytes);
 		}
 	}
 
