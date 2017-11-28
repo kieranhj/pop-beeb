@@ -12,8 +12,9 @@ _TODO = FALSE               ; code still to be ported
 _DEBUG = TRUE               ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
 _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
-_ALL_LEVELS = FALSE          ; allow user to play all levels
+_ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
+_HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 
 _FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM
 _FEATURE_HITFX = FALSE       ; compile code to support hit fx despite lack of RAM
@@ -593,11 +594,19 @@ GUARD SWRAM_TOP
 
 .bank1_start
 .chtable1
+IF _HALF_PLAYER
+INCBIN "Images/BEEB.IMG.CHTAB1.HALF.bin"
+ELSE
 INCBIN "Images/BEEB.IMG.CHTAB1.bin"
+ENDIF
 
 PAGE_ALIGN
 .chtable3
+IF _HALF_PLAYER
+INCBIN "Images/BEEB.IMG.CHTAB3.HALF.bin"
+ELSE
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
+ENDIF
 
 PAGE_ALIGN
 .bgtable1b
@@ -618,11 +627,19 @@ GUARD SWRAM_TOP
 
 .bank2_start
 .chtable2
+IF _HALF_PLAYER
+INCBIN "Images/BEEB.IMG.CHTAB2.HALF.bin"
+ELSE
 INCBIN "Images/BEEB.IMG.CHTAB2.bin"
+ENDIF
 
 PAGE_ALIGN
 .chtable5
+IF _HALF_PLAYER
+INCBIN "Images/BEEB.IMG.CHTAB5.HALF.bin"
+ELSE
 INCBIN "Images/BEEB.IMG.CHTAB5.bin"
+ENDIF
 
 PAGE_ALIGN
 .bgtable1a
@@ -783,10 +800,17 @@ PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+IF _HALF_PLAYER
+PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
+ELSE
 PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
+ENDIF
 ;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 ;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 ;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0

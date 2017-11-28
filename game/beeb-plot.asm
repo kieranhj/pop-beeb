@@ -775,8 +775,29 @@ IF _UNROLL_LAYMASK = FALSE
     STA sprite_addr+2
 
     \ Save a cycle per line - player typically min 24 lines
+
+IF _HALF_PLAYER
+    LDA BEEBHACK
+    BEQ no_beebhack
+
+    \ The ugliest hack :(
+    LDA WIDTH
+    STA smEOR+1
+    LDA #0
+    STA smWIDTH+1
+    BEQ done_beebhack
+
+    .no_beebhack
     LDA WIDTH
     STA smWIDTH+1
+    LDA #0
+    STA smEOR+1
+
+    .done_beebhack
+ELSE
+    LDA WIDTH
+    STA smWIDTH+1
+ENDIF
     LDA TOPEDGE
     STA smTOPEDGE+1
 
@@ -952,10 +973,12 @@ RASTER_COL PAL_yellow
 
 \ Special case for half-height sprites
 
+IF _HALF_PLAYER
     LDA smWIDTH+1
     .smEOR
     EOR #0
     STA smWIDTH+1
+ENDIF
 
 \ Next scanline
 
@@ -1230,8 +1253,29 @@ IF _UNROLL_LAYMASK = FALSE
     STA sprite_addr+2
 
     \ Save a cycle per line - player typically min 24 lines
+
+IF _HALF_PLAYER
+    LDA BEEBHACK
+    BEQ no_beebhack
+
+    \ The ugliest hack :(
+    LDA WIDTH
+    STA smEOR+1
+    LDA #0
+    STA smWIDTH+1
+    BEQ done_beebhack
+
+    .no_beebhack
     LDA WIDTH
     STA smWIDTH+1
+    LDA #0
+    STA smEOR+1
+
+    .done_beebhack
+ELSE
+    LDA WIDTH
+    STA smWIDTH+1
+ENDIF
     LDA TOPEDGE
     STA smTOPEDGE+1
 
@@ -1404,6 +1448,13 @@ RASTER_COL PAL_yellow
     BCC no_carry
     INC sprite_addr+2
     .no_carry
+
+IF _HALF_PLAYER
+    LDA smWIDTH+1
+    .smEOR
+    EOR #0
+    STA smWIDTH+1
+ENDIF
 
 \ Next scanline
 

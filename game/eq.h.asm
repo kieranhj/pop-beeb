@@ -166,6 +166,8 @@ maxmsg = 16     ;32     ;x5
 .RIGHTCUT skip 1
 .BANK skip 1
 .BOTCUT skip 1
+.PALETTE skip 1         ; BEEB TO DO
+.BEEBHACK skip 1
 
 height = IMAGE
 width = IMAGE+1

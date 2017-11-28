@@ -304,7 +304,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 	if (beebptr)
 	{
 		*beebptr++ = mode5_width;
-		*beebptr++ = pixel_height | (height_step > 1 ? 0x80 : 0);		// use top bit to indicate height altered but keep original height
+		*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
 	}
 
 	for (int y = 0; y < pixel_height; y += height_step)
