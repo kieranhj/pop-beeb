@@ -1942,3 +1942,18 @@ Hazel: blueprint, Mult7&10,
 Andy: music (reserve - keep font?)
 
 Note: currently &269 bytes of jump tables alone!!
+
+BGTAB1.DUN = 8871
+BGTAB1.DUNA = 759
+BGTAB1.DUNB = 983
+BGTAB1.DUNC = 5873
+
+BGTAB1.PAL = 9017
+BGTAB1.
+
+CHTAB1.HALF = 4701 (&1300)
+CHTAB2.HALF = 4647 (&1300)
+CHTAB3.HALF = 3195 (&D00)
+CHTAB5.HALF = 3195 (&D00)
+Total=&4000 exactly :)
+
