@@ -9,9 +9,11 @@
 \*-------------------------------
 \ org org
 \
+IF _JMP_TABLE=FALSE
 .sure jmp SURE
 .fast jmp FAST
 .getinitobj jmp GETINITOBJ
+ENDIF
 \
 \*-------------------------------
 \ lst

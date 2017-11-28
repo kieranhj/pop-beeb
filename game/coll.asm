@@ -14,6 +14,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .checkbarr jmp CHECKBARR
 .collisions jmp COLLISIONS
 .getfwddist jmp GETFWDDIST
@@ -27,6 +28,7 @@
 \ jmp firstguard ;temp
 
 .enemycoll jmp ENEMYCOLL
+ENDIF
 
 \*-------------------------------
 \ lst

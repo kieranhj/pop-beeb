@@ -15,6 +15,7 @@ _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
 _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
+_JMP_TABLE = TRUE            ; use a single global jump table
 
 _FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM
 _FEATURE_HITFX = FALSE       ; compile code to support hit fx despite lack of RAM
@@ -288,6 +289,12 @@ ENDIF
 }
 
 .beeb_init_end
+
+; Global jump table
+
+IF _JMP_TABLE
+INCLUDE "game/aux_core.asm"
+ENDIF
 
 ; Beeb source in CORE
 

@@ -17,7 +17,8 @@ DebugKeys = 0
 \*-------------------------------
 \ org org
 
- .keys jmp KEYS
+ IF _JMP_TABLE=FALSE
+.keys jmp KEYS
  .clrjstk jmp CLRJSTK
  .zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
  .addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
@@ -43,6 +44,7 @@ DebugKeys = 0
 
  .dloop BRK       ;jmp DLOOP
  .strobe jmp STROBE
+ENDIF
 
 \*-------------------------------
 \ lst

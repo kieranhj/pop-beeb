@@ -10,6 +10,7 @@ PalaceEditor = 0
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .animtrans jmp ANIMTRANS
 .trigspikes jmp TRIGSPIKES
 .pushpp jmp PUSHPP
@@ -32,6 +33,7 @@ PalaceEditor = 0
 .getflaskflame jmp GETFLASKFRAME
 .trigsword jmp TRIGSWORD
 .jampp jmp JAMPP
+ENDIF
 
 \*-------------------------------
 \ lst

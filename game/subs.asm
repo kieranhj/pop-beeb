@@ -16,6 +16,7 @@ CheckTimer = 0
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
 .doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
 .PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
@@ -49,6 +50,7 @@ ENDIF
 .initialguards jmp INITIALGUARDS
 .mirappear jmp MIRAPPEAR
 .crumble jmp CRUMBLE
+ENDIF
 
 \*-------------------------------
 \ lst

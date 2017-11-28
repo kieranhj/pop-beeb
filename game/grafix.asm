@@ -17,6 +17,7 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 \*-------------------------------
 \ org org
 \
+IF _JMP_TABLE=FALSE
 .gr BRK         ;jmp GR
 .drawall jmp DRAWALL
 .controller jmp CONTROLLER
@@ -114,6 +115,7 @@ _DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to D
 .vblank JMP beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
+ENDIF
 \
 \*-------------------------------
 \ lst

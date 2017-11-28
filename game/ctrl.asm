@@ -9,6 +9,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .PlayerCtrl jmp PLAYERCTRL
 .checkfloor jmp CHECKFLOOR
 .ShadCtrl jmp SHADCTRL
@@ -18,6 +19,7 @@
 .DoImpale jmp DOIMPALE
 .GenCtrl jmp GENCTRL
 .checkimpale jmp CHECKIMPALE
+ENDIF
 
 \*-------------------------------
 \ lst

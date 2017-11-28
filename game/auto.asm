@@ -15,6 +15,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .AutoCtrl jmp AUTOCTRL
 .checkstrike jmp CHECKSTRIKE
 .checkstab jmp CHECKSTAB
@@ -24,6 +25,7 @@
 .cutguard jmp CUTGUARD
 .addguard jmp ADDGUARD
 .cut jmp CUT
+ENDIF
 
 \*-------------------------------
 \ lst

@@ -18,6 +18,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .getframe jmp GETFRAME
 .getseq jmp GETSEQ
 .getbasex jmp GETBASEX
@@ -99,6 +100,7 @@
 .getabove jmp GETABOVE
 .getaboveinf jmp GETABOVEINF
 .cmpwall jmp CMPWALL
+ENDIF
 
 \*-------------------------------
 \ lst

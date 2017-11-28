@@ -1895,3 +1895,50 @@ Saving = 14K
 Pros: keep existing plot routine, could have faster plotting (two scanlines together), full 3 colours available, square pixels, keep horizontal resolution
 Cons: reduced vertical resolution, looks very chunky, not competitive with other 8-bit versions?
 Lowest quality, highest saving
+
+28/11/2017
+Half height player sprites is done for now
+
+How to move gameplay code into a second SWRAM bank?
+Use jump table interface to select appropriate bank for module
+Ideally use self-contained modules to avoid continual bank switching
+Find locality of code & data - harder to switch on data access
+
+Apple II implies these groupings:
+(0) master, hires, unpack, hrtables (main ram)
+(1) grafix, tables, frameadv, bgdata, topctrl, framedefs, seqtable, ctrl, coll, gamebg, auto (aux)
+(2) ctrlsubs, specialk, subs, sound, mover, misc (aux lc)
+
+NB. blueprint is accessed freely across the gameplay code
+
+Current Layout
+Core: master, topctrl, grafix, hires (jump), hires, misc, specialk + hrtables, bgdata (core)
+Main: plot
+Hazel: blueprint, tables, bgdata (high), seqtable, framedefs
+Aux High (swram): ctrl, frameadv, gamebg, subs, mover, auto, ctrlsubs, coll
+
+DATA Usage:
+bgdata.asm - (auxmem swram) data only used by frameadv.asm
+bgdata_high.asm - (hazel) data only used by frameadv.asm
+seqtable.asm - (hazel) data only used by ctrlsubs.asm - called by coll.asm
+framedefs.asm - (hazel) data only used by ctrlsubs.asm
+tables.asm - (hazel) Byte&Offset,Mult30 tables used by grafix.asm, Block&Pixel tables used by ctrlsubs.asm, Mult7&10 used by many
+
+Propose groups:
+
+Only gameplay code can be in SWRAM
+Need to split gameplay code between multiple SWRAM banks
+All plot code must be in Core (or Hazel potentially)
+Change notion of Aux to be all gameplay code not rendering or Core
+Any data that can be accessed randomly is moved up to Hazel
+
+1/ Vector all jumps through swram bank switch - have to restore prev bank!
+2/ Move all data next to used code - split tables.asm, rejoin bgdata.asm
+3/ Remove notion of Main & Aux RAM switch as no longer applies
+
+Aux (A): ctrlsubs, coll, auto, mover + seqtable, framedefs
+Aux (B): frameadv, grafix + bgdata
+Hazel: blueprint, Mult7&10,
+Andy: music (reserve - keep font?)
+
+Note: currently &269 bytes of jump tables alone!!

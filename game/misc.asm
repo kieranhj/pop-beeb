@@ -10,6 +10,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .VanishChar BRK     ; jmp VANISHCHAR
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
@@ -32,6 +33,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .LoadLevelX jmp LOADLEVELX
 .checkalert jmp CHECKALERT
 .dispversion BRK    ; jmp DISPVERSION
+ENDIF
 
 \*-------------------------------
 \ lst

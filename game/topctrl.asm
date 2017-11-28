@@ -671,12 +671,12 @@ ENDIF
 .FrameAdv
 {
  lda cutplan ;set by PrepCut
- bne cut
+ bne local_cut
 
  jsr DoFast
  jmp PageFlip ;Update current screen...
 
-.cut jmp DoCleanCut ;or draw new screen from scratch
+.local_cut jmp DoCleanCut ;or draw new screen from scratch
 }
 
 \*-------------------------------
