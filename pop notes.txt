@@ -1946,10 +1946,15 @@ Note: currently &269 bytes of jump tables alone!!
 BGTAB1.DUN = 8871
 BGTAB1.DUNA = 759
 BGTAB1.DUNB = 983
-BGTAB1.DUNC = 5873
+BGTAB1.DUNC = 5873 (&1700)
 
-BGTAB1.PAL = 9017
-BGTAB1.
+BGTAB1.PAL = 9017 (&2300) - comes down to &1F00
+BGTAB1.PALA = 917 (&400)
+BGTAB1.PALB = 1017 (&400)
+BGTAB1.PALC = 5827
+BGTAB2.PAL = 4593 (&1200)
+
+CHTAB4.X = 5281 (&1500)
 
 CHTAB1.HALF = 4701 (&1300)
 CHTAB2.HALF = 4647 (&1300)
@@ -1957,3 +1962,5 @@ CHTAB3.HALF = 3195 (&D00)
 CHTAB5.HALF = 3195 (&D00)
 Total=&4000 exactly :)
 
+Note: need to load new AUX code into SWRAM - remember data is loaded in a different
+way!!

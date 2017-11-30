@@ -2,8 +2,6 @@
 ; Originally SEQTABLE.S
 ; All animation state tables and data
 
-_COULD_BE_OVERLAID_IN_THEORY = TRUE
-
 .seqtab
 \org = $3000
 \ tr on ;TABS 15,20,40

@@ -16,6 +16,7 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE = FALSE
 .updatemeters jmp UPDATEMETERS
 .DrawKidMeter jmp DRAWKIDMETER
 .DrawSword jmp DRAWSWORD
@@ -44,6 +45,7 @@
 .twinkle BRK        ; jmp TWINKLE
 .flow BRK           ; jmp FLOW
 .pmask BRK          ; jmp PMASK
+ENDIF
 
 \ NOT BEEB COPY PROTECTION
 \.yellow BRK         ; jmp YELLOW

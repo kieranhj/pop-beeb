@@ -17,6 +17,8 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE            ; use a single global jump table
 
+_COULD_BE_OVERLAID_IN_THEORY = TRUE     ; save the memory for now!
+
 _FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM
 _FEATURE_HITFX = FALSE       ; compile code to support hit fx despite lack of RAM
 _FEATURE_GAMEPLAY = FALSE    ; compile missing gaameplay code despite lack of RAM
@@ -58,6 +60,12 @@ zp_top = &a0
 
 ORG &0
 GUARD locals
+
+.DLL_REG_A skip 1
+.DLL_BANK skip 1
+.DLL_FUNC_LO skip 1
+.DLL_FUNC_HI skip 1
+
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
 
@@ -169,6 +177,7 @@ INCLUDE "lib/print.asm"
 .aux_filename   EQUS "Aux    $"
 .high_filename  EQUS "High   $"
 .hazel_filename EQUS "Hazel  $"
+.auxb_filename  EQUS "AuxB   $"
 
 .pop_beeb_entry
 {
@@ -230,7 +239,20 @@ INCLUDE "lib/print.asm"
 
     \\ Load Aux
 
+    \\ And Aux High (SWRAM)
+
+    LDA #2      ; hard code
+    JSR swr_select_slot
+
+    LDX #LO(auxb_filename)
+    LDY #HI(auxb_filename)
+    LDA #HI(pop_beeb_aux_b_start)
+    JSR disksys_load_file
+
     JSR beeb_shadow_select_aux
+
+    LDA #BEEB_SWRAM_SLOT_AUX_HIGH
+    JSR swr_select_slot
 
 \\ AUX (Deprecated)
 \    LDX #LO(aux_filename)
@@ -313,9 +335,6 @@ hires_core_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
-INCLUDE "game/hires.asm"
-hires_end=P%
-
 ; PoP gameplay code moved from AUX memory
 
 INCLUDE "game/misc.asm"
@@ -327,17 +346,9 @@ specialk_end=P%
 
 .pop_beeb_data_start
 
-; Beeb specific data
-INCLUDE "game/beeb_core_data.asm"
-
 ; Data in CORE memory (always present)
-INCLUDE "game/hrtables.asm"
-hrtables_end=P%
 
 ; PoP gameplay data moved from AUX memory
-
-INCLUDE "game/bgdata.asm"
-bgdata_end=P%
 
 .pop_beeb_data_end
 .pop_beeb_end
@@ -398,6 +409,9 @@ GUARD MAIN_TOP
 .pop_beeb_main_start
 
 ; Code & data in MAIN RAM (rendering)
+
+INCLUDE "game/hires.asm"
+hires_end=P%
 
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
@@ -461,7 +475,7 @@ GUARD AUX_TOP
 
 ; Save executable code for Aux RAM
 
-SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
+; SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
 
 ; BSS in AUX RAM (gameplay)
 
@@ -500,12 +514,15 @@ SKIP &900
 
 INCLUDE "game/tables.asm"
 tables_end=P%
+INCLUDE "game/bgdata.asm"
+bgdata_end=P%
 INCLUDE "game/bgdata_high.asm"
 bgdata_high_end=P%
-INCLUDE "game/seqtable.asm"
-seqtab_end=P%
-INCLUDE "game/framedefs.asm"
-framedef_end=P%
+INCLUDE "game/hrtables.asm"
+hrtables_end=P%
+
+; Beeb specific data
+INCLUDE "game/beeb_core_data.asm"
 
 .pop_beeb_aux_hazel_data_end
 
@@ -658,9 +675,28 @@ PAGE_ALIGN
 .bgtable1b
 INCBIN "Images/BEEB.IMG.BGTAB1.PALB.bin"
 
+\\ Code + data doesn't technically have to be page aligned...
 PAGE_ALIGN
+.pop_beeb_aux_b_start
+
+INCLUDE "game/seqtable.asm"
+seqtab_end=P%
+INCLUDE "game/framedefs.asm"
+framedef_end=P%
+INCLUDE "game/ctrlsubs.asm"
+ctrlsubs_end=P%
+INCLUDE "game/coll.asm"
+coll_end=P%
+INCLUDE "game/auto.asm"
+auto_end=P%
+
+.pop_beeb_aux_b_end
 
 .bank2_end
+
+; Save executable code for Aux B RAM
+
+SAVE "AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
 
 PRINT "--------"
 PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
@@ -690,12 +726,6 @@ INCLUDE "game/subs.asm"
 subs_end=P%
 INCLUDE "game/mover.asm"
 mover_end=P%
-INCLUDE "game/auto.asm"
-auto_end=P%
-INCLUDE "game/ctrlsubs.asm"
-ctrlsubs_end=P%
-INCLUDE "game/coll.asm"
-coll_end=P%
 
 .pop_beeb_aux_high_end
 

@@ -103,11 +103,24 @@
 .hires_getwidth
 {
  jsr mainmem
+
+ LDA &F4:PHA
+
  jsr hires_GETWIDTH
+
+ STA regA+1
+
+ PLA:STA &F4:STA &FE30
+
 \\ must preserve A&X
- PHA:PHX
+ PHX
  JSR auxmem
- PLX:PLA
+
+\\ must preserve callers SWRAM bank
+ 
+ PLX
+ .regA
+ LDA #0
  RTS
 }
 

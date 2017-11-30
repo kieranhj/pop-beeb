@@ -49,27 +49,6 @@
     equb $FF                        ; 11111111 15 15
 }
 
-.beeb_palette
-{
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
-
-    EQUB PAL_black
-    EQUB PAL_red
-    EQUB PAL_green
-    EQUB PAL_yellow
-    EQUB PAL_blue
-    EQUB PAL_magenta
-    EQUB PAL_cyan
-    EQUB PAL_white
-}
-
 \*-------------------------------
 ; Very lazy table for turning MODE 2 black pixels into MASK
 ; Could / should be in MAIN
@@ -242,28 +221,6 @@ PAGE_ALIGN
     EQUB &72            \ chtab13
     EQUB &72            \ chtab25
     EQUB &73            \ chtab467
-}
-
-\*-------------------------------
-; CRTC & ULA data required to configure out special MODE 2
-; Following data could be dumped after boot!
-
-.beeb_crtcregs
-{
-	EQUB 127 			; R0  horizontal total
-	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
-	EQUB 98				; R2  horizontal position
-	EQUB &28			; R3  sync width
-	EQUB 38				; R4  vertical total
-	EQUB 0				; R5  vertical total adjust
-	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
-	EQUB 34				; R7  vertical position; 35=top of screen
-	EQUB 0				; R8  interlace
-	EQUB 7				; R9  scanlines per row
-	EQUB 32				; R10 cursor start
-	EQUB 8				; R11 cursor end
-	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
-	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
 .beeb_core_data_end
