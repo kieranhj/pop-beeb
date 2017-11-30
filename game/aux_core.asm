@@ -3,50 +3,51 @@
 
 .aux_core_start
 
-MACRO JUMP_TO function, bank
+MACRO JUMP_A name, base, index
 {
     \\ Preserve A
 
-    STA DLL_REG_A
+    STX DLL_REG_X
 
-    \\ Load function address
+    \\ Load function index
 
-    LDA #LO(function)
-    STA DLL_FUNC_LO
-    LDA #HI(function)
-    STA DLL_FUNC_HI
+    LDX #(base + index)
 
-    \\ Load bank# and call jump fn
+    \\ Call jump function
 
-    LDA #bank
-    JMP jump_to
-}   \\ 3c+2c+3c+2c+3c+2c+3c = 18c + 15b overhead per fn :(
+    JMP jump_to_A
+}   \\ 3c+2c+3c = 8c + 7b overhead per fn
 ENDMACRO
 
-.jump_to        ; A=bank, X&Y=fn address
+.jump_to_A
 {
-    \\ Store bank#
-    STA DLL_BANK
+    STA DLL_REG_A
 
     \\ Remember current bank
     LDA &F4: PHA
 
-    \\ Switch to new swram bank
-    LDA DLL_BANK
-    STA &F4:STA &FE30
+    LDA #6          ; hard code this aux A = 6
+    STA &F4: STA &FE30
 
-    \\ Set function address
-    LDA DLL_FUNC_LO
-    STA jump_to_addr+1
+    LDA aux_core_fn_table_A_LO, X
+    STA jump_to_addr_A + 1
 
-    LDA DLL_FUNC_HI
-    STA jump_to_addr+2
+    LDA aux_core_fn_table_A_HI, X
+
+IF _DEBUG
+    BNE fn_ok
+    BRK         ; X=fn index that isn't implemented
+    .fn_ok
+ENDIF
+
+    STA jump_to_addr_A + 2
 
     \\ Restore A before fn call
+    LDX DLL_REG_X
     LDA DLL_REG_A
 }
 \\ Call function
-.jump_to_addr
+.jump_to_addr_A
     JSR &FFFF
 {
     \\ Preserve A
@@ -60,194 +61,249 @@ ENDMACRO
     LDA DLL_REG_A
 
     RTS
-}   \\ 3c+3c+3c+3c+3c+4c+3c+4c+3c+4c+3c+6c+3c+4c+3c+4c+3c+6c = 65c!
+}   \\ 3c+3c+3c+2c+3c+4c+4c+4c+4c+4c+3c+3c+6c+3c+4c+3c+4c+3c+6c = 69c
+
+
+MACRO JUMP_B name, base, index
+{
+    \\ Preserve A
+
+    STX DLL_REG_X
+
+    \\ Load function index
+
+    LDX #(base + index)
+
+    \\ Call jump function
+
+    JMP jump_to_B
+}   \\ 3c+2c+3c = 8c + 7b overhead per fn
+ENDMACRO
+
+.jump_to_B
+{
+    STA DLL_REG_A
+
+    \\ Remember current bank
+    LDA &F4: PHA
+
+    LDA #7          ; hard code this aux B = 7
+    STA &F4: STA &FE30
+
+    LDA aux_core_fn_table_B_LO, X
+    STA jump_to_addr_B + 1
+
+    LDA aux_core_fn_table_B_HI, X
+
+IF _DEBUG
+    BNE fn_ok
+    BRK         ; X=fn index that isn't implemented
+    .fn_ok
+ENDIF
+
+    STA jump_to_addr_B + 2
+
+    \\ Restore A before fn call
+    LDX DLL_REG_X
+    LDA DLL_REG_A
+}
+\\ Call function
+.jump_to_addr_B
+    JSR &FFFF
+{
+    \\ Preserve A
+    STA DLL_REG_A
+
+    \\ Restore original bank
+    PLA
+    STA &F4:STA &FE30
+
+    \\ Restore A before return
+    LDA DLL_REG_A
+
+    RTS
+}   \\ 3c+3c+3c+2c+3c+4c+4c+4c+4c+4c+3c+3c+6c+3c+4c+3c+4c+3c+6c = 69c
+
 
 IF _JMP_TABLE
-
 \*-------------------------------
 \* auto.asm
 \*-------------------------------
 
-AUTO_BANK = 6
+.AutoCtrl JUMP_A AUTOCTRL, AUTO_BASE, 0
+.checkstrike JUMP_A CHECKSTRIKE, AUTO_BASE, 1
+.checkstab JUMP_A CHECKSTAB, AUTO_BASE, 2
+.AutoPlayback JUMP_A AUTOPLAYBACK, AUTO_BASE, 3
+.cutcheck JUMP_A CUTCHECK, AUTO_BASE, 4
 
-.AutoCtrl JUMP_TO AUTOCTRL, AUTO_BANK
-.checkstrike JUMP_TO CHECKSTRIKE, AUTO_BANK
-.checkstab JUMP_TO CHECKSTAB, AUTO_BANK
-.AutoPlayback JUMP_TO AUTOPLAYBACK, AUTO_BANK
-.cutcheck JUMP_TO CUTCHECK, AUTO_BANK
+.cutguard JUMP_A CUTGUARD, AUTO_BASE, 5
+.addguard JUMP_A ADDGUARD, AUTO_BASE, 6
+.cut JUMP_A CUT, AUTO_BASE, 7
 
-.cutguard JUMP_TO CUTGUARD, AUTO_BANK
-.addguard JUMP_TO ADDGUARD, AUTO_BANK
-.cut JUMP_TO CUT, AUTO_BANK
 
 \*-------------------------------
 \* coll.asm
 \*-------------------------------
 
-COLL_BANK = 6
+.checkbarr JUMP_A CHECKBARR, COLL_BASE, 0
+.collisions JUMP_A COLLISIONS, COLL_BASE, 1
+.getfwddist JUMP_A GETFWDDIST, COLL_BASE, 2
+.checkcoll JUMP_A CHECKCOLL, COLL_BASE, 3
+.animchar JUMP_A ANIMCHAR, COLL_BASE, 4
 
-.checkbarr JUMP_TO CHECKBARR, COLL_BANK
-.collisions JUMP_TO COLLISIONS, COLL_BANK
-.getfwddist JUMP_TO GETFWDDIST, COLL_BANK
-.checkcoll JUMP_TO CHECKCOLL, COLL_BANK
-.animchar JUMP_TO ANIMCHAR, COLL_BANK
+.checkslice JUMP_A CHECKSLICE, COLL_BASE, 5
+.checkslice2 JUMP_A CHECKSLICE2, COLL_BASE, 6
+\ JUMP_A markmeters ;temp
+.checkgate JUMP_A CHECKGATE, COLL_BASE, 7
+\ JUMP_A firstguard ;temp
 
-.checkslice JUMP_TO CHECKSLICE, COLL_BANK
-.checkslice2 JUMP_TO CHECKSLICE2, COLL_BANK
-\ JUMP_TO markmeters ;temp
-.checkgate JUMP_TO CHECKGATE, COLL_BANK
-\ JUMP_TO firstguard ;temp
+.enemycoll JUMP_A ENEMYCOLL, COLL_BASE, 8
 
-.enemycoll JUMP_TO ENEMYCOLL, COLL_BANK
 
 \*-------------------------------
 \* ctrl.asm
 \*-------------------------------
 
-CTRL_BANK = 7
+.PlayerCtrl JUMP_B PLAYERCTRL, CTRL_BASE, 0
+.checkfloor JUMP_B CHECKFLOOR, CTRL_BASE, 1
+.ShadCtrl JUMP_B SHADCTRL, CTRL_BASE, 2
+.rereadblocks JUMP_B REREADBLOCKS, CTRL_BASE, 3
+.checkpress JUMP_B CHECKPRESS, CTRL_BASE, 4
 
-.PlayerCtrl JUMP_TO PLAYERCTRL, CTRL_BANK
-.checkfloor JUMP_TO CHECKFLOOR, CTRL_BANK
-.ShadCtrl JUMP_TO SHADCTRL, CTRL_BANK
-.rereadblocks JUMP_TO REREADBLOCKS, CTRL_BANK
-.checkpress JUMP_TO CHECKPRESS, CTRL_BANK
+.DoImpale JUMP_B DOIMPALE, CTRL_BASE, 5
+.GenCtrl JUMP_B GENCTRL, CTRL_BASE, 6
+.checkimpale JUMP_B CHECKIMPALE, CTRL_BASE, 7
 
-.DoImpale JUMP_TO DOIMPALE, CTRL_BANK
-.GenCtrl JUMP_TO GENCTRL, CTRL_BANK
-.checkimpale JUMP_TO CHECKIMPALE, CTRL_BANK
 
 \*-------------------------------
 \* ctrlsubs.asm
 \*-------------------------------
 
-CTRLSUBS_BANK = 6
+.getframe JUMP_A GETFRAME, CTRLSUBS_BASE, 0
+.getseq JUMP_A GETSEQ, CTRLSUBS_BASE, 1
+.getbasex JUMP_A GETBASEX, CTRLSUBS_BASE, 2
+.getblockx JUMP_A GETBLOCKX, CTRLSUBS_BASE, 3
+.getblockxp JUMP_A GETBLOCKXP, CTRLSUBS_BASE, 4
 
-.getframe JUMP_TO GETFRAME, CTRLSUBS_BANK
-.getseq JUMP_TO GETSEQ, CTRLSUBS_BANK
-.getbasex JUMP_TO GETBASEX, CTRLSUBS_BANK
-.getblockx JUMP_TO GETBLOCKX, CTRLSUBS_BANK
-.getblockxp JUMP_TO GETBLOCKXP, CTRLSUBS_BANK
+.getblocky JUMP_A GETBLOCKY, CTRLSUBS_BASE, 5
+.getblockej JUMP_A GETBLOCKEJ, CTRLSUBS_BASE, 6
+.addcharx JUMP_A ADDCHARX, CTRLSUBS_BASE, 7
+.getdist JUMP_A GETDIST, CTRLSUBS_BASE, 8
+.getdist1 JUMP_A GETDIST1, CTRLSUBS_BASE, 9
 
-.getblocky JUMP_TO GETBLOCKY, CTRLSUBS_BANK
-.getblockej JUMP_TO GETBLOCKEJ, CTRLSUBS_BANK
-.addcharx JUMP_TO ADDCHARX, CTRLSUBS_BANK
-.getdist JUMP_TO GETDIST, CTRLSUBS_BANK
-.getdist1 JUMP_TO GETDIST1, CTRLSUBS_BANK
+.getabovebeh JUMP_A GETABOVEBEH, CTRLSUBS_BASE, 10
+.rdblock JUMP_A RDBLOCK, CTRLSUBS_BASE, 11
+.rdblock1 JUMP_A RDBLOCK1, CTRLSUBS_BASE, 12
+.setupsword JUMP_A SETUPSWORD, CTRLSUBS_BASE, 13
+.getscrns JUMP_A GETSCRNS, CTRLSUBS_BASE, 14
 
-.getabovebeh JUMP_TO GETABOVEBEH, CTRLSUBS_BANK
-.rdblock JUMP_TO RDBLOCK, CTRLSUBS_BANK
-.rdblock1 JUMP_TO RDBLOCK1, CTRLSUBS_BANK
-.setupsword JUMP_TO SETUPSWORD, CTRLSUBS_BANK
-.getscrns JUMP_TO GETSCRNS, CTRLSUBS_BANK
+.addguardobj JUMP_A ADDGUARDOBJ, CTRLSUBS_BASE, 15
+.opjumpseq JUMP_A OPJUMPSEQ, CTRLSUBS_BASE, 16
+.getedges JUMP_A GETEDGES, CTRLSUBS_BASE, 17
+.indexchar JUMP_A INDEXCHAR, CTRLSUBS_BASE, 18
+.quickfg JUMP_A QUICKFG, CTRLSUBS_BASE, 19
 
-.addguardobj JUMP_TO ADDGUARDOBJ, CTRLSUBS_BANK
-.opjumpseq JUMP_TO OPJUMPSEQ, CTRLSUBS_BANK
-.getedges JUMP_TO GETEDGES, CTRLSUBS_BANK
-.indexchar JUMP_TO INDEXCHAR, CTRLSUBS_BANK
-.quickfg JUMP_TO QUICKFG, CTRLSUBS_BANK
+.cropchar JUMP_A CROPCHAR, CTRLSUBS_BASE, 20
+.getleft JUMP_A GETLEFT, CTRLSUBS_BASE, 21
+.getright JUMP_A GETRIGHT, CTRLSUBS_BASE, 22
+.getup JUMP_A GETUP, CTRLSUBS_BASE, 23
+.getdown JUMP_A GETDOWN, CTRLSUBS_BASE, 24
 
-.cropchar JUMP_TO CROPCHAR, CTRLSUBS_BANK
-.getleft JUMP_TO GETLEFT, CTRLSUBS_BANK
-.getright JUMP_TO GETRIGHT, CTRLSUBS_BANK
-.getup JUMP_TO GETUP, CTRLSUBS_BANK
-.getdown JUMP_TO GETDOWN, CTRLSUBS_BANK
+.cmpspace JUMP_A CMPSPACE, CTRLSUBS_BASE, 25
+.cmpbarr JUMP_A CMPBARR, CTRLSUBS_BASE, 26
+.addkidobj JUMP_A ADDKIDOBJ, CTRLSUBS_BASE, 27
+.addshadobj JUMP_A ADDSHADOBJ, CTRLSUBS_BASE, 28
+.addreflobj JUMP_A ADDREFLOBJ, CTRLSUBS_BASE, 29
 
-.cmpspace JUMP_TO CMPSPACE, CTRLSUBS_BANK
-.cmpbarr JUMP_TO CMPBARR, CTRLSUBS_BANK
-.addkidobj JUMP_TO ADDKIDOBJ, CTRLSUBS_BANK
-.addshadobj JUMP_TO ADDSHADOBJ, CTRLSUBS_BANK
-.addreflobj JUMP_TO ADDREFLOBJ, CTRLSUBS_BANK
+.LoadKid JUMP_A LOADKID, CTRLSUBS_BASE, 30
+.LoadShad JUMP_A LOADSHAD, CTRLSUBS_BASE, 31
+.SaveKid JUMP_A SAVEKID, CTRLSUBS_BASE, 32
+.SaveShad JUMP_A SAVESHAD, CTRLSUBS_BASE, 33
+.setupchar JUMP_A SETUPCHAR, CTRLSUBS_BASE, 34
 
-.LoadKid JUMP_TO LOADKID, CTRLSUBS_BANK
-.LoadShad JUMP_TO LOADSHAD, CTRLSUBS_BANK
-.SaveKid JUMP_TO SAVEKID, CTRLSUBS_BANK
-.SaveShad JUMP_TO SAVESHAD, CTRLSUBS_BANK
-.setupchar JUMP_TO SETUPCHAR, CTRLSUBS_BANK
+.GetFrameInfo JUMP_A GETFRAMEINFO, CTRLSUBS_BASE, 35
+.indexblock JUMP_A INDEXBLOCK, CTRLSUBS_BASE, 36
+.markred JUMP_A MARKRED, CTRLSUBS_BASE, 37
+.markfred JUMP_A MARKFRED, CTRLSUBS_BASE, 38
+.markwipe JUMP_A MARKWIPE, CTRLSUBS_BASE, 39
 
-.GetFrameInfo JUMP_TO GETFRAMEINFO, CTRLSUBS_BANK
-.indexblock JUMP_TO INDEXBLOCK, CTRLSUBS_BANK
-.markred JUMP_TO MARKRED, CTRLSUBS_BANK
-.markfred JUMP_TO MARKFRED, CTRLSUBS_BANK
-.markwipe JUMP_TO MARKWIPE, CTRLSUBS_BANK
+.markmove JUMP_A MARKMOVE, CTRLSUBS_BASE, 40
+.markfloor JUMP_A MARKFLOOR, CTRLSUBS_BASE, 41
+.unindex JUMP_A UNINDEX, CTRLSUBS_BASE, 42
+.quickfloor JUMP_A QUICKFLOOR, CTRLSUBS_BASE, 43
+.unevenfloor JUMP_A UNEVENFLOOR, CTRLSUBS_BASE, 44
 
-.markmove JUMP_TO MARKMOVE, CTRLSUBS_BANK
-.markfloor JUMP_TO MARKFLOOR, CTRLSUBS_BANK
-.unindex JUMP_TO UNINDEX, CTRLSUBS_BANK
-.quickfloor JUMP_TO QUICKFLOOR, CTRLSUBS_BANK
-.unevenfloor JUMP_TO UNEVENFLOOR, CTRLSUBS_BANK
+.markhalf JUMP_A MARKHALF, CTRLSUBS_BASE, 45
+.addswordobj JUMP_A ADDSWORDOBJ, CTRLSUBS_BASE, 46
+.getblocky1 JUMP_A GETBLOCKYP, CTRLSUBS_BASE, 47
+.checkledge JUMP_A CHECKLEDGE, CTRLSUBS_BASE, 48
+.get2infront JUMP_A GET2INFRONT, CTRLSUBS_BASE, 49
 
-.markhalf JUMP_TO MARKHALF, CTRLSUBS_BANK
-.addswordobj JUMP_TO ADDSWORDOBJ, CTRLSUBS_BANK
-.getblocky1 JUMP_TO GETBLOCKYP, CTRLSUBS_BANK
-.checkledge JUMP_TO CHECKLEDGE, CTRLSUBS_BANK
-.get2infront JUMP_TO GET2INFRONT, CTRLSUBS_BANK
+.checkspikes JUMP_A CHECKSPIKES, CTRLSUBS_BASE, 50
+.rechargemeter JUMP_A RECHARGEMETER, CTRLSUBS_BASE, 51
+.addfcharx JUMP_A ADDFCHARX, CTRLSUBS_BASE, 52
+.facedx JUMP_A FACEDX, CTRLSUBS_BASE, 53
+.jumpseq JUMP_A JUMPSEQ, CTRLSUBS_BASE, 54
 
-.checkspikes JUMP_TO CHECKSPIKES, CTRLSUBS_BANK
-.rechargemeter JUMP_TO RECHARGEMETER, CTRLSUBS_BANK
-.addfcharx JUMP_TO ADDFCHARX, CTRLSUBS_BANK
-.facedx JUMP_TO FACEDX, CTRLSUBS_BANK
-.jumpseq JUMP_TO JUMPSEQ, CTRLSUBS_BANK
+.GetBaseBlock JUMP_A GETBASEBLOCK, CTRLSUBS_BASE, 55
+.LoadKidwOp JUMP_A LOADKIDWOP, CTRLSUBS_BASE, 56
+.SaveKidwOp JUMP_A SAVEKIDWOP, CTRLSUBS_BASE, 57
+.getopdist JUMP_A GETOPDIST, CTRLSUBS_BASE, 58
+.LoadShadwOp JUMP_A LOADSHADWOP, CTRLSUBS_BASE, 59
 
-.GetBaseBlock JUMP_TO GETBASEBLOCK, CTRLSUBS_BANK
-.LoadKidwOp JUMP_TO LOADKIDWOP, CTRLSUBS_BANK
-.SaveKidwOp JUMP_TO SAVEKIDWOP, CTRLSUBS_BANK
-.getopdist JUMP_TO GETOPDIST, CTRLSUBS_BANK
-.LoadShadwOp JUMP_TO LOADSHADWOP, CTRLSUBS_BANK
+.SaveShadwOp JUMP_A SAVESHADWOP, CTRLSUBS_BASE, 60
+.boostmeter JUMP_A BOOSTMETER, CTRLSUBS_BASE, 61
+.getunderft JUMP_A GETUNDERFT, CTRLSUBS_BASE, 62
+.getinfront JUMP_A GETINFRONT, CTRLSUBS_BASE, 63
+.getbehind JUMP_A GETBEHIND, CTRLSUBS_BASE, 64
 
-.SaveShadwOp JUMP_TO SAVESHADWOP, CTRLSUBS_BANK
-.boostmeter JUMP_TO BOOSTMETER, CTRLSUBS_BANK
-.getunderft JUMP_TO GETUNDERFT, CTRLSUBS_BANK
-.getinfront JUMP_TO GETINFRONT, CTRLSUBS_BANK
-.getbehind JUMP_TO GETBEHIND, CTRLSUBS_BANK
+.getabove JUMP_A GETABOVE, CTRLSUBS_BASE, 65
+.getaboveinf JUMP_A GETABOVEINF, CTRLSUBS_BASE, 66
+.cmpwall JUMP_A CMPWALL, CTRLSUBS_BASE, 67
 
-.getabove JUMP_TO GETABOVE, CTRLSUBS_BANK
-.getaboveinf JUMP_TO GETABOVEINF, CTRLSUBS_BANK
-.cmpwall JUMP_TO CMPWALL, CTRLSUBS_BANK
 
 \*-------------------------------
 \* frameadv.asm
 \*-------------------------------
 
-FRAMEADV_BANK = 7
+.sure JUMP_B SURE, FRAMEADV_BASE, 0
+.fast JUMP_B FAST, FRAMEADV_BASE, 1
+.getinitobj JUMP_B GETINITOBJ, FRAMEADV_BASE, 2
 
-.sure JUMP_TO SURE, FRAMEADV_BANK
-.fast JUMP_TO FAST, FRAMEADV_BANK
-.getinitobj JUMP_TO GETINITOBJ, FRAMEADV_BANK
 
 \*-------------------------------
 \* gamebg.asm
 \*-------------------------------
 
-GAMEBG_BANK = 7
+.updatemeters JUMP_B UPDATEMETERS, GAMEBG_BASE, 0
+.DrawKidMeter JUMP_B DRAWKIDMETER, GAMEBG_BASE, 1
+.DrawSword JUMP_B DRAWSWORD, GAMEBG_BASE, 2
+.DrawKid JUMP_B DRAWKID, GAMEBG_BASE, 3
+.DrawShad JUMP_B DRAWSHAD, GAMEBG_BASE, 4
 
-.updatemeters JUMP_TO UPDATEMETERS, GAMEBG_BANK
-.DrawKidMeter JUMP_TO DRAWKIDMETER, GAMEBG_BANK
-.DrawSword JUMP_TO DRAWSWORD, GAMEBG_BANK
-.DrawKid JUMP_TO DRAWKID, GAMEBG_BANK
-.DrawShad JUMP_TO DRAWSHAD, GAMEBG_BANK
+.setupflame JUMP_B SETUPFLAME, GAMEBG_BASE, 5
+.continuemsg BRK    ; JUMP_B CONTINUEMSG           BEEB TODO MESSAGES
+.addcharobj JUMP_B ADDCHAROBJ, GAMEBG_BASE, 7
+.setobjindx JUMP_B SETOBJINDX, GAMEBG_BASE, 8
+.printlevel BRK     ; JUMP_B PRINTLEVEL
 
-.setupflame JUMP_TO SETUPFLAME, GAMEBG_BANK
-.continuemsg BRK    ; JUMP_TO CONTINUEMSG           BEEB TODO MESSAGES
-.addcharobj JUMP_TO ADDCHAROBJ, GAMEBG_BANK
-.setobjindx JUMP_TO SETOBJINDX, GAMEBG_BANK
-.printlevel BRK     ; JUMP_TO PRINTLEVEL
+.DrawOppMeter JUMP_B DRAWOPPMETER, GAMEBG_BASE, 10
+.flipdiskmsg BRK    ; JUMP_B FLIPDISKMSG
+.timeleftmsg BRK    ; JUMP_B TIMELEFTMSG
+.DrawGuard JUMP_B DRAWGUARD, GAMEBG_BASE, 13
+.DrawGuard2 JUMP_B DRAWGUARD, GAMEBG_BASE, 14
 
-.DrawOppMeter JUMP_TO DRAWOPPMETER, GAMEBG_BANK
-.flipdiskmsg BRK    ; JUMP_TO FLIPDISKMSG
-.timeleftmsg BRK    ; JUMP_TO TIMELEFTMSG
-.DrawGuard JUMP_TO DRAWGUARD, GAMEBG_BANK
-.DrawGuard2 JUMP_TO DRAWGUARD, GAMEBG_BANK
+.setupflask JUMP_B SETUPFLASK, GAMEBG_BASE, 15
+.setupcomix JUMP_B SETUPCOMIX, GAMEBG_BASE, 16
+.psetupflame BRK    ; JUMP_B PSETUPFLAME           BEEB TODO PRINCESS
+.drawpost BRK       ; JUMP_B DRAWPOST
+.drawglass BRK      ; JUMP_B DRAWGLASS
 
-.setupflask JUMP_TO SETUPFLASK, GAMEBG_BANK
-.setupcomix JUMP_TO SETUPCOMIX, GAMEBG_BANK
-.psetupflame BRK    ; JUMP_TO PSETUPFLAME           BEEB TODO PRINCESS
-.drawpost BRK       ; JUMP_TO DRAWPOST
-.drawglass BRK      ; JUMP_TO DRAWGLASS
+.initlay BRK        ; JUMP_B INITLAY
+.twinkle BRK        ; JUMP_B TWINKLE
+.flow BRK           ; JUMP_B FLOW
+.pmask BRK          ; JUMP_B PMASK
 
-.initlay BRK        ; JUMP_TO INITLAY
-.twinkle BRK        ; JUMP_TO TWINKLE
-.flow BRK           ; JUMP_TO FLOW
-.pmask BRK          ; JUMP_TO PMASK
 
 \*-------------------------------
 \* grafix.asm
@@ -353,6 +409,7 @@ GRAFIX_BANK = -1        ; currently in Core
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
 
+
 \*-------------------------------
 \* misc.asm
 \*-------------------------------
@@ -382,34 +439,34 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .checkalert jmp CHECKALERT
 .dispversion BRK    ; jmp DISPVERSION
 
+
 \*-------------------------------
 \* mover.asm
 \*-------------------------------
 
-MOVER_BANK = 7
+.animtrans JUMP_B ANIMTRANS, MOVER_BASE, 0
+.trigspikes JUMP_B TRIGSPIKES, MOVER_BASE, 1
+.pushpp JUMP_B PUSHPP, MOVER_BASE, 2
+.breakloose1 JUMP_B BREAKLOOSE1, MOVER_BASE, 3
+.breakloose JUMP_B BREAKLOOSE, MOVER_BASE, 4
 
-.animtrans JUMP_TO ANIMTRANS, MOVER_BANK
-.trigspikes JUMP_TO TRIGSPIKES, MOVER_BANK
-.pushpp JUMP_TO PUSHPP, MOVER_BANK
-.breakloose1 JUMP_TO BREAKLOOSE1, MOVER_BANK
-.breakloose JUMP_TO BREAKLOOSE, MOVER_BANK
+.animmobs JUMP_B ANIMMOBS, MOVER_BASE, 5
+.addmobs JUMP_B ADDMOBS, MOVER_BASE, 6
+.closeexit JUMP_B CLOSEEXIT, MOVER_BASE, 7
+.getspikes JUMP_B GETSPIKES, MOVER_BASE, 8
+.shakem JUMP_B SHAKEM, MOVER_BASE, 9
 
-.animmobs JUMP_TO ANIMMOBS, MOVER_BANK
-.addmobs JUMP_TO ADDMOBS, MOVER_BANK
-.closeexit JUMP_TO CLOSEEXIT, MOVER_BANK
-.getspikes JUMP_TO GETSPIKES, MOVER_BANK
-.shakem JUMP_TO SHAKEM, MOVER_BANK
+.trigslicer JUMP_B TRIGSLICER, MOVER_BASE, 10
+.trigtorch JUMP_B TRIGTORCH, MOVER_BASE, 11
+.getflameflame JUMP_B GETFLAMEFRAME, MOVER_BASE, 12
+.smashmirror JUMP_B SMASHMIRROR, MOVER_BASE, 13
+.jamspikes JUMP_B JAMSPIKES, MOVER_BASE, 14
 
-.trigslicer JUMP_TO TRIGSLICER, MOVER_BANK
-.trigtorch JUMP_TO TRIGTORCH, MOVER_BANK
-.getflameflame JUMP_TO GETFLAMEFRAME, MOVER_BANK
-.smashmirror JUMP_TO SMASHMIRROR, MOVER_BANK
-.jamspikes JUMP_TO JAMSPIKES, MOVER_BANK
+.trigflask JUMP_B TRIGFLASK, MOVER_BASE, 15
+.getflaskflame JUMP_B GETFLASKFRAME, MOVER_BASE, 16
+.trigsword JUMP_B TRIGSWORD, MOVER_BASE, 17
+.jampp JUMP_B JAMPP, MOVER_BASE, 18
 
-.trigflask JUMP_TO TRIGFLASK, MOVER_BANK
-.getflaskflame JUMP_TO GETFLASKFRAME, MOVER_BANK
-.trigsword JUMP_TO TRIGSWORD, MOVER_BANK
-.jampp JUMP_TO JAMPP, MOVER_BANK
 
 \*-------------------------------
 \* specialk.asm
@@ -444,46 +501,583 @@ SPECIALK_BANK = -1      ; currently in Core
  .dloop BRK       ;jmp DLOOP
  .strobe jmp STROBE
 
+
 \*-------------------------------
 \* subs.asm
 \*-------------------------------
 
-SUBS_BANK = 7
+.addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
+.doflashon RTS          ; JUMP_B DOFLASHON             BEEB TODO FLASH
+.PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
+.demo BRK               ; JUMP_B DEMO
+.showtime RTS           ; JUMP_B SHOWTIME              BEEB TODO TIMER
 
-.addtorches JUMP_TO ADDTORCHES, SUBS_BANK
-.doflashon RTS          ; JUMP_TO DOFLASHON             BEEB TODO FLASH
-.PageFlip JMP shadow_swap_buffers           ; JUMP_TO PAGEFLIP
-.demo BRK               ; JUMP_TO DEMO
-.showtime RTS           ; JUMP_TO SHOWTIME              BEEB TODO TIMER
+.doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
+.lrclse RTS             ; JUMP_B LRCLSE                BEEB TODO FLASH
+\ JUMP_B potioneffect
+\ JUMP_B checkalert
+\ JUMP_B reflection
 
-.doflashoff RTS         ; JUMP_TO DOFLASHOFF            BEEB TODO FLASH
-.lrclse RTS             ; JUMP_TO LRCLSE                BEEB TODO FLASH
-\ JUMP_TO potioneffect
-\ JUMP_TO checkalert
-\ JUMP_TO reflection
-
-.addslicers JUMP_TO ADDSLICERS, SUBS_BANK
-.pause JUMP_TO PAUSE, SUBS_BANK
-\ JUMP_TO bonesrise
-.deadenemy JUMP_TO DEADENEMY, SUBS_BANK
+.addslicers JUMP_B ADDSLICERS, SUBS_BASE, 7
+.pause JUMP_B PAUSE, SUBS_BASE, 8
+\ JUMP_B bonesrise
+.deadenemy JUMP_B DEADENEMY, SUBS_BASE, 9
 IF _ALL_LEVELS
-.playcut RTS            ; JUMP_TO PLAYCUT               BEEB TODO CUTSCENE
+.playcut RTS            ; JUMP_B PLAYCUT               BEEB TODO CUTSCENE
 ELSE
-.playcut BRK            ; JUMP_TO PLAYCUT
+.playcut BRK            ; JUMP_B PLAYCUT
 ENDIF
 
-.addlowersound RTS      ; JUMP_TO ADDLOWERSOUND         BEEB TODO SOUND
-.RemoveObj JUMP_TO REMOVEOBJ, SUBS_BANK
-.addfall JUMP_TO ADDFALL, SUBS_BANK
-.setinitials JUMP_TO SETINITIALS, SUBS_BANK
-.startkid JUMP_TO STARTKID, SUBS_BANK
+.addlowersound RTS      ; JUMP_B ADDLOWERSOUND         BEEB TODO SOUND
+.RemoveObj JUMP_B REMOVEOBJ, SUBS_BASE, 12
+.addfall JUMP_B ADDFALL, SUBS_BASE, 13
+.setinitials JUMP_B SETINITIALS, SUBS_BASE, 14
+.startkid JUMP_B STARTKID, SUBS_BASE, 15
 
-.startkid1 JUMP_TO STARTKID1, SUBS_BANK
-.gravity JUMP_TO GRAVITY, SUBS_BANK
-.initialguards JUMP_TO INITIALGUARDS, SUBS_BANK
-.mirappear JUMP_TO MIRAPPEAR, SUBS_BANK
-.crumble JUMP_TO CRUMBLE, SUBS_BANK
+.startkid1 JUMP_B STARTKID1, SUBS_BASE, 16
+.gravity JUMP_B GRAVITY, SUBS_BASE, 17
+.initialguards JUMP_B INITIALGUARDS, SUBS_BASE, 18
+.mirappear JUMP_B MIRAPPEAR, SUBS_BASE, 19
+.crumble JUMP_B CRUMBLE, SUBS_BASE, 20
+
+
+\*-------------------------------
+\* FUNCTION addresses for AUX A
+\*-------------------------------
+
+.aux_core_fn_table_A_LO
+
+\*-------------------------------
+\* auto.asm
+\*-------------------------------
+AUTO_BASE = P%-aux_core_fn_table_A_LO
+EQUB LO(AUTOCTRL)
+EQUB LO(CHECKSTRIKE)
+EQUB LO(CHECKSTAB)
+EQUB LO(AUTOPLAYBACK)
+EQUB LO(CUTCHECK)
+
+EQUB LO(CUTGUARD)
+EQUB LO(ADDGUARD)
+EQUB LO(CUT)
+
+\*-------------------------------
+\* coll.asm
+\*-------------------------------
+COLL_BASE = P%-aux_core_fn_table_A_LO
+EQUB LO(CHECKBARR)
+EQUB LO(COLLISIONS)
+EQUB LO(GETFWDDIST)
+EQUB LO(CHECKCOLL)
+EQUB LO(ANIMCHAR)
+
+EQUB LO(CHECKSLICE)
+EQUB LO(CHECKSLICE2)
+\ JUMP_TO markmeters ;temp
+EQUB LO(CHECKGATE)
+\ JUMP_TO firstguard ;temp
+
+EQUB LO(ENEMYCOLL)
+
+\*-------------------------------
+\* ctrlsubs.asm
+\*-------------------------------
+CTRLSUBS_BASE = P%-aux_core_fn_table_A_LO
+EQUB LO(GETFRAME)
+EQUB LO(GETSEQ)
+EQUB LO(GETBASEX)
+EQUB LO(GETBLOCKX)
+EQUB LO(GETBLOCKXP)
+
+EQUB LO(GETBLOCKY)
+EQUB LO(GETBLOCKEJ)
+EQUB LO(ADDCHARX)
+EQUB LO(GETDIST)
+EQUB LO(GETDIST1)
+
+EQUB LO(GETABOVEBEH)
+EQUB LO(RDBLOCK)
+EQUB LO(RDBLOCK1)
+EQUB LO(SETUPSWORD)
+EQUB LO(GETSCRNS)
+
+EQUB LO(ADDGUARDOBJ)
+EQUB LO(OPJUMPSEQ)
+EQUB LO(GETEDGES)
+EQUB LO(INDEXCHAR)
+EQUB LO(QUICKFG)
+
+EQUB LO(CROPCHAR)
+EQUB LO(GETLEFT)
+EQUB LO(GETRIGHT)
+EQUB LO(GETUP)
+EQUB LO(GETDOWN)
+
+EQUB LO(CMPSPACE)
+EQUB LO(CMPBARR)
+EQUB LO(ADDKIDOBJ)
+EQUB LO(ADDSHADOBJ)
+EQUB LO(ADDREFLOBJ)
+
+EQUB LO(LOADKID)
+EQUB LO(LOADSHAD)
+EQUB LO(SAVEKID)
+EQUB LO(SAVESHAD)
+EQUB LO(SETUPCHAR)
+
+EQUB LO(GETFRAMEINFO)
+EQUB LO(INDEXBLOCK)
+EQUB LO(MARKRED)
+EQUB LO(MARKFRED)
+EQUB LO(MARKWIPE)
+
+EQUB LO(MARKMOVE)
+EQUB LO(MARKFLOOR)
+EQUB LO(UNINDEX)
+EQUB LO(QUICKFLOOR)
+EQUB LO(UNEVENFLOOR)
+
+EQUB LO(MARKHALF)
+EQUB LO(ADDSWORDOBJ)
+EQUB LO(GETBLOCKYP)
+EQUB LO(CHECKLEDGE)
+EQUB LO(GET2INFRONT)
+
+EQUB LO(CHECKSPIKES)
+EQUB LO(RECHARGEMETER)
+EQUB LO(ADDFCHARX)
+EQUB LO(FACEDX)
+EQUB LO(JUMPSEQ)
+
+EQUB LO(GETBASEBLOCK)
+EQUB LO(LOADKIDWOP)
+EQUB LO(SAVEKIDWOP)
+EQUB LO(GETOPDIST)
+EQUB LO(LOADSHADWOP)
+
+EQUB LO(SAVESHADWOP)
+EQUB LO(BOOSTMETER)
+EQUB LO(GETUNDERFT)
+EQUB LO(GETINFRONT)
+EQUB LO(GETBEHIND)
+
+EQUB LO(GETABOVE)
+EQUB LO(GETABOVEINF)
+EQUB LO(CMPWALL)
+
+.aux_core_fn_table_A_HI
+\*-------------------------------
+\* auto.asm
+\*-------------------------------
+EQUB HI(AUTOCTRL)
+EQUB HI(CHECKSTRIKE)
+EQUB HI(CHECKSTAB)
+EQUB HI(AUTOPLAYBACK)
+EQUB HI(CUTCHECK)
+
+EQUB HI(CUTGUARD)
+EQUB HI(ADDGUARD)
+EQUB HI(CUT)
+
+\*-------------------------------
+\* coll.asm
+\*-------------------------------
+EQUB HI(CHECKBARR)
+EQUB HI(COLLISIONS)
+EQUB HI(GETFWDDIST)
+EQUB HI(CHECKCOLL)
+EQUB HI(ANIMCHAR)
+
+EQUB HI(CHECKSLICE)
+EQUB HI(CHECKSLICE2)
+\ JUMP_TO markmeters ;temp
+EQUB HI(CHECKGATE)
+\ JUMP_TO firstguard ;temp
+
+EQUB HI(ENEMYCOLL)
+
+\*-------------------------------
+\* ctrlsubs.asm
+\*-------------------------------
+EQUB HI(GETFRAME)
+EQUB HI(GETSEQ)
+EQUB HI(GETBASEX)
+EQUB HI(GETBLOCKX)
+EQUB HI(GETBLOCKXP)
+
+EQUB HI(GETBLOCKY)
+EQUB HI(GETBLOCKEJ)
+EQUB HI(ADDCHARX)
+EQUB HI(GETDIST)
+EQUB HI(GETDIST1)
+
+EQUB HI(GETABOVEBEH)
+EQUB HI(RDBLOCK)
+EQUB HI(RDBLOCK1)
+EQUB HI(SETUPSWORD)
+EQUB HI(GETSCRNS)
+
+EQUB HI(ADDGUARDOBJ)
+EQUB HI(OPJUMPSEQ)
+EQUB HI(GETEDGES)
+EQUB HI(INDEXCHAR)
+EQUB HI(QUICKFG)
+
+EQUB HI(CROPCHAR)
+EQUB HI(GETLEFT)
+EQUB HI(GETRIGHT)
+EQUB HI(GETUP)
+EQUB HI(GETDOWN)
+
+EQUB HI(CMPSPACE)
+EQUB HI(CMPBARR)
+EQUB HI(ADDKIDOBJ)
+EQUB HI(ADDSHADOBJ)
+EQUB HI(ADDREFLOBJ)
+
+EQUB HI(LOADKID)
+EQUB HI(LOADSHAD)
+EQUB HI(SAVEKID)
+EQUB HI(SAVESHAD)
+EQUB HI(SETUPCHAR)
+
+EQUB HI(GETFRAMEINFO)
+EQUB HI(INDEXBLOCK)
+EQUB HI(MARKRED)
+EQUB HI(MARKFRED)
+EQUB HI(MARKWIPE)
+
+EQUB HI(MARKMOVE)
+EQUB HI(MARKFLOOR)
+EQUB HI(UNINDEX)
+EQUB HI(QUICKFLOOR)
+EQUB HI(UNEVENFLOOR)
+
+EQUB HI(MARKHALF)
+EQUB HI(ADDSWORDOBJ)
+EQUB HI(GETBLOCKYP)
+EQUB HI(CHECKLEDGE)
+EQUB HI(GET2INFRONT)
+
+EQUB HI(CHECKSPIKES)
+EQUB HI(RECHARGEMETER)
+EQUB HI(ADDFCHARX)
+EQUB HI(FACEDX)
+EQUB HI(JUMPSEQ)
+
+EQUB HI(GETBASEBLOCK)
+EQUB HI(LOADKIDWOP)
+EQUB HI(SAVEKIDWOP)
+EQUB HI(GETOPDIST)
+EQUB HI(LOADSHADWOP)
+
+EQUB HI(SAVESHADWOP)
+EQUB HI(BOOSTMETER)
+EQUB HI(GETUNDERFT)
+EQUB HI(GETINFRONT)
+EQUB HI(GETBEHIND)
+
+EQUB HI(GETABOVE)
+EQUB HI(GETABOVEINF)
+EQUB HI(CMPWALL)
+
+\*-------------------------------
+\* FUNCTION addresses for AUX B
+\*-------------------------------
+
+.aux_core_fn_table_B_LO
+
+\*-------------------------------
+\* ctrl.asm
+\*-------------------------------
+CTRL_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(PLAYERCTRL)
+EQUB LO(CHECKFLOOR)
+EQUB LO(SHADCTRL)
+EQUB LO(REREADBLOCKS)
+EQUB LO(CHECKPRESS)
+
+EQUB LO(DOIMPALE)
+EQUB LO(GENCTRL)
+EQUB LO(CHECKIMPALE)
+
+\*-------------------------------
+\* frameadv.asm
+\*-------------------------------
+FRAMEADV_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(SURE)
+EQUB LO(FAST)
+EQUB LO(GETINITOBJ)
+
+\*-------------------------------
+\* gamebg.asm
+\*-------------------------------
+GAMEBG_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(UPDATEMETERS)
+EQUB LO(DRAWKIDMETER)
+EQUB LO(DRAWSWORD)
+EQUB LO(DRAWKID)
+EQUB LO(DRAWSHAD)
+
+EQUB LO(SETUPFLAME)
+EQUB 0    ; EQUB LO(CONTINUEMSG)           BEEB TODO MESSAGES
+EQUB LO(ADDCHAROBJ)
+EQUB LO(SETOBJINDX)
+EQUB 0    ; EQUB LO(PRINTLEVEL)
+
+EQUB LO(DRAWOPPMETER)
+EQUB 0    ; EQUB LO(FLIPDISKMSG)
+EQUB 0    ; EQUB LO(TIMELEFTMSG)
+EQUB LO(DRAWGUARD)
+EQUB LO(DRAWGUARD)
+
+EQUB LO(SETUPFLASK)
+EQUB LO(SETUPCOMIX)
+EQUB 0    ; EQUB LO(PSETUPFLAME)           BEEB TODO PRINCESS
+EQUB 0    ; EQUB LO(DRAWPOST)
+EQUB 0    ; EQUB LO(DRAWGLASS)
+
+EQUB 0    ; EQUB LO(INITLAY)
+EQUB 0    ; EQUB LO(TWINKLE)
+EQUB 0    ; EQUB LO(FLOW)
+EQUB 0    ; EQUB LO(PMASK)
+
+\*-------------------------------
+\* mover.asm
+\*-------------------------------
+MOVER_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(ANIMTRANS)
+EQUB LO(TRIGSPIKES)
+EQUB LO(PUSHPP)
+EQUB LO(BREAKLOOSE1)
+EQUB LO(BREAKLOOSE)
+
+EQUB LO(ANIMMOBS)
+EQUB LO(ADDMOBS)
+EQUB LO(CLOSEEXIT)
+EQUB LO(GETSPIKES)
+EQUB LO(SHAKEM)
+
+EQUB LO(TRIGSLICER)
+EQUB LO(TRIGTORCH)
+EQUB LO(GETFLAMEFRAME)
+EQUB LO(SMASHMIRROR)
+EQUB LO(JAMSPIKES)
+
+EQUB LO(TRIGFLASK)
+EQUB LO(GETFLASKFRAME)
+EQUB LO(TRIGSWORD)
+EQUB LO(JAMPP)
+
+\*-------------------------------
+\* subs.asm
+\*-------------------------------
+SUBS_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(ADDTORCHES)
+EQUB 0    ; EQUB LO(DOFLASHON)             BEEB TODO FLASH
+EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
+EQUB 0    ; EQUB LO(DEMO)
+EQUB 0    ; EQUB LO(SHOWTIME)              BEEB TODO TIMER
+
+EQUB 0    ; EQUB LO(DOFLASHOFF)            BEEB TODO FLASH
+EQUB 0    ; EQUB LO(LRCLSE)                BEEB TODO FLASH
+\ JUMP_TO potioneffect  ; in misc.asm
+\ JUMP_TO checkalert    ; in misc.asm
+\ JUMP_TO reflection    ; in misc.asm
+
+EQUB LO(ADDSLICERS)
+EQUB LO(PAUSE)
+\ JUMP_TO bonesrise     ; in misc.asm
+EQUB LO(DEADENEMY)
+EQUB 0    ; EQUB LO(PLAYCUT)               BEEB TODO CUTSCENE
+
+EQUB 0    ; EQUB LO(ADDLOWERSOUND)         BEEB TODO SOUND
+EQUB LO(REMOVEOBJ)
+EQUB LO(ADDFALL)
+EQUB LO(SETINITIALS)
+EQUB LO(STARTKID)
+
+EQUB LO(STARTKID1)
+EQUB LO(GRAVITY)
+EQUB LO(INITIALGUARDS)
+EQUB LO(MIRAPPEAR)
+EQUB LO(CRUMBLE)
+
+.aux_core_fn_table_B_HI
+
+\*-------------------------------
+\* ctrl.asm
+\*-------------------------------
+EQUB HI(PLAYERCTRL)
+EQUB HI(CHECKFLOOR)
+EQUB HI(SHADCTRL)
+EQUB HI(REREADBLOCKS)
+EQUB HI(CHECKPRESS)
+
+EQUB HI(DOIMPALE)
+EQUB HI(GENCTRL)
+EQUB HI(CHECKIMPALE)
+
+\*-------------------------------
+\* frameadv.asm
+\*-------------------------------
+EQUB HI(SURE)
+EQUB HI(FAST)
+EQUB HI(GETINITOBJ)
+
+\*-------------------------------
+\* gamebg.asm
+\*-------------------------------
+EQUB HI(UPDATEMETERS)
+EQUB HI(DRAWKIDMETER)
+EQUB HI(DRAWSWORD)
+EQUB HI(DRAWKID)
+EQUB HI(DRAWSHAD)
+
+EQUB HI(SETUPFLAME)
+EQUB 0    ; EQUB HI(CONTINUEMSG)           BEEB TODO MESSAGES
+EQUB HI(ADDCHAROBJ)
+EQUB HI(SETOBJINDX)
+EQUB 0    ; EQUB HI(PRINTLEVEL)
+
+EQUB HI(DRAWOPPMETER)
+EQUB 0    ; EQUB HI(FLIPDISKMSG)
+EQUB 0    ; EQUB HI(TIMELEFTMSG)
+EQUB HI(DRAWGUARD)
+EQUB HI(DRAWGUARD)
+
+EQUB HI(SETUPFLASK)
+EQUB HI(SETUPCOMIX)
+EQUB 0    ; EQUB HI(PSETUPFLAME)           BEEB TODO PRINCESS
+EQUB 0    ; EQUB HI(DRAWPOST)
+EQUB 0    ; EQUB HI(DRAWGLASS)
+
+EQUB 0    ; EQUB HI(INITLAY)
+EQUB 0    ; EQUB HI(TWINKLE)
+EQUB 0    ; EQUB HI(FLOW)
+EQUB 0    ; EQUB HI(PMASK)
+
+\*-------------------------------
+\* mover.asm
+\*-------------------------------
+EQUB HI(ANIMTRANS)
+EQUB HI(TRIGSPIKES)
+EQUB HI(PUSHPP)
+EQUB HI(BREAKLOOSE1)
+EQUB HI(BREAKLOOSE)
+
+EQUB HI(ANIMMOBS)
+EQUB HI(ADDMOBS)
+EQUB HI(CLOSEEXIT)
+EQUB HI(GETSPIKES)
+EQUB HI(SHAKEM)
+
+EQUB HI(TRIGSLICER)
+EQUB HI(TRIGTORCH)
+EQUB HI(GETFLAMEFRAME)
+EQUB HI(SMASHMIRROR)
+EQUB HI(JAMSPIKES)
+
+EQUB HI(TRIGFLASK)
+EQUB HI(GETFLASKFRAME)
+EQUB HI(TRIGSWORD)
+EQUB HI(JAMPP)
+
+\*-------------------------------
+\* subs.asm
+\*-------------------------------
+EQUB HI(ADDTORCHES)
+EQUB 0    ; EQUB HI(DOFLASHON)             BEEB TODO FLASH
+EQUB 0    ; EQUB HI(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
+EQUB 0    ; EQUB HI(DEMO)
+EQUB 0    ; EQUB HI(SHOWTIME)              BEEB TODO TIMER
+
+EQUB 0    ; EQUB HI(DOFLASHOFF)            BEEB TODO FLASH
+EQUB 0    ; EQUB HI(LRCLSE)                BEEB TODO FLASH
+\ JUMP_TO potioneffect  ; in misc.asm
+\ JUMP_TO checkalert    ; in misc.asm
+\ JUMP_TO reflection    ; in misc.asm
+
+EQUB HI(ADDSLICERS)
+EQUB HI(PAUSE)
+\ JUMP_TO bonesrise     ; in misc.asm
+EQUB HI(DEADENEMY)
+EQUB 0    ; EQUB HI(PLAYCUT)               BEEB TODO CUTSCENE
+
+EQUB 0    ; EQUB HI(ADDLOWERSOUND)         BEEB TODO SOUND
+EQUB HI(REMOVEOBJ)
+EQUB HI(ADDFALL)
+EQUB HI(SETINITIALS)
+EQUB HI(STARTKID)
+
+EQUB HI(STARTKID1)
+EQUB HI(GRAVITY)
+EQUB HI(INITIALGUARDS)
+EQUB HI(MIRAPPEAR)
+EQUB HI(CRUMBLE)
 
 ENDIF
 
 .aux_core_end
+
+\\ Original approach
+IF 0
+MACRO JUMP_TO function, bank
+{
+    \\ Preserve A
+
+    STA DLL_REG_A
+
+    \\ Load function address
+
+    LDA #LO(function)
+    STA DLL_FUNC_LO
+    LDA #HI(function)
+    STA DLL_FUNC_HI
+
+    \\ Load bank# and call jump fn
+
+    LDA #bank
+    JMP jump_to
+}   \\ 3c+2c+3c+2c+3c+2c+3c = 18c + 15b overhead per fn :(
+ENDMACRO
+
+.jump_to        ; A=bank, X&Y=fn address
+{
+    \\ Store bank#
+    STA DLL_BANK
+
+    \\ Remember current bank
+    LDA &F4: PHA
+
+    \\ Switch to new swram bank
+    LDA DLL_BANK
+    STA &F4:STA &FE30
+
+    \\ Set function address
+    LDA DLL_FUNC_LO
+    STA jump_to_addr+1
+
+    LDA DLL_FUNC_HI
+    STA jump_to_addr+2
+
+    \\ Restore A before fn call
+    LDA DLL_REG_A
+}
+\\ Call function
+.jump_to_addr
+    JSR &FFFF
+{
+    \\ Preserve A
+    STA DLL_REG_A
+
+    \\ Restore original bank
+    PLA
+    STA &F4:STA &FE30
+
+    \\ Restore A before return
+    LDA DLL_REG_A
+
+    RTS
+}   \\ 3c+3c+3c+3c+3c+4c+3c+4c+3c+4c+3c+6c+3c+4c+3c+4c+3c+6c = 65c!
+ENDIF

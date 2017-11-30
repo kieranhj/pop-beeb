@@ -62,9 +62,7 @@ ORG &0
 GUARD locals
 
 .DLL_REG_A skip 1
-.DLL_BANK skip 1
-.DLL_FUNC_LO skip 1
-.DLL_FUNC_HI skip 1
+.DLL_REG_X skip 1
 
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
