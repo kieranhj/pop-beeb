@@ -96,6 +96,7 @@ EQUB HI(beeb_plot_layrsave_9bytes)
     BNE width_not_zero
 
     .skipit
+    JSR swr_deselect_ANDY
     JMP SKIPIT
 
     .width_not_zero
@@ -212,6 +213,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -288,6 +290,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -372,6 +375,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -464,6 +468,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -564,6 +569,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -674,6 +680,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -792,6 +799,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -918,6 +926,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -1052,6 +1061,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -1195,6 +1205,7 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 ENDIF

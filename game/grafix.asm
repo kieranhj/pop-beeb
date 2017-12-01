@@ -85,7 +85,7 @@ IF _JMP_TABLE=FALSE
 .addmidez jmp ADDMIDEZ
 \
 .addwipe jmp ADDWIPE
-.addmsg BRK     ;jmp ADDMSG
+.addmsg jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
 .zerolsts jmp ZEROLSTS
@@ -299,17 +299,19 @@ ENDIF
 .return rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  A D D M S G
-*
-*  Add an image to MESSAGE image list (uses bg tables)
-*
-*  In:  XCO, OFFSET, YCO, IMAGE (coded), OPACITY (bit 6 coded)
-*
-*-------------------------------
-ADDMSG ldx msgX
+\*-------------------------------
+\*
+\*  A D D M S G
+\*
+\*  Add an image to MESSAGE image list (uses bg tables)
+\*
+\*  In:  XCO, OFFSET, YCO, IMAGE (coded), OPACITY (bit 6 coded)
+\*
+\*-------------------------------
+
+.ADDMSG
+{
+ ldx msgX
  inx
  cpx #maxmsg
  bcs return
@@ -329,8 +331,9 @@ ADDMSG ldx msgX
  sta msgOP,X
 
  stx msgX
-return rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*

@@ -121,4 +121,13 @@ ENDIF
     RTS
 }
 
+.swr_deselect_ANDY
+{
+    LDA &fe30
+    AND #&7F
+    sta &f4
+    STA &fe30
+    RTS
+}
+
 .beeb_swr_end

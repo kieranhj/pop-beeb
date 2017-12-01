@@ -1964,3 +1964,29 @@ Total=&4000 exactly :)
 
 Note: need to load new AUX code into SWRAM - remember data is loaded in a different
 way!!
+
+30/11/2017
+~~~
+Crazy DLL system works!  Redirecting every single gameplay fn call through another function to select & restore the appropriate swram bank
+Now hardcoded to banks 6 & 7
+
+Current memory free:
+Zero page free =  &15 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &4 
+Core RAM free =  &339 
+Main RAM free =  &6A 
+HAZEL RAM free =  &8D9 
+ANDY RAM free =  &0 
+BANK 0 free =  &25F 
+BANK 1 free =  &85 
+BANK 2 free =  &101A 
+BANK 3 free =  &1B40 
+> Glorious!
+
+After adding already ported missing gameplay features:
+Core RAM free =  &1A1 
+Main RAM free =  &36 
+BANK 2 free =  &CFA 
+BANK 3 free =  &195D 
+> It disappears quickly!

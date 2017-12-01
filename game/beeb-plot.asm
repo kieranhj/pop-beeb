@@ -39,7 +39,6 @@
 \*-------------------------------
 
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
-_REMOVE_MLAY = TRUE         ; remove MLayAND + MLaySTA as don't believe these are used
 
 _UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
 _UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
@@ -168,6 +167,7 @@ IF _UNROLL_LAYRSAVE = FALSE
     BNE width_ok
 
     .skipit
+    JSR swr_deselect_ANDY
     JMP SKIPIT
 
     \ Store visible width
@@ -286,6 +286,7 @@ IF _UNROLL_LAYRSAVE = FALSE
 
 ;RASTER_COL PAL_black
 
+    JSR swr_deselect_ANDY
     JMP DONE                ; restore vars
 }
 
@@ -456,6 +457,8 @@ ENDIF
     .done_y
 
 ;RASTER_COL PAL_black
+
+    JSR swr_deselect_ANDY
 
     RTS
 }
@@ -1493,11 +1496,13 @@ ENDIF
 
 .beeb_plot_sprite_MLayAND
 {
-IF _REMOVE_MLAY
-    BRK             ; not convinced this function is used!
-ELSE
-    RTS
-ENDIF
+    \\ BEEB TODO
+    \\ Turns out this function is used to display opponent energy bar
+    \\ Can just create a new sprite for this as need to figure out size etc anyway
+    \\ Maybe also placement on Beeb
+    \\ For now just plot it without mirror
+
+    JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
 }
 
 \*-------------------------------
@@ -1506,11 +1511,13 @@ ENDIF
 
 .beeb_plot_sprite_MLaySTA
 {
-IF _REMOVE_MLAY
-    BRK             ; not convinced this function is used!
-ELSE
-    RTS
-ENDIF
+    \\ BEEB TODO
+    \\ Turns out this function is used to display opponent energy bar
+    \\ Can just create a new sprite for this as need to figure out size etc anyway
+    \\ Maybe also placement on Beeb
+    \\ For now just plot it without mirror
+
+    JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
 }
 
 

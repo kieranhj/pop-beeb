@@ -109,6 +109,8 @@ kshowtime = IKN_space OR &80
 kflipx = IKN_x OR &80
 kflipy = IKN_y OR &80
 
+knext = IKN_n OR &80
+
 \*  Special keys (development)
 
 knextlevel = ')'
@@ -431,7 +433,13 @@ kerasegame = '*'
  sta timerequest
  rts
 
-.label_19
+.label_19 cmp #knext \\ BEEB TEMP
+ bne label_20
+ inc NextLevel
+ bne label_sk1
+
+.label_20
+
 .return
  rts
 }

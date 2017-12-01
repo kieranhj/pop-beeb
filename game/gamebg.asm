@@ -94,24 +94,23 @@ temp ds 1
  dend
 ENDIF
 
-IF _FEATURE_HITFX
 .gamebg_tempsave skip $10
-ENDIF
 
-IF _FEATURE_METERS
 \*-------------------------------
 \* Strength meters
 
 .KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
-.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
+\\.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
-.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 27,28,29,30,31,32,34,35,36,37,38,39       \\ BEEB TODO MIRROR
+.OppStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
+\\.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+\\.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
 .bline EQUB $89,$8a,$8b
-ENDIF
 
 IF _TODO
 *-------------------------------
@@ -522,7 +521,6 @@ ENDIF
 
 .UPDATEMETERS
 {
-IF _FEATURE_METERS
  lda redkidmeter
  beq label_1
 
@@ -533,7 +531,6 @@ IF _FEATURE_METERS
 
  jmp DrawOppMeter
 .return
-ENDIF
  rts
 }
 
@@ -544,7 +541,6 @@ ENDIF
 \*-------------------------------
 
 .DRAWKIDMETER
-IF _FEATURE_METERS
 {
  lda inbuilder
  bne return_53
@@ -622,7 +618,6 @@ IF _FEATURE_METERS
  inc xsave
  bne dloop
 }
-ENDIF
 .return_53
  rts
 
@@ -634,7 +629,6 @@ ENDIF
 
 .DRAWOPPMETER
 {
-IF _FEATURE_METERS
  lda inbuilder
  bne return_53
 
@@ -715,9 +709,6 @@ IF _FEATURE_METERS
  sta IMAGE
  ldx xsave
  jmp drawimg
-ELSE
- RTS
-ENDIF
 }
 
 \*-------------------------------
@@ -1015,7 +1006,6 @@ ENDIF
 \*-------------------------------
 \* Save/restore FCharVars
 
-IF _FEATURE_HITFX
 .saveFChar
 {
  ldx #$f
@@ -1036,7 +1026,6 @@ IF _FEATURE_HITFX
 .return
  rts
 }
-ENDIF
 
 \*-------------------------------
 \*
@@ -1047,7 +1036,6 @@ ENDIF
 \*-------------------------------
 
 .SETUPCOMIX
-IF _FEATURE_HITFX
 {
  jsr saveFChar
  jsr local_sub
@@ -1122,7 +1110,6 @@ IF _FEATURE_HITFX
  lda #TypeComix
  jmp addcharobj
 }
-ENDIF
 .return_27
  rts
 

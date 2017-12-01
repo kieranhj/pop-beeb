@@ -17,11 +17,7 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE            ; use a single global jump table
 
-_COULD_BE_OVERLAID_IN_THEORY = TRUE     ; save the memory for now!
-
-_FEATURE_METERS = FALSE      ; compile code to support energy meters despite lack of RAM
-_FEATURE_HITFX = FALSE       ; compile code to support hit fx despite lack of RAM
-_FEATURE_GAMEPLAY = FALSE    ; compile missing gaameplay code despite lack of RAM
+_COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now!
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 

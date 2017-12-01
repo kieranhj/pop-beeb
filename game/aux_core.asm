@@ -378,7 +378,7 @@ GRAFIX_BANK = -1        ; currently in Core
 .addmidez jmp ADDMIDEZ
 \
 .addwipe jmp ADDWIPE
-.addmsg BRK     ;jmp ADDMSG
+.addmsg jmp ADDMSG
 .savegame BRK   ;jmp SAVEGAME
 .loadgame BRK   ;jmp LOADGAME
 .zerolsts jmp ZEROLSTS
@@ -416,7 +416,7 @@ GRAFIX_BANK = -1        ; currently in Core
 
 MISC_BANK = -1      ; currently in Core
 
-.VanishChar BRK     ; jmp VANISHCHAR
+.VanishChar jmp VANISHCHAR
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable

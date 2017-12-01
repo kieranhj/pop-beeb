@@ -11,7 +11,7 @@
 \ org org
 
 IF _JMP_TABLE=FALSE
-.VanishChar BRK     ; jmp VANISHCHAR
+.VanishChar jmp VANISHCHAR
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
@@ -70,13 +70,14 @@ ENDIF
 
 \FirstSideB = 3
 
-IF _TODO
-*-------------------------------
-*
-* Vanish character
-*
-*-------------------------------
-VANISHCHAR
+\*-------------------------------
+\*
+\* Vanish character
+\*
+\*-------------------------------
+
+.VANISHCHAR
+{
  lda #86
  sta CharFace
  lda #0
@@ -85,8 +86,11 @@ VANISHCHAR
  sec
  sbc OppStrength
  sta ChgOppStr
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Move a block of memory
@@ -482,7 +486,6 @@ ENDIF
 
 .UNHOLY
 {
-IF _FEATURE_GAMEPLAY
  lda level
  cmp #12
  bne return_54
@@ -505,7 +508,6 @@ IF _FEATURE_GAMEPLAY
  jsr addsound
  lda #100
  jmp decstr
-ENDIF
 }
 .return_54
  rts
@@ -518,7 +520,6 @@ ENDIF
 
 .REFLECTION
 {
-IF _FEATURE_GAMEPLAY
  jsr LoadKid
  jsr GetFrameInfo
 
@@ -556,15 +557,11 @@ IF _FEATURE_GAMEPLAY
  sta FCharCL
 
  jmp addreflobj ;normal reflection
-ELSE
- RTS
-ENDIF
 }
 
 \*-------------------------------
 \* Get char data for kid's reflection
 
-IF _FEATURE_GAMEPLAY
 .getreflect
 {
  lda CharBlockX
@@ -625,7 +622,6 @@ IF _FEATURE_GAMEPLAY
  sta KidStrength
  jmp markmeters
 }
-ENDIF
 
 \*-------------------------------
 \*
@@ -639,7 +635,6 @@ skeltrig = 2
 skelprog = 2
 
 .BONESRISE
-IF _FEATURE_GAMEPLAY
 {
  lda level
  cmp #3
@@ -726,9 +721,6 @@ IF _FEATURE_GAMEPLAY
 
  jmp SaveShad ;save ShadVars
 }
-ELSE
- RTS
-ENDIF
 
 \*-------------------------------
 \*

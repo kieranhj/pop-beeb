@@ -173,7 +173,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 \\ 26c per Apple byte + 24c per row
 
@@ -233,7 +233,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_3bytes
@@ -300,7 +300,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_4bytes
@@ -375,7 +375,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_5bytes
@@ -458,7 +458,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_6bytes
@@ -549,7 +549,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_7bytes
@@ -648,7 +648,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_8bytes
@@ -755,7 +755,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 .beeb_plot_peel_9bytes
@@ -870,7 +870,7 @@ ENDIF
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 
 IF 0
@@ -994,7 +994,7 @@ IF 0
 
     .done_y
 
-    RTS
+    JMP swr_deselect_ANDY
 }
 ENDIF
 
