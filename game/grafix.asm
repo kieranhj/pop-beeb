@@ -1801,6 +1801,7 @@ ENDIF
 \*  Hires
 \*
 \*-------------------------------
+\\ BEEB TODO remove redirections
 .CLS
 {
 \ jsr prehr

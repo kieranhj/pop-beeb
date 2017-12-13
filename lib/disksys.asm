@@ -324,6 +324,9 @@ ENDIF
     jsr disksys_find_file
     bpl continue
     ; file not found
+IF _DEBUG
+    BRK
+ENDIF
     rts
 .file_length    EQUB 0,0,0
 .file_sector    EQUB 0,0

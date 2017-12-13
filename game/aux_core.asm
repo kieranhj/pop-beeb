@@ -295,14 +295,14 @@ IF _JMP_TABLE
 
 .setupflask JUMP_B SETUPFLASK, GAMEBG_BASE, 15
 .setupcomix JUMP_B SETUPCOMIX, GAMEBG_BASE, 16
-.psetupflame BRK    ; JUMP_B PSETUPFLAME           BEEB TODO PRINCESS
-.drawpost BRK       ; JUMP_B DRAWPOST
-.drawglass BRK      ; JUMP_B DRAWGLASS
+.psetupflame JUMP_B PSETUPFLAME, GAMEBG_BASE, 17
+.drawpost RTS       ; JUMP_B DRAWPOST
+.drawglass RTS      ; JUMP_B DRAWGLASS             BEEB TODO GFX
 
-.initlay BRK        ; JUMP_B INITLAY
-.twinkle BRK        ; JUMP_B TWINKLE
-.flow BRK           ; JUMP_B FLOW
-.pmask BRK          ; JUMP_B PMASK
+.initlay JUMP_B INITLAY, GAMEBG_BASE, 20
+.twinkle RTS        ; JUMP_B TWINKLE               BEEB TODO GFX
+.flow JUMP_B FLOW, GAMEBG_BASE, 22
+.pmask RTS          ; JUMP_B PMASK                 BEEB TODO GFX
 
 
 \*-------------------------------
@@ -354,7 +354,7 @@ GRAFIX_BANK = -1        ; currently in Core
 .xminit BRK     ;jmp XMINIT
 
 .xmplay BRK     ;jmp XMPLAY
-.cutprincess RTS;jmp CUTPRINCESS                BEEB TODO CUTSCENES
+.cutprincess jmp _cutprincess           ; BEEB doesn't need to be vectored thru grafix
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
 .reload BRK     ;jmp RELOAD
@@ -458,7 +458,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 .trigslicer JUMP_B TRIGSLICER, MOVER_BASE, 10
 .trigtorch JUMP_B TRIGTORCH, MOVER_BASE, 11
-.getflameflame JUMP_B GETFLAMEFRAME, MOVER_BASE, 12
+.getflameframe JUMP_B GETFLAMEFRAME, MOVER_BASE, 12
 .smashmirror JUMP_B SMASHMIRROR, MOVER_BASE, 13
 .jamspikes JUMP_B JAMSPIKES, MOVER_BASE, 14
 
@@ -489,7 +489,7 @@ SPECIALK_BANK = -1      ; currently in Core
  .demokeys jmp DEMOKEYS
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
- .getminleft BRK  ;jmp GETMINLEFT
+ .getminleft jmp GETMINLEFT
  .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
  .shortentime BRK ;jmp SHORTENTIME
@@ -523,9 +523,9 @@ SPECIALK_BANK = -1      ; currently in Core
 \ JUMP_B bonesrise
 .deadenemy JUMP_B DEADENEMY, SUBS_BASE, 9
 IF _ALL_LEVELS
-.playcut RTS            ; JUMP_B PLAYCUT               BEEB TODO CUTSCENE
+.playcut JUMP_B PLAYCUT, SUBS_BASE, 10
 ELSE
-.playcut BRK            ; JUMP_B PLAYCUT
+.playcut BRK            ; JUMP_B PLAYCUT               BEEB TODO CUTSCENE
 ENDIF
 
 .addlowersound RTS      ; JUMP_B ADDLOWERSOUND         BEEB TODO SOUND
@@ -833,13 +833,13 @@ EQUB LO(DRAWGUARD)
 
 EQUB LO(SETUPFLASK)
 EQUB LO(SETUPCOMIX)
-EQUB 0    ; EQUB LO(PSETUPFLAME)           BEEB TODO PRINCESS
+EQUB LO(PSETUPFLAME)
 EQUB 0    ; EQUB LO(DRAWPOST)
 EQUB 0    ; EQUB LO(DRAWGLASS)
 
-EQUB 0    ; EQUB LO(INITLAY)
+EQUB LO(INITLAY)
 EQUB 0    ; EQUB LO(TWINKLE)
-EQUB 0    ; EQUB LO(FLOW)
+EQUB LO(FLOW)
 EQUB 0    ; EQUB LO(PMASK)
 
 \*-------------------------------
@@ -889,7 +889,7 @@ EQUB LO(ADDSLICERS)
 EQUB LO(PAUSE)
 \ JUMP_TO bonesrise     ; in misc.asm
 EQUB LO(DEADENEMY)
-EQUB 0    ; EQUB LO(PLAYCUT)               BEEB TODO CUTSCENE
+EQUB LO(PLAYCUT)
 
 EQUB 0    ; EQUB LO(ADDLOWERSOUND)         BEEB TODO SOUND
 EQUB LO(REMOVEOBJ)
@@ -948,13 +948,13 @@ EQUB HI(DRAWGUARD)
 
 EQUB HI(SETUPFLASK)
 EQUB HI(SETUPCOMIX)
-EQUB 0    ; EQUB HI(PSETUPFLAME)           BEEB TODO PRINCESS
+EQUB HI(PSETUPFLAME)
 EQUB 0    ; EQUB HI(DRAWPOST)
 EQUB 0    ; EQUB HI(DRAWGLASS)
 
-EQUB 0    ; EQUB HI(INITLAY)
+EQUB HI(INITLAY)
 EQUB 0    ; EQUB HI(TWINKLE)
-EQUB 0    ; EQUB HI(FLOW)
+EQUB HI(FLOW)
 EQUB 0    ; EQUB HI(PMASK)
 
 \*-------------------------------
@@ -1002,7 +1002,7 @@ EQUB HI(ADDSLICERS)
 EQUB HI(PAUSE)
 \ JUMP_TO bonesrise     ; in misc.asm
 EQUB HI(DEADENEMY)
-EQUB 0    ; EQUB HI(PLAYCUT)               BEEB TODO CUTSCENE
+EQUB HI(PLAYCUT)
 
 EQUB 0    ; EQUB HI(ADDLOWERSOUND)         BEEB TODO SOUND
 EQUB HI(REMOVEOBJ)

@@ -117,7 +117,7 @@ IF 0
 \ dum $212
 
 .milestone skip 1
-;.GlassState skip 1
+.GlassState skip 1
 ;.redrawglass skip 1
 .doortop skip 1
 .GuardColor skip 1

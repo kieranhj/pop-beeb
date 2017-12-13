@@ -37,13 +37,13 @@ IF _JMP_TABLE = FALSE
 
 .setupflask jmp SETUPFLASK
 .setupcomix jmp SETUPCOMIX
-.psetupflame BRK    ; jmp PSETUPFLAME           BEEB TODO PRINCESS
+.psetupflame jmp PSETUPFLAME
 .drawpost BRK       ; jmp DRAWPOST
 .drawglass BRK      ; jmp DRAWGLASS
 
-.initlay BRK        ; jmp INITLAY
+.initlay jmp INITLAY
 .twinkle BRK        ; jmp TWINKLE
-.flow BRK           ; jmp FLOW
+.flow jmp FLOW
 .pmask BRK          ; jmp PMASK
 ENDIF
 
@@ -126,19 +126,21 @@ postimg = $c ;chtable6
 starx = 2
 stary hex 62,65,6d,72
 stari hex 2a,2b,2b,2a ;chtable6
+ENDIF
 
-*-------------------------------
-* Hourglass
+\*-------------------------------
+\* Hourglass
 
 glassx = 19
 glassy = 151
-glassimg hex 15,0d,0e,0f,10,11,12,13,14 ;chtable6
-sandht db 0,1,2,3,4,5,6,7
+.glassimg EQUB $15,$0d,$0e,$0f,$10,$11,$12,$13,$14 ;chtable6
+.sandht EQUB 0,1,2,3,4,5,6,7
 
 flowx = glassx+1
 flowy = glassy-2
-flowimg hex 16,17,18 ;chtable6
+.flowimg EQUB $16,$17,$18 ;chtable6
 
+IF _TODO
 *-------------------------------
 * Masks for Princess's face & hair
 
@@ -829,7 +831,7 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
 .PSETUPFLAME
 {
  cpx #torchLast+1
- bcs return
+ bcs return_59
 
  lda ptorchflame,x
  sta IMAGE
@@ -838,15 +840,17 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  sta OPACITY
 
  jsr initlay
-
-.setch6 lda #LO(chtable6)
+}
+.gamebg_setch6
+{
+ lda #LO(chtable6)
  sta TABLE
  lda #HI(chtable6)
  sta TABLE+1
-
-.return
- rts
 }
+.return_59
+ rts
+
 
 IF _TODO
 *-------------------------------
@@ -933,9 +937,12 @@ PMASK
 :m1 ldx #1
  bpl :mask
 :2
+ENDIF
 
-]rts rts
+.return_60
+ rts
 
+IF _TODO
 :mask
  lda FCharY
  clc
@@ -972,18 +979,21 @@ RECHECKYEL
  jsr yellow
  lda #$ff
  rts
+ENDIF
 
-*-------------------------------
-*
-* Draw sand flowing through hourglass
-*
-* In: X = frame # (0-3)
-*     Y = hourglass state (0-8)
-*
-*-------------------------------
-FLOW
+\*-------------------------------
+\*
+\* Draw sand flowing through hourglass
+\*
+\* In: X = frame # (0-3)
+\*     Y = hourglass state (0-8)
+\*
+\*-------------------------------
+
+.FLOW
+{
  cpy #8
- bcs ]rts ;glass is empty
+ bcs return_60 ;glass is empty
  jsr initlay
  lda #glassy
  sec
@@ -999,9 +1009,9 @@ FLOW
  sta YCO
  lda #enum_sta
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
  jmp lay ;<---DIRECT HIRES CALL
-ENDIF
+}
 
 \*-------------------------------
 \* Save/restore FCharVars
@@ -1237,11 +1247,15 @@ SETRECHECK0
  sta locals
  lda #>recheck0
  sta locals+1 ;fall thru (& return A = 0)
+ENDIF
 
-*-------------------------------
-INITLAY
- lda #3 ;auxmem
- sta BANK
+\*-------------------------------
+
+.INITLAY
+{
+\ NOT BEEB
+\ lda #3 ;auxmem
+\ sta BANK          \\ BANK handled by setcharimg or setbgimg in grafix.asm
 
  lda #40
  sta RIGHTCUT
@@ -1251,7 +1265,9 @@ INITLAY
  sta LEFTCUT
  sta TOPCUT
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Print character

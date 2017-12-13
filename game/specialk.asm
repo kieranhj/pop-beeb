@@ -33,7 +33,7 @@ DebugKeys = 0
  .demokeys jmp DEMOKEYS
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
- .getminleft BRK  ;jmp GETMINLEFT
+ .getminleft jmp GETMINLEFT
  .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
  .shortentime BRK ;jmp SHORTENTIME
@@ -1302,17 +1302,30 @@ BURN
  sbc #4
  sta BOTCUT
  jmp lay ;<---DIRECT HIRES CALL
+ENDIF
 
-*-------------------------------
-*
-* Get # of minutes (or seconds) left
-*
-* In: FrameCount (0-65535)
-* Out: MinLeft (BCD byte: $00-99) = # of minutes left
-*      SecLeft = # of seconds left (during final minute)
-*
-*-------------------------------
-GETMINLEFT
+\*-------------------------------
+\*
+\* Get # of minutes (or seconds) left
+\*
+\* In: FrameCount (0-65535)
+\* Out: MinLeft (BCD byte: $00-99) = # of minutes left
+\*      SecLeft = # of seconds left (during final minute)
+\*
+\*-------------------------------
+
+.GETMINLEFT
+{
+\\ BEEB TODO game timer
+ SED
+ LDA #59
+ STA MinLeft
+ LDA #59
+ STA SecLeft
+ CLD
+ RTS
+
+IF _TODO
  lda #0
  sta ]count
  sta ]count+1
@@ -1370,7 +1383,10 @@ GETMINLEFT
  bpl :loop
  ldy #0
 ]rts rts
+ENDIF
+}
 
+IF _TODO
 *-------------------------------
 timetable
 :0 dw t-60*min

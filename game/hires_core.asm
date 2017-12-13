@@ -33,92 +33,112 @@
 
 .hires_cls
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_CLS
 \ jsr hires_CLS
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_lay
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_plot_sprite_LAY
 \ jsr hires_LAY
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_fastlay
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
  LDA #0
  STA OFFSET
  jsr beeb_plot_sprite_FASTLAY
 \ jsr hires_FASTLAY
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_layrsave
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_plot_layrsave
 \ jsr hires_LAYRSAVE
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_lrcls
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  BRK
 \ jsr hires_LRCLS
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_fastmask
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
 \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
  LDA #0
  STA OFFSET
  jsr beeb_plot_sprite_FASTMASK
 \ jsr hires_FASTMASK
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_fastblack
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_plot_wipe
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_peel
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_plot_peel
 \ jsr hires_PEEL
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_getwidth
 {
- jsr mainmem
-
- LDA &F4:PHA
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
 
  jsr hires_GETWIDTH
 
+\\ must preserve A&X
  STA regA+1
 
- PLA:STA &F4:STA &FE30
-
-\\ must preserve A&X
- PHX
- JSR auxmem
-
 \\ must preserve callers SWRAM bank
+
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
  
- PLX
  .regA
  LDA #0
  RTS
@@ -147,9 +167,10 @@ ENDIF
 
 \*-------------------------------
 
+IF _NOT_BEEB
 .mainmem
 {
-    JMP beeb_shadow_select_main
+    JMP beeb_select_main_mem     \\ BEEB TODO remove redirection
 \ NOT BEEB
 \sta $c004 ;RAMWRT off
 \sta $c002 ;RAMRD off
@@ -158,9 +179,10 @@ ENDIF
 
 .auxmem
 {
-    JMP beeb_shadow_select_aux
+    JMP beeb_select_aux_mem     \\ BEEB TODO remove redirection
 \ NOT BEEB
 \sta $c005 ;RAMWRT on
 \sta $c003 ;RAMRD on
 \rts
 }
+ENDIF

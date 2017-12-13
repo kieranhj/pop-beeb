@@ -121,31 +121,58 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 
 \*-------------------------------
-; SHADOW RAM select
+; Apple II RAM select - map to Beeb
 \*-------------------------------
 
-.beeb_shadow_select_main
+MACRO BEEB_SELECT_MAIN_MEM
 {
+    LDA &F4: PHA
+}
+ENDMACRO
+
+IF 0
+.beeb_select_main_mem
+{
+\ Main & Aux used to map to SHADOW but no longer
 \    LDA &FE34
 \    AND #&FB            ; mask out bit 2
 \    STA &FE34
+
+\ Now maps to multiple SWRAM banks so...
+
+    \\ Remember current bank
+    LDA &F4: PHA
+
     RTS
 }
+ENDIF
 
-.beeb_shadow_select_aux
+MACRO BEEB_SELECT_AUX_MEM
 {
-    LDA &FE34
-    ORA #&8         ;&C          ; mask in bit 2 & 3 (for HAZEL)
-    STA &FE34
+    PLA:STA &F4:STA &FE30
+}
+ENDMACRO
 
-\ Also page in AUX HIGH code in SWRAM bank
-
+IF 0
+.beeb_select_aux_mem
+{
+\ Main & Aux used to map to SHADOW but no longer
+\    LDA &FE34
+\    ORA #&C          ; mask in bit 2 & 3 (for HAZEL)
+\    STA &FE34
+\ Then SHADOW + SWRAM
 \    LDA #BEEB_SWRAM_SLOT_AUX_HIGH
 \    JMP swr_select_slot
 
-\ BEEB TEMP
+\ Now maps to multiple SWRAM banks so...
+
+    \\ Restore original bank
+    PLA
+    STA &F4:STA &FE30
+
     RTS
 }
+ENDIF
 
 ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
 .shadow_init_buffers
@@ -297,7 +324,7 @@ IF _DEBUG
     STX level
     JSR LoadLevelX
 
-    JSR beeb_shadow_select_main
+\\    JSR beeb_shadow_select_main
 
     LDA #1
     STA beeb_sprite_no

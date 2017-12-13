@@ -208,7 +208,6 @@ INCLUDE "lib/print.asm"
 
     \\ Load Main
 
-\    JSR beeb_shadow_select_main
 \ Ensure MAIN RAM is writeable
 
     LDA &FE34:AND #&FB:STA &FE34
@@ -232,10 +231,11 @@ INCLUDE "lib/print.asm"
     JSR shadow_init_buffers
 
     \\ Load Aux
+    \\ BEEB TODO tidy up swram slots vs banks
 
     \\ And Aux High (SWRAM)
 
-    LDA #2      ; hard code
+    LDA #2      ; hard code - assuming this goes to 6
     JSR swr_select_slot
 
     LDX #LO(auxb_filename)
@@ -243,9 +243,7 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_aux_b_start)
     JSR disksys_load_file
 
-    JSR beeb_shadow_select_aux
-
-    LDA #BEEB_SWRAM_SLOT_AUX_HIGH
+    LDA #BEEB_SWRAM_SLOT_AUX_HIGH   \\ assuming this goes to 7
     JSR swr_select_slot
 
 \\ AUX (Deprecated)
@@ -261,6 +259,10 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_aux_high_start)
     JSR disksys_load_file
 
+\ Ensure HAZEL RAM is writeable - assume this says writable throughout?
+
+    LDA &FE34:ORA #&8:STA &FE34
+
     \\ And Aux HAZEL
 
     LDX #LO(hazel_filename)
@@ -268,7 +270,7 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_aux_hazel_data_start)
     JSR disksys_load_file
 
-    \\ Remain in AUX...
+    \\ Remain in AUX...doesn't mean anything anymore as AUX = SWRAM x2
 
     LDA #0
     STA beeb_vsync_count
@@ -573,7 +575,7 @@ BEEB_SWRAM_SLOT_BGTAB2 = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 1
 BEEB_SWRAM_SLOT_CHTAB4 = 0
-BEEB_SWRAM_SLOT_CHTAB67 = 4             ; BEEB - NOT SURE WHERE THIS WILL GO YET!
+BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 SWRAM_START = &8000
@@ -809,7 +811,7 @@ PAGE_ALIGN
 ; Put files on the disk
 \*-------------------------------
 
-PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+;PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
 PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
 PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
@@ -850,8 +852,8 @@ PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ENDIF
-;PUTFILE "Images/IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
-;PUTFILE "Images/IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
-;PUTFILE "Images/IMG.CHTAB7.bin", "CHTAB7", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
-PUTBASIC "chkimg.bas", "CHKIMG"
+;PUTBASIC "chkimg.bas", "CHKIMG"

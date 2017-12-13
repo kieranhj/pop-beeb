@@ -994,14 +994,18 @@ IF _NOT_BEEB
  jsr PageFlip
  jmp normspeed
 ELSE
- jsr PageFlip
- jsr drawbg ;draw bg on p2
+; jsr PageFlip ; then show current screen
+
+ jsr drawbg ;draw bg on p2 - has a vblank call?
+
+\ BEEB TODO COPY SCREEN?
 
  jsr PageFlip
+
  jsr drawbg ;draw bg on p2
  jsr DoFast ;add chars
 
- jmp PageFlip
+; jmp PageFlip
 ENDIF
 }
 ENDIF

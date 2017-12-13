@@ -26,7 +26,7 @@
  ._loadstage2 BRK   ;jmp LoadStage2
  
  ._attractmode BRK  ;jmp ATTRACTMODE            BEEB TODO ATTRACT & DEMO
- ._cutprincess BRK  ;jmp CUTPRINCESS            BEEB TODO CUTSCENES
+ ._cutprincess jmp CUTPRINCESS
  ._savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
  ._loadgame BRK     ;jmp LOADGAME
  ._dostartgame jmp DOSTARTGAME
@@ -484,9 +484,6 @@ ENDIF
 \ NOT BEEB
 \ jmp driveoff
 
-\ Ensure BEEB select full Aux memory after load
- JSR beeb_shadow_select_aux
-
  RTS
 }
 
@@ -542,6 +539,7 @@ ENDIF
 \ Not sure what's going on here - suggests 3x sets of bg tiles
 \ As these are loaded by track/sector and not filename, presume
 \ The bg tiles are part loaded into memory location for bg
+\ ANSWER: Tracks 07 & 09 are BGTAB1.DUN and BGTAB2.DUN but on the second disk to reduce swapping
 
 \*-------------------------------
 \rdbg1 ldx newBGset1
@@ -869,18 +867,22 @@ copydhires
 
  jsr _copy2000aux
  jmp _copy2000 ;in hires
+ENDIF
 
-*-------------------------------
-*
-*  Cut to princess screen
-*
-*-------------------------------
-CUTPRINCESS
+\*-------------------------------
+\*
+\*  Cut to princess screen
+\*
+\*-------------------------------
+
+.CUTPRINCESS
+{
  jsr blackout
  lda #1 ;seek track 0
-cutprincess1
+.cutprincess1
  jsr LoadStage2 ;displaces bgtab1-2, chtab4
 
+IF _TODO            \\ BEEB TODO HIRES SCREENS
  lda #pacProom
  jsr SngExpand
 
@@ -889,7 +891,15 @@ cutprincess1
  lda #$20
  sta IMAGE ;copy page 1 to page 2
  jmp _copy2000 ;in HIRES
+ELSE
+ JSR cls
+ JSR PageFlip
+ JSR cls
+ RTS
+ENDIF
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Epilog (You Win)
@@ -1552,75 +1562,140 @@ ReloadStuff
  db RdSeq.Inc,$4c
 
  jmp driveoff
+ENDIF
 
-*-------------------------------
-*
-*  Load stage 2 data (6000-a800)
-*
-*-------------------------------
-LoadStage2
- ldx BBundID
- cpx #POPside2
- beq LoadStage2B
+\*-------------------------------
+\*
+\*  Load stage 2 data (6000-a800)
+\*
+\*-------------------------------
+\LoadStage2
+\ ldx BBundID
+\ cpx #POPside2
+\ beq LoadStage2B
+\
+\LoadStage2A
+\ jsr driveon
+\
+\ lda #0
+\ jsr loadch7 ;side A only
+\
+\ lda #29
+\]ls2 sta track
+\
+\:test jsr rw18
+\ db RdSeqErr.Inc,$60
+\ bcc :ok
+\ jsr error
+\ jmp :test
+\:ok
+\ jsr rw18
+\ db RdSeq.Inc,$72
+\ jsr rw18
+\ db RdSeq.Inc,$84
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 96,97,98,99,9a,9b,9c,9d,9e
+\ hex 00,00,00,00,00,00,00,00,00
+\
+\ lda #$ff
+\ sta BGset1
+\ sta BGset2
+\ sta CHset
+\
+\ jmp driveoff
+\
+\* Load chtable7 (side A only)
+\
+\loadch7
+\ sta recheck0
+\:test lda #28
+\ sta track
+\ jsr rw18
+\ db RdGrpErr.Inc
+\ hex 00,00,00,00,00,00,00,00,00
+\ hex 00,00,00,00,9f,a0,a1,a2,a3
+\ bcc :ok
+\ jsr error
+\ jmp :test
+\:ok
+\]rts rts
+\
+\*-------------------------------
+\*
+\*  Load stage 2 routines (side B)
+\*
+\*-------------------------------
+\LoadStage2B
+\ jsr driveon
+\
+\ lda #24
+\ bne ]ls2
 
-LoadStage2A
- jsr driveon
+.chtab6_to_name
+EQUS "CHTAB6X$"
 
- lda #0
- jsr loadch7 ;side A only
+.LoadStage2
+{
+\\ Switches on disk side to decide 6A or 6B
+    LDA #0
+    CLC
+    ADC #'A'
+    STA chtab6_to_name+6
 
- lda #29
-]ls2 sta track
+    lda #BEEB_SWRAM_SLOT_CHTAB67
+    jsr swr_select_slot
 
-:test jsr rw18
- db RdSeqErr.Inc,$60
- bcc :ok
- jsr error
- jmp :test
-:ok
- jsr rw18
- db RdSeq.Inc,$72
- jsr rw18
- db RdSeq.Inc,$84
- jsr rw18
- db RdGrp.Inc
- hex 96,97,98,99,9a,9b,9c,9d,9e
- hex 00,00,00,00,00,00,00,00,00
+    lda #HI(chtable6)
+    ldx #LO(chtab6_to_name)
+    ldy #HI(chtab6_to_name)
+    jsr disksys_load_file
 
- lda #$ff
- sta BGset1
- sta BGset2
- sta CHset
+    \ Relocate the IMG file
+    LDA #LO(chtable6)
+    STA beeb_readptr
+    LDA #HI(chtable6)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
 
- jmp driveoff
+    LDA #&ff
+    sta BGset1
+    sta BGset2
 
-* Load chtable7 (side A only)
+    JSR loadch7
 
-loadch7
- sta recheck0
-:test lda #28
- sta track
- jsr rw18
- db RdGrpErr.Inc
- hex 00,00,00,00,00,00,00,00,00
- hex 00,00,00,00,9f,a0,a1,a2,a3
- bcc :ok
- jsr error
- jmp :test
-:ok
-]rts rts
+    .return
+    rts    
+}
 
-*-------------------------------
-*
-*  Load stage 2 routines (side B)
-*
-*-------------------------------
-LoadStage2B
- jsr driveon
+.chtab7_file_name
+EQUS "CHTAB7 $"
 
- lda #24
- bne ]ls2
+.loadch7
+{
+    lda #BEEB_SWRAM_SLOT_CHTAB67
+    jsr swr_select_slot
 
+    lda #HI(chtable7)
+    ldx #LO(chtab7_file_name)
+    ldy #HI(chtab7_file_name)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable7)
+    STA beeb_readptr
+    LDA #HI(chtable7)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    LDA #&ff
+    STA CHset
+
+    .return
+    rts
+}
+
+IF _TODO
 *-------------------------------
 *
 *  Load stage 3

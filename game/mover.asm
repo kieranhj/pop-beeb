@@ -25,7 +25,7 @@ IF _JMP_TABLE=FALSE
 
 .trigslicer jmp TRIGSLICER
 .trigtorch jmp TRIGTORCH
-.getflameflame jmp GETFLAMEFRAME
+.getflameframe jmp GETFLAMEFRAME
 .smashmirror jmp SMASHMIRROR
 .jamspikes jmp JAMSPIKES
 
