@@ -579,30 +579,7 @@ EQUS "DUN1X  $"
     adc #0
     STA beeb_writeptr+1
 
-    \ Now need to load 3x blocks for BGTAB1
-
-    \ Poke C into filename
-    LDA #'C'
-    LDY #4
-    STA (beeb_writeptr), Y
-
-    \ Set BANK for C
-    lda #BEEB_SWRAM_SLOT_BGTAB1_C
-    jsr swr_select_slot
-
-    \ Load file C
-    LDX beeb_writeptr
-    LDY beeb_writeptr+1
-    lda #HI(bgtable1c)
-    jsr disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(bgtable1c)
-    STA beeb_readptr
-    LDA #HI(bgtable1c)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
+    \ Now need to load 2x blocks for BGTAB1
 
     \ Poke B into filename
     LDA #'B'

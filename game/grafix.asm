@@ -992,9 +992,11 @@ ENDIF
 
 .bg1
 
+ LDA IMAGE
+
 \ BGTAB1
 
- CMP #10
+ CMP #88
  BCS not_A
 
 \ BGTAB A
@@ -1006,33 +1008,17 @@ ENDIF
  BNE ok
 
  .not_A
- CMP #23
- BCS not_B
 
 \ BGTAB B
 
  SEC
- SBC #9
+ SBC #87
  STA IMAGE
 
  LDA #BEEB_SWRAM_SLOT_BGTAB1_B
  STA BANK
 
  lda #HI(bgtable1b)
- BNE ok
-
- .not_B
-
-\ BGTAB C
-
- SEC
- SBC #22
- STA IMAGE
-
- LDA #BEEB_SWRAM_SLOT_BGTAB1_C
- STA BANK
-
- lda #HI(bgtable1c)
 
 .ok sta TABLE+1
 

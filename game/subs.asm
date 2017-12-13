@@ -363,6 +363,8 @@ slicersync = 3 ;# frames out of sync
  sta ptorchstate,x
  tax
  jsr psetupflame
+ LDA #BEEB_SWRAM_SLOT_CHTAB67
+ STA BANK       ; BEEB hideous hack
  jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
 }
 
@@ -409,7 +411,7 @@ slicersync = 3 ;# frames out of sync
 
  jsr rnd
  cmp #10
- bcs return_57
+ bcs return
  jsr rnd
  and #3
  clc
@@ -422,6 +424,8 @@ slicersync = 3 ;# frames out of sync
  pla
  sta pstarcount,x
  jmp twinkle ;<---Contains direct hires call
+.return
+ RTS
 }
 
 IF _NOT_BEEB

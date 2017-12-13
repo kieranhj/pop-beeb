@@ -38,8 +38,8 @@ IF _JMP_TABLE = FALSE
 .setupflask jmp SETUPFLASK
 .setupcomix jmp SETUPCOMIX
 .psetupflame jmp PSETUPFLAME
-.drawpost BRK       ; jmp DRAWPOST
-.drawglass BRK      ; jmp DRAWGLASS
+.drawpost jmp DRAWPOST
+.drawglass jmp DRAWGLASS
 
 .initlay jmp INITLAY
 .twinkle BRK        ; jmp TWINKLE
@@ -112,21 +112,19 @@ bullet = $88 ;in bgtable2
 blank = $8c
 .bline EQUB $89,$8a,$8b
 
-IF _TODO
-*-------------------------------
-* Post in Princess's room
+\*-------------------------------
+\* Post in Princess's room
 
 postx = 31
 posty = 152
 postimg = $c ;chtable6
 
-*-------------------------------
-* Stars outside Princess's window
+\*-------------------------------
+\* Stars outside Princess's window
 
 starx = 2
-stary hex 62,65,6d,72
-stari hex 2a,2b,2b,2a ;chtable6
-ENDIF
+.stary EQUB $62,$65,$6d,$72
+.stari EQUB $2a,$2b,$2b,$2a ;chtable6
 
 \*-------------------------------
 \* Hourglass
@@ -810,9 +808,9 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  lda #enum_sta
  sta OPACITY
 
- lda #LO(bgtable1c)
+ lda #LO(bgtable1a)
  sta TABLE
- lda #HI(bgtable1c)
+ lda #HI(bgtable1a)
  sta TABLE+1
 
 .return
@@ -847,6 +845,8 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  sta TABLE
  lda #HI(chtable6)
  sta TABLE+1
+ LDA #&FF           ; BEEB hideous hack :)
+ STA BANK
 }
 .return_59
  rts
@@ -880,32 +880,38 @@ TWINKLE
  eor #$20
  sta PAGE
  rts
+ENDIF
 
-*-------------------------------
-*
-* Draw big white post in Princess's room
-*
-*-------------------------------
-DRAWPOST
+\*-------------------------------
+\*
+\* Draw big white post in Princess's room
+\*
+\*-------------------------------
+
+.DRAWPOST
+{
  lda #postx
  sta XCO
  lda #posty
  sta YCO
  lda #postimg
  sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
  jmp addfore
+}
 
-*-------------------------------
-*
-* Draw hourglass in Princess's room
-*
-* In: X = glass state (0-8, 0 = full)
-*
-*-------------------------------
-DRAWGLASS
+\*-------------------------------
+\*
+\* Draw hourglass in Princess's room
+\*
+\* In: X = glass state (0-8, 0 = full)
+\*
+\*-------------------------------
+
+.DRAWGLASS
+{
  lda #glassx
  sta XCO
  lda #glassy
@@ -914,9 +920,11 @@ DRAWGLASS
  sta IMAGE
  lda #enum_sta
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
  jmp addback
+}
 
+IF _TODO
 *-------------------------------
 *
 * Mask princess's face & hair for certain CharPosns
@@ -964,7 +972,9 @@ IF _TODO
  sta OPACITY
  lda #UseLayrsave.$80
  jmp addmid
+ENDIF
 
+IF _NOT_BEEB
 *-------------------------------
 * If failed copy prot check due to disk not in drive, recheck
 * In: a = 0 (Call after setrecheck0)
@@ -1010,6 +1020,8 @@ ENDIF
  lda #enum_sta
  sta OPACITY
  jsr gamebg_setch6
+ LDA #BEEB_SWRAM_SLOT_CHTAB67
+ STA BANK       ; BEEB hideous hack
  jmp lay ;<---DIRECT HIRES CALL
 }
 
