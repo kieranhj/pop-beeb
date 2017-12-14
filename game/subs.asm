@@ -859,26 +859,25 @@ ENDIF
 \*-------------------------------
 .PlaySong
 {
-IF _NOT_BEEB
- jsr minit
+\ BEEB TODO MUSIC
+\ jsr minit
  jsr swpage
-:loop lda #1
+.loop lda #1
  jsr strobe
- lda $c061
- ora $c062
+\ NOT BEEB
+\ lda $c061
+\ ora $c062
  ora keypress
- bmi :interrupt
+ bmi interrupt
  jsr pburn
  jsr pstars
  jsr pflow
- jsr mplay
+\ BEEB TODO MUSIC
+\ jsr mplay
  cmp #0
- bne :loop
-:interrupt
+ bne loop
+.interrupt
  jmp swpage
-ELSE
-    RTS               \\ BEEB TODO MUSIC  
-ENDIF
 }
 
 \*-------------------------------
@@ -920,17 +919,23 @@ ENDIF
 
 \*-------------------------------
 \*  Switch hires pages for duration of song
+\\ KC note - this means lay is just poking visible screen directly
+\\ whilst the rest of the system is "frozen" during music playback
 
 .swpage
 {
-IF _NOT_BEEB
  lda PAGE
  eor #$20
  sta PAGE
+
+\\ BEEB equivalent here to invert RAM bit 2 only
+\\ BEEB TODO danger?
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
  rts
-ELSE
- JMP shadow_swap_buffers        \\ BEEB TODO CHECK
-ENDIF
 }
 
 IF _TODO

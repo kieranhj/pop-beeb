@@ -192,7 +192,7 @@ ENDIF
     STA PAGE
 
     lda &fe34
-    eor #1+4	; invert bits 0 & 2
+    eor #1+4	; invert bits 0 (CRTC) & 2 (RAM)
     sta &fe34
     rts
 }
