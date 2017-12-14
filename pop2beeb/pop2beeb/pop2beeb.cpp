@@ -257,10 +257,10 @@ int get_colour(unsigned char *colour_data, int pixel_width, int pixel_height, in
 	return colour_data[y * pixel_width + x];
 }
 
-void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_height, int apple_width, int x8, int y, int &c0, int &c1, int &c2, int &c3, bool point)
+void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_height, int apple_width, int x8, int y, int &c0, int &c1, int &c2, int &c3, bool point, bool even)
 {
 	int width_parity = apple_width & 1;
-	int x_parity = point ? 0 : (x8 & 1);
+	int x_parity = point ? 0 : ((x8 & 1)==even);
 
 	// Or select specific pixels to double-up
 
@@ -290,7 +290,7 @@ void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_he
 	}
 }
 
-int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, int height_step, unsigned char *beebptr, bool test, bool point)
+int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, int height_step, unsigned char *beebptr, bool test, bool point, bool even)
 {
 	int expanded_width = 8 * pixel_width / 7;
 	int reduced_width = expanded_width / 2;
@@ -325,7 +325,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 
 			// Or select specific pixels to double-up
 
-			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c0, c1, c2, c3, point);
+			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c0, c1, c2, c3, point, even);
 
 			// Convert 4x pixels to MODE5 2bpp
 
@@ -439,6 +439,7 @@ int main(int argc, char **argv)
 	const bool halfv = cimg_option("-halfv", false, "Halve vertical resolution");
 	const bool simple = cimg_option("-simple", false, "Use simple colour conversion");
 	const bool point = cimg_option("-point", true, "Use simple point sample (best for characters)");
+	const bool even = cimg_option("-even", true, "Start with odd or even bytes when parity sampling (DUN=true PAL=false)");
 	const bool verbose = cimg_option("-v", false, "Verbose output");
 	int start_image = cimg_option("-s", 1, "Start image #");
 	int end_image = cimg_option("-e", 127, "End image #");
@@ -609,7 +610,7 @@ int main(int argc, char **argv)
 				{
 					int c[4];
 
-					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[0], c[1], c[2], c[3], point);
+					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[0], c[1], c[2], c[3], point, even);
 
 					for (int j = 0; j < 4; j++)
 					{
@@ -691,7 +692,7 @@ int main(int argc, char **argv)
 
 				for (int x8 = 0, x = 0; x8 < mode5_width; x8++, x += 4)
 				{
-					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point);
+					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point, even);
 				}
 
 				for(int p=0, x=0; p < (mode5_width*4); p += 3)
@@ -856,7 +857,7 @@ int main(int argc, char **argv)
 
 				if (mode == 5)
 				{
-					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
+					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even);
 				}
 
 				if (mode == 6)
