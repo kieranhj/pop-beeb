@@ -852,6 +852,9 @@ ENDIF
 \*
 \*-------------------------------
 
+.pacRoom_name
+EQUS "PRIN   $"
+
 .CUTPRINCESS
 {
  jsr blackout
@@ -869,9 +872,14 @@ IF _TODO            \\ BEEB TODO HIRES SCREENS
  sta IMAGE ;copy page 1 to page 2
  jmp _copy2000 ;in HIRES
 ELSE
- JSR cls
+ LDX #LO(pacRoom_name)
+ LDY #HI(pacRoom_name)
+ LDA #HI(beeb_screen_addr)
+ JSR disksys_load_file
+
+; JSR cls
  JSR PageFlip
- JSR cls
+; JSR cls
  RTS
 ENDIF
 }

@@ -851,4 +851,6 @@ PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 ;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
+PUTFILE "Images/BEEB.PRINCESS.mode2.bin", "PRIN", beeb_screen_addr, 0
+
 ;PUTBASIC "chkimg.bas", "CHKIMG"

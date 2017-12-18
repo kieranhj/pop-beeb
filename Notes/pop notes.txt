@@ -1990,3 +1990,36 @@ Main RAM free =  &36
 BANK 2 free =  &CFA 
 BANK 3 free =  &195D 
 > It disappears quickly!
+
+14/12/2017
+~~~
+Screens for cutscenes
+Port SngExpand in UNPACK.S to separate asm file
+Build disk image with packed files
+Unpack in emulator and save Apple II screen buffer
+Could turn into sprite bank with 1x large sprite?
+Pass through pop2beeb convertor
+Take a look at the output in MODE 5 res
+NB. Just princess room
+
+Attract mode contains double hires screens
+Need to learn more about this Apple II screen mode
+Looks like 4x packed double hires screens
+And 3x delta for the text at the bottom
+Broderbund presents PoP by Jordan etc.
+
+\*-------------------------------
+\* Hi bytes of crunch data
+\* Double hi-res (stage 1)
+
+pacSplash = $40
+delPresents = $70
+delByline = $72
+delTitle = $74
+pacProlog = $7c
+pacSumup = $60 ;mainmem
+pacEpilog = $76 ;side B
+
+\* Single hires (stage 2)
+
+pacProom = $84
