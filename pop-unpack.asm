@@ -106,6 +106,15 @@ ORG &70
 
 \*-------------------------------
 
+.CrnDatPtr SKIP 2
+.XClmPos SKIP 1
+.YScrPos SKIP 1
+.ByteHld SKIP 1
+.RepeatCdn SKIP 1
+.ScrBasPtr SKIP 2
+
+\*-------------------------------
+
 screen_addr = &6200
 
 ORG &E00
@@ -279,6 +288,7 @@ GUARD &2000
  BEQ inner_loop
 }
 
+IF 0        ; maths currently wrong!
 .convert_to_beeb
 {
     LDA #0
@@ -391,51 +401,42 @@ NEXT
 FOR y,0,23,1
 EQUB HI(y*320)
 NEXT
+ENDIF
 
+\*-------------------------------
+\*
+\*  Unpack crunched double hi-res screen
+\*
+\*  Robert A. Cook 3/89
+\*
+\*  In: A = hi byte of crunched data address
+\*      RAMRD set to main/aux depending on where crunched
+\*        data is stored
+\*
+\*-------------------------------
 
-IF 0
-*-------------------------------
-*
-*  Unpack crunched double hi-res screen
-*
-*  Robert A. Cook 3/89
-*
-*  In: A = hi byte of crunched data address
-*      RAMRD set to main/aux depending on where crunched
-*        data is stored
-*
-*-------------------------------
-
- dum $f0
-
-CrnDatPtr ds 2
-XClmPos ds 1
-YScrPos ds 1
-ByteHld ds 1
-RepeatCdn ds 1
-ScrBasPtr ds 2
-
- dend
-
-*-------------------------------
-DBLEXPAND
+.DBLEXPAND
+{
  sta CrnDatPtr+1
 
  lda #1
  sta CrnDatPtr
 ;(CrnDatPtr),0 is crunch type (unused)
  jmp WipeRgtExp
+}
 
-*-------------------------------
-*
-*  Wipe Right Expand
-*
-*-------------------------------
-WipeRgtExp
+\*-------------------------------
+\*
+\*  Wipe Right Expand
+\*
+\*-------------------------------
+
+.WipeRgtExp
+{
  lda #0
  sta XClmPos
 
-:Loop lda #0
+.Loop lda #0
  sta YScrPos
  jsr ExpandClm
 
@@ -447,10 +448,13 @@ WipeRgtExp
 
  lda XClmPos
  cmp #80
- bne :Loop
+ bne Loop
 
-]rts rts
+.return
+ rts
+}
 
+IF 0
 *-------------------------------
 *
 *  Delta Expand
@@ -530,19 +534,21 @@ DeltaExp
 
 :Done sta RAMRDmain
 ]rts rts
+ENDIF
 
-*-------------------------------
-*
-*  Expand Column
-*
-*-------------------------------
-ExpandClm
+\*-------------------------------
+\*
+\*  Expand Column
+\*
+\*-------------------------------
 
-:Loop ldy #0
+.ExpandClm
+{
+.Loop ldy #0
  lda (CrnDatPtr),y
  sta ByteHld
  and #$80
- beq :ExpandOne
+ beq ExpandOne
 
  ldy #1
  lda (CrnDatPtr),y
@@ -555,46 +561,49 @@ ExpandClm
  lda CrnDatPtr
  adc #2
  sta CrnDatPtr
- bcc :a4
+ bcc a4
  inc CrnDatPtr+1
-:a4
- jmp :Next
+.a4
+ jmp Next
 
-:ExpandOne
+.ExpandOne
  lda ByteHld
  ldx #1
  jsr ExpClmSeq
 
  inc CrnDatPtr
- bne :sysi5
+ bne sysi5
  inc CrnDatPtr+1
-:sysi5
+.sysi5
 
-:Next lda YScrPos
+.Next lda YScrPos
  cmp #192
- bcc :Loop
+ bcc Loop
 
  rts
+}
 
-*-------------------------------
-*
-*  Expand Column Sequence
-*
-*-------------------------------
-*
-*  In: XClmPos
-*      YScrPos
-*      A (byte pattern)
-*      X (repeat rle_count)
-*
-*  Out: YScrPos (modified)
-*
-*-------------------------------
-ExpClmSeq
+\*-------------------------------
+\*
+\*  Expand Column Sequence
+\*
+\*-------------------------------
+\*
+\*  In: XClmPos
+\*      YScrPos
+\*      A (byte pattern)
+\*      X (repeat rle_count)
+\*
+\*  Out: YScrPos (modified)
+\*
+\*-------------------------------
+
+.ExpClmSeq
+{
  sta ByteHld
  stx RepeatCdn
 
-:Loop ldx XClmPos
+.Loop ldx XClmPos
  ldy YScrPos
  lda ByteHld
  jsr PutScrByte
@@ -605,55 +614,60 @@ ExpClmSeq
  sta YScrPos
 
  dec RepeatCdn
- bne :Loop
+ bne Loop
 
  rts
+}
 
-*-------------------------------
-*
-* Expand Column Sequence 1
-*
-*-------------------------------
-ExpClmSeq1
+\*-------------------------------
+\*
+\* Expand Column Sequence 1
+\*
+\*-------------------------------
+.ExpClmSeq1
+{
  sta ByteHld
  stx RepeatCdn
 
-:Loop ldx XClmPos
+.Loop ldx XClmPos
  ldy YScrPos
  lda ByteHld
- bmi :Next
+ bmi Next
 
  jsr PutScrByte
 
-:Next inc YScrPos
+.Next inc YScrPos
 
  lda YScrPos
  cmp #192
- bne :SkipXInc
+ bne SkipXInc
 
  lda #0
  sta YScrPos
 
  inc XClmPos
 
-:SkipXInc
+.SkipXInc
  dec RepeatCdn
- bne :Loop
+ bne Loop
 
  rts
+}
 
-*-------------------------------
-*
-*  Put DHires Byte Value
-*
-*-------------------------------
-*
-*  In:  X (XClmPos)
-*       Y (YScrPos)
-*       A (Byte value)
-*
-*-------------------------------
-PutScrByte
+\*-------------------------------
+\*
+\*  Put DHires Byte Value
+\*
+\*-------------------------------
+\*
+\*  In:  X (XClmPos)
+\*       Y (YScrPos)
+\*       A (Byte value)
+\*
+\*-------------------------------
+
+.PutScrByte
+{
  sta ByteHld
  ;YScrPos in Y
  lda YLO,y
@@ -663,19 +677,22 @@ PutScrByte
  sta ScrBasPtr+1
 
  txa ;XClmPos in X
- lsr
+ lsr A
  tay
  bcs NoAuxSet
 
- sta RAMWRTaux
+\ sta RAMWRTaux
 
-NoAuxSet lda ByteHld
+.NoAuxSet lda ByteHld
  sta (ScrBasPtr),y
 
- sta RAMWRTmain
+\ sta RAMWRTmain
 
-]rts rts
+.return
+ rts
+}
 
+IF 0
 *-------------------------------
 *
 *  Delta Expand (Pop or Wipe)
@@ -1030,10 +1047,54 @@ loadscrn
 ]rts rts
 ENDIF
 
+.YLO
+FOR Y%,0,191,1
+address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
+EQUB LO(address)
+NEXT
+\ hex 00000000000000008080808080808080
+\ hex 00000000000000008080808080808080
+\ hex 00000000000000008080808080808080
+\ hex 00000000000000008080808080808080
+
+\ hex 2828282828282828A8A8A8A8A8A8A8A8
+\ hex 2828282828282828A8A8A8A8A8A8A8A8
+\ hex 2828282828282828A8A8A8A8A8A8A8A8
+\ hex 2828282828282828A8A8A8A8A8A8A8A8
+
+\ hex 5050505050505050D0D0D0D0D0D0D0D0
+\ hex 5050505050505050D0D0D0D0D0D0D0D0
+\ hex 5050505050505050D0D0D0D0D0D0D0D0
+\ hex 5050505050505050D0D0D0D0D0D0D0D0
+
+; Would ideally be PAGE_ALIGN
+.YHI
+FOR Y%,0,191,1
+address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
+EQUB HI(address)
+NEXT
+\ hex 2024282C3034383C2024282C3034383C
+\ hex 2125292D3135393D2125292D3135393D
+\ hex 22262A2E32363A3E22262A2E32363A3E
+\ hex 23272B2F33373B3F23272B2F33373B3F
+
+\ hex 2024282C3034383C2024282C3034383C
+\ hex 2125292D3135393D2125292D3135393D
+\ hex 22262A2E32363A3E22262A2E32363A3E
+\ hex 23272B2F33373B3F23272B2F33373B3F
+
+\ hex 2024282C3034383C2024282C3034383C
+\ hex 2125292D3135393D2125292D3135393D
+\ hex 22262A2E32363A3E22262A2E32363A3E
+\ hex 23272B2F33373B3F23272B2F33373B3F
+
 ALIGN &100
 .pacRoomData
 PUTFILE "Other/PRINCESS.SIDEA.SCENE", "PRINA", 0, 0
 PUTFILE "Other/PRINCESS.SIDEB.SCENE", "PRINB", 0, 0
+PUTFILE "Other/STAGE1.SIDEA.DATA", "SIDEA", 0, 0
+PUTFILE "Other/STAGE1.SIDEB.DATA", "SIDEB", 0, 0
+
 PUTBASIC "convpac.bas", "convpac"
 
 SAVE "unpack", main, P%, main
