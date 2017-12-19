@@ -6,10 +6,10 @@
 
 using namespace cimg_library;
 
-static unsigned char imagetab[10 * 1024];
+static unsigned char imagetab[48 * 1024];
 static int image_addrs[256];
 static int image_size[256][2];
-static unsigned char image_data[256][1000];
+static unsigned char image_data[256][16*1024];
 
 static int pixel_size[256][2];
 static unsigned char pixels[256][10000];
@@ -40,6 +40,26 @@ unsigned char palette[8][3] =
 	{ 20, 207, 253 },			// blue
 	{ 255, 106, 60 },			// orange
 	{ 255, 255, 255 },			// white
+};
+
+unsigned char dhr_palette[16][3] =
+{
+	{ 0, 0, 0 },			// black
+	{ 96, 78, 189 },		// dk blue
+	{ 0, 163, 96 },			// dk green
+	{ 20, 207, 253 },		// med blue
+	{ 96, 114, 3 },			// brown
+	{ 156, 156, 156 },		// grey2
+	{ 20, 245, 60 },		// green
+	{ 114, 255, 208 },		// aqua
+	{ 255, 68, 253 },		// magenta
+	{ 255, 68, 253 },		// violet
+	{ 156, 156, 156 },		// grey1
+	{ 208, 195, 255 },		// lt blue
+	{ 255, 106, 60 },		// orange
+	{ 255, 160, 208 },		// pink
+	{ 208, 221, 141 },		// yellow
+	{ 255, 255, 255 },		// white
 };
 
 unsigned char odd_columns[8] =
@@ -230,6 +250,41 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 	}
 
 	return calc_image_width_from_colour(colour_data, pixel_width, pixel_height);
+}
+
+int convert_pixels_to_dhr(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data)
+{
+	for (int y = 0; y < pixel_height; y++)
+	{
+		for (int x = 0; x < pixel_width; x++)
+		{
+			// Use three b&w Apple II pixels to look up colour (see emulator notes)
+
+			unsigned char byte0 = x > 0 ? pixel_data[y*pixel_width + x - 1] : 0;
+			unsigned char byte1 = pixel_data[y*pixel_width + x];
+			unsigned char byte2 = x < (pixel_width - 1) ? pixel_data[y*pixel_width + x + 1] : 0;
+			unsigned char byte3 = x < (pixel_width - 2) ? pixel_data[y*pixel_width + x + 2] : 0;
+			unsigned char byte4 = x < (pixel_width - 3) ? pixel_data[y*pixel_width + x + 3] : 0;
+
+			int pixel0 = byte0 & 1;
+			int pixel1 = byte1 & 1;
+			int pixel2 = byte2 & 1;
+			int pixel3 = byte3 & 1;
+			int pixel4 = byte4 & 1;
+
+			unsigned char colour = (pixel0 << 3) | (pixel1 << 2) | (pixel2 << 1) | (pixel3);
+//			unsigned char colour = (pixel1 << 3) | (pixel2 << 2) | (pixel3 << 1) | (pixel4);
+
+			if(colour==14)
+				printf("%d%d%d%d=%d ", pixel0, pixel1, pixel2, pixel3, colour);
+
+			colour_data[y*pixel_width + x] = colour;
+		}
+
+		printf("\n");\
+	}
+
+	return pixel_width;
 }
 
 int calc_mode5_size(unsigned char *colour_data, int pixel_width, int pixel_height, bool verbose)
@@ -426,6 +481,67 @@ int calc_attribute6_size(unsigned char *colour_data, int pixel_width, int pixel_
 	return attr_bytes + 4;
 }
 
+static int CrnDatPtr;
+
+void PutScrByte(unsigned char ByteHld, int XClmPos, int YScrPos)
+{
+	image_data[0][YScrPos * 80 + XClmPos] = ByteHld;
+}
+
+void ExpClmSeq(unsigned char ByteHld, unsigned char ByteCount, int XClmPos, int &YScrPos)
+{
+	while (ByteCount)
+	{
+		PutScrByte(ByteHld, XClmPos, YScrPos);
+
+		YScrPos += 2;
+
+		ByteCount--;
+	}
+}
+
+void ExpandClm(int XClmPos, int YScrPos)
+{
+	while (YScrPos < 192)
+	{
+		unsigned char ByteHld = imagetab[CrnDatPtr];
+
+		if (ByteHld & 0x80)
+		{
+			unsigned char ByteCount = imagetab[CrnDatPtr + 1];
+
+			ExpClmSeq(ByteHld & 0x7f, ByteCount, XClmPos, YScrPos);
+
+			CrnDatPtr += 2;
+		}
+		else
+		{
+			// ExpandOne
+
+			ExpClmSeq(ByteHld, 1, XClmPos, YScrPos);
+
+			CrnDatPtr++;
+		}
+	}
+}
+
+void unpack_double_hires(void)
+{
+	CrnDatPtr = 1;
+
+	// WipeRgtExp
+
+	int XClmPos = 0;
+
+	while (XClmPos < 80)
+	{
+		ExpandClm(XClmPos, 0);
+		ExpandClm(XClmPos, 1);
+
+		XClmPos++;
+	}
+}
+
 
 int main(int argc, char **argv)
 {
@@ -441,6 +557,7 @@ int main(int argc, char **argv)
 	const bool point = cimg_option("-point", true, "Use simple point sample (best for characters)");
 	const bool even = cimg_option("-even", true, "Start with odd or even bytes when parity sampling (DUN=true PAL=false)");
 	const bool verbose = cimg_option("-v", false, "Verbose output");
+	const bool dhr = cimg_option("-dhr", false, "Double hi-res pac file input not sprite table");
 	int start_image = cimg_option("-s", 1, "Start image #");
 	int end_image = cimg_option("-e", 127, "End image #");
 
@@ -456,9 +573,53 @@ int main(int argc, char **argv)
 
 	FILE *parity = fopen(parityfile, "rb");
 
-	fread(imagetab, 1, 10 * 1024, input);				// forgotten how to file length of file!
+	fread(imagetab, 1, 48 * 1024, input);				// forgotten how to file length of file!
 	fclose(input);
 	input = NULL;
+
+	if (dhr)
+	{
+		unpack_double_hires();
+
+		image_size[0][0] = 80;
+		image_size[0][1] = 192;
+
+		pixel_size[0][0] = convert_apple_to_pixels(image_data[0], image_size[0][0], image_size[0][1], pixels[0]);
+		pixel_size[0][1] = image_size[0][1];
+
+		colour_width[0] = convert_pixels_to_dhr(pixels[0], pixel_size[0][0], pixel_size[0][1], colours[0]);
+
+		CImg<unsigned char> img(pixel_size[0][0], pixel_size[0][1], 1, 3, 0);	// was total_width
+
+		int current_x = 0;
+
+			int height = pixel_size[0][1];
+			int current_y = 0;
+			int width = pixel_size[0][0];
+			unsigned char color[] = { 255, 255, 255 };
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					img(current_x + x, current_y + y, 0) = dhr_palette[colours[0][y*width + x]][0];
+					img(current_x + x, current_y + y, 1) = dhr_palette[colours[0][y*width + x]][1];
+					img(current_x + x, current_y + y, 2) = dhr_palette[colours[0][y*width + x]][2];
+
+				//	img(current_x + x, current_y + y, 0) = (pixels[0][y*width + x] & 1) * 255;
+				//	img(current_x + x, current_y + y, 1) = (pixels[0][y*width + x] & 1) * 255;
+				//	img(current_x + x, current_y + y, 2) = (pixels[0][y*width + x] & 1) * 255;
+				}
+			}
+
+		//	img.draw_rectangle(current_x - 1, current_y - 1, current_x + width, current_y + height, color, 0.5f, 0xffffffff);
+
+		char testname[256];
+		sprintf(testname, "%s.png", inputname);
+		img.save(testname);
+
+		exit(0);
+	}
 
 	int num_images = imagetab[0];
 
