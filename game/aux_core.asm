@@ -351,9 +351,9 @@ GRAFIX_BANK = -1        ; currently in Core
 .setfastmain BRK;jmp SETFASTMAIN
 .loadlevel BRK  ;jmp LOADLEVEL
 .attractmode BRK;jmp ATTRACTMODE
-.xminit BRK     ;jmp XMINIT
+.xminit RTS     ;jmp XMINIT             ; BEEB TODO music
 
-.xmplay BRK     ;jmp XMPLAY
+.xmplay RTS     ;jmp XMPLAY             ; BEEB TODO music
 .cutprincess jmp _cutprincess           ; BEEB doesn't need to be vectored thru grafix
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
@@ -414,29 +414,27 @@ GRAFIX_BANK = -1        ; currently in Core
 \* misc.asm
 \*-------------------------------
 
-MISC_BANK = -1      ; currently in Core
-
-.VanishChar jmp VANISHCHAR
+.VanishChar JUMP_B VANISHCHAR, MISC_BASE, 0
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
-.firstguard jmp FIRSTGUARD
-.markmeters jmp MARKMETERS
+.firstguard JUMP_B FIRSTGUARD, MISC_BASE, 3
+.markmeters JUMP_B MARKMETERS, MISC_BASE, 4
 
-.potioneffect jmp POTIONEFFECT
+.potioneffect JUMP_B POTIONEFFECT, MISC_BASE, 5
 .mouserescue BRK    ; jmp MOUSERESCUE
-.StabChar jmp STABCHAR
-.unholy jmp UNHOLY
-.reflection jmp REFLECTION
+.StabChar JUMP_B STABCHAR, MISC_BASE, 7
+.unholy JUMP_B UNHOLY, MISC_BASE, 8
+.reflection JUMP_B REFLECTION, MISC_BASE, 9
 
-.MarkKidMeter jmp MARKKIDMETER
-.MarkOppMeter jmp MARKOPPMETER
-.bonesrise jmp BONESRISE
-.decstr jmp DECSTR
-.DoSaveGame BRK     ; jmp DOSAVEGAME                    BEEB TODO SAVEGAME
+.MarkKidMeter JUMP_B MARKKIDMETER, MISC_BASE, 10
+.MarkOppMeter JUMP_B MARKOPPMETER, MISC_BASE, 11
+.bonesrise JUMP_B BONESRISE, MISC_BASE, 12
+.decstr JUMP_B DECSTR, MISC_BASE, 13
+.DoSaveGame BRK     ; jmp DOSAVEGAME           BEEB TODO SAVEGAME
 
-.LoadLevelX jmp LOADLEVELX
-.checkalert jmp CHECKALERT
+\.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
+.checkalert JUMP_B CHECKALERT, MISC_BASE, 15
 .dispversion BRK    ; jmp DISPVERSION
 
 
@@ -903,6 +901,33 @@ EQUB LO(INITIALGUARDS)
 EQUB LO(MIRAPPEAR)
 EQUB LO(CRUMBLE)
 
+\*-------------------------------
+\* misc.asm
+\*-------------------------------
+MISC_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(VANISHCHAR)
+EQUB 0      ; EQUB LO(MOVEMUSIC
+EQUB 0      ; EQUB LO(MOVEAUXLC)
+EQUB LO(FIRSTGUARD)
+EQUB LO(MARKMETERS)
+
+EQUB LO(POTIONEFFECT)
+EQUB 0      ; EQUB LO(MOUSERESCUE)
+EQUB LO(STABCHAR)
+EQUB LO(UNHOLY)
+EQUB LO(REFLECTION)
+
+EQUB LO(MARKKIDMETER)
+EQUB LO(MARKOPPMETER)
+EQUB LO(BONESRISE)
+EQUB LO(DECSTR)
+EQUB 0      ; EQUB LO(DOSAVEGAME)         BEEB TODO SAVEGAME
+
+\.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
+EQUB LO(CHECKALERT)
+EQUB 0      ; EQUB LO(DISPVERSION)
+
+
 .aux_core_fn_table_B_HI
 
 \*-------------------------------
@@ -1015,6 +1040,31 @@ EQUB HI(GRAVITY)
 EQUB HI(INITIALGUARDS)
 EQUB HI(MIRAPPEAR)
 EQUB HI(CRUMBLE)
+
+\*-------------------------------
+\* misc.asm
+\*-------------------------------
+EQUB HI(VANISHCHAR)
+EQUB 0      ; EQUB LO(MOVEMUSIC)
+EQUB 0      ; EQUB LO(MOVEAUXLC)
+EQUB HI(FIRSTGUARD)
+EQUB HI(MARKMETERS)
+
+EQUB HI(POTIONEFFECT)
+EQUB 0      ; EQUB LO(MOUSERESCUE)
+EQUB HI(STABCHAR)
+EQUB HI(UNHOLY)
+EQUB HI(REFLECTION)
+
+EQUB HI(MARKKIDMETER)
+EQUB HI(MARKOPPMETER)
+EQUB HI(BONESRISE)
+EQUB HI(DECSTR)
+EQUB 0      ; EQUB LO(DOSAVEGAME)         BEEB TODO SAVEGAME
+
+\.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
+EQUB HI(CHECKALERT)
+EQUB 0      ; EQUB LO(DISPVERSION)
 
 ENDIF
 

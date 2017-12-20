@@ -726,7 +726,7 @@ ENDIF
 
  lda #s_Princess
  ldx #8
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #5
  jsr play
@@ -737,7 +737,7 @@ ENDIF
  jsr play
  lda #s_Squeek
  ldx #0
- jsr PlaySongI ;door squeaks...
+ jsr subs_PlaySongI ;door squeaks...
 
  lda #7
  sta SPEED
@@ -754,7 +754,7 @@ ENDIF
  jsr play ;vizier enters
  lda #s_Vizier
  ldx #12
- jsr PlaySongI
+ jsr subs_PlaySongI
  lda #4
  jsr play
 
@@ -768,7 +768,7 @@ ENDIF
  jsr play ;stops in front of princess
  lda #s_Buildup
  ldx #25
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #Vraise ;raises arms
  jsr vjumpseq
@@ -793,7 +793,7 @@ ENDIF
  sta psandcount ;sand starts flowing
  lda #s_Magic
  ldx #8
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #7
  sta SPEED
@@ -814,7 +814,7 @@ ENDIF
  sta SPEED
  lda #s_StTimer
  ldx #20
- jmp PlaySongI
+ jmp subs_PlaySongI
 }
 
 \*-------------------------------
@@ -890,7 +890,7 @@ ENDIF
 \*     X = # cycles to play if sound is off
 \*
 \*-------------------------------
-.PlaySongI
+.subs_PlaySongI
 {
  tay
  lda soundon

@@ -333,8 +333,6 @@ hires_core_end=P%
 
 ; PoP gameplay code moved from AUX memory
 
-INCLUDE "game/misc.asm"
-misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
 
@@ -376,8 +374,6 @@ PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "GRAFIX size = ", ~(grafix_end - grafix)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
-PRINT "HIRES size = ", ~(hires_end - hires)
-PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
 PRINT "--------"
 PRINT "BEEB CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
@@ -395,8 +391,8 @@ PRINT "--------"
 ; Construct MAIN RAM (video & screen)
 \*-------------------------------
 
-MAIN_START = &3000
-MAIN_TOP = beeb_screen_addr
+MAIN_START=&3000
+MAIN_TOP=beeb_screen_addr
 
 CLEAR 0, &FFFF
 ORG MAIN_START
@@ -425,6 +421,7 @@ SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
 PRINT "--------"
 PRINT "MAIN Modules"
 PRINT "--------"
+PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
@@ -448,8 +445,8 @@ PRINT "--------"
 ; Construct  AUX (SHADOW) RAM
 \*-------------------------------
 
-AUX_START = &3000
-AUX_TOP = &8000
+AUX_START=&3000
+AUX_TOP=&8000
 
 CLEAR 0, &FFFF
 ORG AUX_START
@@ -545,8 +542,8 @@ PRINT "--------"
 ; Construct ANDY RAM
 \*-------------------------------
 
-ANDY_START = &8000
-ANDY_TOP = &9000
+ANDY_START=&8000
+ANDY_TOP=&9000
 
 CLEAR 0, &FFFF
 ORG ANDY_START
@@ -717,6 +714,8 @@ INCLUDE "game/subs.asm"
 subs_end=P%
 INCLUDE "game/mover.asm"
 mover_end=P%
+INCLUDE "game/misc.asm"
+misc_end=P%
 
 .pop_beeb_aux_high_end
 
@@ -738,6 +737,7 @@ PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "AUTO size = ", ~(auto_end-auto)
 PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
 PRINT "COLL size = ", ~(coll_end-coll)
+PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
