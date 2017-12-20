@@ -819,6 +819,12 @@ EQUS "VIZ    $"
 
 .rdbluep
 {
+    TXA
+    BEQ set_drive
+    LDA #2
+    .set_drive
+    JSR disksys_set_drive
+
     cpx #10
     bcs double_digit
 
@@ -1496,37 +1502,35 @@ EQUS "CHTAB3 $"
 EQUS "CHTAB2 $"
 EQUS "CHTAB5 $"
 
+.bank1_filename
+EQUS "BANK1  $"
+
 .loadperm
 {
+    LDA #0
+    JSR disksys_set_drive
+
     \ Start with CHTAB1 + 3
     lda #BEEB_SWRAM_SLOT_CHTAB13
     jsr swr_select_slot
 
+IF BEEB_SWRAM_SLOT_CHTAB13=BEEB_SWRAM_SLOT_CHTAB25
+    LDX #LO(bank1_filename)
+    LDY #HI(bank1_filename)
+    LDA #HI(SWRAM_START)
+    JSR disksys_load_file
+ELSE
     \ index into table for filename
     LDX #LO(perm_file_names)
     LDY #HI(perm_file_names)
     LDA #HI(chtable1)
     JSR disksys_load_file
 
-    \ Relocate the IMG file
-    LDA #LO(chtable1)
-    STA beeb_readptr
-    LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
     \ index into table for filename
     LDX #LO(perm_file_names + 8)
     LDY #HI(perm_file_names + 8)
     LDA #HI(chtable3)
     JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
 
     \ Then CHTAB2 + 5
     lda #BEEB_SWRAM_SLOT_CHTAB25
@@ -1538,18 +1542,33 @@ EQUS "CHTAB5 $"
     LDA #HI(chtable2)
     JSR disksys_load_file
 
+    \ index into table for filename
+    LDX #LO(perm_file_names + 24)
+    LDY #HI(perm_file_names + 24)
+    LDA #HI(chtable5)
+    JSR disksys_load_file
+ENDIF
+
+    \ Relocate the IMG file
+    LDA #LO(chtable1)
+    STA beeb_readptr
+    LDA #HI(chtable1)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Relocate the IMG file
+    LDA #LO(chtable3)
+    STA beeb_readptr
+    LDA #HI(chtable3)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
     \ Relocate the IMG file
     LDA #LO(chtable2)
     STA beeb_readptr
     LDA #HI(chtable2)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
-    LDA #HI(chtable5)
-    JSR disksys_load_file
 
     \ Relocate the IMG file
     LDA #LO(chtable5)
@@ -1737,7 +1756,11 @@ EQUS "CHTAB6X$"
 
 .LoadStage2
 {
-\\ Switches on disk side to decide 6A or 6B
+    LDA #2
+    JSR disksys_set_drive
+
+    \\ Need to switch sCHTAB6 A/B according to Apple II disc layout
+
     LDA #0
     CLC
     ADC #'A'

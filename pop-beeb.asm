@@ -83,6 +83,15 @@ BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
+BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
+BEEB_SWRAM_SLOT_BGTAB1_A = 0
+BEEB_SWRAM_SLOT_BGTAB2 = 0
+BEEB_SWRAM_SLOT_CHTAB13 = 1
+BEEB_SWRAM_SLOT_CHTAB25 = 1
+BEEB_SWRAM_SLOT_CHTAB4 = 0
+BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
+BEEB_SWRAM_SLOT_AUX_HIGH = 3
+
 INCLUDE "game/beeb-plot.h.asm"
 
 PRINT "--------"
@@ -297,8 +306,6 @@ ENDIF
     \\ Would have been entered directly by the boot loader on Apple II
 
     JSR _firstboot
-
-    \\ Not supposed to return but start our game directly until attract mode done
 
     JSR _dostartgame
 
@@ -565,15 +572,6 @@ PRINT "--------"
 ; Construct ROMS
 \*-------------------------------
 
-BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
-BEEB_SWRAM_SLOT_BGTAB1_A = 0
-BEEB_SWRAM_SLOT_BGTAB2 = 0
-BEEB_SWRAM_SLOT_CHTAB13 = 1
-BEEB_SWRAM_SLOT_CHTAB25 = 1
-BEEB_SWRAM_SLOT_CHTAB4 = 0
-BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
-BEEB_SWRAM_SLOT_AUX_HIGH = 3
-
 SWRAM_START = &8000
 SWRAM_TOP = &C000
 
@@ -650,6 +648,8 @@ PRINT "--------"
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
+
+SAVE "BANK1", bank1_start, bank1_end, 0
 
 ; BANK 2
 
@@ -803,16 +803,18 @@ PAGE_ALIGN
 
 
 \*-------------------------------
-; Put files on the disk
+; Put files on SIDE A of the disk
 \*-------------------------------
 
 ;PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
-PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
-PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
-PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
-PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
-PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
-PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
+
+\ Now on SIDE B
+;PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
+;PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
+;PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
+;PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
+;PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
+;PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
 ;PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
 ;PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
 ;PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
@@ -821,36 +823,54 @@ PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
 ;PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
 ;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
 ;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+
+\ Now split into A&B (not C)
 PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.DUNC.bin", "DUN1C", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+\PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
+\PUTFILE "Images/BEEB.IMG.BGTAB1.DUNC.bin", "DUN1C", 0, 0
+
+\ Now split into A&B (not C)
+\ Not needed on SIDE A
+;PUTFILE "Images/BEEB.IMG.BGTAB1.PALA.bin", "PAL1A", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB1.PALB.bin", "PAL1B", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
 \PUTFILE "Images/BEEB.IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.PALA.bin", "PAL1A", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.PALB.bin", "PAL1B", 0, 0
 \PUTFILE "Images/BEEB.IMG.BGTAB1.PALC.bin", "PAL1C", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB4.FAT.bin", "FAT", 0, 0
+
+\ Only need regular Guard for SIDE A
 PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.FAT.bin", "FAT", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
+
 IF _HALF_PLAYER
-PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
+; All saved into single file for BANK1
+;PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
 ELSE
 PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ENDIF
+
 PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
+\ 6.B used on SIDE B
 ;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
-PUTFILE "Images/BEEB.PRINCESS.mode2.bin", "PRIN", beeb_screen_addr, 0
+\ Cutscene files
+PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", beeb_screen_addr, 0
 
-;PUTBASIC "chkimg.bas", "CHKIMG"
+\ Attract files
+PUTFILE "Other/applewin.Splash.mode2.bin", "SPLASH", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Title.mode2.bin", "TITLE", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Byline.mode2.bin", "BYLINE", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Prolog.mode2.bin", "PROLOG", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Sumup.mode2.bin", "SUMUP", beeb_screen_addr, 0

@@ -1,0 +1,37 @@
+@echo off
+
+rem disk1 now created by beebasm
+
+del "pop-beeb-side-b.ssd"
+
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL1"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL2"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL3"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL4"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL5"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL6"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL7"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL8"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL9"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL10"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL11"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL12"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL13"
+
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.DUNA.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.DUNB.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB2.DUN.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.PALA.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.PALB.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB2.PAL.bin"
+
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.FAT.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.GD.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SHAD.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SKEL.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.VIZ.bin"
+
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.A.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.B.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB7.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Other/BEEB.PRINCESS.mode2.bin"

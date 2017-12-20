@@ -2023,3 +2023,59 @@ pacEpilog = $76 ;side B
 \* Single hires (stage 2)
 
 pacProom = $84
+
+
+20/12/2017
+~~~
+Gah!  Run out of files on a single DFS disc.
+
+Level files = 14 (original A=3 B=11)
+BG image sets = 2x 3 = 6 (both)
+Guards = 5 (both)
+Player = 4 (or can be 1x bank) (side A)
+Cutscenes = 4 (both)
+Attract = 7 (side A)
+Code = Core+Main+Hazel+Andy+AuxB+High = 6 (side A)
+Boot = 1 (side A)
+
+Both = 6+5+4 = 15
+Side A = 3+4+7+6+1 = 21
+Side B = 11
+
+Probably easiest to put all levels except 0 on Side B
+Then only need data for demo level set on Side A
+
+Side B = 15 + 13 = 28
+Side A = 1 + 3 + 1 + 4/1 + 4 + 7 + 6 + 1 = 27
+
+
+Side B:
+LEVEL1
+..
+LEVEL13
+PAL1A
+PAL1B
+PAL2
+DUN1A
+DUN1B
+DUN2
+FAT
+GD
+SHAD
+SKEL
+VIZ
+CHTAB6
+CHTAB7
+PRIN (PROOM)
+(EPILOG?)
+
+Side A:
+!BOOT
+Core+Main+Hazel+Andy+AuxB+High
+SPLASH
+..
+SUMUP
+CHTAB6
+CHTAB7
+GD
+BANK1

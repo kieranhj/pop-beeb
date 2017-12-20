@@ -3,7 +3,7 @@
 ; http://chrisacorns.computinghistory.org.uk/docs/Acorn/Manuals/Acorn_DiscSystemUGI2.pdf
 ; Our SWR loader is 60% faster than *SRLOAD
 
-_USE_HAZEL_CATALOG = TRUE           ; this might not hold true for DataCentre and/or Turbo MMC etc.
+_USE_HAZEL_CATALOG = FALSE           ; this might not hold true for DataCentre and/or Turbo MMC etc.
 
 .beeb_disksys_start
 
@@ -104,6 +104,20 @@ IF 0
 ENDIF
 
 ;--------------------------------------------------------------
+; Set drive number and invalidate cached catalog
+;--------------------------------------------------------------
+; on entry
+; A = drive number
+
+.disksys_set_drive
+{
+    STA osword_params_drive
+    LDA #0
+    STA disksys_catalogue_read
+    RTS
+}
+
+;--------------------------------------------------------------
 ; Fetch the 512 byte catalogue from the disk to memory
 ;--------------------------------------------------------------
 ; on entry
@@ -130,16 +144,15 @@ ELSE
     ldy #HI(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+1
     jsr disksys_read_sectors    
 
-;    LDA #&FF
-;    STA disksys_catalogue_read
+    LDA #&FF
+    STA disksys_catalogue_read
     .return
     rts
-
-    .disksys_catalogue_read
-    EQUB 0
 ENDIF
 }
 
+.disksys_catalogue_read
+EQUB 0
 
 IF 0
 ; on entry
