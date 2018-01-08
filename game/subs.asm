@@ -20,7 +20,7 @@ IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
 .doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
 .PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
-.demo BRK               ; jmp DEMO
+.demo jmp DEMO
 .showtime RTS           ; jmp SHOWTIME              BEEB TODO TIMER
 
 .doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
@@ -330,8 +330,8 @@ slicersync = 3 ;# frames out of sync
 \*  Special animation lists for princess's room
 \*
 \*-------------------------------
-.ptorchx EQUB 13,25,LO(-1)
-.ptorchoff EQUB 0,0     \\ BEEB TODO offset supposed to be 6
+.ptorchx EQUB 13,26,LO(-1)      \\ BEEB supposed to be 25+6 - made 26+0
+.ptorchoff EQUB 0,0             \\ BEEB TODO offset supposed to be 6
 .ptorchy EQUB 113,113
 .ptorchstate EQUB 1,6
 .ptorchcount SKIP 1
@@ -860,7 +860,7 @@ ENDIF
 .PlaySong
 {
 \ BEEB TODO MUSIC
-\ jsr minit
+ jsr minit
  jsr swpage
 .loop lda #1
  jsr strobe
@@ -872,8 +872,7 @@ ENDIF
  jsr pburn
  jsr pstars
  jsr pflow
-\ BEEB TODO MUSIC
-\ jsr mplay
+ jsr mplay
  cmp #0
  bne loop
 .interrupt
@@ -914,7 +913,7 @@ ENDIF
  bne loop
  jmp swpage
 .interrupt
- jmp dostartgame
+ jmp _dostartgame
 }
 
 \*-------------------------------
@@ -977,7 +976,7 @@ ENDIF
  jsr demokeys
  bpl cont
  lda #1
- jmp dostartgame ;interrupted--start a new game
+ jmp _dostartgame ;interrupted--start a new game
 
 .notdemo
 IF _NOT_BEEB            \\ BEEB TODO KEYPRESS
@@ -1316,66 +1315,68 @@ floorY = 151
  jmp animchar
 }
 
-IF _TODO
-*-------------------------------
-* Demo commands
-*-------------------------------
-EndProg = -2
-EndDemo = -1
-Ctr = 0
-Fwd = 1
-Back = 2
-Up = 3
-Down = 4
-Upfwd = 5
-Press = 6
-Release = 7
+\*-------------------------------
+\* Demo commands
+\*-------------------------------
 
-*-------------------------------
-DemoProg1 ;up to fight w/1st guard
+\ All defined in auto.asm
+\EndProg = -2
+\EndDemo = -1
+\Ctr = 0
+\Fwd = 1
+\Back = 2
+\Up = 3
+\Down = 4
+\Upfwd = 5
+\Press = 6
+\Release = 7
+
+\*-------------------------------
+
+.DemoProg1 ;up to fight w/1st guard
  EQUB 0,Ctr
- db 1,Fwd
- db 13,Ctr
- db 30,Fwd ;start running...
- db 37,Upfwd ;jump 1st pit
- db 47,Ctr
- db 48,Fwd ;& keep running
+ EQUB 1,Fwd
+ EQUB 13,Ctr
+ EQUB 30,Fwd ;start running...
+ EQUB 37,Upfwd ;jump 1st pit
+ EQUB 47,Ctr
+ EQUB 48,Fwd ;& keep running
 d1 = 65
- db d1,Ctr ;stop
- db d1+8,Back ;look back...
- db d1+10,Ctr
- db d1+34,Back
- db d1+35,Ctr
+ EQUB d1,Ctr ;stop
+ EQUB d1+8,Back ;look back...
+ EQUB d1+10,Ctr
+ EQUB d1+34,Back
+ EQUB d1+35,Ctr
 d2 = 115
- db d2,Upfwd ;jump 2nd pit
- db d2+13,Press ;& grab ledge
- db d2+21,Up
- db d2+42,Release
- db d2+43,Ctr
- db d2+44,Fwd
- db d2+58,Down
- db d2+62,Ctr
- db d2+63,Fwd
- db d2+73,Ctr
+ EQUB d2,Upfwd ;jump 2nd pit
+ EQUB d2+13,Press ;& grab ledge
+ EQUB d2+21,Up
+ EQUB d2+42,Release
+ EQUB d2+43,Ctr
+ EQUB d2+44,Fwd
+ EQUB d2+58,Down
+ EQUB d2+62,Ctr
+ EQUB d2+63,Fwd
+ EQUB d2+73,Ctr
 d3 = 193
- db d3,Fwd
- db d3+12,Ctr
- db d3+40,EndDemo
+ EQUB d3,Fwd
+ EQUB d3+12,Ctr
+ EQUB d3+40,EndDemo
 
-*-------------------------------
-*
-*  D  E  M  O
-*
-*  Controls kid's movements during self-running demo
-*
-*  (Called from PLAYERCTRL)
-*
-*-------------------------------
-DEMO
- lda #DemoProg1
- ldx #>DemoProg1
+\*-------------------------------
+\*
+\*  D  E  M  O
+\*
+\*  Controls kid's movements during self-running demo
+\*
+\*  (Called from PLAYERCTRL)
+\*
+\*-------------------------------
+
+.DEMO
+ lda #LO(DemoProg1)
+ ldx #HI(DemoProg1)
  jmp AutoPlayback
-ENDIF
 
 \*-------------------------------
 \*

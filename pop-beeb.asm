@@ -806,7 +806,7 @@ PAGE_ALIGN
 ; Put files on SIDE A of the disk
 \*-------------------------------
 
-;PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 
 \ Now on SIDE B
 ;PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0

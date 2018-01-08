@@ -61,7 +61,7 @@ IF _JMP_TABLE=FALSE
 .xminit BRK     ;jmp XMINIT
 
 .xmplay BRK     ;jmp XMPLAY
-.cutprincess RTS;jmp CUTPRINCESS                BEEB TODO CUTSCENES
+.cutprincess jmp CUTPRINCESS
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
 .reload BRK     ;jmp RELOAD
@@ -91,8 +91,8 @@ IF _JMP_TABLE=FALSE
 .zerolsts jmp ZEROLSTS
 \
 .screendump BRK ;jmp SCREENDUMP
-.minit BRK      ;jmp MINIT
-.mplay BRK      ;jmp MPLAY
+.minit jmp MINIT
+.mplay jmp MPLAY
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
@@ -105,7 +105,7 @@ IF _JMP_TABLE=FALSE
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
-.musickeys BRK  ;jmp MUSICKEYS                      BEEB TODO SOUND
+.musickeys jmp MUSICKEYS
 .dostartgame BRK;jmp DOSTARTGAME
 \
 .epilog BRK     ;jmp EPILOG
@@ -174,9 +174,10 @@ CTRL = $60
 ESC = $9b
 DELETE = $7f
 SHIFT = $20
+\ BEEB use IKN defines in bbc.asm.h
 
-ksound = 's'-CTRL
-kmusic = 'n'-CTRL
+ksound = IKN_s OR &80
+kmusic = IKN_m OR &80
 
 \*-------------------------------
 \*  Joystick "center" width (increase for bigger center)
@@ -1921,27 +1922,45 @@ ENDIF
  rts
 }
 
+\*-------------------------------
+\*
+\*  Call sound routines (in aux l.c. bank 1)
+\*  Exit with bank 2 switched in
+\*
+\*-------------------------------
+\grafix_bank1in bit RWBANK1
+\ bit RWBANK1
+\ rts
+
+.mplay_temp
+EQUB 0
+
+.MINIT
+{
+\ jsr grafix_bank1in
+\ jsr CALLMINIT
+ LDA #&FF
+ STA mplay_temp
+ RTS
+}
+
+\grafix_bank2in bit RWBANK2
+\ bit RWBANK2
+\ rts
+
+.MPLAY
+{
+\ jsr grafix_bank1in
+\ jsr CALLMPLAY
+\ jmp grafix_bank2in
+
+ LDA mplay_temp
+ DEC A
+ STA mplay_temp
+ RTS
+}
+
 IF _TODO
-*-------------------------------
-*
-*  Call sound routines (in aux l.c. bank 1)
-*  Exit with bank 2 switched in
-*
-*-------------------------------
-grafix_bank1in bit RWBANK1
- bit RWBANK1
- rts
-
-MINIT jsr grafix_bank1in
- jsr CALLMINIT
-grafix_bank2in bit RWBANK2
- bit RWBANK2
- rts
-
-MPLAY jsr grafix_bank1in
- jsr CALLMPLAY
- jmp grafix_bank2in
-
 *-------------------------------
 *
 *  Call aux l.c. routines from MASTER (main l.c.)
@@ -2218,61 +2237,110 @@ CALLMPLAY
 
 :silent lda #0
 return rts
+ENDIF
 
-*-------------------------------
-*
-*  M U S I C   K E Y S
-*
-*  Call while music is playing
-*
-*  Esc to pause, Ctrl-S to turn sound off
-*  Return A = ASCII value (FF for button)
-*  Clear hibit if it's a key we've handled
-*
-*-------------------------------
-MUSICKEYS
- lda $c000
- sta keypress
- bpl :nokey
- sta $c010
+\*-------------------------------
+\*
+\*  M U S I C   K E Y S
+\*
+\*  Call while music is playing
+\*
+\*  Esc to pause, Ctrl-S to turn sound off
+\*  Return A = ASCII value (FF for button)
+\*  Clear hibit if it's a key we've handled
+\*
+\*-------------------------------
 
- cmp #ESC
- bne :cont
-:froze lda $c000
- sta keypress
- bpl :froze
- sta $c010
- cmp #ESC
- bne :cont
+.MUSICKEYS
+{
+\ Check CTRL first
+ LDA #&79
+ LDX #IKN_ctrl EOR &80
+ JSR osbyte
+
+ TXA
+ AND #&80
+ STA beeb_ctrl_key
+
+\ lda $c000
+\ sta keypress
+\ bpl nokey
+\ sta $c010
+
+\ Check keys above CTRL
+ LDA #&79
+ LDX #&2
+ JSR osbyte
+
+ CPX #&FF
+ BEQ nokey
+
+ TXA
+ ORA #&80
+ STA keypress
+
+ CMP #IKN_esc OR &80
+ bne cont
+
+.froze
+\ lda $c000
+\ sta keypress
+\ bpl froze
+\ sta $c010
+
+ LDA #&79
+ LDX #IKN_esc EOR &80
+ JSR osbyte
+
+ TXA
+ BPL froze
+
  and #$7f
  rts
 
-:cont cmp #ksound
- bne :3
+.cont
+ cmp #ksound
+ bne label_3
  lda soundon
  eor #1
  sta soundon
-:21 beq :2
+
+.label_21
+ beq label_2
  jsr gtone
-:2 lda #0
+
+.label_2
+ lda #0
  rts
 
-:3 cmp #kmusic
- bne :1
+.label_3
+ cmp #kmusic
+ bne label_1
  lda musicon
  eor #1
  sta musicon
- jmp :21
+ jmp label_21
 
-:nobtn lda keypress
+.label_1
+.nobtn
+ lda keypress
  rts
-:1
-:nokey lda $c061
- ora $c062
- bpl :nobtn
- lda #$ff
-return rts
 
+\ Check Apple / joystick button
+\ lda $c061
+\ ora $c062
+\ bpl :nobtn
+\ lda #$ff
+
+.nokey
+ LDA #0
+ STA keypress
+
+.return
+ rts
+}
+
+IF _TODO
 *===============================
 vblflag ds 1
 *-------------------------------

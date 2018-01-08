@@ -233,7 +233,7 @@ kresume = 'l'-$60
  sta soundon ;Sound on
 
 \ BEEB TEMP comment out
-\ jmp AttractLoop
+ jmp AttractLoop
 }
 
 IF _TODO
@@ -897,11 +897,15 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
+ MASTER_LOAD_HIRES pacRoom_name
+
 \ lda #$40
 \ sta IMAGE+1
 \ lda #$20
 \ sta IMAGE ;copy page 1 to page 2
 \ jmp _copy2000 ;in HIRES
+
+\ BEEB TEMP load princess screen twice - could copy between MAIN & SHADOW
 
  MASTER_LOAD_HIRES pacRoom_name
 
@@ -947,6 +951,10 @@ EQUS "PRIN   $"
 .ATTRACTMODE
 .AttractLoop
 {
+\ BEEB set drive 0 for attract
+ LDA #0
+ JSR disksys_set_drive
+
  lda #1
  sta musicon
 
@@ -1026,9 +1034,12 @@ EQUS "PRESENT$"
 
  MASTER_LOAD_DHIRES presents_filename
 
- ldx #80
- lda #s_Presents
- jsr masater_PlaySongI
+\ ldx #80
+\ lda #s_Presents
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
 
  jmp CleanScreen
 }
@@ -1079,9 +1090,12 @@ EQUS "BYLINE $"
 
  MASTER_LOAD_DHIRES byline_filename
 
- ldx #80
- lda #s_Byline
- jsr masater_PlaySongI
+\ ldx #80
+\ lda #s_Byline
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
 
 \* Credit line disappears
 
@@ -1130,9 +1144,12 @@ EQUS "TITLE  $"
 
  MASTER_LOAD_DHIRES title_filename
 
- ldx #140
- lda #s_Title
- jsr masater_PlaySongI
+\ ldx #140
+\ lda #s_Title
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
 
 \* Credit line disappears
 
@@ -1156,9 +1173,13 @@ EQUS "PROLOG $"
 
  MASTER_LOAD_DHIRES prolog_filename
 
- ldx #250
- lda #s_Prolog
- jmp masater_PlaySongI
+\ ldx #250
+\ lda #s_Prolog
+\ jmp master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+ RTS
 }
 
 \*-------------------------------
@@ -1178,7 +1199,7 @@ EQUS "PROLOG $"
  jsr cutprincess1
 
  lda #0 ;cut #0 (intro)
- jmp xplaycut ;aux l.c. via grafix
+ jmp playcut ;Apple II was xplaycut aux l.c. via grafix
 }
 
 \*-------------------------------
@@ -1200,9 +1221,13 @@ EQUS "SUMUP  $"
 
  MASTER_LOAD_DHIRES sumup_filename
 
- ldx #250
- lda #s_Sumup
- jmp masater_PlaySongI
+\ ldx #250
+\ lda #s_Sumup
+\ jmp master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+ RTS
 }
 
 \*-------------------------------
@@ -1756,7 +1781,7 @@ EQUS "CHTAB6X$"
 
 .LoadStage2
 {
-    LDA #2
+    LDA #0
     JSR disksys_set_drive
 
     \\ Need to switch sCHTAB6 A/B according to Apple II disc layout
@@ -1897,11 +1922,11 @@ ENDIF
 ;(& ignores sound/music toggles)
 \ jsr setaux
 \ BEEB TODO music
- jsr xminit
+ jsr minit      ; was xminit
  LDA #1
 .loop
 \ BEEB TODO music
- jsr xmplay
+ jsr mplay      ; was xmplay
  cmp #0
  bne loop
 .return
@@ -1910,7 +1935,7 @@ ENDIF
 
 \*-------------------------------
 
-.masater_PlaySongI ;interruptible
+.master_PlaySongI ;interruptible
 {
 \ jsr setaux
 \ beq return
@@ -1921,9 +1946,9 @@ ENDIF
  beq master_pause
 
  tya
- jsr xminit
+ jsr minit      ; was xminit
 .loop jsr master_StartGame
- jsr xmplay
+ jsr mplay      ; was xmplay
  cmp #0
  bne loop
 .return
@@ -1942,7 +1967,7 @@ ENDIF
 
  ldy #2
 .loop1 ldx #0
-.loop2 jsr master_StartGame
+.loop2 PHX:PHY:jsr master_StartGame:PLY:PLX
  dex
  bne loop2
  dey

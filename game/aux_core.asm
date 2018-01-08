@@ -351,9 +351,9 @@ GRAFIX_BANK = -1        ; currently in Core
 .setfastmain BRK;jmp SETFASTMAIN
 .loadlevel BRK  ;jmp LOADLEVEL
 .attractmode BRK;jmp ATTRACTMODE
-.xminit RTS     ;jmp XMINIT             ; BEEB TODO music
+.xminit BRK     ;jmp XMINIT             ; BEEB TODO music
 
-.xmplay RTS     ;jmp XMPLAY             ; BEEB TODO music
+.xmplay BRK     ;jmp XMPLAY             ; BEEB TODO music
 .cutprincess jmp _cutprincess           ; BEEB doesn't need to be vectored thru grafix
 .xtitle BRK     ;jmp XTITLE
 .copy2000am BRK ;jmp COPY2000AM
@@ -384,8 +384,8 @@ GRAFIX_BANK = -1        ; currently in Core
 .zerolsts jmp ZEROLSTS
 \
 .screendump BRK ;jmp SCREENDUMP
-.minit BRK      ;jmp MINIT
-.mplay BRK      ;jmp MPLAY
+.minit jmp MINIT
+.mplay jmp MPLAY
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
@@ -398,7 +398,7 @@ GRAFIX_BANK = -1        ; currently in Core
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
-.musickeys BRK  ;jmp MUSICKEYS                      BEEB TODO SOUND
+.musickeys jmp MUSICKEYS
 .dostartgame BRK;jmp DOSTARTGAME
 \
 .epilog BRK     ;jmp EPILOG
@@ -507,7 +507,7 @@ SPECIALK_BANK = -1      ; currently in Core
 .addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
 .doflashon RTS          ; JUMP_B DOFLASHON             BEEB TODO FLASH
 .PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
-.demo BRK               ; JUMP_B DEMO
+.demo JUMP_B DEMO, SUBS_BASE, 3
 .showtime RTS           ; JUMP_B SHOWTIME              BEEB TODO TIMER
 
 .doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
@@ -874,7 +874,7 @@ SUBS_BASE = P% - aux_core_fn_table_B_LO
 EQUB LO(ADDTORCHES)
 EQUB 0    ; EQUB LO(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
-EQUB 0    ; EQUB LO(DEMO)
+EQUB LO(DEMO)
 EQUB 0    ; EQUB LO(SHOWTIME)              BEEB TODO TIMER
 
 EQUB 0    ; EQUB LO(DOFLASHOFF)            BEEB TODO FLASH
@@ -1014,7 +1014,7 @@ EQUB HI(JAMPP)
 EQUB HI(ADDTORCHES)
 EQUB 0    ; EQUB HI(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB HI(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
-EQUB 0    ; EQUB HI(DEMO)
+EQUB HI(DEMO)
 EQUB 0    ; EQUB HI(SHOWTIME)              BEEB TODO TIMER
 
 EQUB 0    ; EQUB HI(DOFLASHOFF)            BEEB TODO FLASH
