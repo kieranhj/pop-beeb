@@ -16,6 +16,7 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE            ; use a single global jump table
+_BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
 
 _COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now!
 
@@ -305,12 +306,7 @@ ENDIF
     \\ Actual POP
     \\ Would have been entered directly by the boot loader on Apple II
 
-    JSR _firstboot
-
-    JSR _dostartgame
-
-    .return
-    RTS
+    JMP _firstboot
 }
 
 .beeb_init_end

@@ -232,8 +232,11 @@ kresume = 'l'-$60
  lda #1
  sta soundon ;Sound on
 
-\ BEEB TEMP comment out
+IF _BOOT_ATTRACT
  jmp AttractLoop
+ELSE
+ jmp DOSTARTGAME
+ENDIF
 }
 
 IF _TODO

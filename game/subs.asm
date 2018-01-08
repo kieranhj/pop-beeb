@@ -20,7 +20,7 @@ IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
 .doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
 .PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
-.demo jmp DEMO
+\\.demo jmp DEMO        \\ moved to auto.asm
 .showtime RTS           ; jmp SHOWTIME              BEEB TODO TIMER
 
 .doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
@@ -33,11 +33,7 @@ IF _JMP_TABLE=FALSE
 .pause jmp PAUSE
 \ jmp bonesrise
 .deadenemy jmp DEADENEMY
-IF _ALL_LEVELS
 .playcut jmp PLAYCUT
-ELSE
-.playcut BRK            ; jmp PLAYCUT
-ENDIF
 
 .addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TODO SOUND
 .RemoveObj jmp REMOVEOBJ
@@ -1314,69 +1310,6 @@ floorY = 151
  jsr jumpseq
  jmp animchar
 }
-
-\*-------------------------------
-\* Demo commands
-\*-------------------------------
-
-\ All defined in auto.asm
-\EndProg = -2
-\EndDemo = -1
-\Ctr = 0
-\Fwd = 1
-\Back = 2
-\Up = 3
-\Down = 4
-\Upfwd = 5
-\Press = 6
-\Release = 7
-
-\*-------------------------------
-
-.DemoProg1 ;up to fight w/1st guard
- EQUB 0,Ctr
- EQUB 1,Fwd
- EQUB 13,Ctr
- EQUB 30,Fwd ;start running...
- EQUB 37,Upfwd ;jump 1st pit
- EQUB 47,Ctr
- EQUB 48,Fwd ;& keep running
-d1 = 65
- EQUB d1,Ctr ;stop
- EQUB d1+8,Back ;look back...
- EQUB d1+10,Ctr
- EQUB d1+34,Back
- EQUB d1+35,Ctr
-d2 = 115
- EQUB d2,Upfwd ;jump 2nd pit
- EQUB d2+13,Press ;& grab ledge
- EQUB d2+21,Up
- EQUB d2+42,Release
- EQUB d2+43,Ctr
- EQUB d2+44,Fwd
- EQUB d2+58,Down
- EQUB d2+62,Ctr
- EQUB d2+63,Fwd
- EQUB d2+73,Ctr
-d3 = 193
- EQUB d3,Fwd
- EQUB d3+12,Ctr
- EQUB d3+40,EndDemo
-
-\*-------------------------------
-\*
-\*  D  E  M  O
-\*
-\*  Controls kid's movements during self-running demo
-\*
-\*  (Called from PLAYERCTRL)
-\*
-\*-------------------------------
-
-.DEMO
- lda #LO(DemoProg1)
- ldx #HI(DemoProg1)
- jmp AutoPlayback
 
 \*-------------------------------
 \*

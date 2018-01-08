@@ -605,7 +605,7 @@ stairthres = 30
 
 .cont lda level
  bne game
-.demo jsr DemoCtrl
+ jsr DemoCtrl
  jmp GenCtrl
 
 \* Character controlled by selected device

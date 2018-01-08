@@ -139,6 +139,7 @@ IF _JMP_TABLE
 .cutguard JUMP_A CUTGUARD, AUTO_BASE, 5
 .addguard JUMP_A ADDGUARD, AUTO_BASE, 6
 .cut JUMP_A CUT, AUTO_BASE, 7
+.demo JUMP_A DEMO, AUTO_BASE, 8             \\ moved from subs.asm
 
 
 \*-------------------------------
@@ -507,7 +508,7 @@ SPECIALK_BANK = -1      ; currently in Core
 .addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
 .doflashon RTS          ; JUMP_B DOFLASHON             BEEB TODO FLASH
 .PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
-.demo JUMP_B DEMO, SUBS_BASE, 3
+.subs_demo BRK          ; JUMP_B DEMO, SUBS_BASE, 3   \\ moved to auto.asm
 .showtime RTS           ; JUMP_B SHOWTIME              BEEB TODO TIMER
 
 .doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
@@ -520,11 +521,7 @@ SPECIALK_BANK = -1      ; currently in Core
 .pause JUMP_B PAUSE, SUBS_BASE, 8
 \ JUMP_B bonesrise
 .deadenemy JUMP_B DEADENEMY, SUBS_BASE, 9
-IF _ALL_LEVELS
 .playcut JUMP_B PLAYCUT, SUBS_BASE, 10
-ELSE
-.playcut BRK            ; JUMP_B PLAYCUT               BEEB TODO CUTSCENE
-ENDIF
 
 .addlowersound RTS      ; JUMP_B ADDLOWERSOUND         BEEB TODO SOUND
 .RemoveObj JUMP_B REMOVEOBJ, SUBS_BASE, 12
@@ -558,6 +555,7 @@ EQUB LO(CUTCHECK)
 EQUB LO(CUTGUARD)
 EQUB LO(ADDGUARD)
 EQUB LO(CUT)
+EQUB LO(DEMO)
 
 \*-------------------------------
 \* coll.asm
@@ -676,6 +674,7 @@ EQUB HI(CUTCHECK)
 EQUB HI(CUTGUARD)
 EQUB HI(ADDGUARD)
 EQUB HI(CUT)
+EQUB HI(DEMO)
 
 \*-------------------------------
 \* coll.asm
@@ -874,7 +873,7 @@ SUBS_BASE = P% - aux_core_fn_table_B_LO
 EQUB LO(ADDTORCHES)
 EQUB 0    ; EQUB LO(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
-EQUB LO(DEMO)
+EQUB 0    ; LO(DEMO)    // moved to auto.asm
 EQUB 0    ; EQUB LO(SHOWTIME)              BEEB TODO TIMER
 
 EQUB 0    ; EQUB LO(DOFLASHOFF)            BEEB TODO FLASH
@@ -1014,7 +1013,7 @@ EQUB HI(JAMPP)
 EQUB HI(ADDTORCHES)
 EQUB 0    ; EQUB HI(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB HI(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
-EQUB HI(DEMO)
+EQUB 0    ; HI(DEMO)    // moved to auto.asm
 EQUB 0    ; EQUB HI(SHOWTIME)              BEEB TODO TIMER
 
 EQUB 0    ; EQUB HI(DOFLASHOFF)            BEEB TODO FLASH

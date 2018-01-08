@@ -26,7 +26,7 @@
 \ jmp showpage                        DEBUG
 
 \.docrosscut BRK   ; jmp showpage     UNUSED
-.goattract BRK    ; jmp GOATTRACT
+.goattract jmp GOATTRACT
 
 \*-------------------------------
 \ lst
@@ -525,7 +525,12 @@ ENDIF
  cmp #12
  beq cut5 ;Princess cuts before certain levels
 
-.cont jmp RESTART ;Start new level
+.cont
+IF _ALL_LEVELS
+ jmp RESTART ;Start new level
+ELSE
+ jmp GOATTRACT
+ENDIF
 
 \* Princess cuts before certain levels
 

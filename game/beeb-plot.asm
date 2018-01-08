@@ -321,10 +321,20 @@ IF _UNROLL_LAYRSAVE = FALSE
 
     ldy #0
     lda (IMAGE),y
+IF _DEBUG
+    BNE width_ok
+    BRK
+    .width_ok
+ENDIF
     sta WIDTH
 
     iny
     lda (IMAGE),y
+IF _DEBUG
+    BNE height_ok
+    BRK
+    .height_ok
+ENDIF
     sta HEIGHT
 
     \ OFFSET IGNORED

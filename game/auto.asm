@@ -25,6 +25,7 @@ IF _JMP_TABLE=FALSE
 .cutguard jmp CUTGUARD
 .addguard jmp ADDGUARD
 .cut jmp CUT
+.demo jmp DEMO
 ENDIF
 
 \*-------------------------------
@@ -2121,3 +2122,70 @@ ENDIF
 \ ds 1
 \ usr $a9,17,$800,*-org
 \ lst off
+
+\\ Moved from subs.asm as needs to be in same RAM bank
+
+\*-------------------------------
+\* Demo commands
+\*-------------------------------
+
+\ All defined in auto.asm
+\EndProg = -2
+\EndDemo = -1
+\Ctr = 0
+\Fwd = 1
+\Back = 2
+\Up = 3
+\Down = 4
+\Upfwd = 5
+\Press = 6
+\Release = 7
+
+\*-------------------------------
+
+.DemoProg1 ;up to fight w/1st guard
+ EQUB 0,Ctr
+ EQUB 1,Fwd
+ EQUB 11,Ctr                    \\ BEEB stop one frame early?!
+ EQUB 30,Fwd ;start running...
+ EQUB 37,Upfwd ;jump 1st pit
+ EQUB 47,Ctr
+ EQUB 48,Fwd ;& keep running
+d1 = 66                         \\ BEEB stop one frame later?!
+ EQUB d1,Ctr ;stop
+ EQUB d1+8,Back ;look back...
+ EQUB d1+10,Ctr
+ EQUB d1+34,Back
+ EQUB d1+35,Ctr
+d2 = 115
+ EQUB d2,Upfwd ;jump 2nd pit
+ EQUB d2+13,Press ;& grab ledge
+ EQUB d2+21,Up
+ EQUB d2+42,Release
+ EQUB d2+43,Ctr
+ EQUB d2+44,Fwd
+ EQUB d2+58,Down
+ EQUB d2+62,Ctr
+ EQUB d2+63,Fwd
+ EQUB d2+73,Ctr
+d3 = 193
+ EQUB d3,Fwd
+ EQUB d3+12,Ctr
+ EQUB d3+40,EndDemo
+
+\*-------------------------------
+\*
+\*  D  E  M  O
+\*
+\*  Controls kid's movements during self-running demo
+\*
+\*  (Called from PLAYERCTRL)
+\*
+\*-------------------------------
+
+.DEMO
+{
+ lda #LO(DemoProg1)
+ ldx #HI(DemoProg1)
+ jmp AutoPlayback
+}
