@@ -52,9 +52,13 @@
 \*-------------------------------
 ; Very lazy table for turning MODE 2 black pixels into MASK
 ; Could / should be in MAIN
+; Used by LAYMASK and MLAYMASK (characters)
 
 PAGE_ALIGN
 .mask_table
+.map_2bpp_to_mask
+; This table turns MODE 5 2bpp packed data directly into MODE 2 mask bytes
+; Used by FASTMASK (background plot)
 FOR byte,0,255,1
 left=byte AND &AA
 right=byte AND &55
@@ -150,7 +154,9 @@ NEXT
 \*-------------------------------
 ; This table turns MODE 5 2bpp packed data directly into MODE 2 mask bytes
 ; Could / should be in MAIN
+; Used by FASTMASK (background plot)
 
+IF 0    \\ same as mask_table!
 PAGE_ALIGN
 .map_2bpp_to_mask
 FOR byte,0,&CC,1
@@ -176,6 +182,7 @@ ELSE
 ENDIF
 
 NEXT
+ENDIF
 
 \*-------------------------------
 ; Multipliction table squeezed in from PAGE_ALIGN
@@ -188,6 +195,7 @@ NEXT
 \*-------------------------------
 ; Compressed (Exile) palette table going from 2bpp data to MODE 2 bytes
 ; Could / should be in MAIN
+; Used by full pixel plot fns (LAY, LAYMASK) i.e. characters
 
 PAGE_ALIGN
 .map_2bpp_to_mode2_pixel            ; background

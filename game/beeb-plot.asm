@@ -1420,7 +1420,7 @@ RASTER_COL PAL_yellow
 .smSTACK2
     ORA &100,X
 
-\ Don't blot blank bytes
+\ Don't plot blank bytes
 
     BEQ skip_zero
 
