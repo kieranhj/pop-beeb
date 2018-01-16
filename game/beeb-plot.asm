@@ -114,7 +114,9 @@ IF _UNROLL_LAYRSAVE = FALSE
     \ OK to page out sprite data now we have dimensions etc.
 
     \ Select MOS 4K RAM
+    IF _PEEL_IN_ANDY
     JSR swr_select_ANDY
+    ENDIF
 
     lda OPACITY
     bpl normal
@@ -167,7 +169,9 @@ IF _UNROLL_LAYRSAVE = FALSE
     BNE width_ok
 
     .skipit
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP SKIPIT
 
     \ Store visible width
@@ -284,9 +288,19 @@ IF _UNROLL_LAYRSAVE = FALSE
     INC PEELBUF+1
     .no_carry4
 
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #HI(peelbuf_top)
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
+
 ;RASTER_COL PAL_black
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -312,7 +326,9 @@ IF _UNROLL_LAYRSAVE = FALSE
 .beeb_plot_peel
 {
     \ Select MOS 4K RAM as our sprite bank
+    IF _PEEL_IN_ANDY
     JSR swr_select_ANDY
+    ENDIF
 
 ;RASTER_COL PAL_green
 
@@ -468,7 +484,9 @@ ENDIF
 
 ;RASTER_COL PAL_black
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
 
     RTS
 }

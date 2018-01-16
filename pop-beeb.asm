@@ -17,6 +17,7 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE            ; use a single global jump table
 _BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
+_PEEL_IN_ANDY = FALSE       ; store peel buffers in ANDY 4K RAM
 
 _COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now!
 
@@ -395,7 +396,7 @@ PRINT "--------"
 \*-------------------------------
 
 MAIN_START=&3000
-MAIN_TOP=beeb_screen_addr
+MAIN_TOP=beeb_screen_addr 
 
 CLEAR 0, &FFFF
 ORG MAIN_START
@@ -436,12 +437,22 @@ PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
 PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
+
+IF _PEEL_IN_ANDY = FALSE
+SKIP (MAIN_TOP - P%) - &A00
+
+.peelbuf1
+.peelbuf2
+SKIP &A00       ; was &800
+.peelbuf_top
+ENDIF
+
 ; (screen buffers)
 
 ; Main RAM stats
 PRINT "Screen buffer address = ", ~beeb_screen_addr
 PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
-PRINT "Main RAM free = ", ~(MAIN_TOP - P%)
+PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - &A00)
 PRINT "--------"
 
 \*-------------------------------
@@ -551,10 +562,14 @@ ANDY_TOP=&9000
 CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
+
+IF _PEEL_IN_ANDY
 .peelbuf1
 SKIP &800
 .peelbuf2
-SKIP &800   ; was &800
+SKIP &800
+.peelbuf_top
+ENDIF
 
 PRINT "--------"
 PRINT "ANDY Modules"

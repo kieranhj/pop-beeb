@@ -53,7 +53,9 @@ EQUB HI(beeb_plot_layrsave_9bytes)
     \ OK to page out sprite data now we have dimensions etc.
 
     \ Select MOS 4K RAM
+    IF _PEEL_IN_ANDY
     JSR swr_select_ANDY
+    ENDIF
 
     lda OPACITY
     bpl normal
@@ -207,13 +209,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -284,13 +288,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -369,13 +375,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -462,13 +470,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -563,13 +573,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -674,13 +686,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -793,13 +807,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -920,13 +936,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -1055,13 +1073,15 @@ ENDIF
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -1199,13 +1219,15 @@ IF 0
 
 IF _DEBUG
     LDA PEELBUF+1
-    CMP #&90
+    CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
 ENDIF
 
+    IF _PEEL_IN_ANDY
     JSR swr_deselect_ANDY
+    ENDIF
     JMP DONE                ; restore vars
 }
 ENDIF
