@@ -677,7 +677,7 @@ int main(int argc, char **argv)
 			flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
 		}
 		
-		bool invert = 0;
+		bool invert = 1;		// badly named
 
 		if (parity)
 		{

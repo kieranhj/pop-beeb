@@ -198,6 +198,8 @@ IF _HALF_PLAYER
 .chtabhack EQUB 1,1,1,0,1,0,0,0
 ENDIF
 
+.chtabpal EQUB &00, &00, &00, &02, &00, &04, &04
+
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel
 
@@ -1023,6 +1025,9 @@ ENDIF
 
 .ok sta TABLE+1
 
+ LDA #&05
+ STA PALETTE            ; BEEB TEMP - fixed palette for bg
+
  tya
  rts
 }
@@ -1055,6 +1060,9 @@ ENDIF
  sta TABLE
  lda chtablist,y
  sta TABLE+1
+
+ LDA chtabpal, Y
+ STA PALETTE
 
  pla
  rts

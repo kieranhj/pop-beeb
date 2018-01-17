@@ -2079,3 +2079,54 @@ CHTAB6
 CHTAB7
 GD
 BANK1
+
+16/1/2018
+~~~
+Better palettes needed
+Characters all mapped through Exile style palette table - trivial
+FASTLAY functions all go through expanded 2bpp -> 3bpp pixel look up &CD in size
+Also because of unrolled loops this is hard to switch at runtime
+Original loops can be poked directly for 6x locations but unrolled = 42x
+Can be indirected through a palette lookup (palptr), Y
+
+    LDY #2
+    LDA (IMAGE), Y
+    STA beeb_data:AND #&CC:TAX      ; 3c+2c+2c
+    LDA map_2bpp_to_mode2_palN, X   ; 4c
+    LDY #32
+    STA (beeb_writeptr), Y
+    LDA beeb_data:AND #&33:TAX      ; 3c+2c+2c
+    LDA map_2bpp_to_mode2_palN, X   ; 4c
+    LDY #40
+    STA (beeb_writeptr), Y
+
+    LDY #2
+    LDA (IMAGE), Y
+    TAX:AND #&CC:TAY                ; 2c+2c+2c
+    LDA (palptr), Y                 ; 5c
+    LDY #32
+    STA (beeb_writeptr), Y
+    TXA:AND #&33:TAY                ; 2c+2c+2c
+    LDA (palptr), Y                 ; 5c
+    LDY #40
+    STA (beeb_writeptr), Y
+
+For palette swap
+Can switch player / enemy palette at setcharimg
+Use enum_eor to toggle alternate palette set (shadow vs Kid + 2x guards)
+
+Palettes needed:
+Kid
+Shadow
+Guard x levels
+Alt guard (per level?)
+Viz
+Princess
+
+Default DUN piece
+Default PAL piece
+Torches
+Spikes
+Chomp
+Exit
+Hourglass

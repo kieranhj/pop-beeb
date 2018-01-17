@@ -475,10 +475,12 @@ ENDIF
 
 .DrawShifted
 {
- lda #1
- jsr chgoffset          ; BEEB TO DO - replace with palette swap
+\ lda #1
+\ jsr chgoffset
 
- lda #enum_mask
+\ lda #enum_mask
+
+ lda #enum_eor          ; BEEB - this increments palette index at lowest level
  sta OPACITY
 
  lda #UseLayrsave OR UseCharTable
@@ -489,7 +491,7 @@ ENDIF
 
 .DrawEored
 {
- lda #enum_eor          ; BEEB TO DO - replace with palette swap
+ lda #enum_eor          ; BEEB - this increments palette index at lowest level
  sta OPACITY
 
  lda #UseLayrsave OR UseCharTable

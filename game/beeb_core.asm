@@ -427,9 +427,8 @@ ENDIF
     \ Set a palette per swram bank
     \ Could set palette per sprite table or even per sprite
 
-    LDY BANK
-    LDA bank_to_palette_temp,Y
-    JSR beeb_plot_sprite_SetExilePalette
+    LDA PALETTE
+    JSR beeb_plot_sprite_setpalette
 
     \ Turns TABLE & IMAGE# into IMAGE ptr
     \ Obtains WIDTH & HEIGHT

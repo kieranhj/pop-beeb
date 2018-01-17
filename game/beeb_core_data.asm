@@ -5,51 +5,6 @@
 .beeb_core_data_start
 
 \*-------------------------------
-; Exile palette tables
-; Could / should be in MAIN
-
-.palette_value_to_pixel_lookup
-{
-    MODE2_PIXELS    MODE2_RED_PAIR, MODE2_YELLOW_PAIR
-    MODE2_PIXELS    MODE2_BLUE_PAIR, MODE2_CYAN_PAIR
-    MODE2_PIXELS    MODE2_MAGENTA_PAIR, MODE2_RED_PAIR
-    MODE2_PIXELS    MODE2_MAGENTA_PAIR, MODE2_BLUE_PAIR
-    equb $EB                        ; white bg, red bg
-    equb $CE                        ; yellow bg, green bg
-    equb $F8                        ; cyan bg, blue bg
-    equb $E6                        ; magenta bg, green bg
-    equb $CC                        ; green bg, green bg
-    equb $EE                        ; white bg, green bg
-    equb $30                        ; blue fg, blue fg
-    equb $DE                        ; yellow bg, cyan bg
-    equb $EF                        ; white bg, yellow bg
-    equb $CB                        ; yellow bg, red bg
-    equb $FB                        ; white bg, magenta bg
-    equb $FE                        ; white bg, cyan bg
-}
-
-.pixel_table
-{
-    ;                                 ABCDEFGH
-    equb $00                        ; 00000000 0  0  
-    equb $03                        ; 00000011 1  1  
-    equb $0C                        ; 00001100 2  2  
-    equb $0F                        ; 00001111 3  3  
-    equb $30                        ; 00110000 4  4  
-    equb $33                        ; 00110011 5  5  
-    equb $3C                        ; 00111100 6  6  
-    equb $3F                        ; 00111111 7  7  
-    equb $C0                        ; 11000000 8  8  
-    equb $C3                        ; 11000011 9  9  
-    equb $CC                        ; 11001100 10 10
-    equb $CF                        ; 11001111 11 11
-    equb $F0                        ; 11110000 12 12
-    equb $F3                        ; 11110011 13 13
-    equb $FC                        ; 11111100 14 14
-    equb $FF                        ; 11111111 15 15
-}
-
-\*-------------------------------
 ; Very lazy table for turning MODE 2 black pixels into MASK
 ; Could / should be in MAIN
 ; Used by LAYMASK and MLAYMASK (characters)
@@ -152,37 +107,40 @@ EQUB HI(n*16)
 NEXT
 
 \*-------------------------------
-; This table turns MODE 5 2bpp packed data directly into MODE 2 mask bytes
+; Compressed (Exile) palette table going from 2bpp data to MODE 2 bytes
 ; Could / should be in MAIN
-; Used by FASTMASK (background plot)
+; Used by full pixel plot fns (LAY, LAYMASK) i.e. characters
 
-IF 0    \\ same as mask_table!
 PAGE_ALIGN
-.map_2bpp_to_mask
-FOR byte,0,&CC,1
-left=(byte AND &88) OR (byte AND &22)
-right=(byte AND &44) OR (byte AND &11)
+.map_2bpp_to_mode2_pixel            ; background
+{
+    EQUB &00                        ; +$00 00000000 either pixel logical 0
+    EQUB &10                        ; +$01 000A000a right pixel logical 1
+    EQUB &20                        ; +$02 00B000b0 left pixel logical 1
 
-IF left = 0
+    skip &0D
 
-    IF right = 0
-        EQUB &FF
-    ELSE
-        EQUB &AA
-    ENDIF
+    EQUB &40                        ; +$10 000A000a right pixel logical 2
+    EQUB &50                        ; +$11 000A000a right pixel logical 3
 
-ELSE
+    skip &0E
 
-    IF right = 0
-        EQUB &55
-    ELSE
-        EQUB &00
-    ENDIF
+    EQUB &80                        ; +$20 00B000b0 left pixel logical 2
+    skip 1
+    EQUB &A0                        ; +$22 00B000b0 left pixel logical 3
+}
+\\ Flip entries in this table when parity changes
 
-ENDIF
-
-NEXT
-ENDIF
+\\ Apple II = black / blue / orange / white 
+.palette_table
+{
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; player
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_RED_PAIR         ; shadow
+    EQUB 0, MODE2_CYAN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; guard
+    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; alt guard
+    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; princess
+    EQUB 0, MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR         ; background
+}
 
 \*-------------------------------
 ; Multipliction table squeezed in from PAGE_ALIGN
@@ -191,44 +149,5 @@ ENDIF
 FOR n,0,39,1
 EQUB LO(n*16)
 NEXT
-
-\*-------------------------------
-; Compressed (Exile) palette table going from 2bpp data to MODE 2 bytes
-; Could / should be in MAIN
-; Used by full pixel plot fns (LAY, LAYMASK) i.e. characters
-
-PAGE_ALIGN
-.map_2bpp_to_mode2_pixel            ; background
-{
-    EQUB &00                        ; 00000000 either pixel logical 0
-    EQUB &10                        ; 000A000a right pixel logical 1
-    EQUB &20                        ; 00B000b0 left pixel logical 1
-
-    skip &0D
-
-    EQUB &40                        ; 000A000a right pixel logical 2
-    EQUB &50                        ; 000A000a right pixel logical 3
-
-    skip &0E
-
-    EQUB &80                        ; 00B000b0 left pixel logical 2
-    skip 1
-    EQUB &A0                        ; 00B000b0 left pixel logical 3
-}
-\\ Flip entries in this table when parity changes
-
-\*-------------------------------
-; Set palette per swram bank
-; Needs to be a palette per image bank
-; Or even better per sprite
-; Could / should be in MAIN
-
-.bank_to_palette_temp
-{
-    EQUB &71            \ bg
-    EQUB &72            \ chtab13
-    EQUB &72            \ chtab25
-    EQUB &73            \ chtab467
-}
 
 .beeb_core_data_end

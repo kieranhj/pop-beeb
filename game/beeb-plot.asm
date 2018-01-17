@@ -648,9 +648,9 @@ ENDIF
  jmp beeb_plot_sprite_MLAY
 
 .notmirr
-\ cmp #enum_eor
-\ bne label_1
-\ jmp LayXOR
+ cmp #enum_eor
+ bne label_1
+ INC PALETTE            ; BEEB eor = increment palette index
 
 .label_1 cmp #enum_and
  bne label_2
@@ -1127,9 +1127,9 @@ ENDIF
 
 .beeb_plot_sprite_MLAY ;A = OPACITY
 {
-\ cmp #enum_eor
-\ bne label_1
-\ jmp MLayXOR
+ cmp #enum_eor
+ bne label_1
+ inc PALETTE            ; BEEB eor = increment palette index
 
 .label_1 cmp #enum_and
  bne label_2
@@ -2046,41 +2046,32 @@ ENDIF
 \*
 \*-------------------------------
 
-\ Top 4-bits are colour 3
-\ Bottom 4-bits are lookup into pixel pairs for colours 1 & 2
-\ Colour 0 always black
-.beeb_plot_sprite_SetExilePalette
+.beeb_plot_sprite_setpalette
 {
+    ASL A:ASL A
     TAX
-    LSR A                     
-    LSR A
-    LSR A
-    LSR A
-    TAY                         ; Y = primary colour 
 
-    LDA pixel_table,Y           ; map primary colour (0-15) to Mode 2
-                                ; pixel value with that colour in both
-                                ; pixels
-    AND #$55                    
-    STA map_2bpp_to_mode2_pixel+$11                     ; &11 - primary colour right pixel
-    ASL A                       
-    STA map_2bpp_to_mode2_pixel+$22                     ; &22 - primary colour left pixel
-    
-    TXA
-    AND #$0F                    ; Y = (palette>>0)&15 - pair index
-    TAY
-    LDA palette_value_to_pixel_lookup,Y ; get pair
-    TAY                         
-    AND #$55                    ; get right pixel
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
     STA map_2bpp_to_mode2_pixel+$01                     ; right 1
     ASL A
     STA map_2bpp_to_mode2_pixel+$02                     ; left 1
-    TYA
-    AND #$AA                    ; get left pixel
-    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
-    LSR A
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
     STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
     
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
     RTS
 }
 
