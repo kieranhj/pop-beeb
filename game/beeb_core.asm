@@ -208,12 +208,11 @@ IF _IRQ_VSYNC
     .wait_loop
     CMP beeb_vsync_count
     BEQ wait_loop
+    RTS
 ELSE
     LDA #19
     JMP osbyte
 ENDIF
-
-    RTS
 }
 
 \*-------------------------------
@@ -434,6 +433,83 @@ ENDIF
     \ Obtains WIDTH & HEIGHT
     
     JMP PREPREP
+}
+
+\*-------------------------------
+; Expands 6 bytes left/right logical 0/1/2/3 pixels into all byte combinations
+\*-------------------------------
+
+.beeb_expand_palette_table
+{
+    STX beeb_writeptr
+    STY beeb_writeptr+1
+
+\\ Update palette address table x2
+
+    TAX
+    LDA beeb_writeptr
+    STA palette_addr_LO, X
+    LDA beeb_writeptr+1
+    STA palette_addr_HI, X
+    TXA:EOR #8
+    TAX
+    LDA beeb_writeptr
+    STA palette_addr_LO, X
+    LDA beeb_writeptr+1
+    STA palette_addr_HI, X
+    TXA:EOR #8
+
+\\ Set small palette lookup
+
+    JSR beeb_plot_sprite_setpalette
+
+\\ Wipe expanded palette lookup
+
+    LDY #0
+    LDA #0
+    .wipe
+    STA (beeb_writeptr), Y
+    INY
+    CPY #&CD
+    BNE wipe 
+
+\\ Exapnd each entry in palette lookup
+
+    LDY #0
+    .loop
+
+    TYA:AND #&88            ; pixel D
+    LSR A:LSR A         ; shift down
+    TAX
+    LDA map_2bpp_to_mode2_pixel, X      ; left pixel logical 0/1/2/3
+    ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    TYA:AND #&44            ; pixel C
+    LSR A: LSR A        ; shift down
+    TAX
+    LDA map_2bpp_to_mode2_pixel, X      ; right pixel logical 0/1/2/3
+    ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    TYA:AND #&22            ; pixel B
+    TAX
+    LDA map_2bpp_to_mode2_pixel, X      ; left pixel logical 0/1/2/3
+    ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    TYA:AND #&11            ; pixel A
+    TAX
+    LDA map_2bpp_to_mode2_pixel, X      ; right pixel logical 0/1/2/3
+    ORA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y
+
+    INY
+    CPY #&CD
+    BCC loop
+
+    .return
+    RTS
 }
 
 .beeb_core_end

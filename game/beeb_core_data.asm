@@ -95,8 +95,9 @@ ENDMACRO
 ; Could / should be in MAIN
 
 PAGE_ALIGN
-.map_2bpp_to_mode2_palN
-MAP_2BPP_TO_MODE2 MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR
+.fast_palette_lookup_0
+;MAP_2BPP_TO_MODE2 MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR
+SKIP &CD
 
 \*-------------------------------
 ; Multipliction table squeezed in from PAGE_ALIGN
@@ -104,6 +105,22 @@ MAP_2BPP_TO_MODE2 MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR
 .Mult16_HI          ; or shift...
 FOR n,0,39,1
 EQUB HI(n*16)
+NEXT
+
+\*-------------------------------
+; Expanded palette table going from 2bpp data directly to MODE 2 bytes
+; For torches and blades etc.
+PAGE_ALIGN
+.fast_palette_lookup_1
+;MAP_2BPP_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR
+SKIP &CD
+
+\*-------------------------------
+; Multipliction table squeezed in from PAGE_ALIGN
+; Could / should be in MAIN
+.Mult16_LO
+FOR n,0,39,1
+EQUB LO(n*16)
 NEXT
 
 \*-------------------------------
@@ -131,23 +148,88 @@ PAGE_ALIGN
 }
 \\ Flip entries in this table when parity changes
 
+.fast_palette_lookup_2
+SKIP &CD
+
+PAGE_ALIGN
+.fast_palette_lookup_3
+SKIP &CD
+
+.palette_addr_LO
+{
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_1)
+    EQUB LO(fast_palette_lookup_2)
+    EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_1)
+    EQUB LO(fast_palette_lookup_2)
+    EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_1)
+    EQUB LO(fast_palette_lookup_2)
+    EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_1)
+    EQUB LO(fast_palette_lookup_2)
+    EQUB LO(fast_palette_lookup_3)
+}
+
+.palette_addr_HI
+{
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_1)
+    EQUB HI(fast_palette_lookup_2)
+    EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_1)
+    EQUB HI(fast_palette_lookup_2)
+    EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_1)
+    EQUB HI(fast_palette_lookup_2)
+    EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_1)
+    EQUB HI(fast_palette_lookup_2)
+    EQUB HI(fast_palette_lookup_3)
+}
+
 \\ Apple II = black / blue / orange / white 
 .palette_table
 {
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; player
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_RED_PAIR         ; shadow
-    EQUB 0, MODE2_CYAN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; guard
-    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; alt guard
-    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; princess
-    EQUB 0, MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR         ; background
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; player
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; guard blue
+    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; guard green
+    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; guard red
+
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; background dun 0 (flask, slicer, energy)
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR          ; background dun 1
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR, MODE2_RED_PAIR         ; background dun 2 (flame)
+    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; background dun 3
+
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_BLUE_PAIR      ; shadow
+    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; alt guard blue (green)
+    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; alt guard green (red)
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; alt guard red (blue)
+
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; background pal 0
+    EQUB 0, MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR         ; background pal 1
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR, MODE2_RED_PAIR         ; background pal 2 (flame)
+    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; background pal 3
 }
 
-\*-------------------------------
-; Multipliction table squeezed in from PAGE_ALIGN
-; Could / should be in MAIN
-.Mult16_LO
-FOR n,0,39,1
-EQUB LO(n*16)
-NEXT
+.bgimg1pal
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5        ; 1-20
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5        ; 21-40
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5        ; 41-60
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5        ; 61-80
+EQUB &5,&6,&6,&6,&6,&6,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&6,&6,&6,&6        ; 81-100
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                                   ; 101-111
+
+.bgimg2pal
+EQUB &5,&5,&5,&5,&5,&5,&4,&4,&4,&4,&4,&4,&5,&4,&4,&4,&5,&5,&5,&5        ; 1-20
+EQUB &4,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5        ; 21-40
+EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                                   ; 41-51
 
 .beeb_core_data_end

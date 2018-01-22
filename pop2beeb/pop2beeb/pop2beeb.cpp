@@ -86,7 +86,7 @@ unsigned char even_columns[8] =
 	WHITE0
 };
 
-unsigned char apple_colour_to_beeb_logical_colour[8] =
+unsigned char apple_colour_to_beeb_logical_colour[8] =			// maps apple colour to our MODE 5 colour indices
 {
 	0,							// black
 	1,							// purple = magenta
@@ -98,12 +98,56 @@ unsigned char apple_colour_to_beeb_logical_colour[8] =
 	3							// white
 };
 
-unsigned char beeb_logical_colour_to_screen_pixel[4][4] =			//
+unsigned char beeb_mode5_colour_to_screen_pixel[4][4] =			// maps our MODE 5 colour indices to MODE 5 pixel bytes
 {
-	{ 0x00, 0x00, 0x00, 0x00 },
-	{ 0x08, 0x04, 0x02, 0x01 },
-	{ 0x80, 0x40, 0x20, 0x10 },
-	{ 0x88, 0x44, 0x22, 0x11 }
+	{ 0x00, 0x00, 0x00, 0x00 },	// 0 = black
+	{ 0x08, 0x04, 0x02, 0x01 }, // 1 = blue
+	{ 0x80, 0x40, 0x20, 0x10 }, // 2 = orange
+	{ 0x88, 0x44, 0x22, 0x11 }, // 3 = white
+};
+
+unsigned char nula_colours[16][3] =
+{
+	{ 0, 0, 0 },			// black (MUST BE BLACK)
+	{ 255, 0, 0, },			// red
+	{ 0, 255, 0, },			// green
+	{ 255, 255, 0, },		// yellow
+	{ 0, 0, 255, },			// blue
+	{ 255, 0, 255, },		// magenta
+	{ 0, 255, 255, },		// cyan
+	{ 255, 255, 255, },		// white
+
+	{ 0, 0, 0 },			// black
+	{ 255, 0, 0, },			// red
+	{ 0, 255, 0, },			// green
+	{ 255, 255, 0, },		// yellow
+	{ 0, 0, 255, },			// blue
+	{ 255, 0, 255, },		// magenta
+	{ 0, 255, 255, },		// cyan
+	{ 255, 255, 255, },		// white
+};
+
+unsigned char palette_selection[16][3] = 
+{
+	{ 4, 1, 7 },			// blue, red, white = closest to Apple II default colours (blue, orange, white)
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 7 },			// red, yellow, white
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
@@ -181,7 +225,7 @@ int calc_image_width_from_colour(unsigned char *colour_data, int pixel_width, in
 	return colour_width;
 }
 
-int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool invert, bool simple, int remove)
+int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pixel_height, unsigned char *colour_data, bool odd, bool simple, int remove)
 {
 	for (int y = 0; y < pixel_height; y++)
 	{
@@ -196,7 +240,7 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 				unsigned char byte2 = x < (pixel_width - 1) ? pixel_data[y*pixel_width + x + 1] : 0;
 				unsigned char colour = 4;
 
-				if (invert)
+				if (odd)
 					colour |= ((byte2 & 1) << 1) | (byte1 & 1);
 				else
 					colour |= ((byte1 & 1) << 1) | (byte2 & 1);
@@ -230,7 +274,7 @@ int convert_pixels_to_colour(unsigned char *pixel_data, int pixel_width, int pix
 
 				unsigned char colour;
 
-				if ((x & 1) == invert)
+				if ((x & 1) == odd)
 				{
 					colour = group1 | odd_columns[pixel0 + pixel1 * 2 + pixel2 * 4];
 				}
@@ -384,10 +428,10 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 
 			// Convert 4x pixels to MODE5 2bpp
 
-			beebbyte = beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0]
-				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1]
-				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c2]][2]
-				| beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c3]][3];
+			beebbyte = beeb_mode5_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0]
+				| beeb_mode5_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1]
+				| beeb_mode5_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c2]][2]
+				| beeb_mode5_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c3]][3];
 
 //			printf("y=%d x8=%d c0=%d c1=%d c2=%d c3=%d l0=%d l1=%d l2=%d l3=%d p0=0x%2x p1=0x%2x p2=0x%2x p3=0x%2x b=0x%2x\n", y, x8, c0, c1, c2, c3, apple_colour_to_beeb_logical_colour[c0], apple_colour_to_beeb_logical_colour[c1], apple_colour_to_beeb_logical_colour[c2], apple_colour_to_beeb_logical_colour[c3], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c0]][0], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c1]][1], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c2]][2], beeb_logical_colour_to_screen_pixel[apple_colour_to_beeb_logical_colour[c3]][3], beebbyte);
 
@@ -542,14 +586,57 @@ void unpack_double_hires(void)
 	}
 }
 
+int get_distance_to_colour(int i, unsigned char r, unsigned char g, unsigned char b)
+{
+	return (r - nula_colours[i][0]) * (r - nula_colours[i][0]) + (g - nula_colours[i][1]) * (g - nula_colours[i][1]) + (b - nula_colours[i][2]) * (b - nula_colours[i][2]);
+}
+
+int find_nearest_nula_colour(unsigned char r, unsigned char g, unsigned char b)
+{
+	int c = 0;
+	int min_distance = INT_MAX;
+
+	for (int i = 0; i < 16; i++)
+	{
+		int distance = get_distance_to_colour(i, r, g, b);
+
+		if (distance < min_distance)
+		{
+			c = i;
+			min_distance = distance;
+		}
+	}
+
+	return c;
+}
+
+int get_beeb_byte_for_palette(int index, unsigned char r, unsigned char g, unsigned char b, int pixel)
+{
+	int c = 0;
+	int min_distance = get_distance_to_colour(0, r, g, b);
+
+	for (int i = 1; i < 4; i++)
+	{
+		int distance = get_distance_to_colour(palette_selection[index][i-1], r, g, b);
+		if ( distance < min_distance )
+		{
+			c = i;
+			min_distance = distance;
+		}
+	}
+
+	return beeb_mode5_colour_to_screen_pixel[c][pixel];
+}
 
 int main(int argc, char **argv)
 {
 	cimg_usage("POP asset convertor.\n\nUsage : pop2beeb [options]");
 	const char *const inputname = cimg_option("-i", (char*)0, "Input filename");
 	const char *const outputname = cimg_option("-o", (char*)0, "Output filename");
+	const char *const bitmapname = cimg_option("-b", (char*)0, "Bitmap filename to use instead of automatic conversion");
 	const int mode = cimg_option("-mode", 5, "BBC MODE number (6='attribute' mode)");
 	const int remove = cimg_option("-remove", 0, "Remove Apple II colour # from data");
+	int pal = cimg_option("-pal", 0, "Palette selection for bitmap");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
 	const bool halfv = cimg_option("-halfv", false, "Halve vertical resolution");
@@ -677,19 +764,24 @@ int main(int argc, char **argv)
 			flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
 		}
 		
-		bool invert = 1;		// badly named
+		bool odd = 1;
 
 		if (parity)
 		{
-			invert = fgetc(parity) == '1' ? 1 : 0;
+			odd = fgetc(parity) == '1' ? 1 : 0;
 		}
 
-		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], invert, simple, remove);
+		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], odd, simple, remove);
 	}
 
 	max_height += 2;
 
-
+	if (parity)
+	{
+		fclose(parity);
+		parity = NULL;
+	}
+	
 	if (test)
 	{
 		if (verbose)
@@ -974,80 +1066,227 @@ int main(int argc, char **argv)
 		printf("Size vs Apple = %f%%\n", 100.0f * total_attr6 / (float)total_bytes);
 	}
 
-	if (outputname)
+	if (bitmapname)
 	{
-		FILE *output = fopen(outputname, "wb");
-		
-		if (output)
+		int mode5_total_width = total_width - (num_images * 8);
+		mode5_total_width = 8 * mode5_total_width / 7;
+		mode5_total_width += num_images * 8;
+
+		printf("Reading pixel data from '%s'...\n", bitmapname);
+
+		CImg<unsigned char> bitmap(bitmapname);
+
+		char palfile[256];
+		sprintf(palfile, "%s.pal.txt", inputname);
+
+		FILE *palsel = fopen(palfile, "rb");
+
+		if (palsel)
 		{
-			unsigned char *beebdata = (unsigned char*)malloc((mode == 4 ? total_mode4 : total_mode5) + num_images * 4 + 3);
-			unsigned char *beebptr = beebdata;
+			printf("Using palette selection file '%s'...\n", palfile);
+		}
 
-			if (end_image > num_images)
-				end_image = num_images;
+		int current_x = 4;
 
-			num_images = end_image - start_image + 1;
+		if (outputname)
+		{
+			FILE *output = fopen(outputname, "wb");
 
-			printf("Output start image = %d\nOutput end image = %d\nOutput total images = %d\n", start_image, end_image, num_images);
-
-			*beebptr++ = num_images;
-
-			for (int i = start_image - 1; i < end_image; i++)
+			if (output)
 			{
+				unsigned char *beebdata = (unsigned char*)malloc((mode == 4 ? total_mode4 : total_mode5) + num_images * 4 + 3);
+				unsigned char *beebptr = beebdata;
+
+				if (end_image > num_images)
+					end_image = num_images;
+
+				num_images = end_image - start_image + 1;
+
+				printf("Output start image = %d\nOutput end image = %d\nOutput total images = %d\n", start_image, end_image, num_images);
+
+				for (int i = 1; i < start_image; i++)
+				{
+					int pixel_width = pixel_size[i][0];
+					int expanded_width = 8 * pixel_width / 7;
+					int reduced_width = expanded_width / 2;
+					int mode5_width = (reduced_width + 3) / 4;
+					current_x += (mode5_width * 4 * 2) + 8;
+
+					if (palsel)
+					{
+						unsigned char p = fgetc(palsel);		// throw it away
+					}
+				}
+
+				*beebptr++ = num_images;
+
+				for (int i = start_image - 1; i < end_image; i++)
+				{
+					*beebptr++ = 0xff;
+					*beebptr++ = 0xff;		// don't know pointers yet
+				}
 				*beebptr++ = 0xff;
-				*beebptr++ = 0xff;		// don't know pointers yet
+				*beebptr++ = 0xff;			// don't know free yet
+
+											// Write Beeb data
+
+				for (int j = 0, i = start_image - 1; i < end_image; i++, j++)
+				{
+					int pixel_height = pixel_size[i][1];
+					int current_y = max_height - pixel_height - 1;
+
+					int pixel_width = pixel_size[i][0];
+					int expanded_width = 8 * pixel_width / 7;
+					int reduced_width = expanded_width / 2;
+					int mode5_width = (reduced_width + 3) / 4;
+
+					if (palsel)
+					{
+						unsigned char p = fgetc(palsel);
+						// Super hack balls!
+						if (p >= '0' && p <= '9')
+						{
+							pal = p - '0';
+						}
+						else if (p >= 'a' && p <= 'f')
+						{
+							pal = p - 'a' + 10;
+						}
+						else if (p >= 'A' && p <= 'F')
+						{
+							pal = p - 'A' + 10;
+						}
+					}
+
+					// Now we know our address
+
+					beebdata[1 + j * 2] = LO(beebptr - beebdata);
+					beebdata[2 + j * 2] = HI(beebptr - beebdata);
+
+					// Write bytes directly from bitmap
+
+					*beebptr++ = mode5_width;
+					*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
+
+					for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
+					{
+						int actual_y = !flip ? (pixel_height - 1 - y) : y;
+
+						for (int x8 = 0; x8 < mode5_width; x8++)
+						{
+						//	int c0 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2));
+						//	int c1 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2));
+						//	int c2 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2));
+						//	int c3 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2));
+
+						//	printf("%d %d %d %d ", c0, c1, c2, c3);
+
+							unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
+							unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
+							unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
+							unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
+
+							unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
+
+							*beebptr++ = beebbyte;
+						}
+
+						//	printf("\n");
+					}
+
+					current_x += (mode5_width * 4 * 2) + 8;
+				}
+
+				// Write free address
+
+				beebdata[1 + num_images * 2] = LO(beebptr - beebdata);
+				beebdata[2 + num_images * 2] = HI(beebptr - beebdata);
+
+				// Write file
+
+				fwrite(beebdata, 1, beebptr - beebdata, output);
+				fclose(output);
+				output = NULL;
+
+				printf("Output bytes written = %d\n", beebptr - beebdata);
+				printf("Size vs original = %f%%\n", 100.0f * (beebptr - beebdata) / (float)total_bytes);
 			}
-			*beebptr++ = 0xff;
-			*beebptr++ = 0xff;			// don't know free yet
+		}
+	}
+	else
+	{
+		if (outputname)
+		{
+			FILE *output = fopen(outputname, "wb");
 
-			// Write Beeb data
-
-			for (int j = 0, i = start_image - 1; i < end_image; i++, j++)
+			if (output)
 			{
-				// Now we know our address
+				unsigned char *beebdata = (unsigned char*)malloc((mode == 4 ? total_mode4 : total_mode5) + num_images * 4 + 3);
+				unsigned char *beebptr = beebdata;
 
-				beebdata[1 + j * 2] = LO(beebptr - beebdata);
-				beebdata[2 + j * 2] = HI(beebptr - beebdata);
+				if (end_image > num_images)
+					end_image = num_images;
 
-				int bytes_written = 0;
-				
-				if (mode == 4)
+				num_images = end_image - start_image + 1;
+
+				printf("Output start image = %d\nOutput end image = %d\nOutput total images = %d\n", start_image, end_image, num_images);
+
+				*beebptr++ = num_images;
+
+				for (int i = start_image - 1; i < end_image; i++)
 				{
-					bytes_written += convert_pixels_to_mode4(pixels[i], pixel_size[i][0], pixel_size[i][1], colour_width[i], beebptr);
+					*beebptr++ = 0xff;
+					*beebptr++ = 0xff;		// don't know pointers yet
+				}
+				*beebptr++ = 0xff;
+				*beebptr++ = 0xff;			// don't know free yet
+
+				// Write Beeb data
+
+				for (int j = 0, i = start_image - 1; i < end_image; i++, j++)
+				{
+					// Now we know our address
+
+					beebdata[1 + j * 2] = LO(beebptr - beebdata);
+					beebdata[2 + j * 2] = HI(beebptr - beebdata);
+
+					int bytes_written = 0;
+
+					if (mode == 4)
+					{
+						bytes_written += convert_pixels_to_mode4(pixels[i], pixel_size[i][0], pixel_size[i][1], colour_width[i], beebptr);
+					}
+
+					if (mode == 5)
+					{
+						bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even);
+					}
+
+					if (mode == 6)
+					{
+						// TODO
+						//	bytes_written += convert_colour_to_attr6(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
+					}
+
+					beebptr += bytes_written;
 				}
 
-				if (mode == 5)
-				{
-					bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even);
-				}
+				// Write free address
 
-				if (mode == 6)
-				{
-				// TODO
-				//	bytes_written += convert_colour_to_attr6(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
-				}
+				beebdata[1 + num_images * 2] = LO(beebptr - beebdata);
+				beebdata[2 + num_images * 2] = HI(beebptr - beebdata);
 
-				beebptr += bytes_written;
+				// Write file
+
+				fwrite(beebdata, 1, beebptr - beebdata, output);
+				fclose(output);
+				output = NULL;
+
+				printf("Output bytes written = %d\n", beebptr - beebdata);
+				printf("Size vs original = %f%%\n", 100.0f * (beebptr - beebdata) / (float)total_bytes);
 			}
-
-			// Write free address
-
-			beebdata[1 + num_images * 2] = LO(beebptr - beebdata);
-			beebdata[2 + num_images * 2] = HI(beebptr - beebdata);
-
-			// Write file
-
-			fwrite(beebdata, 1, beebptr - beebdata, output);
-			fclose(output);
-			output = NULL;
-
-			printf("Output bytes written = %d\n", beebptr - beebdata);
-			printf("Size vs original = %f%%\n", 100.0f * (beebptr - beebdata) / (float)total_bytes);
 		}
 	}
 
-	if (parity)
-		fclose(parity);
-		
 	return 0;
 }

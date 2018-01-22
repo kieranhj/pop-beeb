@@ -23,3 +23,4 @@
 .beeb_stack_depth SKIP 1
 
 .beeb_vsync_count SKIP 1
+.beeb_palette_toggle    SKIP 1

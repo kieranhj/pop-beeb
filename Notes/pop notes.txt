@@ -2127,6 +2127,50 @@ Default DUN piece
 Default PAL piece
 Torches
 Spikes
-Chomp
+Slicers
 Exit
 Hourglass
+
+Easiest way to specify palette?  Ideally would have encoded this in sprite table as 6 MODE2 pixel bytes
+but this wouldn't work for our expanded 2bpp->3bpp lookup table anyway
+Need to be able to specify a palette per sprite that is defined somewhere else
+Want to make this easier to generate NULA versions later.
+Say 16 3x colour palettes are sufficient.  Define a palette file as 16x RGB entries (for NULA proof)
+Then 16x 3x indices into that table for our 16x 3x colour palettes.  Finally define a text file that
+is optionally loaded alongside the image bank with a single digit 0-F for each sprite to specify palette
+
+E.g.
+0 0 0 
+255 0 0 
+0 255 0
+255 255 0
+0 0 255
+255 0 255
+0 255 255
+255 255 255
+...
+1 2 7           <- palette 0 = (black)/red/green/white
+6 2 7           <- palette 1 = (black)/cyan/green/white
+
+Process for converting sprites to new palette
+Define colour table in code (currently fixed to Beeb - but could be read with config file)
+Define 16x 3x colour palettes in code and tool
+<input>.pal.txt file specifies palette selection per sprite for pixel matching
+Define those 16x palettes in runtime and specify same table for palette selection
+Could generate larger pixel look up tables at runtime for each level as required
+
+Now have a function to expand a 6 byte palette table into expanded &CD lookup
+So define 16x 3x colour palettes in just one place
+Expand those palettes used by the background pieces at runtime for each level
+Update pointer table accordingly so all palette values get mapped to something
+Say each level picks 4x palettes that are used for background pieces
+(Perhaps more with NULA but certainly enough to cover immediate Beeb requirements)
+DUN pieces background + torches, spikes, slicers etc.
+PAL background pieces + torches etc.
+This way can keep the palette indices constant but limit space used when expanded
+
+Palettes mapped to bgset sprites - unless want to chang the look of a particular
+level as variation from just dungeon / palace?
+
+Propose bg tiles use 4-7 for Dungeon and 12-15 for Palace (toggle bit 3)
+Alt sets on a level also toggle bit 3.  So player = 0 and shadow = 8

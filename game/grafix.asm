@@ -2,7 +2,7 @@
 ; Originally GRAFIX.S
 ; All Apple II hi-res graphics functions
 
-_DIV7_TABLES = FALSE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
+_DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
 
 .grafix
 \org = $400
@@ -198,7 +198,7 @@ IF _HALF_PLAYER
 .chtabhack EQUB 1,1,1,0,1,0,0,0
 ENDIF
 
-.chtabpal EQUB &00, &00, &00, &02, &00, &04, &04
+.chtabpal EQUB &00, &00, &00, &02, &00, &02, &02
 
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel
@@ -950,7 +950,7 @@ RASTER_COL PAL_black
 \*  S E T   B  G   I M A G E
 \*
 \*  In: IMAGE = coded image #
-\*  Out: BANK, TABLE, IMAGE set for hires call
+\*  Out: BANK, TABLE, IMAGE set for hires call + PALETTE (BEEB)
 \*
 \*  Protect A,X
 \*
@@ -987,6 +987,11 @@ ENDIF
 
 \ BGTAB2
 
+ PHX:TAX
+ LDA bgimg2pal-1, X
+ EOR beeb_palette_toggle
+ STA PALETTE:PLX
+
  LDA #BEEB_SWRAM_SLOT_BGTAB2
  STA BANK
 
@@ -996,6 +1001,12 @@ ENDIF
 .bg1
 
  LDA IMAGE
+
+ PHX:TAX
+ LDA bgimg1pal-1, X
+ EOR beeb_palette_toggle
+ STA PALETTE
+ TXA:PLX
 
 \ BGTAB1
 
@@ -1024,9 +1035,6 @@ ENDIF
  lda #HI(bgtable1b)
 
 .ok sta TABLE+1
-
- LDA #&05
- STA PALETTE            ; BEEB TEMP - fixed palette for bg
 
  tya
  rts

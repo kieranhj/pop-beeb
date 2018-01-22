@@ -511,6 +511,40 @@ ENDIF
 \ NOT BEEB
 \ jmp driveoff
 
+\ Expand fist palette lookup
+
+ LDA newBGset1
+ BEQ is_dun
+ LDA #8         ; is_pal
+ .is_dun
+ STA beeb_palette_toggle
+
+\ Expand four palette tables in total
+
+ LDA #4
+ EOR beeb_palette_toggle
+ LDX #LO(fast_palette_lookup_0)
+ LDY #HI(fast_palette_lookup_0)
+ JSR beeb_expand_palette_table
+
+ LDA #5
+ EOR beeb_palette_toggle
+ LDX #LO(fast_palette_lookup_1)
+ LDY #HI(fast_palette_lookup_1)
+ JSR beeb_expand_palette_table
+
+ LDA #6
+ EOR beeb_palette_toggle
+ LDX #LO(fast_palette_lookup_2)
+ LDY #HI(fast_palette_lookup_2)
+ JSR beeb_expand_palette_table
+ 
+ LDA #7
+ EOR beeb_palette_toggle
+ LDX #LO(fast_palette_lookup_3)
+ LDY #HI(fast_palette_lookup_3)
+ JSR beeb_expand_palette_table
+
  RTS
 }
 
@@ -585,7 +619,7 @@ ENDIF
 .bgset1_to_name
 EQUS "DUN1X  $"
 EQUS "PAL1X  $"
-EQUS "DUN1X  $"
+\EQUS "DUN1X  $"         ; bgset1=$02 just means side A/B of original disc
 
 .rdbg1
 {
@@ -670,7 +704,7 @@ EQUS "DUN1X  $"
 .bgset2_to_name
 EQUS "DUN2   $"
 EQUS "PAL2   $"
-EQUS "DUN2   $"
+\EQUS "DUN2   $"            ; $02 just meant side B of original disc
 
 .rdbg2
 {
@@ -2025,7 +2059,7 @@ ENDIF
 \* alt bg & char set list
 \* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
 
-.bgset1 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
+.bgset1 EQUB 00,00,00,00,01,01,01,00,00,00,01,01,00,00,01
 \bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
 .chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
 
@@ -2052,5 +2086,4 @@ ENDIF
 \ pla
 
  jmp _loadlevel ;in MASTER
- rts
 }

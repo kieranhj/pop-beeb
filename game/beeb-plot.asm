@@ -650,7 +650,9 @@ ENDIF
 .notmirr
  cmp #enum_eor
  bne label_1
- INC PALETTE            ; BEEB eor = increment palette index
+ LDA PALETTE        ; BEEB eor = increment palette index
+ EOR #8
+ STA PALETTE
 
 .label_1 cmp #enum_and
  bne label_2
@@ -1129,7 +1131,9 @@ ENDIF
 {
  cmp #enum_eor
  bne label_1
- inc PALETTE            ; BEEB eor = increment palette index
+ LDA PALETTE        ; BEEB eor = increment palette index
+ EOR #8
+ STA PALETTE
 
 .label_1 cmp #enum_and
  bne label_2
@@ -1581,6 +1585,15 @@ ENDIF
 
 .beeb_plot_sprite_FASTMASK
 {
+    \ BEEB PALETTE
+    LDX PALETTE
+    LDA palette_addr_LO, X
+    STA smPAL1+1
+    STA smPAL2+1
+    LDA palette_addr_HI, X
+    STA smPAL1+2
+    STA smPAL2+2
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
@@ -1648,7 +1661,8 @@ ENDIF
 
 \ OR in sprite byte
 
-    ORA map_2bpp_to_mode2_palN, X
+    .smPAL1
+    ORA &FFFF, X
 
 \ Write to screen
 
@@ -1677,7 +1691,8 @@ ENDIF
 
 \ OR in sprite byte
 
-    ORA map_2bpp_to_mode2_palN, X
+    .smPAL2
+    ORA &FFFF, X
 
 \ Write to screen
 
@@ -1756,6 +1771,15 @@ ENDIF
 }
 .beeb_plot_sprite_FASTLAYAND_PP
 {
+    \ BEEB PALETTE
+    LDX PALETTE
+    LDA palette_addr_LO, X
+    STA smPAL1+1
+    STA smPAL2+1
+    LDA palette_addr_HI, X
+    STA smPAL1+2
+    STA smPAL2+2
+
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
@@ -1806,7 +1830,8 @@ ENDIF
 
     AND #&CC
     TAX
-    LDA map_2bpp_to_mode2_palN, X
+    .smPAL1
+    LDA &FFFF, X
 
 \ AND sprite data with screen
 
@@ -1825,7 +1850,8 @@ ENDIF
     LDA beeb_data
     AND #&33
     TAX
-    LDA map_2bpp_to_mode2_palN, X
+    .smPAL2
+    LDA &FFFF, X
 
 \ AND sprite data with screen
 
@@ -1908,6 +1934,15 @@ IF _UNROLL_FASTLAY = FALSE
 }
 .beeb_plot_sprite_FASTLAYSTA_PP
 {
+    \ BEEB PALETTE
+    LDX PALETTE
+    LDA palette_addr_LO, X
+    STA smPAL1+1
+    STA smPAL2+1
+    LDA palette_addr_HI, X
+    STA smPAL1+2
+    STA smPAL2+2
+
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
@@ -1958,7 +1993,8 @@ IF _UNROLL_FASTLAY = FALSE
 
     AND #&CC
     TAX
-    LDA map_2bpp_to_mode2_palN, X
+    .smPAL1
+    LDA &FFFF, X
 
 \ Write to screen
 
@@ -1973,7 +2009,8 @@ IF _UNROLL_FASTLAY = FALSE
     LDA beeb_data
     AND #&33
     TAX
-    LDA map_2bpp_to_mode2_palN, X
+    .smPAL2
+    LDA &FFFF, X
 
 \ Write to screen
 
