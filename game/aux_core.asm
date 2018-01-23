@@ -471,24 +471,22 @@ BRK ; bcc MOVEAUXLC ;relocatable
 \* specialk.asm
 \*-------------------------------
 
-SPECIALK_BANK = -1      ; currently in Core
-
- .keys jmp KEYS
- .clrjstk jmp CLRJSTK
+ .keys JUMP_B KEYS, SPECIALK_BASE, 0
+ .clrjstk JUMP_B CLRJSTK, SPECIALK_BASE, 1
  .zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
  .addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
- .facejstk jmp FACEJSTK
+ .facejstk JUMP_B FACEJSTK, SPECIALK_BASE, 4
 
- .SaveSelect jmp SAVESELECT
- .LoadSelect jmp LOADSELECT
- .SaveDesel jmp SAVEDESEL
- .LoadDesel jmp LOADDESEL
- .initinput jmp INITINPUT
+ .SaveSelect JUMP_B SAVESELECT, SPECIALK_BASE, 5
+ .LoadSelect JUMP_B LOADSELECT, SPECIALK_BASE, 6
+ .SaveDesel JUMP_B SAVEDESEL, SPECIALK_BASE, 7
+ .LoadDesel JUMP_B LOADDESEL, SPECIALK_BASE, 8
+ .initinput JUMP_B INITINPUT, SPECIALK_BASE, 9
 
- .demokeys jmp DEMOKEYS
+ .demokeys JUMP_B DEMOKEYS, SPECIALK_BASE, 10
  .listtorches BRK ;jmp LISTTORCHES
  .burn BRK        ;jmp BURN
- .getminleft jmp GETMINLEFT
+ .getminleft JUMP_B GETMINLEFT, SPECIALK_BASE, 13
  .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
  .shortentime BRK ;jmp SHORTENTIME
@@ -498,7 +496,7 @@ SPECIALK_BANK = -1      ; currently in Core
  \jmp decstr
 
  .dloop BRK       ;jmp DLOOP
- .strobe jmp STROBE
+ .strobe JUMP_B STROBE, SPECIALK_BASE, 18
 
 
 \*-------------------------------
@@ -867,6 +865,37 @@ EQUB LO(TRIGSWORD)
 EQUB LO(JAMPP)
 
 \*-------------------------------
+\* specialk.asm
+\*-------------------------------
+SPECIALK_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(KEYS)
+EQUB LO(CLRJSTK)
+EQUB 0     ; EQUB LO(ZEROSOUND)          BEEB TODO SOUND
+EQUB 0     ; EQUB LO(ADDSOUND)           BEEB TODO SOUND
+EQUB LO(FACEJSTK)
+
+EQUB LO(SAVESELECT)
+EQUB LO(LOADSELECT)
+EQUB LO(SAVEDESEL)
+EQUB LO(LOADDESEL)
+EQUB LO(INITINPUT)
+
+EQUB LO(DEMOKEYS)
+EQUB 0         ; EQUB LO(LISTTORCHES)
+EQUB 0         ; EQUB LO(BURN)
+EQUB LO(GETMINLEFT)
+EQUB 0         ; EQUB LO(KEEPTIME)         BEEB TODO TIMER
+
+EQUB 0         ; EQUB LO(SHORTENTIME)
+EQUB 0         ; EQUB LO(CUESONG)          BEEB TODO MUSIC
+ \jmp DoSaveGame
+ \jmp LoadLevelX
+ \jmp decstr
+
+EQUB 0         ; EQUB LO(DLOOP)
+EQUB LO(STROBE)
+
+\*-------------------------------
 \* subs.asm
 \*-------------------------------
 SUBS_BASE = P% - aux_core_fn_table_B_LO
@@ -1006,6 +1035,36 @@ EQUB HI(TRIGFLASK)
 EQUB HI(GETFLASKFRAME)
 EQUB HI(TRIGSWORD)
 EQUB HI(JAMPP)
+
+\*-------------------------------
+\* specialk.asm
+\*-------------------------------
+EQUB HI(KEYS)
+EQUB HI(CLRJSTK)
+EQUB 0     ; EQUB HI(ZEROSOUND)          BEEB TODO SOUND
+EQUB 0     ; EQUB HI(ADDSOUND)           BEEB TODO SOUND
+EQUB HI(FACEJSTK)
+
+EQUB HI(SAVESELECT)
+EQUB HI(LOADSELECT)
+EQUB HI(SAVEDESEL)
+EQUB HI(LOADDESEL)
+EQUB HI(INITINPUT)
+
+EQUB HI(DEMOKEYS)
+EQUB 0         ; EQUB HI(LISTTORCHES)
+EQUB 0         ; EQUB HI(BURN)
+EQUB HI(GETMINLEFT)
+EQUB 0         ; EQUB HI(KEEPTIME)         BEEB TODO TIMER
+
+EQUB 0         ; EQUB HI(SHORTENTIME)
+EQUB 0         ; EQUB HI(CUESONG)          BEEB TODO MUSIC
+ \jmp DoSaveGame
+ \jmp LoadLevelX
+ \jmp decstr
+
+EQUB 0         ; EQUB HI(DLOOP)
+EQUB HI(STROBE)
 
 \*-------------------------------
 \* subs.asm

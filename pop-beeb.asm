@@ -337,9 +337,6 @@ hires_core_end=P%
 
 ; PoP gameplay code moved from AUX memory
 
-INCLUDE "game/specialk.asm"
-specialk_end=P%
-
 .pop_beeb_core_end
 
 .pop_beeb_data_start
@@ -373,16 +370,12 @@ PRINT "DISKSYS size = ", ~(beeb_disksys_end - beeb_disksys_start)
 PRINT "SWR size = ", ~(beeb_swr_end - beeb_swr_start)
 PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
 PRINT "INIT size = ", ~(beeb_init_end - beeb_init_start)
+PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
 PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "GRAFIX size = ", ~(grafix_end - grafix)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
-PRINT "SPECIALK size = ", ~(specialk_end-specialk)
-PRINT "--------"
-PRINT "BEEB CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
-PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
-PRINT "BGDATA (CORE) size = ", ~(bgdata_end-bgdata)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -541,12 +534,13 @@ PRINT "--------"
 PRINT "HAZEL Modules"
 PRINT "--------"
 PRINT "TABLES size = ", ~(tables_end-tables)
-PRINT "BGDATA (HIGH/HAZEL) size = ", ~(bgdata_high_end-tables_end)
-PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
-PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
+PRINT "BGDATA (formerly CORE) size = ", ~(bgdata_end-bgdata)
+PRINT "BGDATA (formerly HIGH now HAZEL) size = ", ~(bgdata_high_end-bgdata_end)
+PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
+PRINT "BEEB (formerly) CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
 PRINT "--------"
-PRINT "HAZEL BSS (blueprint) size = ", ~(pop_beeb_aux_hazel_data_start - blueprnt)
 PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
+PRINT "HAZEL BSS (blueprint) size = ", ~(pop_beeb_aux_hazel_data_start - blueprnt)
 PRINT "HAZEL high watermark = ", ~P%
 PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
 PRINT "--------"
@@ -698,6 +692,17 @@ auto_end=P%
 SAVE "AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
 
 PRINT "--------"
+PRINT "AUX B Modules"
+PRINT "--------"
+PRINT "SEQTABLE size = ", ~(seqtab_end-seqtab)
+PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
+PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
+PRINT "COLL size = ", ~(coll_end-coll)
+PRINT "AUTO size = ", ~(auto_end-auto)
+PRINT "--------"
+PRINT "Aux B code+data size = ", ~(pop_beeb_aux_b_end - pop_beeb_aux_b_start)
+PRINT "Aux B high watermark = ", ~P%
+PRINT "--------"
 PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
 PRINT "BANK 2 free = ", ~(SWRAM_TOP - bank2_end)
 PRINT "--------"
@@ -727,6 +732,8 @@ INCLUDE "game/mover.asm"
 mover_end=P%
 INCLUDE "game/misc.asm"
 misc_end=P%
+INCLUDE "game/specialk.asm"
+specialk_end=P%
 
 .pop_beeb_aux_high_end
 
@@ -745,10 +752,8 @@ PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
 PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
 PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
-PRINT "AUTO size = ", ~(auto_end-auto)
-PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
-PRINT "COLL size = ", ~(coll_end-coll)
 PRINT "MISC size = ", ~(misc_end-misc)
+PRINT "SPECIALK size = ", ~(specialk_end-specialk)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
