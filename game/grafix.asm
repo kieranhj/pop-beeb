@@ -43,18 +43,6 @@ IF _JMP_TABLE=FALSE
 ;
 \ Removed unnecessary redirections
 ;
-;
-;
-;
-.xminit BRK     ;jmp XMINIT
-
-.xmplay BRK     ;jmp XMPLAY
-;
-.xtitle BRK     ;jmp XTITLE
-;
-;
-
-;
 \ jmp RELOAD
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -84,7 +72,7 @@ IF _JMP_TABLE=FALSE
 ;
 ;
 \
-.xplaycut BRK   ;jmp XPLAYCUT
+;
 \.checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 \.fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
 .musickeys jmp MUSICKEYS
@@ -92,7 +80,7 @@ IF _JMP_TABLE=FALSE
 \
 ;
 ;
-.xmovemusic BRK ;jmp XMOVEMUSIC
+;
 .whoop BRK      ;jmp WHOOP
 .vblank JMP beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
@@ -1775,38 +1763,6 @@ EQUB 0
  STA mplay_temp
  RTS
 }
-
-IF _TODO
-*-------------------------------
-*
-*  Call aux l.c. routines from MASTER (main l.c.)
-*
-*-------------------------------
-XMINIT sta ALTZPon
- jsr MINIT
- sta ALTZPoff
- rts
-
-XMPLAY sta ALTZPon
- jsr MPLAY
- sta ALTZPoff
- rts
-
-XTITLE sta ALTZPon
- jsr titlescreen
- sta ALTZPoff
- rts
-
-XPLAYCUT sta ALTZPon
- jsr playcut ;in subs
- sta ALTZPoff
- rts
-
-XMOVEMUSIC sta ALTZPon
- jsr movemusic ;in misc
- sta ALTZPoff
- rts
-ENDIF
 
 IF _NOT_BEEB
 \*-------------------------------
