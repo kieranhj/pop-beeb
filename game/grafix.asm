@@ -40,33 +40,21 @@ IF _JMP_TABLE=FALSE
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel jmp SNGPEEL
 .rnd jmp RND
-.cls jmp CLS
-\
-.lay jmp LAY
-.fastlay jmp FASTLAY
-.layrsave jmp LAYRSAVE
-.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?  USED FOR SCREEN FLASH
-.fastmask jmp FASTMASK
-\
-.fastblack jmp FASTBLACK
-.peel jmp PEEL
-.getwidth jmp GETWIDTH
-.copy2000 BRK   ;jmp COPY2000
-.copy2000ma BRK ;jmp COPY2000MA
-
-.setfastaux BRK ;jmp SETFASTAUX
-.setfastmain BRK;jmp SETFASTMAIN
-.loadlevel BRK  ;jmp LOADLEVEL
-.attractmode BRK;jmp ATTRACTMODE
+\\
+\ Removed unnecessary redirections
+\\
+\\
+\\
+\\
 .xminit BRK     ;jmp XMINIT
 
 .xmplay BRK     ;jmp XMPLAY
-.cutprincess jmp CUTPRINCESS
+\\
 .xtitle BRK     ;jmp XTITLE
-.copy2000am BRK ;jmp COPY2000AM
-.reload BRK     ;jmp RELOAD
+\\
+\\
 
-.loadstage2 BRK ;jmp LOADSTAGE2
+\\
 \ jmp RELOAD
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -86,17 +74,17 @@ IF _JMP_TABLE=FALSE
 \
 .addwipe jmp ADDWIPE
 .addmsg jmp ADDMSG
-.savegame BRK   ;jmp SAVEGAME
-.loadgame BRK   ;jmp LOADGAME
+\\
+\\
 .zerolsts jmp ZEROLSTS
 \
-.screendump BRK ;jmp SCREENDUMP
+\\
 .minit jmp MINIT
 .mplay jmp MPLAY
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty jmp INVERTY
+\
 .normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
@@ -106,10 +94,10 @@ IF _JMP_TABLE=FALSE
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
 .musickeys jmp MUSICKEYS
-.dostartgame BRK;jmp DOSTARTGAME
+\\
 \
-.epilog BRK     ;jmp EPILOG
-.loadaltset BRK ;jmp LOADALTSET
+\\
+\\
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
 .vblank JMP beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
@@ -1682,7 +1670,7 @@ ENDIF
 .return rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  Calls to hires & master routines
@@ -1695,56 +1683,8 @@ IF _TODO
 *  Master
 *
 *-------------------------------
-LOADLEVEL sta ALTZPoff ;main l.c.
- jsr _loadlevel
- sta ALTZPon ;aux l.c.
- rts
-
-ATTRACTMODE sta ALTZPoff
- jsr _attractmode
- sta ALTZPon
- rts
-
-CUTPRINCESS sta ALTZPoff
- jsr _cutprincess
- sta ALTZPon
- rts
-
-RELOAD sta ALTZPoff
- jsr _reload
- sta ALTZPon
- rts
-
-LOADSTAGE2 sta ALTZPoff
- jsr _loadstage2
- sta ALTZPon
- rts
-
-SAVEGAME sta ALTZPoff
- jsr _savegame
- sta ALTZPon
- rts
-
-LOADGAME sta ALTZPoff
- jsr _loadgame
- sta ALTZPon
- rts
-
-DOSTARTGAME sta ALTZPoff
- jmp _dostartgame
-
-EPILOG sta ALTZPoff
- jmp _epilog
-
-LOADALTSET sta ALTZPoff
- jsr _loadaltset
- sta ALTZPon
- rts
-
-SCREENDUMP sta ALTZPoff
- jsr _screendump
- sta ALTZPon
- rts
+\\ BEEB Removed unnecessary redirection
+ENDIF
 
 \*-------------------------------
 \*
@@ -1797,146 +1737,13 @@ ELSE
 .GOGAME
 .EDREBOOT rts
 ENDIF
-ENDIF
 
 \*-------------------------------
 \*
 \*  Hires
 \*
 \*-------------------------------
-\\ BEEB TODO remove redirections
-.CLS
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _cls
-\ sta ALTZPon
- rts
-}
-
-.LAY
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _lay
-\ sta ALTZPon
- rts
-}
-
-.FASTLAY
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _fastlay
-\ sta ALTZPon
- rts
-}
-
-.LAYRSAVE
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _layrsave
-\ sta ALTZPon
-\ jmp posthr
- rts
-}
-
-.LRCLS
-{
- sta scrncolor ;In: A = screen color
-\ sta ALTZPoff
- jsr _lrcls
-\ sta ALTZPon
- rts
-}
-
-.FASTMASK
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _fastmask
-\ sta ALTZPon
- rts
-}
-
-.FASTBLACK
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _fastblack
-\ sta ALTZPon
- rts
-}
-
-.PEEL
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _peel
-\ sta ALTZPon
- rts
-}
-
-.GETWIDTH
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _getwidth
-\ sta ALTZPon
- rts
-}
-
-.COPY2000
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _copy2000
-\ sta ALTZPon
- rts
-}
-
-.COPY2000AM
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _copy2000am
-\ sta ALTZPon
- rts
-}
-
-.COPY2000MA
-{
-\ jsr prehr
-\ sta ALTZPoff
- jsr _copy2000ma
-\ sta ALTZPon
- rts
-}
-
-.SETFASTAUX
-{
-\ sta ALTZPoff
- jsr _setfastaux
-\ sta ALTZPon
- rts
-}
-
-.SETFASTMAIN
-{
-\ sta ALTZPoff
- jsr _setfastmain
-\ sta ALTZPon
- rts
-}
-
-.INVERTY
-{
-\ sta ALTZPoff
- jsr _inverty
-\ sta ALTZPon
- rts
-}
+\\ BEEB Removed redirections
 
 \*-------------------------------
 \*
@@ -2008,6 +1815,7 @@ XMOVEMUSIC sta ALTZPon
  rts
 ENDIF
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \* Copy hires params from aux to main z.p.
@@ -2050,6 +1858,7 @@ ENDIF
 \ bpl loop
 \.return rts
 }
+ENDIF
 
 IF _TODO
 *-------------------------------

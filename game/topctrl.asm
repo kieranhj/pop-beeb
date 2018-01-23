@@ -1406,7 +1406,7 @@ ENDIF
 \ sta BBundID
 
 \:ok
- jmp _attractmode
+ jmp attractmode
 }
 
 \*-------------------------------

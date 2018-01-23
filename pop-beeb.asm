@@ -307,7 +307,7 @@ ENDIF
     \\ Actual POP
     \\ Would have been entered directly by the boot loader on Apple II
 
-    JMP _firstboot
+    JMP firstboot
 }
 
 .beeb_init_end

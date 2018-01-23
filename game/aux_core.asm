@@ -334,33 +334,21 @@ GRAFIX_BANK = -1        ; currently in Core
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel jmp SNGPEEL
 .rnd jmp RND
-.cls jmp CLS
-\
-.lay jmp LAY
-.fastlay jmp FASTLAY
-.layrsave jmp LAYRSAVE
-.lrcls RTS      ;jmp LRCLS          BEEB TO DO OR NOT NEEDED?  USED FOR SCREEN FLASH
-.fastmask jmp FASTMASK
-\
-.fastblack jmp FASTBLACK
-.peel jmp PEEL
-.getwidth jmp GETWIDTH
-.copy2000 BRK   ;jmp COPY2000
-.copy2000ma BRK ;jmp COPY2000MA
-
-.setfastaux BRK ;jmp SETFASTAUX
-.setfastmain BRK;jmp SETFASTMAIN
-.loadlevel BRK  ;jmp LOADLEVEL
-.attractmode BRK;jmp ATTRACTMODE
+\\
+\ Removed unnecessary redirections
+\\
+\\
+\\
+\\
 .xminit BRK     ;jmp XMINIT             ; BEEB TODO music
 
 .xmplay BRK     ;jmp XMPLAY             ; BEEB TODO music
-.cutprincess jmp _cutprincess           ; BEEB doesn't need to be vectored thru grafix
+\\
 .xtitle BRK     ;jmp XTITLE
-.copy2000am BRK ;jmp COPY2000AM
-.reload BRK     ;jmp RELOAD
+\\
+\\
 
-.loadstage2 BRK ;jmp LOADSTAGE2
+\\
 \ jmp RELOAD
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -380,17 +368,17 @@ GRAFIX_BANK = -1        ; currently in Core
 \
 .addwipe jmp ADDWIPE
 .addmsg jmp ADDMSG
-.savegame BRK   ;jmp SAVEGAME
-.loadgame BRK   ;jmp LOADGAME
+\\
+\\
 .zerolsts jmp ZEROLSTS
 \
-.screendump BRK ;jmp SCREENDUMP
+\
 .minit jmp MINIT
 .mplay jmp MPLAY
 .savebinfo BRK  ;jmp SAVEBINFO
 .reloadbinfo BRK;jmp RELOADBINFO
 \
-.inverty jmp INVERTY
+\
 .normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
 .addmidezo jmp ADDMIDEZO
 .calcblue jmp CALCBLUE
@@ -400,10 +388,10 @@ GRAFIX_BANK = -1        ; currently in Core
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 .fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
 .musickeys jmp MUSICKEYS
-.dostartgame BRK;jmp DOSTARTGAME
+\\
 \
-.epilog BRK     ;jmp EPILOG
-.loadaltset BRK ;jmp LOADALTSET
+\\
+\\
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
 .vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc

@@ -4,25 +4,25 @@
 .hires_core
 
 ._boot3 BRK         ;jmp boot3
-._cls jmp hires_cls
-._lay jmp hires_lay
-._fastlay jmp hires_fastlay
-._layrsave jmp hires_layrsave
+.cls jmp hires_cls
+.lay jmp hires_lay
+.fastlay jmp hires_fastlay
+.layrsave jmp hires_layrsave
 
-._lrcls brk         ;jmp hires_lrcls    \ is implemented but not safe to call!
-._fastmask jmp hires_fastmask
-._fastblack jmp hires_fastblack
-._peel jmp hires_peel
-._getwidth jmp hires_getwidth
+.lrcls rts         ;jmp hires_lrcls    \ is implemented but not safe to call!
+.fastmask jmp hires_fastmask
+.fastblack jmp hires_fastblack
+.peel jmp hires_peel
+.getwidth jmp hires_getwidth
 
-._copy2000 BRK      ;jmp copyscrnMM
-._copy2000aux BRK   ;jmp copyscrnAA
-._setfastaux BRK    ;jmp hires_SETFASTAUX
-._setfastmain BRK   ;jmp hires_SETFASTMAIN
-._copy2000ma BRK    ;jmp copyscrnMA
+.copy2000 BRK      ;jmp copyscrnMM
+.copy2000aux BRK   ;jmp copyscrnAA
+.setfastaux BRK    ;jmp hires_SETFASTAUX
+.setfastmain BRK   ;jmp hires_SETFASTMAIN
+.copy2000ma BRK    ;jmp copyscrnMA
 
-._copy2000am BRK    ;jmp copyscrnAM
-._inverty BRK       ;jmp INVERTY
+.copy2000am BRK    ;jmp copyscrnAM
+.inverty BRK       ;jmp INVERTY
 
 \*-------------------------------
 \*
@@ -170,7 +170,7 @@ ENDIF
 IF _NOT_BEEB
 .mainmem
 {
-    JMP beeb_select_main_mem     \\ BEEB TODO remove redirection
+ BRK
 \ NOT BEEB
 \sta $c004 ;RAMWRT off
 \sta $c002 ;RAMRD off
@@ -179,7 +179,7 @@ IF _NOT_BEEB
 
 .auxmem
 {
-    JMP beeb_select_aux_mem     \\ BEEB TODO remove redirection
+ BRK
 \ NOT BEEB
 \sta $c005 ;RAMWRT on
 \sta $c003 ;RAMRD on

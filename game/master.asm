@@ -20,19 +20,19 @@
 \*-------------------------------
 \ org org
 
- ._firstboot jmp FIRSTBOOT
- ._loadlevel jmp LOADLEVEL
- ._reload BRK       ;jmp RELOAD                 EDITOR
- ._loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
+ .firstboot jmp FIRSTBOOT
+ .loadlevel jmp LOADLEVEL
+ .reload BRK       ;jmp RELOAD                 EDITOR
+ .loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
  
- ._attractmode jmp ATTRACTMODE
- ._cutprincess jmp CUTPRINCESS
- ._savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
- ._loadgame BRK     ;jmp LOADGAME
- ._dostartgame jmp DOSTARTGAME
+ .attractmode jmp ATTRACTMODE
+ .cutprincess jmp CUTPRINCESS
+ .savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
+ .loadgame BRK     ;jmp LOADGAME
+ .dostartgame jmp DOSTARTGAME
 
- ._epilog BRK       ;jmp EPILOG
- ._loadaltset BRK   ;jmp LOADALTSET
+ .epilog BRK       ;jmp EPILOG
+ .loadaltset BRK   ;jmp LOADALTSET
 \_screendump
 
 .LoadLevelX jmp LOADLEVELX             ; moved from misc.asm
@@ -2085,5 +2085,5 @@ ENDIF
 \ tax
 \ pla
 
- jmp _loadlevel ;in MASTER
+ jmp LOADLEVEL ;in MASTER
 }

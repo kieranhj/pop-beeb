@@ -909,7 +909,7 @@ ENDIF
  bne loop
  jmp swpage
 .interrupt
- jmp _dostartgame
+ jmp dostartgame
 }
 
 \*-------------------------------
@@ -972,7 +972,7 @@ ENDIF
  jsr demokeys
  bpl cont
  lda #1
- jmp _dostartgame ;interrupted--start a new game
+ jmp dostartgame ;interrupted--start a new game
 
 .notdemo
 IF _NOT_BEEB            \\ BEEB TODO KEYPRESS
