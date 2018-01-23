@@ -317,11 +317,11 @@ GRAFIX_BANK = -1        ; currently in Core
 .drawall jmp DRAWALL
 .controller jmp CONTROLLER
 \ jmp dispversion
-.saveblue BRK   ;jmp SAVEBLUE
+\.saveblue BRK   ;jmp SAVEBLUE          ; Editor only
 \
-.reloadblue BRK ;jmp RELOADBLUE
+\.reloadblue BRK ;jmp RELOADBLUE        ; Editor only
 .movemem BRK    ;jmp MOVEMEM
-.buttons jmp BUTTONS ;ed
+\.buttons jmp BUTTONS ;ed
 .gtone RTS      ;jmp GTONE          BEEB TODO SOUND
 .setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
 \
@@ -335,33 +335,27 @@ GRAFIX_BANK = -1        ; currently in Core
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel jmp SNGPEEL
 .rnd jmp RND
-\\
+;
 \ Removed unnecessary redirections
-\\
-\\
-\\
-\\
+;
+;
+;
+;
 .xminit BRK     ;jmp XMINIT             ; BEEB TODO music
-
+\
 .xmplay BRK     ;jmp XMPLAY             ; BEEB TODO music
-\\
+;
 .xtitle BRK     ;jmp XTITLE
-\\
-\\
-
-\\
+;
+;
+\
+;
 \ jmp RELOAD
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
-.edreboot BRK   ;jmp EDREBOOT ;ed
-\
-.gobuild BRK    ;jmp GOBUILD ;ed
-.gogame BRK     ;jmp GOGAME ;ed
-.writedir BRK   ;jmp WRITEDIR ;ed
-.readdir BRK    ;jmp READDIR ;ed
-.svelevel BRK   ;jmp SAVELEVEL ;ed
-\
-.saavelevelg BRK;jmp SAVELEVELG ;ed
+;
+\ Removed Editor only fns
+;
 .addback jmp ADDBACK
 .addfore jmp ADDFORE
 .addmid jmp ADDMID
@@ -369,30 +363,30 @@ GRAFIX_BANK = -1        ; currently in Core
 \
 .addwipe jmp ADDWIPE
 .addmsg jmp ADDMSG
-\\
-\\
+;
+;
 .zerolsts jmp ZEROLSTS
 \
-\
+;
 .minit jmp MINIT
 .mplay jmp MPLAY
-.savebinfo BRK  ;jmp SAVEBINFO
-.reloadbinfo BRK;jmp RELOADBINFO
+\.savebinfo BRK  ;jmp SAVEBINFO         ; Editor only
+\.reloadbinfo BRK;jmp RELOADBINFO       ; Editor only
 \
-\
-.normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
+;
+\.normspeed RTS  ;jmp NORMSPEED         ; NOT BEEB
 .addmidezo jmp ADDMIDEZO
-\\
-\\
+;
+;
 \
 .xplaycut BRK   ;jmp XPLAYCUT
-.checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
-.fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
+\.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
+\.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
 .musickeys jmp MUSICKEYS
-\\
+;
 \
-\\
-\\
+;
+;
 .xmovemusic BRK ;jmp XMOVEMUSIC
 .whoop BRK      ;jmp WHOOP
 .vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
