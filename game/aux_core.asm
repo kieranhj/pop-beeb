@@ -270,7 +270,8 @@ IF _JMP_TABLE
 .sure JUMP_B SURE, FRAMEADV_BASE, 0
 .fast JUMP_B FAST, FRAMEADV_BASE, 1
 .getinitobj JUMP_B GETINITOBJ, FRAMEADV_BASE, 2
-
+.calcblue JUMP_B CALCBLUE, FRAMEADV_BASE, 3
+.zerored JUMP_B ZERORED, FRAMEADV_BASE, 4
 
 \*-------------------------------
 \* gamebg.asm
@@ -381,8 +382,8 @@ GRAFIX_BANK = -1        ; currently in Core
 \
 .normspeed RTS  ;jmp NORMSPEED                      NOT BEEB
 .addmidezo jmp ADDMIDEZO
-.calcblue jmp CALCBLUE
-.zerored jmp ZERORED
+\\
+\\
 \
 .xplaycut BRK   ;jmp XPLAYCUT
 .checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
@@ -791,6 +792,8 @@ FRAMEADV_BASE = P% - aux_core_fn_table_B_LO
 EQUB LO(SURE)
 EQUB LO(FAST)
 EQUB LO(GETINITOBJ)
+EQUB LO(CALCBLUE)
+EQUB LO(ZERORED)
 
 \*-------------------------------
 \* gamebg.asm
@@ -965,6 +968,8 @@ EQUB HI(CHECKIMPALE)
 EQUB HI(SURE)
 EQUB HI(FAST)
 EQUB HI(GETINITOBJ)
+EQUB HI(CALCBLUE)
+EQUB HI(ZERORED)
 
 \*-------------------------------
 \* gamebg.asm

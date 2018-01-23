@@ -13,6 +13,8 @@ IF _JMP_TABLE=FALSE
 .sure jmp SURE
 .fast jmp FAST
 .getinitobj jmp GETINITOBJ
+.calcblue jmp CALCBLUE
+.zerored jmp ZERORED
 ENDIF
 \
 \*-------------------------------
@@ -2421,3 +2423,98 @@ ENDIF
 \ ds 1
 \ usr $a9,3,$490,*-org
 \ lst off
+
+\*-------------------------------
+\* The following routines properly belong to FRAMEADV
+\* but have been moved here for lack of space
+\\ BEEB moved back to FRAMEADV module as do have space...
+\*-------------------------------
+\*
+\*  C A L C   B L U E
+\*
+\*  Given:  screen #, 1-24 (in acc)
+\*  Return: start of BLUETYPE table (in BlueType)
+\*          start of BLUESPEC table (in BlueSpec)
+\*
+\*  If A = 0...
+\*    In game: returns garbage
+\*    In builder: returns menu data
+\*
+\*-------------------------------
+.CALCBLUE
+{
+IF EditorDisk
+ cmp #0
+ beq calcmenu
+ENDIF
+
+ sec
+ sbc #1 ;reduce to 0-23
+ asl A
+ tax ;x2
+
+ lda Mult30,x
+ clc
+ adc #LO(blueprnt)
+ sta BlueType
+
+ lda Mult30+1,x
+ adc #HI(blueprnt)
+ sta BlueType+1
+
+ lda BlueType
+ clc
+ adc #LO(24*30)
+ sta BlueSpec
+
+ lda BlueType+1
+ adc #HI(24*30)
+ sta BlueSpec+1
+
+.return rts
+}
+
+IF EditorDisk
+.calcmenu
+{
+ lda #LO(menutype)
+ sta BlueType
+ lda #HI(menutype)
+ sta BlueType+1
+
+ lda #LO(menuspec)
+ sta BlueSpec
+ lda #HI(menuspec)
+ sta BlueSpec+1
+ rts
+}
+ENDIF
+
+\*-------------------------------
+\*
+\*  Z E R O   R E D
+\*
+\*  zero redraw buffers
+\*
+\*-------------------------------
+.ZERORED
+{
+ lda #0
+ ldy #29
+.loop sta redbuf,y
+ sta fredbuf,y
+ sta floorbuf,y
+ sta halfbuf,y
+ sta wipebuf,y
+ sta movebuf,y
+ sta objbuf,y
+ dey
+ bpl loop
+
+ ldy #9
+.loop2 sta topbuf,y
+ dey
+ bpl loop2
+
+ rts
+}
