@@ -35,7 +35,7 @@ ENDMACRO
     LDA aux_core_fn_table_A_HI, X
 
 IF _DEBUG
-    BNE fn_ok
+    BMI fn_ok   ; can only jump into upper half of RAM!
     BRK         ; X=fn index that isn't implemented
     .fn_ok
 ENDIF
@@ -96,7 +96,7 @@ ENDMACRO
     LDA aux_core_fn_table_B_HI, X
 
 IF _DEBUG
-    BNE fn_ok
+    BMI fn_ok   ; can only jump into upper half of RAM!
     BRK         ; X=fn index that isn't implemented
     .fn_ok
 ENDIF
@@ -315,7 +315,7 @@ GRAFIX_BANK = -1        ; currently in Core
 
 .gr BRK         ;jmp GR
 .drawall jmp DRAWALL
-.controller jmp CONTROLLER
+;
 \ jmp dispversion
 \.saveblue BRK   ;jmp SAVEBLUE          ; Editor only
 \
@@ -323,13 +323,13 @@ GRAFIX_BANK = -1        ; currently in Core
 .movemem BRK    ;jmp MOVEMEM
 \.buttons jmp BUTTONS ;ed
 .gtone RTS      ;jmp GTONE          BEEB TODO SOUND
-.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
+;
 \
 .dimchar jmp DIMCHAR
 .cvtx jmp CVTX
 .zeropeel jmp ZEROPEEL
 .zeropeels jmp ZEROPEELS
-.pread BRK      ;jmp PREAD          JOYSTICK
+;
 \
 .addpeel jmp ADDPEEL
 .copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
@@ -337,11 +337,6 @@ GRAFIX_BANK = -1        ; currently in Core
 .rnd jmp RND
 ;
 \ Removed unnecessary redirections
-;
-\ jmp RELOAD
-.getselect jmp GETSELECT
-.getdesel jmp GETDESEL
-;
 \ Removed Editor only fns
 ;
 .addback jmp ADDBACK
@@ -442,32 +437,38 @@ BRK ; bcc MOVEAUXLC ;relocatable
 \* specialk.asm
 \*-------------------------------
 
- .keys JUMP_B KEYS, SPECIALK_BASE, 0
- .clrjstk JUMP_B CLRJSTK, SPECIALK_BASE, 1
- .zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
- .addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
- .facejstk JUMP_B FACEJSTK, SPECIALK_BASE, 4
+.keys JUMP_B KEYS, SPECIALK_BASE, 0
+.clrjstk JUMP_B CLRJSTK, SPECIALK_BASE, 1
+.zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
+.addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.facejstk JUMP_B FACEJSTK, SPECIALK_BASE, 4
 
- .SaveSelect JUMP_B SAVESELECT, SPECIALK_BASE, 5
- .LoadSelect JUMP_B LOADSELECT, SPECIALK_BASE, 6
- .SaveDesel JUMP_B SAVEDESEL, SPECIALK_BASE, 7
- .LoadDesel JUMP_B LOADDESEL, SPECIALK_BASE, 8
- .initinput JUMP_B INITINPUT, SPECIALK_BASE, 9
+.SaveSelect JUMP_B SAVESELECT, SPECIALK_BASE, 5
+.LoadSelect JUMP_B LOADSELECT, SPECIALK_BASE, 6
+.SaveDesel JUMP_B SAVEDESEL, SPECIALK_BASE, 7
+.LoadDesel JUMP_B LOADDESEL, SPECIALK_BASE, 8
+.initinput JUMP_B INITINPUT, SPECIALK_BASE, 9
 
- .demokeys JUMP_B DEMOKEYS, SPECIALK_BASE, 10
- .listtorches BRK ;jmp LISTTORCHES
- .burn BRK        ;jmp BURN
- .getminleft JUMP_B GETMINLEFT, SPECIALK_BASE, 13
- .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
+.demokeys JUMP_B DEMOKEYS, SPECIALK_BASE, 10
+.listtorches BRK ;jmp LISTTORCHES
+.burn BRK        ;jmp BURN
+.getminleft JUMP_B GETMINLEFT, SPECIALK_BASE, 13
+.keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
- .shortentime BRK ;jmp SHORTENTIME
- .cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
- \jmp DoSaveGame
- \jmp LoadLevelX
- \jmp decstr
+.shortentime BRK ;jmp SHORTENTIME
+.cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
+\jmp DoSaveGame
+\jmp LoadLevelX
+\jmp decstr
 
- .dloop BRK       ;jmp DLOOP
- .strobe JUMP_B STROBE, SPECIALK_BASE, 18
+.dloop BRK       ;jmp DLOOP
+.strobe JUMP_B STROBE, SPECIALK_BASE, 18
+.controller JUMP_B CONTROLLER, SPECIALK_BASE, 19
+
+.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
+.pread BRK      ;jmp PREAD          JOYSTICK
+.getselect JUMP_B GETSELECT, SPECIALK_BASE, 22
+.getdesel JUMP_B GETDESEL, SPECIALK_BASE, 23
 
 
 \*-------------------------------
@@ -867,6 +868,12 @@ EQUB 0         ; EQUB LO(CUESONG)          BEEB TODO MUSIC
 
 EQUB 0         ; EQUB LO(DLOOP)
 EQUB LO(STROBE)
+EQUB LO(CONTROLLER)
+
+EQUB 0          ; EQUB LO(SETCENTER)      BEEB TODO JOYSTICK
+EQUB 0          ; EQUB LO(PREAD)          JOYSTICK
+EQUB LO(GETSELECT)
+EQUB LO(GETDESEL)
 
 \*-------------------------------
 \* subs.asm
@@ -1040,6 +1047,12 @@ EQUB 0         ; EQUB HI(CUESONG)          BEEB TODO MUSIC
 
 EQUB 0         ; EQUB HI(DLOOP)
 EQUB HI(STROBE)
+EQUB HI(CONTROLLER)
+
+EQUB 0          ; EQUB HI(SETCENTER)      BEEB TODO JOYSTICK
+EQUB 0          ; EQUB HI(PREAD)          JOYSTICK
+EQUB HI(GETSELECT)
+EQUB HI(GETDESEL)
 
 \*-------------------------------
 \* subs.asm

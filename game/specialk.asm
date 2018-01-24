@@ -19,31 +19,37 @@ DebugKeys = 0
 
  IF _JMP_TABLE=FALSE
 .keys jmp KEYS
- .clrjstk jmp CLRJSTK
- .zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
- .addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
- .facejstk jmp FACEJSTK
+.clrjstk jmp CLRJSTK
+.zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
+.addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.facejstk jmp FACEJSTK
 
- .SaveSelect jmp SAVESELECT
- .LoadSelect jmp LOADSELECT
- .SaveDesel jmp SAVEDESEL
- .LoadDesel jmp LOADDESEL
- .initinput jmp INITINPUT
+.SaveSelect jmp SAVESELECT
+.LoadSelect jmp LOADSELECT
+.SaveDesel jmp SAVEDESEL
+.LoadDesel jmp LOADDESEL
+.initinput jmp INITINPUT
 
- .demokeys jmp DEMOKEYS
- .listtorches BRK ;jmp LISTTORCHES
- .burn BRK        ;jmp BURN
- .getminleft jmp GETMINLEFT
- .keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
+.demokeys jmp DEMOKEYS
+.listtorches BRK ;jmp LISTTORCHES
+.burn BRK        ;jmp BURN
+.getminleft jmp GETMINLEFT
+.keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
 
- .shortentime BRK ;jmp SHORTENTIME
- .cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
- \jmp DoSaveGame
- \jmp LoadLevelX
- \jmp decstr
+.shortentime BRK ;jmp SHORTENTIME
+.cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
+\jmp DoSaveGame
+\jmp LoadLevelX
+\jmp decstr
 
- .dloop BRK       ;jmp DLOOP
- .strobe jmp STROBE
+.dloop BRK       ;jmp DLOOP
+.strobe jmp STROBE
+.controller jmp CONTROLLER
+.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
+.pread BRK      ;jmp PREAD          JOYSTICK
+
+.getselect jmp GETSELECT
+.getdesel jmp GETDESEL
 ENDIF
 
 \*-------------------------------
@@ -1511,3 +1517,296 @@ ENDIF
 \eof ds 1
 \  usr $a9,19,$b00,*-org
 \ lst off
+
+\*-------------------------------
+\*
+\*  Joystick/keyboard routines MOVED FROM GRAFIX.ASM
+\*
+\*-------------------------------
+\*
+\*  Get input from selected/deselected device
+\*
+\*  In: kbdX, kbdY, joyX, joyY, BTN0, BTN1, ManCtrl
+\*
+\*  Out: JSTKX, JSTKY, btn
+\*
+\*-------------------------------
+.GETSELECT
+ lda joyon ;joystick selected?
+ bne getjoy ;yes--use jstk
+ beq getkbd ;no--use kbd
+
+.GETDESEL
+ lda joyon
+ bne getkbd
+ beq getjoy
+
+.getjoy
+{
+ lda joyX
+ sta JSTKX
+ lda joyY
+ sta JSTKY
+
+ lda BTN1
+ ldx ManCtrl ;When manual ctrl is on, btn 0 belongs
+ bmi label_1 ;to kbd and btn 1 to jstk.  With manual ctrl
+ ora BTN0 ;off, btns can be used interchangeably.
+.label_1 sta btn
+ rts
+}
+
+.getkbd
+{
+ lda kbdX
+ sta JSTKX
+ lda kbdY
+ sta JSTKY
+
+ lda BTN0
+ ldx ManCtrl
+ bmi label_1
+ ora BTN1
+.label_1 sta btn
+.return
+ rts
+}
+
+\*-------------------------------
+\*
+\*  Read controller (jstk & buttons)
+\*
+\*  Out: joyX-Y, BTN0-1
+\*
+\*-------------------------------
+
+.CONTROLLER
+{
+\ BEEB TEMP comment out JOYSTICK
+\ jsr JREAD ;read jstk
+
+ jmp BREAD ;& btns
+}
+
+\*-------------------------------
+\*
+\*  Read joystick
+\*
+\*  Out: joyX-Y
+\*
+\*  joyX: -1 = left, 0 = center, +1 = right
+\*  joyY: -1 = up, 0 = center, +1 = down
+\*
+\*-------------------------------
+
+IF  _TODO
+.JREAD
+{
+ lda joyon
+ beq return
+ jsr PREAD ;read game pots
+
+ ldx #0
+ jsr cvtpdl
+ inx
+ jsr cvtpdl
+
+\* Reverse joyY?
+
+ lda jvert
+ beq label_1
+
+ lda #0
+ sec
+ sbc joyY
+ sta joyY
+
+\* Reverse joyX?
+
+.label_1 lda jhoriz
+ beq return
+
+ lda #0
+ sec
+ sbc joyX
+ sta joyX
+.return
+ rts
+}
+ENDIF
+
+\*-------------------------------
+\*
+\*  Read buttons
+\*
+\*  Out: BTN0-1
+\*
+\*-------------------------------
+
+.BREAD
+{
+ lda jbtns
+ bne label_1 ;buttons switched
+
+\ lda $c061
+\ ldx $c062
+
+ LDA #&79
+ LDX #IKN_return EOR &80
+ JSR osbyte
+ TXA
+
+.label_2 sta BTN0
+ stx BTN1
+ rts
+
+.label_1
+\ ldx $c062
+\ lda $c061
+
+ LDA #&79
+ LDX #IKN_return EOR &80
+ JSR osbyte
+ TXA
+
+ jmp label_2
+}
+
+\*-------------------------------
+\*
+\*  (Temp routine--for builder only)
+\*
+\*-------------------------------
+
+IF EditorDisk
+.BUTTONS
+{
+ ldx BTN0 ;"raw"
+ lda #0
+ sta BUTT0
+ lda b0down ;last button value
+ stx b0down
+ and #$80
+ bne :rdbtn1
+ stx BUTT0
+
+:rdbtn1 ldx BTN1
+ lda #0
+ sta BUTT1
+ lda b1down
+ stx b1down
+ and #$80
+ bne :rdjup
+ stx BUTT1
+
+:rdjup lda joyY
+ bmi return
+ lda #0
+ sta JSTKUP ;jstk is not up--clear JSTKUP
+.return
+ rts
+}
+ENDIF
+
+IF _TODO
+*-------------------------------
+*
+*  Convert raw counter value (approx. 0-70) to -1/0/1
+*
+*  In: X = paddle # (0 = horiz, 1 = vert)
+*
+*-------------------------------
+cvtpdl
+ lda joyX,x
+ cmp jthres1x,x
+ bcs :1
+ lda #-1
+ bne :3
+:1 cmp jthres2x,x
+ bcs :2
+ lda #0
+ beq :3
+:2 lda #1
+:3 sta joyX,x
+return rts
+
+*-------------------------------
+*
+*  Read game pots
+*
+*  Out: Raw counter values (approx. 0-70) in joyX-Y
+*
+*-------------------------------
+PREAD
+ lda #0
+ sta joyX
+ sta joyY
+
+ lda $c070 ;Reset timers
+
+:loop ldx #1
+:1 lda $c064,x ;Check timer input
+ bpl :beat
+ inc joyX,x ;Still high; increment counter
+:nextpdl dex
+ bpl :1
+
+ lda $C064
+ ora $C065
+ bpl return ;Both inputs low: we're done
+
+ lda joyX
+ ora joyY
+ bpl :loop ;Do it again
+return rts
+
+:beat nop
+ bpl :nextpdl ;Kill time
+
+*-------------------------------
+*
+*  Select jstk & define current joystick posn as center
+*
+*  Out: jthres1-2x, jthres1-2y
+*
+*-------------------------------
+SETCENTER
+ jsr normspeed ;IIGS
+
+ lda #$ff
+ sta joyon ;Joystick on
+
+ lda #0
+ sta jvert
+ sta jhoriz
+ sta jbtns ;set normal params
+
+ jsr PREAD ;get raw jstk values
+
+ lda joyX
+ ora joyY
+ bmi :nojoy ;No joystick connected
+
+ lda joyX
+ sec
+ sbc #cwidthx
+ sta jthres1x
+ lda joyX
+ clc
+ adc #cwidthx
+ sta jthres2x
+
+ lda joyY
+ sec
+ sbc #cwidthy
+ sta jthres1y
+ lda joyY
+ clc
+ adc #cwidthy
+ sta jthres2y
+ rts
+
+:nojoy lda #0
+ sta joyon
+return rts
+ENDIF
