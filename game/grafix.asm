@@ -18,7 +18,6 @@ _DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DI
 \ org org
 \
 IF _JMP_TABLE=FALSE
-.gr BRK         ;jmp GR
 .drawall jmp DRAWALL
 ;
 \ jmp dispversion
@@ -27,7 +26,7 @@ IF _JMP_TABLE=FALSE
 \.reloadblue BRK ;jmp RELOADBLUE
 .movemem BRK    ;jmp MOVEMEM
 \.buttons jmp BUTTONS ;ed
-.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
+;
 ;
 \
 .dimchar jmp DIMCHAR
@@ -56,8 +55,8 @@ IF _JMP_TABLE=FALSE
 .zerolsts jmp ZEROLSTS
 \
 ;
-.minit jmp MINIT
-.mplay jmp MPLAY
+;
+;
 \.savebinfo BRK  ;jmp SAVEBINFO
 \.reloadbinfo BRK;jmp RELOADBINFO
 \
@@ -70,13 +69,13 @@ IF _JMP_TABLE=FALSE
 ;
 \.checkIIGS BRK  ;jmp CHECKIIGS                      NOT BEEB
 \.fastspeed RTS  ;jmp FASTSPEED                      NOT BEEB
-.musickeys jmp MUSICKEYS
+;
 ;
 \
 ;
 ;
 ;
-.whoop BRK      ;jmp WHOOP
+;
 .vblank JMP beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
@@ -1260,65 +1259,6 @@ MOVEMEM sta grafix_dest+1
 
 *-------------------------------
 *
-*  G  T  O  N  E
-*
-*  Call this routine to confirm special-key presses
-*  & any other time we want to bypass normal sound interface
-*
-*-------------------------------
-SK1Pitch = 15
-SK1Dur = 50
-
-GTONE ldy #SK1Pitch
- ldx #>SK1Pitch
- lda #SK1Dur
- jmp tone
-
-*-------------------------------
-*
-*  Whoop speaker (like RW18)
-*
-*-------------------------------
-WHOOP
- ldy #0
-:1 tya
- bit $c030
-:2 sec
- sbc #1
- bne :2
- dey
- bne :1
-return rts
-
-*-------------------------------
-*
-*  Produce tone
-*
-*  In: y-x = pitch lo-hi
-*      a = duration
-*
-*-------------------------------
-tone
- sty :pitch
- stx :pitch+1
-:outloop bit $c030
- ldx #0
-:midloop ldy #0
-:inloop iny
- cpy :pitch
- bcc :inloop
- inx
- cpx :pitch+1
- bcc :midloop
- sec
- sbc #1
- bne :outloop
- rts
-
-:pitch ds 2
-
-*-------------------------------
-*
 * Copy one hires page to the other
 *
 * In: PAGE = dest scrn (00/20)
@@ -1413,14 +1353,6 @@ EDREBOOT sta ALTZPoff
  sta ALTZPon
  rts
 
-ELSE
-.SAVELEVEL
-.SAVELEVELG
-.READDIR
-.WRITEDIR
-.GOBUILD
-.GOGAME
-.EDREBOOT rts
 ENDIF
 
 \*-------------------------------
@@ -1429,44 +1361,6 @@ ENDIF
 \*
 \*-------------------------------
 \\ BEEB Removed redirections
-
-\*-------------------------------
-\*
-\*  Call sound routines (in aux l.c. bank 1)
-\*  Exit with bank 2 switched in
-\*
-\*-------------------------------
-\grafix_bank1in bit RWBANK1
-\ bit RWBANK1
-\ rts
-
-.mplay_temp
-EQUB 0
-
-.MINIT
-{
-\ jsr grafix_bank1in
-\ jsr CALLMINIT
- LDA #&FF
- STA mplay_temp
- RTS
-}
-
-\grafix_bank2in bit RWBANK2
-\ bit RWBANK2
-\ rts
-
-.MPLAY
-{
-\ jsr grafix_bank1in
-\ jsr CALLMPLAY
-\ jmp grafix_bank2in
-
- LDA mplay_temp
- DEC A
- STA mplay_temp
- RTS
-}
 
 IF _NOT_BEEB
 \*-------------------------------
@@ -1587,145 +1481,7 @@ switchzp
  dex
  bpl :loop
  rts
-
-*-------------------------------
-*
-*  Call MINIT
-*
-*  In: A = song #
-*
-*-------------------------------
-CALLMINIT
- pha
- jsr switchzp
- pla
- jsr _minit
- jmp switchzp
-
-*-------------------------------
-*
-*  Call MPLAY
-*
-*  Out: A = song #
-*  (Most songs set song # = 0 when finished)
-*
-*-------------------------------
-CALLMPLAY
- lda soundon
- and musicon
- beq :silent
-
- jsr switchzp
- jsr _mplay ;returns INDEX
- pha
- jsr switchzp
- pla
- rts
-
-:silent lda #0
-return rts
 ENDIF
-
-\*-------------------------------
-\*
-\*  M U S I C   K E Y S
-\*
-\*  Call while music is playing
-\*
-\*  Esc to pause, Ctrl-S to turn sound off
-\*  Return A = ASCII value (FF for button)
-\*  Clear hibit if it's a key we've handled
-\*
-\*-------------------------------
-
-.MUSICKEYS
-{
-\ Check CTRL first
- LDA #&79
- LDX #IKN_ctrl EOR &80
- JSR osbyte
-
- TXA
- AND #&80
- STA beeb_ctrl_key
-
-\ lda $c000
-\ sta keypress
-\ bpl nokey
-\ sta $c010
-
-\ Check keys above CTRL
- LDA #&79
- LDX #&2
- JSR osbyte
-
- CPX #&FF
- BEQ nokey
-
- TXA
- ORA #&80
- STA keypress
-
- CMP #IKN_esc OR &80
- bne cont
-
-.froze
-\ lda $c000
-\ sta keypress
-\ bpl froze
-\ sta $c010
-
- LDA #&79
- LDX #IKN_esc EOR &80
- JSR osbyte
-
- TXA
- BPL froze
-
- and #$7f
- rts
-
-.cont
- cmp #ksound
- bne label_3
- lda soundon
- eor #1
- sta soundon
-
-.label_21
- beq label_2
- jsr gtone
-
-.label_2
- lda #0
- rts
-
-.label_3
- cmp #kmusic
- bne label_1
- lda musicon
- eor #1
- sta musicon
- jmp label_21
-
-.label_1
-.nobtn
- lda keypress
- rts
-
-\ Check Apple / joystick button
-\ lda $c061
-\ ora $c062
-\ bpl :nobtn
-\ lda #$ff
-
-.nokey
- LDA #0
- STA keypress
-
-.return
- rts
-}
 
 IF _NOT_BEEB
 *===============================

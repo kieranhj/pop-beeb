@@ -50,6 +50,7 @@ DebugKeys = 0
 
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
+.musickeys jmp MUSICKEYS
 ENDIF
 
 \*-------------------------------
@@ -1810,3 +1811,104 @@ SETCENTER
  sta joyon
 return rts
 ENDIF
+
+\*-------------------------------
+\*
+\*  M U S I C   K E Y S
+\*
+\*  Call while music is playing
+\*
+\*  Esc to pause, Ctrl-S to turn sound off
+\*  Return A = ASCII value (FF for button)
+\*  Clear hibit if it's a key we've handled
+\*
+\*-------------------------------
+
+.MUSICKEYS
+{
+\ Check CTRL first
+ LDA #&79
+ LDX #IKN_ctrl EOR &80
+ JSR osbyte
+
+ TXA
+ AND #&80
+ STA beeb_ctrl_key
+
+\ lda $c000
+\ sta keypress
+\ bpl nokey
+\ sta $c010
+
+\ Check keys above CTRL
+ LDA #&79
+ LDX #&2
+ JSR osbyte
+
+ CPX #&FF
+ BEQ nokey
+
+ TXA
+ ORA #&80
+ STA keypress
+
+ CMP #IKN_esc OR &80
+ bne cont
+
+.froze
+\ lda $c000
+\ sta keypress
+\ bpl froze
+\ sta $c010
+
+ LDA #&79
+ LDX #IKN_esc EOR &80
+ JSR osbyte
+
+ TXA
+ BPL froze
+
+ and #$7f
+ rts
+
+.cont
+ cmp #ksound
+ bne label_3
+ lda soundon
+ eor #1
+ sta soundon
+
+.label_21
+ beq label_2
+ jsr gtone
+
+.label_2
+ lda #0
+ rts
+
+.label_3
+ cmp #kmusic
+ bne label_1
+ lda musicon
+ eor #1
+ sta musicon
+ jmp label_21
+
+.label_1
+.nobtn
+ lda keypress
+ rts
+
+\ Check Apple / joystick button
+\ lda $c061
+\ ora $c062
+\ bpl :nobtn
+\ lda #$ff
+
+.nokey
+ LDA #0
+ STA keypress
+
+.return
+ rts
+}

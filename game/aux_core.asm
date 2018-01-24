@@ -313,7 +313,6 @@ IF _JMP_TABLE
 
 GRAFIX_BANK = -1        ; currently in Core
 
-.gr BRK         ;jmp GR
 .drawall jmp DRAWALL
 ;
 \ jmp dispversion
@@ -322,7 +321,7 @@ GRAFIX_BANK = -1        ; currently in Core
 \.reloadblue BRK ;jmp RELOADBLUE        ; Editor only
 .movemem BRK    ;jmp MOVEMEM
 \.buttons jmp BUTTONS ;ed
-.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
+;
 ;
 \
 .dimchar jmp DIMCHAR
@@ -351,8 +350,8 @@ GRAFIX_BANK = -1        ; currently in Core
 .zerolsts jmp ZEROLSTS
 \
 ;
-.minit jmp MINIT
-.mplay jmp MPLAY
+;
+;
 \.savebinfo BRK  ;jmp SAVEBINFO         ; Editor only
 \.reloadbinfo BRK;jmp RELOADBINFO       ; Editor only
 \
@@ -365,16 +364,26 @@ GRAFIX_BANK = -1        ; currently in Core
 ;
 \.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
 \.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
-.musickeys jmp MUSICKEYS
+;
 ;
 \
 ;
 ;
 ;
-.whoop BRK      ;jmp WHOOP
+;
 .vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 \
 .vbli BRK       ;jmp VBLI ;VBL interrupt
+
+
+\*-------------------------------
+\* audio.asm
+\*-------------------------------
+
+.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
+.minit jmp MINIT
+.mplay jmp MPLAY
+.whoop BRK      ;jmp WHOOP
 
 
 \*-------------------------------
@@ -469,6 +478,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .pread BRK      ;jmp PREAD          JOYSTICK
 .getselect JUMP_B GETSELECT, SPECIALK_BASE, 22
 .getdesel JUMP_B GETDESEL, SPECIALK_BASE, 23
+.musickeys JUMP_B MUSICKEYS, SPECIALK_BASE, 24
 
 
 \*-------------------------------
@@ -874,6 +884,7 @@ EQUB 0          ; EQUB LO(SETCENTER)      BEEB TODO JOYSTICK
 EQUB 0          ; EQUB LO(PREAD)          JOYSTICK
 EQUB LO(GETSELECT)
 EQUB LO(GETDESEL)
+EQUB LO(MUSICKEYS)
 
 \*-------------------------------
 \* subs.asm
@@ -1053,6 +1064,7 @@ EQUB 0          ; EQUB HI(SETCENTER)      BEEB TODO JOYSTICK
 EQUB 0          ; EQUB HI(PREAD)          JOYSTICK
 EQUB HI(GETSELECT)
 EQUB HI(GETDESEL)
+EQUB HI(MUSICKEYS)
 
 \*-------------------------------
 \* subs.asm

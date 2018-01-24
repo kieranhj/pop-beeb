@@ -174,7 +174,7 @@ INCLUDE "lib/disksys.asm"
 INCLUDE "lib/swr.asm"
 INCLUDE "lib/print.asm"
 
-.beeb_init_start
+.beeb_boot_start
 
 .swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks.", 13, 0
 
@@ -310,7 +310,7 @@ ENDIF
     JMP firstboot
 }
 
-.beeb_init_end
+.beeb_boot_end
 
 ; Global jump table
 
@@ -332,6 +332,8 @@ INCLUDE "game/grafix.asm"
 grafix_end=P%
 INCLUDE "game/hires_core.asm"
 hires_core_end=P%
+INCLUDE "game/audio.asm"
+audio_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
@@ -369,13 +371,14 @@ PRINT "--------"
 PRINT "DISKSYS size = ", ~(beeb_disksys_end - beeb_disksys_start)
 PRINT "SWR size = ", ~(beeb_swr_end - beeb_swr_start)
 PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
-PRINT "INIT size = ", ~(beeb_init_end - beeb_init_start)
+PRINT "BEEB BOOT size = ", ~(beeb_boot_end - beeb_boot_start)
 PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
 PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "GRAFIX size = ", ~(grafix_end - grafix)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
+PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
