@@ -115,6 +115,7 @@ INCLUDE "game/coll.h.asm"
 INCLUDE "game/auto.h.asm"
 INCLUDE "game/ctrlsubs.h.asm"
 INCLUDE "game/misc.h.asm"
+INCLUDE "game/specialk.h.asm"
 
 \*-------------------------------
 ; BSS data in lower RAM

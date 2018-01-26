@@ -24,14 +24,14 @@ IF _JMP_TABLE = FALSE
 .DrawShad jmp DRAWSHAD
 
 .setupflame jmp SETUPFLAME
-.continuemsg BRK    ; jmp CONTINUEMSG           BEEB TODO MESSAGES
+.continuemsg RTS    ; jmp CONTINUEMSG           BEEB TODO MESSAGES
 .addcharobj jmp ADDCHAROBJ
 .setobjindx jmp SETOBJINDX
-.printlevel BRK     ; jmp PRINTLEVEL
+.printlevel RTS     ; jmp PRINTLEVEL            BEEB TODO MESSAGES
 
 .DrawOppMeter jmp DRAWOPPMETER
-.flipdiskmsg BRK    ; jmp FLIPDISKMSG
-.timeleftmsg BRK    ; jmp TIMELEFTMSG
+.flipdiskmsg BRK    ; jmp FLIPDISKMSG           NOT BEEB
+.timeleftmsg RTS    ; jmp TIMELEFTMSG           BEEB TODO MESSAGES
 .DrawGuard jmp DRAWGUARD
 .DrawGuard2 jmp DRAWGUARD
 

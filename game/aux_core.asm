@@ -284,14 +284,14 @@ IF _JMP_TABLE
 .DrawShad JUMP_B DRAWSHAD, GAMEBG_BASE, 4
 
 .setupflame JUMP_B SETUPFLAME, GAMEBG_BASE, 5
-.continuemsg BRK    ; JUMP_B CONTINUEMSG           BEEB TODO MESSAGES
+.continuemsg RTS    ; JUMP_B CONTINUEMSG            BEEB TODO MESSAGES
 .addcharobj JUMP_B ADDCHAROBJ, GAMEBG_BASE, 7
 .setobjindx JUMP_B SETOBJINDX, GAMEBG_BASE, 8
-.printlevel BRK     ; JUMP_B PRINTLEVEL
+.printlevel RTS     ; JUMP_B PRINTLEVEL             BEEB TODO MESSAGES
 
 .DrawOppMeter JUMP_B DRAWOPPMETER, GAMEBG_BASE, 10
-.flipdiskmsg BRK    ; JUMP_B FLIPDISKMSG
-.timeleftmsg BRK    ; JUMP_B TIMELEFTMSG
+.flipdiskmsg BRK    ; JUMP_B FLIPDISKMSG            NOT BEEB
+.timeleftmsg RTS    ; JUMP_B TIMELEFTMSG            BEEB TODO MESSAGES
 .DrawGuard JUMP_B DRAWGUARD, GAMEBG_BASE, 13
 .DrawGuard2 JUMP_B DRAWGUARD, GAMEBG_BASE, 14
 
@@ -462,7 +462,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .listtorches BRK ;jmp LISTTORCHES
 .burn BRK        ;jmp BURN
 .getminleft JUMP_B GETMINLEFT, SPECIALK_BASE, 13
-.keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
+.keeptime JUMP_B KEEPTIME, SPECIALK_BASE, 14
 
 .shortentime BRK ;jmp SHORTENTIME
 .cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
@@ -489,7 +489,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .doflashon RTS          ; JUMP_B DOFLASHON             BEEB TODO FLASH
 .PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
 .subs_demo BRK          ; JUMP_B DEMO, SUBS_BASE, 3   \\ moved to auto.asm
-.showtime RTS           ; JUMP_B SHOWTIME              BEEB TODO TIMER
+.showtime JUMP_B SHOWTIME, SUBS_BASE, 4
 
 .doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
 .lrclse RTS             ; JUMP_B LRCLSE                BEEB TODO FLASH
@@ -868,7 +868,7 @@ EQUB LO(DEMOKEYS)
 EQUB 0         ; EQUB LO(LISTTORCHES)
 EQUB 0         ; EQUB LO(BURN)
 EQUB LO(GETMINLEFT)
-EQUB 0         ; EQUB LO(KEEPTIME)         BEEB TODO TIMER
+EQUB LO(KEEPTIME)
 
 EQUB 0         ; EQUB LO(SHORTENTIME)
 EQUB 0         ; EQUB LO(CUESONG)          BEEB TODO MUSIC
@@ -894,7 +894,7 @@ EQUB LO(ADDTORCHES)
 EQUB 0    ; EQUB LO(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
 EQUB 0    ; LO(DEMO)    // moved to auto.asm
-EQUB 0    ; EQUB LO(SHOWTIME)              BEEB TODO TIMER
+EQUB LO(SHOWTIME)
 
 EQUB 0    ; EQUB LO(DOFLASHOFF)            BEEB TODO FLASH
 EQUB 0    ; EQUB LO(LRCLSE)                BEEB TODO FLASH
@@ -1048,7 +1048,7 @@ EQUB HI(DEMOKEYS)
 EQUB 0         ; EQUB HI(LISTTORCHES)
 EQUB 0         ; EQUB HI(BURN)
 EQUB HI(GETMINLEFT)
-EQUB 0         ; EQUB HI(KEEPTIME)         BEEB TODO TIMER
+EQUB HI(KEEPTIME)
 
 EQUB 0         ; EQUB HI(SHORTENTIME)
 EQUB 0         ; EQUB HI(CUESONG)          BEEB TODO MUSIC
@@ -1073,7 +1073,7 @@ EQUB HI(ADDTORCHES)
 EQUB 0    ; EQUB HI(DOFLASHON)             BEEB TODO FLASH
 EQUB 0    ; EQUB HI(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
 EQUB 0    ; HI(DEMO)    // moved to auto.asm
-EQUB 0    ; EQUB HI(SHOWTIME)              BEEB TODO TIMER
+EQUB HI(SHOWTIME)
 
 EQUB 0    ; EQUB HI(DOFLASHOFF)            BEEB TODO FLASH
 EQUB 0    ; EQUB HI(LRCLSE)                BEEB TODO FLASH

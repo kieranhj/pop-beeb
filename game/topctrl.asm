@@ -1091,8 +1091,7 @@ ENDIF
  jsr fast ;Assemble image lists (including objects
 ;from obj list and necessary portions of bg)
 
-\ BEEB TEMP comment out MESSAGES
-\ jsr dispmsg ;Superimpose message (if any)
+ jsr dispmsg ;Superimpose message (if any)
 
 \ BEEB TEMP TEST
 \ JSR beeb_wait_vsync
@@ -1645,60 +1644,66 @@ addsfx
  lda #SwordClash2
 :clash jmp addsound
 :2
-]rts rts
+ENDIF
+.return_62
+ rts
 
-*-------------------------------
-*
-* Display message ("Press button to continue" or "Level #"
-* or "# minutes left")
-*
-*-------------------------------
-dispmsg
+\*-------------------------------
+\*
+\* Display message ("Press button to continue" or "Level #"
+\* or "# minutes left")
+\*
+\*-------------------------------
+
+.dispmsg
+{
  lda msgtimer
- beq ]rts
+ beq return_62
  dec msgtimer
 
  lda KidLife
- bmi :alive
+ bmi local_alive
 
-* Kid is dead -- message is "Press button to continue"
+\* Kid is dead -- message is "Press button to continue"
 
  lda msgtimer
  cmp #contoff
- bcc ]rts
+ bcc return_62
 
  cmp #contflash
- bcs :steady
+ bcs local_steady
 
  and #7
  cmp #3
- bcs ]rts
+ bcs return_62
  cmp #2
- bne :steady
+ bne local_steady
 
  lda soundon
- bne :2
+ bne label_2
  jsr gtone ;if sound off
-:2 lda #FlashMsg
+.label_2 lda #FlashMsg
  jsr addsound
 
-:steady jmp continuemsg ;Kid is dead--superimpose continue msg
+.local_steady jmp continuemsg ;Kid is dead--superimpose continue msg
 
-* Kid is alive -- message is "Level #" or "# Minutes"
+\* Kid is alive -- message is "Level #" or "# Minutes"
 
-:alive lda msgtimer
+.local_alive lda msgtimer
  cmp #leveltimer-2
- bcs ]rts
+ bcs return_62
 
  lda message
  cmp #LevelMsg
- bne :1
+ bne label_1
  jmp printlevel
 
-:1 cmp #TimeMsg
- bne ]rts
+.label_1 cmp #TimeMsg
+ bne return_62
  jmp timeleftmsg
+}
 
+IF _NOT_BEEB
 *-------------------------------
 *
 * Display "Turn disk over" and wait for button press

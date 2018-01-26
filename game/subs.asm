@@ -21,7 +21,7 @@ IF _JMP_TABLE=FALSE
 .doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
 .PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
 \\.demo jmp DEMO        \\ moved to auto.asm
-.showtime RTS           ; jmp SHOWTIME              BEEB TODO TIMER
+.showtime jmp SHOWTIME
 
 .doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
 .lrclse RTS             ; jmp LRCLSE                BEEB TODO FLASH
@@ -1376,81 +1376,85 @@ floorY = 151
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Show time if requested
-* (& constant time display during final minute)
-*
-* In: timerequest (0 = no, 1-2 = auto, 3 = from kbd,)
-*     4 = Vizier dead)
-*
-*-------------------------------
-SHOWTIME
+\*-------------------------------
+\*
+\* Show time if requested
+\* (& constant time display during final minute)
+\*
+\* In: timerequest (0 = no, 1-2 = auto, 3 = from kbd,)
+\*     4 = Vizier dead)
+\*
+\*-------------------------------
+
+.SHOWTIME
+{
  lda timerequest
- beq ]rts
+ beq return
  lda KidLife
- bpl ]rts
+ bpl return
 
  jsr getminleft
 
  lda MinLeft
  cmp #2
- bcs :normal
+ bcs normal
  lda SecLeft
- beq :timeup
+ beq timeup
 
-* Countdown during final minute
+\* Countdown during final minute
 
  lda level
  cmp #14
- bcs :normal
- bcc :showsec ;stop countdown when clock stops
+ bcs normal
+ bcc showsec ;stop countdown when clock stops
 
-:timeup
+.timeup
  lda timerequest
  cmp #3
- bcc ]rts ;Once t=0, show time only on kbd request
+ bcc return ;Once t=0, show time only on kbd request
 
-:normal
+.normal
  lda msgtimer
- bne ]rts ;wait till other msgs are gone
+ bne return ;wait till other msgs are gone
 
  lda #TimeMsg
  sta message
  lda #timemsgtimer
  ldx timerequest
  cpx #4
- bcc :norm
-:delay lda #timemsgtimer+5 ;delay 5 cycles
-:norm sta msgtimer
+ bcc norm
+.delay lda #timemsgtimer+5 ;delay 5 cycles
+.norm sta msgtimer
 
  lda #0
  sta timerequest
-]rts rts
+.return
+ rts
 
-:showsec
+.showsec
  lda SecLeft
  cmp #2
- bcc :nomsg
+ bcc nomsg
 
  lda message
  cmp #TimeMsg
- beq :2
+ beq label_2
  lda msgtimer
- bne ]rts
+ bne return
  lda #TimeMsg
  sta message
-:2 lda #1
+.label_2 lda #1
  sta timerequest
  lda #1
  sta msgtimer
  rts
-:nomsg lda #0
+.nomsg lda #0
  sta timerequest
  sta msgtimer
  rts
+}
 
+IF _TODO
 *-------------------------------
 * Add lowering-gate sound (only when gate is visible)
 * In: A = state

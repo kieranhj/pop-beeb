@@ -34,7 +34,7 @@ DebugKeys = 0
 .listtorches BRK ;jmp LISTTORCHES
 .burn BRK        ;jmp BURN
 .getminleft jmp GETMINLEFT
-.keeptime RTS    ;jmp KEEPTIME         BEEB TODO TIMER
+.keeptime jmp KEEPTIME
 
 .shortentime BRK ;jmp SHORTENTIME
 .cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
@@ -1323,63 +1323,53 @@ ENDIF
 
 .GETMINLEFT
 {
-\\ BEEB TODO game timer
- SED
- LDA #59
- STA MinLeft
- LDA #59
- STA SecLeft
- CLD
- RTS
-
-IF _TODO
  lda #0
- sta ]count
- sta ]count+1
+ sta specialk_count
+ sta specialk_count+1
 
- lda #min
- sta :sm1+1
- lda #>min
- sta :sm2+1
- jsr :sub ;get MinLeft
+ lda #LO(game_time_min)
+ sta sm1+1
+ lda #HI(game_time_min)
+ sta sm2+1
+ jsr local_sub ;get MinLeft
  sty MinLeft
  cpy #2
- bcs ]rts
+ bcs return
 
-* Final minute only: count seconds
+\* Final minute only: count seconds
 
- lda #59*min
- sta ]count
- lda #>59*min
- sta ]count+1
+ lda #LO(59*game_time_min)
+ sta specialk_count
+ lda #HI(59*game_time_min)
+ sta specialk_count+1
 
- lda #sec
- sta :sm1+1
- lda #>sec
- sta :sm2+1
- jsr :sub ;get SecLeft
+ lda #LO(game_time_sec)
+ sta sm1+1
+ lda #HI(game_time_sec)
+ sta sm2+1
+ jsr local_sub ;get SecLeft
  sty SecLeft
  rts
 
-* Sub returns min/sec left
+\* Sub returns min/sec left
 
-:sub ldy #$61 ;counter
+.local_sub ldy #$61 ;counter
 
-:loop lda ]count+1
+.loop lda specialk_count+1
  cmp FrameCount+1
- bcc :1
- bne ]rts
- lda ]count
+ bcc label_1
+ bne return
+ lda specialk_count
  cmp FrameCount
- bcs ]rts
-:1
- lda ]count
+ bcs return
+.label_1
+ lda specialk_count
  clc
-:sm1 adc #min
- sta ]count
- lda ]count+1
-:sm2 adc #>min
- sta ]count+1
+.sm1 adc #LO(game_time_min)
+ sta specialk_count
+ lda specialk_count+1
+.sm2 adc #HI(game_time_min)
+ sta specialk_count+1
 
  sed
  tya
@@ -1387,87 +1377,94 @@ IF _TODO
  sbc #1
  cld
  tay
- bpl :loop
+ bpl loop
  ldy #0
-]rts rts
-ENDIF
+.return
+ rts
 }
 
-IF _TODO
-*-------------------------------
-timetable
-:0 dw t-60*min
- dw t-55*min
- dw t-50*min
- dw t-45*min
- dw t-40*min
- dw t-35*min
- dw t-30*min
- dw t-25*min
- dw t-20*min
- dw t-15*min
-:20 dw t-10*min
- dw t-5*min
- dw t-4*min
- dw t-3*min
- dw t-2*min
- dw t-1*min+1
- dw t*min+5 ;5 frames after t=0: game over
- dw 65535
+\*-------------------------------
+.timetable
+.timetable_0
+ EQUW game_time_limit-60*game_time_min
+ EQUW game_time_limit-55*game_time_min
+ EQUW game_time_limit-50*game_time_min
+ EQUW game_time_limit-45*game_time_min
+ EQUW game_time_limit-40*game_time_min
+ EQUW game_time_limit-35*game_time_min
+ EQUW game_time_limit-30*game_time_min
+ EQUW game_time_limit-25*game_time_min
+ EQUW game_time_limit-20*game_time_min
+ EQUW game_time_limit-15*game_time_min
+.timetable_20
+ EQUW game_time_limit-10*game_time_min
+ EQUW game_time_limit-5*game_time_min
+ EQUW game_time_limit-4*game_time_min
+ EQUW game_time_limit-3*game_time_min
+ EQUW game_time_limit-2*game_time_min
+ EQUW game_time_limit-1*game_time_min+1
+ EQUW game_time_limit*game_time_min+5 ;5 frames after t=0: game over
+ EQUW 65535
 
-nummsg = *-timetable
+nummsg = P%-timetable
 
-*-------------------------------
-*
-* Keep track of time remaining
-*
-*-------------------------------
-]rts rts
-KEEPTIME
+\*-------------------------------
+\*
+\* Keep track of time remaining
+\*
+\*-------------------------------
+
+.KEEPTIME
+{
 ; lda autopilot
 ; bne ]rts
  lda level
- beq ]rts ;not in demo or during playback
+ beq return ;not in demo or during playback
 
  lda KidLife
- bpl ]rts ;clock stops when kid is dead
+ bpl return ;clock stops when kid is dead
 
-* Inc frame counter
+\* Inc frame counter
+
+\\ BEEB TODO - use vsync counter to make this more accurate
 
  inc FrameCount
- bne :1
+ bne label_1
  inc FrameCount+1
-:1 bne :2
+.label_1 bne label_2
  lda #$ff
  sta FrameCount
  sta FrameCount+1 ;don't wrap around
 
-* time for next message yet?
+\* time for next message yet?
 
-:2 ldy NextTimeMsg ;0-2-4 for 1st, 2nd, 3rd msgs
+.label_2 ldy NextTimeMsg ;0-2-4 for 1st, 2nd, 3rd msgs
  cpy #nummsg
- bcs ]rts ;no more msgs
+ bcs return ;no more msgs
  lda FrameCount+1
  cmp timetable+1,y
- bcc ]rts ;not yet
+ bcc return ;not yet
  lda FrameCount
  cmp timetable,y
- bcc ]rts
+ bcc return
 
-* Yes--is this a convenient time to show msg?
+\* Yes--is this a convenient time to show msg?
 
  lda msgtimer
- bne ]rts ;wait till other msgs are gone
+ bne return ;wait till other msgs are gone
 
-* Yes--show msg (& inc NextTimeMsg)
+\* Yes--show msg (& inc NextTimeMsg)
 
  inc NextTimeMsg
  inc NextTimeMsg
 
  lda #2
  sta timerequest
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Shorten remaining time to 15 minutes
