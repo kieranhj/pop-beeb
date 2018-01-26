@@ -19,7 +19,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .markmeters jmp MARKMETERS
 
 .potioneffect jmp POTIONEFFECT
-.mouserescue BRK    ; jmp MOUSERESCUE
+.mouserescue jmp MOUSERESCUE
 .StabChar jmp STABCHAR
 .unholy jmp UNHOLY
 .reflection jmp REFLECTION
@@ -374,13 +374,13 @@ vibetimer = 3
   rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Mouse rescues you
-*
-*-------------------------------
-MOUSERESCUE
+\*-------------------------------
+\*
+\* Mouse rescues you
+\*
+\*-------------------------------
+.MOUSERESCUE
+{
  jsr LoadKid
 
  lda #24 ;mouse
@@ -391,7 +391,7 @@ MOUSERESCUE
  stx CharBlockY
  lda FloorY+1,x
  sta CharY
- lda #-1
+ lda #LO(-1)
  sta CharFace
  sta CharLife
  lda #1
@@ -402,7 +402,7 @@ MOUSERESCUE
  jsr animchar
 
  jmp SaveShad
-ENDIF
+}
 
 \*-------------------------------
 \*
