@@ -68,9 +68,7 @@ ENDIF
 initAMtimer = 10 ;antimatter cheat key timer
 
 \ dum locals
-\]temp ds 1
-\]count ds 2
-\ dend
+\ Now defined in specialk.h.asm
 
 \POPside1 = $a9
 \POPside2 = $ad
@@ -93,12 +91,19 @@ game_time_limit = 60 ;game time limit
 
 \*  Player control keys
 
-kleft = IKN_z
-kdown = IKN_slash
-kright = IKN_x
-kupleft = IKN_semi
-kup = IKN_colon
-kupright = IKN_rsb
+kleft = IKN_z OR &80
+kdown = IKN_slash OR &80
+kright = IKN_x OR &80
+kupleft = IKN_semi OR &80
+kup = IKN_colon OR &80
+kupright = IKN_rsb OR &80
+
+kleft_apple = IKN_j OR &80
+kdown_apple = IKN_k OR &80
+kright_apple = IKN_l OR &80
+kupleft_apple = IKN_u OR &80
+kup_apple = IKN_i OR &80
+kupright_apple = IKN_o OR &80
 
 \*  Special keys (legit) - all require CTRL
 
@@ -157,8 +162,26 @@ kerasegame = '*'
 }
 .freeze
 {
- lda $C000
- bpl freeze
+; lda $C000
+; bpl freeze
+
+.wait_for_no_keys
+ LDA #&79
+ LDX #0
+ JSR osbyte
+
+ CPX #&FF
+ BNE wait_for_no_keys
+
+.wait_for_key
+ LDA #&79
+ LDX #0
+ JSR osbyte
+ TXA
+ CPX #&FF
+ BEQ wait_for_key
+ TXA
+ ORA #&80
 
  cmp #kfreeze
  beq fradv
@@ -171,7 +194,7 @@ kerasegame = '*'
 
 .fradv lda #1
  sta SINGSTEP
- sta $C010
+; sta $C010
  sta keypress
 }
 .return_35
@@ -649,7 +672,7 @@ kerasegame = '*'
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 * Temporarily change BBundID to reload code & data from side 1
 
@@ -839,55 +862,59 @@ ENDIF
  ldx keydown
  bpl return ;No fresh press & no key down
 
-\ NOT BEEB
-\ ora #$80 ;stale press, key still down
+ ora #$80 ;stale press, key still down
 .cont
  cmp #kleft
  beq local_left
- cmp #kleft-SHIFT
+ cmp #kleft_apple
  bne label_1
 
 .local_left lda #LO(-1)
 .local_setx sta kbdX
  rts
 
-.label_1 cmp #kright
+.label_1
+ cmp #kright
  beq local_right
- cmp #kright-SHIFT
+ cmp #kright_apple
  bne label_2
 
 .local_right lda #1
  bne local_setx
 
-.label_2 cmp #kup
+.label_2
+ cmp #kup
  beq local_up
- cmp #kup-SHIFT
+ cmp #kup_apple
  bne label_3
 
 .local_up lda #LO(-1)
 .local_sety sta kbdY
  rts
 
-.label_3 cmp #kdown
+.label_3
+ cmp #kdown
  beq local_down
- cmp #kdown-SHIFT
+ cmp #kdown_apple
  bne label_4
 
 .local_down lda #1
  bne local_sety
 
-.label_4 cmp #kupleft
+.label_4
+ cmp #kupleft
  beq local_ul
- cmp #kupleft-SHIFT
+ cmp #kupleft_apple
  bne label_5
 
 .local_ul lda #LO(-1)
  sta kbdX
  bne local_sety
 
-.label_5 cmp #kupright
+.label_5
+ cmp #kupright
  beq local_ur
- cmp #kupright-SHIFT
+ cmp #kupright_apple
  bne label_6
 
 .local_ur lda #1

@@ -50,6 +50,11 @@ IKN_copy = 105
 IKN_del = 89
 IKN_semi = 87
 IKN_space = 98
+IKN_l = 86
+IKN_i = 37
+IKN_u = 53
+IKN_o = 54
+IKN_caps = 64
 
 \\ Opcodes
 SEI_OP = $78
@@ -145,6 +150,13 @@ MODE2_BLUE_PAIR=&30
 MODE2_MAGENTA_PAIR=&33
 MODE2_CYAN_PAIR=&3C
 MODE2_WHITE_PAIR=&3F
+
+SHEILA_System_VIA_Register_B   = $FE40
+SHEILA_System_VIA_Register_A   = $FE41
+SHEILA_System_VIA_Data_Dir   = $FE43
+SHEILA_System_VIA_Interrupt_Flag   = $FE4D
+SHEILA_System_VIA_Interrupt_Enable   = $FE4E
+SHEILA_System_VIA_Register_A_NH   = $FE4F
 
 \\ Macro to reset any mapped characters
 \\ since BeebASM doesn't have any feature for this

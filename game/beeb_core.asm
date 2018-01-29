@@ -512,4 +512,38 @@ ENDIF
     RTS
 }
 
+\*-------------------------------
+; Test whether key is pressed (from Thrust!)
+; A=Internal Key Number (IKN)
+; Returns A=0 pressed A<>0 not pressed
+\*-------------------------------
+
+IF 0
+.beeb_test_key
+{
+        PHP
+
+	.L3AA7
+        LDX     #$03
+        LDY     #$0B
+        SEI
+        STX     SHEILA_System_VIA_Register_B
+        LDX     #$7F
+        STX     SHEILA_System_VIA_Data_Dir
+        STA     SHEILA_System_VIA_Register_A_NH
+        LDA     SHEILA_System_VIA_Register_A_NH
+        STY     SHEILA_System_VIA_Register_B
+        PLP
+        LDX     #$00
+        ROL     A
+        BCC     no_press
+
+        LDX     #$FF
+		
+	.no_press
+        CPX     #$FF
+        RTS
+}
+ENDIF
+
 .beeb_core_end
