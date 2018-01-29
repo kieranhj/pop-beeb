@@ -8,7 +8,7 @@
 .fastlay jmp hires_fastlay
 .layrsave jmp hires_layrsave
 
-.lrcls rts         ;jmp hires_lrcls    \ is implemented but not safe to call!
+.lrcls BRK         ;jmp hires_lrcls    \ is implemented but not safe to call!
 .fastmask jmp hires_fastmask
 .fastblack jmp hires_fastblack
 .peel jmp hires_peel

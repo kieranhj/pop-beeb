@@ -293,10 +293,10 @@ ENDIF
  jsr reloadblue
  ELSE
 
- lda #' '
- jsr lrcls
- jsr vblank
 \ NOT BEEB
+\ lda #' '
+\ jsr lrcls
+\ jsr vblank
 \ lda PAGE2off
 \ lda TEXTon
 
@@ -1001,18 +1001,16 @@ IF _NOT_BEEB
  jsr PageFlip
  jmp normspeed
 ELSE
-; jsr PageFlip ; then show current screen
-
  jsr drawbg ;draw bg on p2 - has a vblank call?
-
-\ BEEB TODO COPY SCREEN?
 
  jsr PageFlip
 
- jsr drawbg ;draw bg on p2
+\ BEEB would need spare page for copying data over to shadow?
+
+ jsr drawbg ;draw bg on p1
  jsr DoFast ;add chars
 
-; jmp PageFlip
+ JMP PageFlip
 ENDIF
 }
 ENDIF
@@ -1033,9 +1031,9 @@ ENDIF
  lda #2
  sta CUTTIMER ;min # of frames between cuts
 
- lda #' '
- jsr lrclse
- jsr vblank
+\ lda #' '
+\ jsr lrclse
+\ jsr vblank
 \ NOT BEEB
 \ lda PAGE2off
 \ lda TEXTon

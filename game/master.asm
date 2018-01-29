@@ -39,6 +39,7 @@
 
 MACRO MASTER_LOAD_HIRES filename
 {
+ JSR beeb_set_game_screen
  LDX #LO(filename)
  LDY #HI(filename)
  LDA #HI(beeb_screen_addr)
@@ -939,11 +940,7 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
- MASTER_LOAD_HIRES pacRoom_name
-
-\ Cutscenes take place in game mode
-
- JSR beeb_set_screen_mode
+ MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
 \ lda #$40
 \ sta IMAGE+1
@@ -953,9 +950,6 @@ EQUS "PRIN   $"
 
  LDA #HI(beeb_screen_addr)
  JSR beeb_copy_shadow
-
-\ BEEB TEMP load princess screen twice - could copy between MAIN & SHADOW
-\ MASTER_LOAD_HIRES pacRoom_name
 
  JSR beeb_show_screen           ; BEEB show screen after blackout
 
@@ -1045,7 +1039,7 @@ EQUS "PRIN   $"
 \ BEEB TODO check memory usage
 \ jmp LoadStage1A
 
- JMP beeb_set_double_hires
+ JMP beeb_set_attract_screen
 }
 
 \*-------------------------------
@@ -1065,12 +1059,10 @@ EQUS "PRESENT$"
 
 \* Show DHires page 1
 
-\ BEEB TODO - set MODE 1?
 \ jsr setdhires
 
 \* Copy to DHires page 2
 
-\ BEEB TODO - double buffer
  jsr copy1to2
 
  lda #44
@@ -1164,7 +1156,6 @@ EQUS "TITLE  $"
 {
  jsr unpacksplash
 
-\ BEEB TODO double buffer?
  jsr copy1to2
 
  lda #20
@@ -1300,9 +1291,9 @@ EQUS "EPILOG $"
 
 \ jsr setdhires
 
- MASTER_LOAD_DHIRES epilog_filename, 0
-
  jsr SetupDHires
+
+ MASTER_LOAD_DHIRES epilog_filename, 0
 
  lda #s_Epilog
  jsr PlaySongNI
@@ -1382,7 +1373,7 @@ ENDIF
 \ jsr LoadStage3
 
 \ BEEB set game screen mode (hires)
- JSR beeb_set_screen_mode
+ JSR beeb_set_game_screen
 
  jsr setdemolevel
  jsr rdbluep
@@ -1458,7 +1449,7 @@ ENDIF
 \:1 jsr LoadStage3
 
 \ BEEB set game screen mode (hires)
- JSR beeb_set_screen_mode
+ JSR beeb_set_game_screen
 
 \* Load 1st level
 
@@ -2069,7 +2060,7 @@ ENDIF
 \*-------------------------------
 .blackout
 {
-    JMP beeb_set_blackout
+    JMP beeb_hide_screen
 }
 
 \ BEEB MOVED FROM MISC.S

@@ -492,7 +492,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .showtime JUMP_B SHOWTIME, SUBS_BASE, 4
 
 .doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
-.lrclse RTS             ; JUMP_B LRCLSE                BEEB TODO FLASH
+.lrclse BRK             ; JUMP_B LRCLSE                BEEB TODO FLASH
 \ JUMP_B potioneffect
 \ JUMP_B checkalert
 \ JUMP_B reflection

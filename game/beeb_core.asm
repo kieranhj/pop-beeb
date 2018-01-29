@@ -10,10 +10,10 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 ; Set custom CRTC mode for game
 \*-------------------------------
 
-.beeb_set_screen_mode
+.beeb_set_game_screen
 {
 \\ Don't need all this currently
-IF 0
+IF _TODO
     \\ Set CRTC registers
     LDX #13
     .crtcloop
@@ -63,7 +63,7 @@ ENDIF
     RTS
 }
 
-.beeb_set_double_hires
+.beeb_set_attract_screen
 {
     \\ Assume base MODE is 2 - if changed this to MODE 1 need to twiddle ULA
 
@@ -82,7 +82,7 @@ ENDIF
     RTS
 }
 
-.beeb_set_blackout
+.beeb_hide_screen
 {
     LDA #8:STA &FE00            ; R8 = interlace
     LDA #&30:STA &FE01          ; blank screen
@@ -100,6 +100,7 @@ ENDIF
 ; CRTC & ULA data required to configure out special MODE 2
 ; Following data could be dumped after boot!
 
+IF _TODO
 .beeb_crtcregs
 {
 	EQUB 127 			; R0  horizontal total
@@ -138,6 +139,7 @@ ENDIF
     EQUB PAL_cyan
     EQUB PAL_white
 }
+ENDIF
 
 \*-------------------------------
 ; Relocate image tables
@@ -243,6 +245,8 @@ ENDIF
 ; in double buffer mode, both display & main memory swap, but point to the opposite memory 
 .shadow_swap_buffers
 {
+    JSR beeb_wait_vsync
+
     LDA PAGE
     EOR #&20
     STA PAGE

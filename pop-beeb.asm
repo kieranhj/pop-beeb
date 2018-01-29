@@ -219,9 +219,10 @@ INCLUDE "lib/print.asm"
     JSR oswrch
 
     \\ Set smallest mode right away so we don't see any data loading
-    JSR beeb_set_screen_mode
+    JSR beeb_set_game_screen
 
     \\ Could put a loading screen here?
+    \\ Or just beeb_hide_screen
 
     \\ Load executable overlays
 
