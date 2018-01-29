@@ -3,7 +3,6 @@
 
 .hires_core
 
-._boot3 BRK         ;jmp boot3
 .cls jmp hires_cls
 .lay jmp hires_lay
 .fastlay jmp hires_fastlay

@@ -31,7 +31,7 @@
  .loadgame BRK     ;jmp LOADGAME
  .dostartgame jmp DOSTARTGAME
 
- .epilog BRK       ;jmp EPILOG
+ .epilog jmp EPILOG
  .loadaltset BRK   ;jmp LOADALTSET
 \_screendump
 
@@ -47,13 +47,14 @@ MACRO MASTER_LOAD_HIRES filename
 }
 ENDMACRO
 
-MACRO MASTER_LOAD_DHIRES filename
+MACRO MASTER_LOAD_DHIRES filename, lines
 {
  LDX #LO(filename)
  LDY #HI(filename)
- LDA #HI(beeb_screen_addr)
+ LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
  JSR disksys_load_file
  JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR beeb_show_screen       ; in case previous blackout
 }
 ENDMACRO
 
@@ -890,28 +891,32 @@ EQUS "VIZ    $"
     rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Copy one DHires page to another
-*
-*-------------------------------
-copy1to2
- lda #$40 ;dest
- ldx #$20 ;org
- bne copydhires
+\*-------------------------------
+\*
+\* Copy one DHires page to another
+\*
+\*-------------------------------
 
-copy2to1
- lda #$20
- ldx #$40
+.copy1to2
+{
+    LDA #HI(beeb_double_hires_addr)
+    JMP beeb_copy_shadow
 
-copydhires
- sta IMAGE+1 ;dest
- stx IMAGE ;org
-
- jsr _copy2000aux
- jmp _copy2000 ;in hires
-ENDIF
+\ lda #$40 ;dest
+\ ldx #$20 ;org
+\ bne copydhires
+\
+\copy2to1
+\ lda #$20
+\ ldx #$40
+\
+\copydhires
+\ sta IMAGE+1 ;dest
+\ stx IMAGE ;org
+\
+\ jsr _copy2000aux
+\ jmp _copy2000 ;in hires
+}
 
 \*-------------------------------
 \*
@@ -936,15 +941,23 @@ EQUS "PRIN   $"
 
  MASTER_LOAD_HIRES pacRoom_name
 
+\ Cutscenes take place in game mode
+
+ JSR beeb_set_screen_mode
+
 \ lda #$40
 \ sta IMAGE+1
 \ lda #$20
 \ sta IMAGE ;copy page 1 to page 2
 \ jmp _copy2000 ;in HIRES
 
-\ BEEB TEMP load princess screen twice - could copy between MAIN & SHADOW
+ LDA #HI(beeb_screen_addr)
+ JSR beeb_copy_shadow
 
- MASTER_LOAD_HIRES pacRoom_name
+\ BEEB TEMP load princess screen twice - could copy between MAIN & SHADOW
+\ MASTER_LOAD_HIRES pacRoom_name
+
+ JSR beeb_show_screen           ; BEEB show screen after blackout
 
  RTS
 }
@@ -1025,15 +1038,14 @@ EQUS "PRIN   $"
 {
 \* Show black lo-res scrn
 
-\ BEEB TODO - setup MODE 1?
-\ jsr blackout
+ jsr blackout
 
 \* Load in Stage 1 data
 
 \ BEEB TODO check memory usage
 \ jmp LoadStage1A
 
- RTS
+ JMP beeb_set_double_hires
 }
 
 \*-------------------------------
@@ -1059,7 +1071,7 @@ EQUS "PRESENT$"
 \* Copy to DHires page 2
 
 \ BEEB TODO - double buffer
-\ jsr copy1to2
+ jsr copy1to2
 
  lda #44
  jsr tpause
@@ -1069,7 +1081,7 @@ EQUS "PRESENT$"
 \ lda #delPresents
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES presents_filename
+ MASTER_LOAD_DHIRES presents_filename, 12
 
 \ ldx #80
 \ lda #s_Presents
@@ -1125,7 +1137,7 @@ EQUS "BYLINE $"
 \ lda #delByline
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES byline_filename
+ MASTER_LOAD_DHIRES byline_filename, 12
 
 \ ldx #80
 \ lda #s_Byline
@@ -1153,7 +1165,7 @@ EQUS "TITLE  $"
  jsr unpacksplash
 
 \ BEEB TODO double buffer?
-\ jsr copy1to2
+ jsr copy1to2
 
  lda #20
  jsr tpause
@@ -1161,7 +1173,7 @@ EQUS "TITLE  $"
 \ lda #delTitle
 \ jsr DeltaExpPop
  
- MASTER_LOAD_DHIRES title_filename
+ MASTER_LOAD_DHIRES title_filename, 12
 
  lda #160
  jmp tpause
@@ -1179,7 +1191,7 @@ EQUS "TITLE  $"
 \ lda #delTitle
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES title_filename
+ MASTER_LOAD_DHIRES title_filename, 12
 
 \ ldx #140
 \ lda #s_Title
@@ -1208,7 +1220,7 @@ EQUS "PROLOG $"
 \ sta RAMRDaux
 \ jsr DblExpand
 
- MASTER_LOAD_DHIRES prolog_filename
+ MASTER_LOAD_DHIRES prolog_filename, 0
 
 \ ldx #250
 \ lda #s_Prolog
@@ -1256,7 +1268,7 @@ EQUS "SUMUP  $"
 
 \ jsr setdhires
 
- MASTER_LOAD_DHIRES sumup_filename
+ MASTER_LOAD_DHIRES sumup_filename, 0
 
 \ ldx #250
 \ lda #s_Sumup
@@ -1288,7 +1300,9 @@ EQUS "EPILOG $"
 
 \ jsr setdhires
 
- MASTER_LOAD_DHIRES epilog_filename
+ MASTER_LOAD_DHIRES epilog_filename, 0
+
+ jsr SetupDHires
 
  lda #s_Epilog
  jsr PlaySongNI
@@ -1315,7 +1329,7 @@ EQUS "SPLASH $"
 \ sta RAMRDaux
 \ jmp DblExpand
 
- MASTER_LOAD_DHIRES splash_filename
+ MASTER_LOAD_DHIRES splash_filename, 0
 
  RTS
 }
@@ -1366,6 +1380,9 @@ ENDIF
 
 \ NOT BEEB
 \ jsr LoadStage3
+
+\ BEEB set game screen mode (hires)
+ JSR beeb_set_screen_mode
 
  jsr setdemolevel
  jsr rdbluep
@@ -1439,6 +1456,9 @@ ENDIF
 
 \ NOT BEEB
 \:1 jsr LoadStage3
+
+\ BEEB set game screen mode (hires)
+ JSR beeb_set_screen_mode
 
 \* Load 1st level
 
@@ -2049,8 +2069,7 @@ ENDIF
 \*-------------------------------
 .blackout
 {
-    \\ BEEB TO BE IMPLEMENTED
-    RTS
+    JMP beeb_set_blackout
 }
 
 \ BEEB MOVED FROM MISC.S

@@ -7,11 +7,13 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 .beeb_core_start
 
 \*-------------------------------
-; Set custom CRTC mode
+; Set custom CRTC mode for game
 \*-------------------------------
 
 .beeb_set_screen_mode
 {
+\\ Don't need all this currently
+IF 0
     \\ Set CRTC registers
     LDX #13
     .crtcloop
@@ -36,7 +38,61 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     AND #&F0
     ADC #&10
     BCC palloop
+ELSE
+\\ Just set CRTC registers we care about
 
+IF BEEB_SCREEN_CHARS<>80
+    LDA #1:STA &FE00            ; R1 = horizontal displayed
+    LDA #BEEB_SCREEN_CHARS
+    STA &FE01
+ENDIF
+
+    LDA #6:STA &FE00            ; R6 = vertical displayed
+    LDA #BEEB_SCREEN_ROWS
+    STA &FE01
+
+    LDA #12:STA &FE00           ; R12 = screen start address, high
+    LDA #HI(beeb_screen_addr/8)
+    STA &FE01
+
+    LDA #13:STA &FE00               ; R13 = screen start address, low
+    LDA #LO(beeb_screen_addr/8)
+    STA &FE01
+ENDIF
+
+    RTS
+}
+
+.beeb_set_double_hires
+{
+    \\ Assume base MODE is 2 - if changed this to MODE 1 need to twiddle ULA
+
+    LDA #6:STA &FE00            ; R6 = vertical displayed
+    LDA #BEEB_DOUBLE_HIRES_ROWS
+    STA &FE01
+
+    LDA #12:STA &FE00           ; R12 = screen start address, high
+    LDA #HI(beeb_double_hires_addr/8)
+    STA &FE01
+
+    LDA #13:STA &FE00               ; R13 = screen start address, low
+    LDA #LO(beeb_double_hires_addr/8)
+    STA &FE01
+
+    RTS
+}
+
+.beeb_set_blackout
+{
+    LDA #8:STA &FE00            ; R8 = interlace
+    LDA #&30:STA &FE01          ; blank screen
+    RTS
+}
+
+.beeb_show_screen
+{
+    LDA #8:STA &FE00            ; R8 = interlace
+    LDA #&00:STA &FE01          ; show screen (no interlace)
     RTS
 }
 
@@ -545,5 +601,46 @@ IF 0
         RTS
 }
 ENDIF
+
+\*-------------------------------
+; Copy SHADOW
+; A=Start address PAGE
+\*-------------------------------
+
+.beeb_copy_shadow
+{
+    STA smRead+2
+    STA smWrite+2
+
+    LDX #0
+    
+    .next_page
+    \\ Read from visible screen
+    LDA &FE34:EOR #&4:STA &FE34
+
+    .read_page_loop
+    .smRead
+    LDA &FF00, X
+    STA DISKSYS_BUFFER_ADDR, X
+    INX
+    BNE read_page_loop
+
+    \\ Copy to alternate screen
+    LDA &FE34:EOR #&4:STA &FE34
+
+    .write_page_loop
+    LDA DISKSYS_BUFFER_ADDR, X
+    .smWrite
+    STA &FF00, X
+    INX
+    BNE write_page_loop
+
+    INC smRead+2
+    INC smWrite+2
+
+    BPL next_page
+
+    RTS
+}
 
 .beeb_core_end

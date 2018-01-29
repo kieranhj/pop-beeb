@@ -389,6 +389,8 @@ ENDIF
 
  jsr FirstFrame ;Generate & display first frame
 
+ JSR beeb_show_screen     ; BEEB in case of blackout
+
  jmp MainLoop
 }
 

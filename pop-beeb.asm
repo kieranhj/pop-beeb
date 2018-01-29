@@ -85,6 +85,11 @@ BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
+BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
+BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
+
+beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
+
 BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
 BEEB_SWRAM_SLOT_BGTAB1_A = 0
 BEEB_SWRAM_SLOT_BGTAB2 = 0
@@ -207,14 +212,16 @@ INCLUDE "lib/print.asm"
     LDA #&82:STA &FE4E          ; enable vsync interupt
     CLI
 
-    \\ MODE
+    \\ MODE 2 is the base mode
     LDA #22
     JSR oswrch
-    LDA #BEEB_SCREEN_MODE
+    LDA #2
     JSR oswrch
 
-    \\ Special MODE
+    \\ Set smallest mode right away so we don't see any data loading
     JSR beeb_set_screen_mode
+
+    \\ Could put a loading screen here?
 
     \\ Load executable overlays
 
@@ -885,12 +892,12 @@ PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
 \ Cutscene files
-PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", beeb_screen_addr, 0
+PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
 
 \ Attract files
-PUTFILE "Other/applewin.Splash.mode2.bin", "SPLASH", beeb_screen_addr, 0
-PUTFILE "Other/applewin.Title.mode2.bin", "TITLE", beeb_screen_addr, 0
-PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", beeb_screen_addr, 0
-PUTFILE "Other/applewin.Byline.mode2.bin", "BYLINE", beeb_screen_addr, 0
-PUTFILE "Other/applewin.Prolog.mode2.bin", "PROLOG", beeb_screen_addr, 0
-PUTFILE "Other/applewin.Sumup.mode2.bin", "SUMUP", beeb_screen_addr, 0
+PUTFILE "Other/applewin.Splash.mode2.bin", "SPLASH", &3000, 0
+PUTFILE "Other/applewin.Title.mode2.bin", "TITLE", &3000, 0
+PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", &3000, 0
+PUTFILE "Other/applewin.Byline.mode2.bin", "BYLINE", &3000, 0
+PUTFILE "Other/applewin.Prolog.mode2.bin", "PROLOG", &3000, 0
+PUTFILE "Other/applewin.Sumup.mode2.bin", "SUMUP", &3000, 0
