@@ -130,17 +130,17 @@ unsigned char nula_colours[16][3] =
 unsigned char palette_selection[16][3] = 
 {
 	{ 4, 1, 7 },			// blue, red, white = closest to Apple II default colours (blue, orange, white)
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 4, 6, 3 },			// blue, cyan, yellow
+	{ 4, 6, 7 },			// blue, cyan, white
+	{ 4, 5, 3 },			// blue, magenta, yellow
 
 	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 4, 1, 3 },			// blue, red, yellow
+	{ 6, 1, 3 },			// cyan, red, yellow
+	{ 4, 2, 3 },			// blue, green, yellow
 
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 4, 1, 6 },			// blue, red, cyan
+	{ 4, 1, 2 },			// blue, red, green
 	{ 1, 3, 7 },			// red, yellow, white
 	{ 1, 3, 7 },			// red, yellow, white
 
@@ -1156,6 +1156,8 @@ int main(int argc, char **argv)
 						{
 							pal = p - 'A' + 10;
 						}
+
+						printf("[%d] %d x %d with pal=%d (%d %d %d)\n", i, reduced_width, pixel_height, pal, palette_selection[pal][0], palette_selection[pal][1], palette_selection[pal][2]);
 					}
 
 					// Now we know our address

@@ -162,7 +162,7 @@ IF _HALF_PLAYER
 .chtabhack EQUB 1,1,1,0,1,0,0,0
 ENDIF
 
-.chtabpal EQUB &00, &00, &00, &02, &00, &02, &02
+.chtabpal EQUB &C, &C, &C, &E, &C, &E, &D
 
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel

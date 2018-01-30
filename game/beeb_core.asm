@@ -511,13 +511,15 @@ ENDIF
     STA palette_addr_LO, X
     LDA beeb_writeptr+1
     STA palette_addr_HI, X
-    TXA:EOR #8
-    TAX
-    LDA beeb_writeptr
-    STA palette_addr_LO, X
-    LDA beeb_writeptr+1
-    STA palette_addr_HI, X
-    TXA:EOR #8
+    TXA
+
+\    TXA:EOR #8
+\    TAX
+\    LDA beeb_writeptr
+\    STA palette_addr_LO, X
+\    LDA beeb_writeptr+1
+\    STA palette_addr_HI, X
+\    TXA:EOR #8
 
 \\ Set small palette lookup
 

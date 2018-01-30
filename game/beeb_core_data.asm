@@ -161,18 +161,18 @@ SKIP &CD
     EQUB LO(fast_palette_lookup_1)
     EQUB LO(fast_palette_lookup_2)
     EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_4)
+    EQUB LO(fast_palette_lookup_5)
+    EQUB LO(fast_palette_lookup_6)
+    EQUB LO(fast_palette_lookup_7)
+    EQUB LO(fast_palette_lookup_8)
     EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_1)
-    EQUB LO(fast_palette_lookup_2)
-    EQUB LO(fast_palette_lookup_3)
     EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_1)
-    EQUB LO(fast_palette_lookup_2)
-    EQUB LO(fast_palette_lookup_3)
     EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_1)
-    EQUB LO(fast_palette_lookup_2)
-    EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_0)
 }
 
 .palette_addr_HI
@@ -181,57 +181,75 @@ SKIP &CD
     EQUB HI(fast_palette_lookup_1)
     EQUB HI(fast_palette_lookup_2)
     EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_4)
+    EQUB HI(fast_palette_lookup_5)
+    EQUB HI(fast_palette_lookup_6)
+    EQUB HI(fast_palette_lookup_7)
+    EQUB HI(fast_palette_lookup_8)
     EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_1)
-    EQUB HI(fast_palette_lookup_2)
-    EQUB HI(fast_palette_lookup_3)
     EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_1)
-    EQUB HI(fast_palette_lookup_2)
-    EQUB HI(fast_palette_lookup_3)
     EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_1)
-    EQUB HI(fast_palette_lookup_2)
-    EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_0)
 }
 
 \\ Apple II = black / blue / orange / white 
 .palette_table
 {
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; BRW
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_YELLOW_PAIR         ; BCY
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR          ; BCW
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR      ; BMY
+
+    EQUB 0, MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR         ; RYW
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; BRY
+    EQUB 0, MODE2_CYAN_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; CRY
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR        ; BGY
+
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_CYAN_PAIR            ; BRC
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_GREEN_PAIR           ; BRG
+    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; UNUSED
+    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; UNUSED
+
     EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; player
     EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; guard blue
     EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; guard green
     EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; guard red
-
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; background dun 0 (flask, slicer, energy)
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR          ; background dun 1
-    EQUB 0, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR, MODE2_RED_PAIR         ; background dun 2 (flame)
-    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; background dun 3
-
-    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_BLUE_PAIR      ; shadow
-    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; alt guard blue (green)
-    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; alt guard green (red)
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; alt guard red (blue)
-
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; background pal 0
-    EQUB 0, MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR         ; background pal 1
-    EQUB 0, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR, MODE2_RED_PAIR         ; background pal 2 (flame)
-    EQUB 0, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR, MODE2_MAGENTA_PAIR  ; background pal 3
 }
 
 .bgimg1pal
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 1-16 = $01 - $10
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 17-32 = $11 - $20
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 33-48 = $21 - $30
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 49-64 = $31 - $40
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 65-80 = $41 - $50
-EQUB &5,&6,&6,&6,&6,&6,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 81-96 = $51 - $60
-EQUB &6,&6,&6,&6,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                       ; 97-111 = $61 - $6F
+EQUB 0,0,0,0,1,1,2,2,2,3,3,3,3,0,3,0                    ; 1-16 = $01 - $10
+EQUB 0,0,1,3,1,1,1,1,1,0,0,0,0,1,1,1                    ; 17-32 = $11 - $20
+EQUB 1,0,0,0,0,0,0,0,0,0,0,1,1,1,2,2                    ; 33-48 = $21 - $30
+EQUB 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2                    ; 49-64 = $31 - $40
+EQUB 2,2,2,2,0,0,0,4,4,0,1,1,0,0,0,0                    ; 65-80 = $41 - $50
+EQUB 3,4,4,4,4,4,2,2,2,2,2,2,2,2,2,0                    ; 81-96 = $51 - $60
+EQUB 4,4,4,4,2,2,2,2,2,0,5,0,0,0,0                       ; 97-111 = $61 - $6F
 
 .bgimg2pal
-EQUB &5,&5,&5,&5,&5,&5,&4,&4,&4,&4,&4,&4,&5,&4,&4,&4                    ; 1-16 = $81 - $90
-EQUB &5,&5,&5,&5,&4,&5,&5,&5,&5,&5,&5,&5,&7,&5,&5,&7                    ; 17-32 = $91 - $A0
-EQUB &5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5,&5                    ; 33-48 = $A1 - $B0
-EQUB &5,&5,&5                                                           ; 49-51 = $B1 - $B3
+EQUB 6,6,1,1,1,1,7,0,0,0,0,0,0,8,8,8                    ; 1-16 = $81 - $90
+EQUB 0,0,0,0,4,0,2,2,2,9,9,0,2,4,4,2                    ; 17-32 = $91 - $A0
+EQUB 0,2,2,2,2,5,0,0,0,0,0,0,0,0,4,4                    ; 33-48 = $A1 - $B0
+EQUB 4,4,2                                              ; 49-51 = $B1 - $B3
+
+.fast_palette_lookup_4
+SKIP &CD
+
+.fast_palette_lookup_5
+SKIP &CD
+
+.fast_palette_lookup_6
+SKIP &CD
+
+.fast_palette_lookup_7
+SKIP &CD
+
+.fast_palette_lookup_8
+SKIP &CD
+
+.fast_palette_lookup_9
+SKIP &CD
 
 .beeb_core_data_end
