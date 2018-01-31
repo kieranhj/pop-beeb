@@ -1,5 +1,5 @@
 @echo off
-FOR %%F in (IMG.CHTAB*.bin) DO ..\pop2beeb\pop2beeb -i %%F -o BEEB.%%F -mode 5 -pal 13
+FOR %%F in (IMG.CHTAB*.bin) DO ..\pop2beeb\pop2beeb -i %%F -o BEEB.%%F -mode 5 -pal 14
 
 REM FOR %%F in (IMG.BGTAB*.bin) DO ..\pop2beeb\pop2beeb -i %%F -o BEEB.%%F -mode 5 -point 0
 

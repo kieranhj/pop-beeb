@@ -513,14 +513,6 @@ ENDIF
     STA palette_addr_HI, X
     TXA
 
-\    TXA:EOR #8
-\    TAX
-\    LDA beeb_writeptr
-\    STA palette_addr_LO, X
-\    LDA beeb_writeptr+1
-\    STA palette_addr_HI, X
-\    TXA:EOR #8
-
 \\ Set small palette lookup
 
     JSR beeb_plot_sprite_setpalette
@@ -532,7 +524,7 @@ ENDIF
     .wipe
     STA (beeb_writeptr), Y
     INY
-    CPY #&CD
+    CPY #&34
     BNE wipe 
 
 \\ Exapnd each entry in palette lookup
@@ -540,6 +532,7 @@ ENDIF
     LDY #0
     .loop
 
+IF 0
     TYA:AND #&88            ; pixel D
     LSR A:LSR A         ; shift down
     TAX
@@ -553,6 +546,7 @@ ENDIF
     LDA map_2bpp_to_mode2_pixel, X      ; right pixel logical 0/1/2/3
     ORA (beeb_writeptr), Y
     STA (beeb_writeptr), Y
+ENDIF
 
     TYA:AND #&22            ; pixel B
     TAX
@@ -567,7 +561,7 @@ ENDIF
     STA (beeb_writeptr), Y
 
     INY
-    CPY #&CD
+    CPY #&34
     BCC loop
 
     .return

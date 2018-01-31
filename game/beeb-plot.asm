@@ -1649,6 +1649,10 @@ ENDIF
     AND #&CC                        ; 2c
     BEQ skip_zeroDC
 
+\ Shift down due to smaller palette lookup
+
+    LSR A:LSR A                     ; 4c
+
     TAX
 
 \ Convert pixel data to mask
@@ -1829,6 +1833,11 @@ ENDIF
 \ Lookup pixels D & C
 
     AND #&CC
+
+\ Shift down due to smaller palette lookup
+
+    LSR A:LSR A                     ; 4c
+
     TAX
     .smPAL1
     LDA &FFFF, X
@@ -1992,6 +2001,11 @@ IF _UNROLL_FASTLAY = FALSE
 \ Lookup pixels D & C
 
     AND #&CC
+
+\ Shift down due to smaller palette lookup
+
+    LSR A:LSR A                     ; 4c
+
     TAX
     .smPAL1
     LDA &FFFF, X

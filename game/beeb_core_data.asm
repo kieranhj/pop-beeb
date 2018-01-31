@@ -91,39 +91,6 @@ NEXT
 ENDMACRO
 
 \*-------------------------------
-; Expanded palette table going from 2bpp data directly to MODE 2 bytes
-; Could / should be in MAIN
-
-PAGE_ALIGN
-.fast_palette_lookup_0
-;MAP_2BPP_TO_MODE2 MODE2_CYAN_PAIR, MODE2_GREEN_PAIR, MODE2_WHITE_PAIR
-SKIP &CD
-
-\*-------------------------------
-; Multipliction table squeezed in from PAGE_ALIGN
-; Could / should be in MAIN
-.Mult16_HI          ; or shift...
-FOR n,0,39,1
-EQUB HI(n*16)
-NEXT
-
-\*-------------------------------
-; Expanded palette table going from 2bpp data directly to MODE 2 bytes
-; For torches and blades etc.
-PAGE_ALIGN
-.fast_palette_lookup_1
-;MAP_2BPP_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR
-SKIP &CD
-
-\*-------------------------------
-; Multipliction table squeezed in from PAGE_ALIGN
-; Could / should be in MAIN
-.Mult16_LO
-FOR n,0,39,1
-EQUB LO(n*16)
-NEXT
-
-\*-------------------------------
 ; Compressed (Exile) palette table going from 2bpp data to MODE 2 bytes
 ; Could / should be in MAIN
 ; Used by full pixel plot fns (LAY, LAYMASK) i.e. characters
@@ -148,12 +115,21 @@ PAGE_ALIGN
 }
 \\ Flip entries in this table when parity changes
 
-.fast_palette_lookup_2
-SKIP &CD
+\*-------------------------------
+; Multipliction table squeezed in from PAGE_ALIGN
+; Could / should be in MAIN
+.Mult16_HI          ; or shift...
+FOR n,0,39,1
+EQUB HI(n*16)
+NEXT
 
-PAGE_ALIGN
-.fast_palette_lookup_3
-SKIP &CD
+\*-------------------------------
+; Multipliction table squeezed in from PAGE_ALIGN
+; Could / should be in MAIN
+.Mult16_LO
+FOR n,0,39,1
+EQUB LO(n*16)
+NEXT
 
 .palette_addr_LO
 {
@@ -166,7 +142,7 @@ SKIP &CD
     EQUB LO(fast_palette_lookup_6)
     EQUB LO(fast_palette_lookup_7)
     EQUB LO(fast_palette_lookup_8)
-    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_9)
     EQUB LO(fast_palette_lookup_0)
     EQUB LO(fast_palette_lookup_0)
     EQUB LO(fast_palette_lookup_0)
@@ -186,7 +162,7 @@ SKIP &CD
     EQUB HI(fast_palette_lookup_6)
     EQUB HI(fast_palette_lookup_7)
     EQUB HI(fast_palette_lookup_8)
-    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_9)
     EQUB HI(fast_palette_lookup_0)
     EQUB HI(fast_palette_lookup_0)
     EQUB HI(fast_palette_lookup_0)
@@ -219,22 +195,38 @@ SKIP &CD
     EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR        ; guard red
 }
 
+\*-------------------------------
+; Expanded palette table going from 2bpp data directly to MODE 2 bytes
+; Could / should be in MAIN
+
+.fast_palette_lookup_0
+SKIP &34
+
+.fast_palette_lookup_1
+SKIP &34
+
+.fast_palette_lookup_2
+SKIP &34
+
+.fast_palette_lookup_3
+SKIP &34
+
 .fast_palette_lookup_4
-SKIP &CD
+SKIP &34
 
 .fast_palette_lookup_5
-SKIP &CD
+SKIP &34
 
 .fast_palette_lookup_6
-SKIP &CD
+SKIP &34
 
 .fast_palette_lookup_7
-SKIP &CD
+SKIP &34
 
 .fast_palette_lookup_8
-SKIP &CD
+SKIP &34
 
 .fast_palette_lookup_9
-SKIP &CD
+SKIP &34
 
 .beeb_core_data_end
