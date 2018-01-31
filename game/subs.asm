@@ -1020,7 +1020,7 @@ ENDIF
 {
  jsr subs_DoFast
 
-\ jsr vblank        ; BEEB vblank now inside PageFlip
+ jsr vblank
 
  jmp PageFlip
 }

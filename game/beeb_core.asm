@@ -245,7 +245,7 @@ ENDIF
 ; in double buffer mode, both display & main memory swap, but point to the opposite memory 
 .shadow_swap_buffers
 {
-    JSR beeb_wait_vsync
+    ; I think it was a mistake to wait for vsync here!
 
     LDA PAGE
     EOR #&20

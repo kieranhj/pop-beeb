@@ -44,6 +44,7 @@ MACRO MASTER_LOAD_HIRES filename
  LDY #HI(filename)
  LDA #HI(beeb_screen_addr)
  JSR disksys_load_file
+ JSR vblank
  JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
 }
 ENDMACRO
@@ -54,6 +55,7 @@ MACRO MASTER_LOAD_DHIRES filename, lines
  LDY #HI(filename)
  LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
  JSR disksys_load_file
+ JSR vblank
  JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
  JSR beeb_show_screen       ; in case previous blackout
 }

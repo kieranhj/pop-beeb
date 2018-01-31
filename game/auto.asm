@@ -2146,7 +2146,7 @@ ENDIF
 .DemoProg1 ;up to fight w/1st guard
  EQUB 0,Ctr
  EQUB 1,Fwd
- EQUB 11,Ctr                    \\ BEEB stop one frame early?!
+ EQUB 12,Ctr
  EQUB 30,Fwd ;start running...
  EQUB 37,Upfwd ;jump 1st pit
  EQUB 47,Ctr

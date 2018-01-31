@@ -681,6 +681,11 @@ ENDIF
  bne local_cut
 
  jsr DoFast
+ ; in theory wait for vsync / vblank here
+ ; but as background doesn't change tearing is less noticable
+ ; even if swapping screens mid-frame
+ ; probably need a min frame counter (25Hz)
+ ; so wait for 2 vblanks or swap immediately (ala Banjo)
  jmp PageFlip ;Update current screen...
 
 .local_cut jmp DoCleanCut ;or draw new screen from scratch
@@ -1003,6 +1008,7 @@ IF _NOT_BEEB
 ELSE
  jsr drawbg ;draw bg on p2 - has a vblank call?
 
+ jsr vblank
  jsr PageFlip
 
 \ BEEB would need spare page for copying data over to shadow?
@@ -1010,6 +1016,7 @@ ELSE
  jsr drawbg ;draw bg on p1
  jsr DoFast ;add chars
 
+ jsr vblank
  JMP PageFlip
 ENDIF
 }
