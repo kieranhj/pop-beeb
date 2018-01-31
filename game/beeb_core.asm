@@ -483,16 +483,16 @@ ENDIF
     LDA BANK
     JSR swr_select_slot
 
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
+
     \ Set a palette per swram bank
     \ Could set palette per sprite table or even per sprite
 
     LDA PALETTE
-    JSR beeb_plot_sprite_setpalette
-
-    \ Turns TABLE & IMAGE# into IMAGE ptr
-    \ Obtains WIDTH & HEIGHT
-    
-    JMP PREPREP
+    JMP beeb_plot_sprite_setpalette
 }
 
 \*-------------------------------

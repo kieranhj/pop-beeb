@@ -389,7 +389,7 @@ void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_he
 	}
 }
 
-int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, int height_step, unsigned char *beebptr, bool test, bool point, bool even)
+int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pixel_height, int height_step, unsigned char *beebptr, bool test, bool point, bool even, int pal)
 {
 	int expanded_width = 8 * pixel_width / 7;
 	int reduced_width = expanded_width / 2;
@@ -404,6 +404,8 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 	{
 		*beebptr++ = mode5_width;
 		*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
+
+		*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
 	}
 
 	for (int y = 0; y < pixel_height; y += height_step)
@@ -1194,6 +1196,8 @@ int main(int argc, char **argv)
 					*beebptr++ = mode5_width;
 					*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
 
+					*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
+
 					for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
 					{
 						int actual_y = !flip ? (pixel_height - 1 - y) : y;
@@ -1285,7 +1289,7 @@ int main(int argc, char **argv)
 
 					if (mode == 5)
 					{
-						bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even);
+						bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even, pal);
 					}
 
 					if (mode == 6)

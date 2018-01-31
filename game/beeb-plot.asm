@@ -1585,6 +1585,10 @@ ENDIF
 
 .beeb_plot_sprite_FASTMASK
 {
+    \ Get sprite data address 
+
+    JSR beeb_PREPREP
+
     \ BEEB PALETTE
     LDX PALETTE
     LDA palette_addr_LO, X
@@ -1593,10 +1597,6 @@ ENDIF
     LDA palette_addr_HI, X
     STA smPAL1+2
     STA smPAL2+2
-
-    \ Get sprite data address 
-
-    JSR beeb_PREPREP
 
     \ Beeb screen address
 

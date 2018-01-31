@@ -2174,3 +2174,23 @@ level as variation from just dungeon / palace?
 
 Propose bg tiles use 4-7 for Dungeon and 12-15 for Palace (toggle bit 3)
 Alt sets on a level also toggle bit 3.  So player = 0 and shadow = 8
+
+31/1/2018
+~~~
+Need way more palettes than this!  John has used 10x 3x colour palettes for Dungeon
+Will probably need the same again for Palace.  Assume still < 16 palettes in total?
+Need several for player (player, sword, dead, drink?) plus guards, princess etc.
+Plus colours for shadow and alt guard
+
+Sprites in Palace set will map to different palette numbers vs Dungeon so need to be
+able to specify these.  Can either add a palette byte to sprite data (after width & height)
+or compress run-time table.  Having palette in sprite data would mean not having to keep
+code and pal.txt in sync.
+
+Expand palette set (Dungeon or Palace) at run-time into same 10x tables
+Can reduce larger &CD table to &34 size by shifting down during first lookup
+10x &CD = ~2K (8 pages) 10x &34 = 520 (2 pages + 8 bytes, doh!)
+
+1/ Smaller expanded palettes
+2/ Move palette info to sprite banks
+3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven?

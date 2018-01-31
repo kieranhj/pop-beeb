@@ -951,11 +951,6 @@ ENDIF
 
 \ BGTAB2
 
- PHX:TAX
- LDA bgimg2pal-1, X
- EOR beeb_palette_toggle
- STA PALETTE:PLX
-
  LDA #BEEB_SWRAM_SLOT_BGTAB2
  STA BANK
 
@@ -965,12 +960,6 @@ ENDIF
 .bg1
 
  LDA IMAGE
-
- PHX:TAX
- LDA bgimg1pal-1, X
- EOR beeb_palette_toggle
- STA PALETTE
- TXA:PLX
 
 \ BGTAB1
 

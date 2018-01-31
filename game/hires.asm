@@ -282,9 +282,21 @@ ENDIF
  LDA (IMAGE),Y
  STA HEIGHT
 
+ INY
+ LDA (IMAGE),Y
+ STA PALETTE
+
+\\ Bounds check
+IF _DEBUG
+ CMP #16
+ BCC pal_ok
+ BRK
+ .pal_ok
+ENDIF
+
  LDA IMAGE
  CLC
- ADC #2
+ ADC #3
  STA IMAGE
  BCC label_3
  INC IMAGE+1
