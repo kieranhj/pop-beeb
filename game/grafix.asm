@@ -162,8 +162,6 @@ IF _HALF_PLAYER
 .chtabhack EQUB 1,1,1,0,1,0,0,0
 ENDIF
 
-.chtabpal EQUB &C, &C, &C, &E, &C, &E, &D
-
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel
 
@@ -1021,9 +1019,6 @@ ENDIF
  sta TABLE
  lda chtablist,y
  sta TABLE+1
-
- LDA chtabpal, Y
- STA PALETTE
 
  pla
  rts

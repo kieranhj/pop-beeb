@@ -2191,6 +2191,8 @@ Expand palette set (Dungeon or Palace) at run-time into same 10x tables
 Can reduce larger &CD table to &34 size by shifting down during first lookup
 10x &CD = ~2K (8 pages) 10x &34 = 520 (2 pages + 8 bytes, doh!)
 
-1/ Smaller expanded palettes
-2/ Move palette info to sprite banks
+1/ Smaller expanded palettes - done
+2/ Move palette info to sprite banks - done
 3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven?
+
+Automated palette matching Process - yay!

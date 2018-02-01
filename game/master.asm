@@ -515,72 +515,54 @@ ENDIF
 \ NOT BEEB
 \ jmp driveoff
 
-\ Expand fist palette lookup
-
- LDA newBGset1
- BEQ is_dun
- LDA #8         ; is_pal
- .is_dun
- STA beeb_palette_toggle
-
-\ Expand four palette tables in total
+\ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
 
  LDA #0
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_0)
  LDY #HI(fast_palette_lookup_0)
  JSR beeb_expand_palette_table
 
  LDA #1
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_1)
  LDY #HI(fast_palette_lookup_1)
  JSR beeb_expand_palette_table
 
  LDA #2
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_2)
  LDY #HI(fast_palette_lookup_2)
  JSR beeb_expand_palette_table
  
  LDA #3
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_3)
  LDY #HI(fast_palette_lookup_3)
  JSR beeb_expand_palette_table
 
  LDA #4
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_4)
  LDY #HI(fast_palette_lookup_4)
  JSR beeb_expand_palette_table
 
  LDA #5
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_5)
  LDY #HI(fast_palette_lookup_5)
  JSR beeb_expand_palette_table
 
  LDA #6
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_6)
  LDY #HI(fast_palette_lookup_6)
  JSR beeb_expand_palette_table
 
  LDA #7
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_7)
  LDY #HI(fast_palette_lookup_7)
  JSR beeb_expand_palette_table
 
  LDA #8
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_8)
  LDY #HI(fast_palette_lookup_8)
  JSR beeb_expand_palette_table
 
  LDA #9
-\ EOR beeb_palette_toggle
  LDX #LO(fast_palette_lookup_9)
  LDY #HI(fast_palette_lookup_9)
  JSR beeb_expand_palette_table

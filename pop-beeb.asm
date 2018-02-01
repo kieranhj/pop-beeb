@@ -896,7 +896,7 @@ PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
 
 \ Attract files
-PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0
+PUTFILE "Other/applewin.Splash.mode2.bin", "SPLASH", &3000, 0
 PUTFILE "Other/applewin.Title.mode2.bin", "TITLE", &3000, 0
 PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", &3000, 0
 PUTFILE "Other/applewin.Byline.mode2.bin", "BYLINE", &3000, 0

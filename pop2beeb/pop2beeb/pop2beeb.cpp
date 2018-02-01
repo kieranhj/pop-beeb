@@ -630,6 +630,68 @@ int get_beeb_byte_for_palette(int index, unsigned char r, unsigned char g, unsig
 	return beeb_mode5_colour_to_screen_pixel[c][pixel];
 }
 
+
+int get_beeb_byte_for_colours_in_palette_selection(int index, int c0, int c1, int c2, int c3)
+{
+	int p0=0, p1=0, p2=0, p3=0;
+
+	for (int m = 0; m < 3; m++)
+	{
+		if (palette_selection[index][m] == c0) p0 = m+1;
+		if (palette_selection[index][m] == c1) p1 = m+1;
+		if (palette_selection[index][m] == c2) p2 = m+1;
+		if (palette_selection[index][m] == c3) p3 = m+1;
+	}
+
+	return beeb_mode5_colour_to_screen_pixel[p0][0] | beeb_mode5_colour_to_screen_pixel[p1][1] | beeb_mode5_colour_to_screen_pixel[p2][2] | beeb_mode5_colour_to_screen_pixel[p3][3];
+}
+
+int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height)
+{
+	int counts[16];
+	int num_colours = 0;
+	int palette[16];
+
+	for (int c = 0; c < 16; c++) counts[c] = 0;
+
+	for (int y = 0; y < pixel_height; y++)
+	{
+		for (int x = 0; x < pixel_width; x++)
+		{
+			counts[colour_data[y*pixel_width + x]]++;
+		}
+	}
+
+	for (int c = 1; c < 16; c++)
+	{
+		if (counts[c] > 0)
+			palette[num_colours++] = c;
+	}
+
+	if( num_colours > 3 )
+		printf("WARNING: Found %d colours in sprite!\n", num_colours);
+
+	for (int p = 0; p < 16; p++)
+	{
+		int m;
+
+		for (m = 0; m < 3 && m < num_colours; m++)
+		{
+		// Does this palette colour match one of this selection?
+
+			if (!(palette[m] == palette_selection[p][0] || palette[m] == palette_selection[p][1] || palette[m] == palette_selection[p][2]))
+				break;
+		}
+
+		if (m >= num_colours || m >= 3)
+			return p;
+	}
+
+	printf("WARNING: Failed to match a palette selection against [%d %d %d]\n", palette[0], palette[1], palette[2]);
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	cimg_usage("POP asset convertor.\n\nUsage : pop2beeb [options]");
@@ -1074,21 +1136,51 @@ int main(int argc, char **argv)
 		mode5_total_width = 8 * mode5_total_width / 7;
 		mode5_total_width += num_images * 8;
 
-		printf("Reading pixel data from '%s'...\n", bitmapname);
+		printf("Reading bitmap data from '%s'...\n", bitmapname);
 
 		CImg<unsigned char> bitmap(bitmapname);
 
-		char palfile[256];
-		sprintf(palfile, "%s.pal.txt", inputname);
-
-		FILE *palsel = fopen(palfile, "rb");
-
-		if (palsel)
-		{
-			printf("Using palette selection file '%s'...\n", palfile);
-		}
+		printf("Converting bitmap data to sprites...\n");
 
 		int current_x = 4;
+
+		for (int i = 0; i < num_images; i++)
+		{
+			int pixel_height = pixel_size[i][1];
+			int current_y = max_height - pixel_height - 1;
+
+			int pixel_width = pixel_size[i][0];
+			int expanded_width = 8 * pixel_width / 7;
+			int reduced_width = expanded_width / 2;
+			int mode5_width = (reduced_width + 3) / 4;
+
+			colour_width[i] = mode5_width * 4;
+
+			for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
+			{
+				int actual_y = !flip ? (pixel_height - 1 - y) : y;
+
+				for (int x8 = 0; x8 < mode5_width; x8++)
+				{
+					int c0 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2));
+					int c1 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2));
+					int c2 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2));
+					int c3 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2));
+
+//					unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
+//					unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
+//					unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
+//					unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
+
+					colours[i][y * colour_width[i] + x8 * 4 + 0] = c0;
+					colours[i][y * colour_width[i] + x8 * 4 + 1] = c1;
+					colours[i][y * colour_width[i] + x8 * 4 + 2] = c2;
+					colours[i][y * colour_width[i] + x8 * 4 + 3] = c3;
+				}
+			}
+
+			current_x += (mode5_width * 4 * 2) + 8;
+		}
 
 		if (outputname)
 		{
@@ -1105,39 +1197,6 @@ int main(int argc, char **argv)
 				num_images = end_image - start_image + 1;
 
 				printf("Output start image = %d\nOutput end image = %d\nOutput total images = %d\n", start_image, end_image, num_images);
-
-				for (int i = 1; i < start_image; i++)
-				{
-					int pixel_width = pixel_size[i][0];
-					int expanded_width = 8 * pixel_width / 7;
-					int reduced_width = expanded_width / 2;
-					int mode5_width = (reduced_width + 3) / 4;
-					current_x += (mode5_width * 4 * 2) + 8;
-
-					if (palsel)
-					{
-						pal = -1;
-
-						while (pal == -1)
-						{
-							unsigned char p = fgetc(palsel);
-
-							// Super hack balls!
-							if (p >= '0' && p <= '9')
-							{
-								pal = p - '0';
-							}
-							else if (p >= 'a' && p <= 'f')
-							{
-								pal = p - 'a' + 10;
-							}
-							else if (p >= 'A' && p <= 'F')
-							{
-								pal = p - 'A' + 10;
-							}
-						}
-					}
-				}
 
 				*beebptr++ = num_images;
 
@@ -1161,29 +1220,11 @@ int main(int argc, char **argv)
 					int reduced_width = expanded_width / 2;
 					int mode5_width = (reduced_width + 3) / 4;
 
-					if (palsel)
+					pal = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+
+					if (verbose)
 					{
-						pal = -1;
-
-						while (pal == -1)
-						{
-							unsigned char p = fgetc(palsel);
-
-							// Super hack balls!
-							if (p >= '0' && p <= '9')
-							{
-								pal = p - '0';
-							}
-							else if (p >= 'a' && p <= 'f')
-							{
-								pal = p - 'a' + 10;
-							}
-							else if (p >= 'A' && p <= 'F')
-							{
-								pal = p - 'A' + 10;
-							}
-						}
-						printf("[%d] %d x %d with pal=%d (%d %d %d)\n", i, reduced_width, pixel_height, pal, palette_selection[pal][0], palette_selection[pal][1], palette_selection[pal][2]);
+						printf("Image %d matched palette %d\n", i+1, pal);
 					}
 
 					// Now we know our address
@@ -1200,23 +1241,23 @@ int main(int argc, char **argv)
 
 					for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
 					{
-						int actual_y = !flip ? (pixel_height - 1 - y) : y;
-
 						for (int x8 = 0; x8 < mode5_width; x8++)
 						{
-						//	int c0 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2));
-						//	int c1 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2));
-						//	int c2 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2));
-						//	int c3 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2));
+							int c0 = colours[i][y * colour_width[i] + x8 * 4 + 0];
+							int c1 = colours[i][y * colour_width[i] + x8 * 4 + 1];
+							int c2 = colours[i][y * colour_width[i] + x8 * 4 + 2];
+							int c3 = colours[i][y * colour_width[i] + x8 * 4 + 3];
 
 						//	printf("%d %d %d %d ", c0, c1, c2, c3);
 
-							unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
-							unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
-							unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
-							unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
+							unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(pal, c0, c1, c2, c3);
 
-							unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
+						//	unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
+						//	unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
+						//	unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
+						//	unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
+
+						//	unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
 
 							*beebptr++ = beebbyte;
 						}

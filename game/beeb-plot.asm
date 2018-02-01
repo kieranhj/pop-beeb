@@ -650,9 +650,7 @@ ENDIF
 .notmirr
  cmp #enum_eor
  bne label_1
- LDA PALETTE        ; BEEB eor = increment palette index
- EOR #8
- STA PALETTE
+ INC PALETTE        ; BEEB eor = increment palette index
 
 .label_1 cmp #enum_and
  bne label_2
@@ -1131,9 +1129,7 @@ ENDIF
 {
  cmp #enum_eor
  bne label_1
- LDA PALETTE        ; BEEB eor = increment palette index
- EOR #8
- STA PALETTE
+ INC PALETTE        ; BEEB eor = increment palette index
 
 .label_1 cmp #enum_and
  bne label_2
