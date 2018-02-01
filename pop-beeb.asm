@@ -19,7 +19,7 @@ _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 _BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
 _PEEL_IN_ANDY = FALSE       ; store peel buffers in ANDY 4K RAM - BEEB REMOVE ME
 
-_COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now!
+_COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now! - BEEB REMOVE ME
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
@@ -896,7 +896,7 @@ PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
 
 \ Attract files
-PUTFILE "Other/applewin.Splash.mode2.bin", "SPLASH", &3000, 0
+PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0
 PUTFILE "Other/applewin.Title.mode2.bin", "TITLE", &3000, 0
 PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", &3000, 0
 PUTFILE "Other/applewin.Byline.mode2.bin", "BYLINE", &3000, 0
