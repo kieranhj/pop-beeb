@@ -898,7 +898,7 @@ PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
 \ Attract files
 PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0
 PUTFILE "Other/john.Title.mode2.bin", "TITLE", &3000, 0
-PUTFILE "Other/applewin.Presents.mode2.bin", "PRESENT", &3000, 0
+PUTFILE "Other/john.Presents.mode2.bin", "PRESENT", &3000, 0
 PUTFILE "Other/john.Byline.mode2.bin", "BYLINE", &3000, 0
 PUTFILE "Other/john.Prolog.mode2.bin", "PROLOG", &3000, 0
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
