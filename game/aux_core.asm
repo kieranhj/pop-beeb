@@ -314,66 +314,30 @@ IF _JMP_TABLE
 GRAFIX_BANK = -1        ; currently in Core
 
 .drawall jmp DRAWALL
-;
 \ jmp dispversion
 \.saveblue BRK   ;jmp SAVEBLUE          ; Editor only
-\
 \.reloadblue BRK ;jmp RELOADBLUE        ; Editor only
-.movemem BRK    ;jmp MOVEMEM
 \.buttons jmp BUTTONS ;ed
-;
-;
-\
 .dimchar jmp DIMCHAR
 .cvtx jmp CVTX
 .zeropeel jmp ZEROPEEL
 .zeropeels jmp ZEROPEELS
-;
-\
+
 .addpeel jmp ADDPEEL
-.copyscrn RTS   ;jmp COPYSCRN       BEEB TO DO OR NOT NEEDED?
 .sngpeel jmp SNGPEEL
-.rnd jmp RND
-;
 \ Removed unnecessary redirections
 \ Removed Editor only fns
-;
 .addback jmp ADDBACK
 .addfore jmp ADDFORE
 .addmid jmp ADDMID
+
 .addmidez jmp ADDMIDEZ
-\
 .addwipe jmp ADDWIPE
 .addmsg jmp ADDMSG
-;
-;
 .zerolsts jmp ZEROLSTS
-\
-;
-;
-;
 \.savebinfo BRK  ;jmp SAVEBINFO         ; Editor only
 \.reloadbinfo BRK;jmp RELOADBINFO       ; Editor only
-\
-;
-\.normspeed RTS  ;jmp NORMSPEED         ; NOT BEEB
 .addmidezo jmp ADDMIDEZO
-;
-;
-\
-;
-\.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
-\.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
-;
-;
-\
-;
-;
-;
-;
-.vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
-\
-.vbli BRK       ;jmp VBLI ;VBL interrupt
 
 
 \*-------------------------------

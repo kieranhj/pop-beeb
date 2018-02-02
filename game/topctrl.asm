@@ -979,7 +979,8 @@ IF UseQuick
 
  jsr PageFlip
 
- jsr copyscrn ;copy bg to p2
+\ NOT BEEB
+\ jsr copyscrn ;copy bg to p2
  jsr DoFast ;add chars
 
  jsr PageFlip ;show complete frame
