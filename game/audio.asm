@@ -4,12 +4,11 @@
 
 .audio
 
-IF _JMP_TABLE=FALSE
 .gtone RTS      ;jmp GTONE          BEEB TODO SOUND
 .minit jmp MINIT
 .mplay jmp MPLAY
 .whoop BRK      ;jmp WHOOP
-ENDIF
+
 
 IF _TODO
 *-------------------------------

@@ -2,6 +2,8 @@
 ; Originally TABLES.S
 ; All precalculated tables
 
+_DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
+
 .tables
 \org = $e00
 \ tr on

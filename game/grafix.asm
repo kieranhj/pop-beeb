@@ -2,8 +2,6 @@
 ; Originally GRAFIX.S
 ; All Apple II hi-res graphics functions
 
-_DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
-
 .grafix
 \org = $400
 \ tr on

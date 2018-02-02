@@ -334,8 +334,6 @@ INCLUDE "game/master.asm"
 master_end=P%
 INCLUDE "game/topctrl.asm"
 topctrl_end=P%
-INCLUDE "game/grafix.asm"
-grafix_end=P%
 INCLUDE "game/hires_core.asm"
 hires_core_end=P%
 INCLUDE "game/audio.asm"
@@ -382,7 +380,6 @@ PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
 PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
-PRINT "GRAFIX size = ", ~(grafix_end - grafix)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "--------"
@@ -725,6 +722,8 @@ INCLUDE "game/frameadv.asm"
 frameadv_end=P%
 INCLUDE "game/gamebg.asm"
 gamebg_end=P%
+INCLUDE "game/grafix.asm"
+grafix_end=P%
 INCLUDE "game/subs.asm"
 subs_end=P%
 INCLUDE "game/mover.asm"
@@ -749,6 +748,7 @@ PRINT "--------"
 PRINT "CTRL size = ", ~(ctrl_end-ctrl)
 PRINT "FRAMEADV size = ", ~(frameadv_end-frameadv)
 PRINT "GAMEBG size = ", ~(gamebg_end-gamebg)
+PRINT "GRAFIX size = ", ~(grafix_end-grafix)
 PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)

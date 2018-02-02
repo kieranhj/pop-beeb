@@ -311,43 +311,31 @@ IF _JMP_TABLE
 \* grafix.asm
 \*-------------------------------
 
-GRAFIX_BANK = -1        ; currently in Core
-
-.drawall jmp DRAWALL
+.drawall JUMP_B DRAWALL, GRAFIX_BASE, 0
 \ jmp dispversion
 \.saveblue BRK   ;jmp SAVEBLUE          ; Editor only
 \.reloadblue BRK ;jmp RELOADBLUE        ; Editor only
 \.buttons jmp BUTTONS ;ed
-.dimchar jmp DIMCHAR
-.cvtx jmp CVTX
-.zeropeel jmp ZEROPEEL
-.zeropeels jmp ZEROPEELS
+.dimchar JUMP_B DIMCHAR, GRAFIX_BASE, 1
+.cvtx JUMP_B CVTX, GRAFIX_BASE, 2
+.zeropeel JUMP_B ZEROPEEL, GRAFIX_BASE, 3
+.zeropeels JUMP_B ZEROPEELS, GRAFIX_BASE, 4
 
-.addpeel jmp ADDPEEL
-.sngpeel jmp SNGPEEL
+.addpeel JUMP_B ADDPEEL, GRAFIX_BASE, 5
+.sngpeel JUMP_B SNGPEEL, GRAFIX_BASE, 6
 \ Removed unnecessary redirections
 \ Removed Editor only fns
-.addback jmp ADDBACK
-.addfore jmp ADDFORE
-.addmid jmp ADDMID
+.addback JUMP_B ADDBACK, GRAFIX_BASE, 7
+.addfore JUMP_B ADDFORE, GRAFIX_BASE, 8
+.addmid JUMP_B ADDMID, GRAFIX_BASE, 9
 
-.addmidez jmp ADDMIDEZ
-.addwipe jmp ADDWIPE
-.addmsg jmp ADDMSG
-.zerolsts jmp ZEROLSTS
+.addmidez JUMP_B ADDMIDEZ, GRAFIX_BASE, 10
+.addwipe JUMP_B ADDWIPE, GRAFIX_BASE, 11
+.addmsg JUMP_B ADDMSG, GRAFIX_BASE, 12
+.zerolsts JUMP_B ZEROLSTS, GRAFIX_BASE, 13
 \.savebinfo BRK  ;jmp SAVEBINFO         ; Editor only
 \.reloadbinfo BRK;jmp RELOADBINFO       ; Editor only
-.addmidezo jmp ADDMIDEZO
-
-
-\*-------------------------------
-\* audio.asm
-\*-------------------------------
-
-.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
-.minit jmp MINIT
-.mplay jmp MPLAY
-.whoop BRK      ;jmp WHOOP
+.addmidezo JUMP_B ADDMIDEZO, GRAFIX_BASE, 14
 
 
 \*-------------------------------
@@ -786,6 +774,34 @@ EQUB LO(FLOW)
 EQUB 0    ; EQUB LO(PMASK)
 
 \*-------------------------------
+\* grafix.asm
+\*-------------------------------
+GRAFIX_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(DRAWALL)
+\ jmp dispversion
+\.saveblue BRK   ;jmp SAVEBLUE
+\.reloadblue BRK ;jmp RELOADBLUE
+\.buttons jmp BUTTONS ;ed
+EQUB LO(DIMCHAR)
+EQUB LO(CVTX)
+EQUB LO(ZEROPEEL)
+EQUB LO(ZEROPEELS)
+
+EQUB LO(ADDPEEL)
+EQUB LO(SNGPEEL)
+EQUB LO(ADDBACK)
+EQUB LO(ADDFORE)
+EQUB LO(ADDMID)
+
+EQUB LO(ADDMIDEZ)
+EQUB LO(ADDWIPE)
+EQUB LO(ADDMSG)
+EQUB LO(ZEROLSTS)
+\.savebinfo BRK  ;jmp SAVEBINFO
+\.reloadbinfo BRK;jmp RELOADBINFO
+EQUB LO(ADDMIDEZO)
+
+\*-------------------------------
 \* mover.asm
 \*-------------------------------
 MOVER_BASE = P% - aux_core_fn_table_B_LO
@@ -968,6 +984,33 @@ EQUB HI(FLOW)
 EQUB 0    ; EQUB HI(PMASK)
 
 \*-------------------------------
+\* grafix.asm
+\*-------------------------------
+EQUB HI(DRAWALL)
+\ jmp dispversion
+\.saveblue BRK   ;jmp SAVEBLUE
+\.reloadblue BRK ;jmp RELOADBLUE
+\.buttons jmp BUTTONS ;ed
+EQUB HI(DIMCHAR)
+EQUB HI(CVTX)
+EQUB HI(ZEROPEEL)
+EQUB HI(ZEROPEELS)
+
+EQUB HI(ADDPEEL)
+EQUB HI(SNGPEEL)
+EQUB HI(ADDBACK)
+EQUB HI(ADDFORE)
+EQUB HI(ADDMID)
+
+EQUB HI(ADDMIDEZ)
+EQUB HI(ADDWIPE)
+EQUB HI(ADDMSG)
+EQUB HI(ZEROLSTS)
+\.savebinfo BRK  ;jmp SAVEBINFO
+\.reloadbinfo BRK;jmp RELOADBINFO
+EQUB HI(ADDMIDEZO)
+
+\*-------------------------------
 \* mover.asm
 \*-------------------------------
 EQUB HI(ANIMTRANS)
@@ -1091,65 +1134,3 @@ EQUB 0      ; EQUB LO(DISPVERSION)
 ENDIF
 
 .aux_core_end
-
-\\ Original approach
-IF 0
-MACRO JUMP_TO function, bank
-{
-    \\ Preserve A
-
-    STA DLL_REG_A
-
-    \\ Load function address
-
-    LDA #LO(function)
-    STA DLL_FUNC_LO
-    LDA #HI(function)
-    STA DLL_FUNC_HI
-
-    \\ Load bank# and call jump fn
-
-    LDA #bank
-    JMP jump_to
-}   \\ 3c+2c+3c+2c+3c+2c+3c = 18c + 15b overhead per fn :(
-ENDMACRO
-
-.jump_to        ; A=bank, X&Y=fn address
-{
-    \\ Store bank#
-    STA DLL_BANK
-
-    \\ Remember current bank
-    LDA &F4: PHA
-
-    \\ Switch to new swram bank
-    LDA DLL_BANK
-    STA &F4:STA &FE30
-
-    \\ Set function address
-    LDA DLL_FUNC_LO
-    STA jump_to_addr+1
-
-    LDA DLL_FUNC_HI
-    STA jump_to_addr+2
-
-    \\ Restore A before fn call
-    LDA DLL_REG_A
-}
-\\ Call function
-.jump_to_addr
-    JSR &FFFF
-{
-    \\ Preserve A
-    STA DLL_REG_A
-
-    \\ Restore original bank
-    PLA
-    STA &F4:STA &FE30
-
-    \\ Restore A before return
-    LDA DLL_REG_A
-
-    RTS
-}   \\ 3c+3c+3c+3c+3c+4c+3c+4c+3c+4c+3c+6c+3c+4c+3c+4c+3c+6c = 65c!
-ENDIF
