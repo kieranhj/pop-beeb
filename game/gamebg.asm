@@ -408,10 +408,13 @@ ENDIF
 
 .DRAWKID
 {
+IF _DEBUG
  lda backtolife
  beq label_2
+ DEC backtolife
  lda PAGE
  beq return_28 ;flash when coming back to life
+ENDIF
 
 .label_2 lda mergetimer
  bmi label_1

@@ -62,7 +62,7 @@ LastSideB = 14 ;& last
 \TEXTon = $c051
 \PAGE2off = $c054
 
-kresurrect = 'R'
+kresurrect = IKN_r OR $80
 
 \*-------------------------------
 \* Misc. changeable parameters
@@ -152,7 +152,7 @@ ENDIF
 \ NOT BEEB
 \ jsr setfastaux ;bgtable in auxmem
 
- lda #FinalDisk EOR 1
+ lda #LO(_DEBUG)
  sta develment
 
  jsr initgame
@@ -1288,9 +1288,7 @@ ENDIF
 .ok cmp #1
  beq gameover ;End game when msgtimer = 1
 
- IF FinalDisk
- ELSE
-
+IF _DEBUG
  lda develment
  beq nodevel
  lda keypress
@@ -1313,8 +1311,7 @@ ENDIF
 
 \* Raise kid from the dead (TEMP!)
 
- IF FinalDisk
- ELSE
+IF _DEBUG
 .raise
  lda #0
  sta msgtimer
@@ -1331,8 +1328,7 @@ ENDIF
  lda #stand
  jsr jumpseq
  jmp startkid1
-
- ENDIF
+ENDIF
 }
 
 IF _TODO

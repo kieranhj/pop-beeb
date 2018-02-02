@@ -142,7 +142,9 @@ IF 1
 .invert skip 1
 .PlayCount skip 1
 .refract skip 1
+IF _DEBUG
 .backtolife skip 1
+ENDIF
 .cutplan skip 1
 ;.lastcmd skip 1
 ;.distfallen skip 1
