@@ -302,9 +302,9 @@ IF _JMP_TABLE
 .drawglass JUMP_B DRAWGLASS, GAMEBG_BASE, 19
 
 .initlay JUMP_B INITLAY, GAMEBG_BASE, 20
-.twinkle RTS        ; JUMP_B TWINKLE               BEEB TODO GFX
+.twinkle RTS        ; JUMP_B TWINKLE                BEEB TODO GFX
 .flow JUMP_B FLOW, GAMEBG_BASE, 22
-.pmask RTS          ; JUMP_B PMASK                 BEEB TODO GFX
+.pmask RTS          ; JUMP_B PMASK, GAMEBG_BASE, 23 BEEB TODO GFX
 
 
 \*-------------------------------
@@ -771,7 +771,7 @@ EQUB LO(DRAWGLASS)
 EQUB LO(INITLAY)
 EQUB 0    ; EQUB LO(TWINKLE)
 EQUB LO(FLOW)
-EQUB 0    ; EQUB LO(PMASK)
+EQUB 0      ;EQUB LO(PMASK)
 
 \*-------------------------------
 \* grafix.asm
@@ -981,7 +981,7 @@ EQUB HI(DRAWGLASS)
 EQUB HI(INITLAY)
 EQUB 0    ; EQUB HI(TWINKLE)
 EQUB HI(FLOW)
-EQUB 0    ; EQUB HI(PMASK)
+EQUB 0      ; EQUB HI(PMASK)
 
 \*-------------------------------
 \* grafix.asm

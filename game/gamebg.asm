@@ -44,7 +44,7 @@ IF _JMP_TABLE = FALSE
 .initlay jmp INITLAY
 .twinkle BRK        ; jmp TWINKLE
 .flow jmp FLOW
-.pmask BRK          ; jmp PMASK
+.pmask jmp PMASK
 ENDIF
 
 \ NOT BEEB COPY PROTECTION
@@ -138,13 +138,13 @@ flowx = glassx+1
 flowy = glassy-2
 .flowimg EQUB $16,$17,$18 ;chtable6
 
-IF _TODO
-*-------------------------------
-* Masks for Princess's face & hair
+\*-------------------------------
+\* Masks for Princess's face & hair
 
-pmaskdx hex 00,00
-pmaskdy db -4,-33
-pmaski hex 2c,22
+IF _TODO
+.pmaskdx EQUB $00,$00
+.pmaskdy EQUB LO(-4),LO(-33)
+.pmaski EQUB $2c,$22
 ENDIF
 
 \*-------------------------------
@@ -503,6 +503,7 @@ ENDIF
 
 \*-------------------------------
 
+IF _NOT_BEEB
 .chgoffset
 {
  clc
@@ -517,6 +518,7 @@ ENDIF
 .label_1 sta OFFSET
  rts
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -929,34 +931,36 @@ ENDIF
  jmp addback
 }
 
+\*-------------------------------
+\*
+\* Mask princess's face & hair for certain CharPosns
+\*
+\* (Called after ADDCHAROBJ)
+\*
+\*-------------------------------
+
 IF _TODO
-*-------------------------------
-*
-* Mask princess's face & hair for certain CharPosns
-*
-* (Called after ADDCHAROBJ)
-*
-*-------------------------------
-PMASK
+.PMASK
+{
  ldx CharPosn
  cpx #19 ;plie
- bne :1
+ bne label_1
  ldx #0
- bpl :mask
-:1 cpx #1 ;pslump-1
- beq :m1
+ bpl PMASK_mask
+.label_1 cpx #1 ;pslump-1
+ beq m1
  cpx #18 ;pslump-2
- bne :2
-:m1 ldx #1
- bpl :mask
-:2
+ bne label_2
+.m1 ldx #1
+ bpl PMASK_mask
+.label_2
+}
 ENDIF
-
 .return_60
  rts
-
-IF _TODO
-:mask
+IF _NOT_BEEB
+.PMASK_mask
+{
  lda FCharY
  clc
  adc pmaskdy,x
@@ -973,10 +977,11 @@ IF _TODO
  lda #5 ;chtable6
  sta TABLE
 
- lda #and
+ lda #enum_and
  sta OPACITY
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR $80
  jmp addmid
+}
 ENDIF
 
 IF _NOT_BEEB

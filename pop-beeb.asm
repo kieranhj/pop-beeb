@@ -16,7 +16,7 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
@@ -182,7 +182,6 @@ INCLUDE "lib/print.asm"
 .swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks.", 13, 0
 
 .main_filename  EQUS "Main   $"
-.aux_filename   EQUS "Aux    $"
 .high_filename  EQUS "High   $"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
@@ -262,12 +261,6 @@ INCLUDE "lib/print.asm"
 
     LDA #BEEB_SWRAM_SLOT_AUX_HIGH   \\ assuming this goes to 7
     JSR swr_select_slot
-
-\\ AUX (Deprecated)
-\    LDX #LO(aux_filename)
-\    LDY #HI(aux_filename)
-\    LDA #HI(pop_beeb_aux_start)
-\    JSR disksys_load_file
 
     \\ And Aux High (SWRAM)
 
@@ -453,53 +446,6 @@ PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - &A00)
 PRINT "--------"
 
 \*-------------------------------
-; Construct  AUX (SHADOW) RAM
-\*-------------------------------
-
-AUX_START=&3000
-AUX_TOP=&8000
-
-CLEAR 0, &FFFF
-ORG AUX_START
-GUARD AUX_TOP
-
-.pop_beeb_aux_start
-.pop_beeb_aux_code_start
-
-; Code in AUX RAM (gameplay)
-
-.pop_beeb_aux_code_end
-
-; Data in AUX RAM (gameplay)
-
-.pop_beeb_aux_data_start
-
-.pop_beeb_aux_data_end
-.pop_beeb_aux_end
-
-; Save executable code for Aux RAM
-
-; SAVE "Aux", pop_beeb_aux_start, pop_beeb_aux_end, 0
-
-; BSS in AUX RAM (gameplay)
-
-.pop_beeb_aux_bss_start
-
-.pop_beeb_aux_bss_end
-
-PRINT "--------"
-PRINT "AUX (Deprecated)"
-PRINT "--------"
-PRINT "Aux code size = ", ~(pop_beeb_aux_code_end - pop_beeb_aux_code_start)
-PRINT "Aux data size = ", ~(pop_beeb_aux_data_end - pop_beeb_aux_data_start)
-PRINT "Aux BSS size = ", ~(pop_beeb_aux_bss_end - pop_beeb_aux_bss_start)
-PRINT "--------"
-PRINT "Aux high watermark = ", ~P%
-PRINT "Aux RAM free = ", ~(AUX_TOP - P%)
-PRINT "--------"
-
-
-\*-------------------------------
 ; Construct HAZEL RAM
 \*-------------------------------
 
@@ -549,7 +495,6 @@ PRINT "HAZEL high watermark = ", ~P%
 PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
 PRINT "--------"
 
-
 \*-------------------------------
 ; Construct ANDY RAM
 \*-------------------------------
@@ -568,7 +513,6 @@ PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
 PRINT "--------"
 
-
 \*-------------------------------
 ; Construct ROMS
 \*-------------------------------
@@ -580,7 +524,9 @@ CLEAR 0, &FFFF
 ORG SWRAM_START
 GUARD SWRAM_TOP
 
+\*-------------------------------
 ; BANK 0
+\*-------------------------------
 
 .bank0_start
 
@@ -603,7 +549,9 @@ PRINT "BANK 0 size = ", ~(bank0_end - bank0_start)
 PRINT "BANK 0 free = ", ~(SWRAM_TOP - bank0_end)
 PRINT "--------"
 
+\*-------------------------------
 ; BANK 1
+\*-------------------------------
 
 CLEAR 0, &FFFF
 ORG SWRAM_START
@@ -652,7 +600,9 @@ PRINT "--------"
 
 SAVE "BANK1", bank1_start, bank1_end, 0
 
+\*-------------------------------
 ; BANK 2
+\*-------------------------------
 
 CLEAR 0, &FFFF
 ORG SWRAM_START
@@ -703,8 +653,9 @@ PRINT "BANK 2 size = ", ~(bank2_end - bank2_start)
 PRINT "BANK 2 free = ", ~(SWRAM_TOP - bank2_end)
 PRINT "--------"
 
-
+\*-------------------------------
 ; BANK 3
+\*-------------------------------
 
 CLEAR 0, &FFFF
 ORG SWRAM_START
@@ -761,7 +712,6 @@ PRINT "BANK 3 size = ", ~(bank3_end - bank3_start)
 PRINT "BANK 3 free = ", ~(SWRAM_TOP - bank3_end)
 PRINT "--------"
 
-
 \*-------------------------------
 ; Construct overlay files
 ; Not sure what this is going to overlay yet!
@@ -785,7 +735,6 @@ PRINT "--------"
 PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
 PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 PRINT "--------"
-
 
 \*-------------------------------
 \*
@@ -816,50 +765,21 @@ ORG blueprnt
 .GdStartSeqH skip 24
 PAGE_ALIGN
 
-
 \*-------------------------------
 ; Put files on SIDE A of the disk
 \*-------------------------------
 
 PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 
-\ Now on SIDE B
-;PUTFILE "Levels/LEVEL1", "LEVEL1", 0, 0
-;PUTFILE "Levels/LEVEL2", "LEVEL2", 0, 0
-;PUTFILE "Levels/LEVEL3", "LEVEL3", 0, 0
-;PUTFILE "Levels/LEVEL4", "LEVEL4", 0, 0
-;PUTFILE "Levels/LEVEL5", "LEVEL5", 0, 0
-;PUTFILE "Levels/LEVEL6", "LEVEL6", 0, 0
-;PUTFILE "Levels/LEVEL7", "LEVEL7", 0, 0
-;PUTFILE "Levels/LEVEL8", "LEVEL8", 0, 0
-;PUTFILE "Levels/LEVEL9", "LEVEL9", 0, 0
-;PUTFILE "Levels/LEVEL10", "LEVEL10", 0, 0
-;PUTFILE "Levels/LEVEL11", "LEVEL11", 0, 0
-;PUTFILE "Levels/LEVEL12", "LEVEL12", 0, 0
-;PUTFILE "Levels/LEVEL13", "LEVEL13", 0, 0
-;PUTFILE "Levels/LEVEL14", "LEVEL14", 0, 0
+\ All game levels now on SIDE B
 
-\ Now split into A&B (not C)
+\ BG split into A&B only need DUN for Demo on SIDA A
 PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
 PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.DUN.bin", "DUN1", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.DUNC.bin", "DUN1C", 0, 0
 
-\ Now split into A&B (not C)
-\ Not needed on SIDE A
-;PUTFILE "Images/BEEB.IMG.BGTAB1.PALA.bin", "PAL1A", 0, 0
-;PUTFILE "Images/BEEB.IMG.BGTAB1.PALB.bin", "PAL1B", 0, 0
-;PUTFILE "Images/BEEB.IMG.BGTAB2.PAL.bin", "PAL2", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.PAL.bin", "PAL1", 0, 0
-\PUTFILE "Images/BEEB.IMG.BGTAB1.PALC.bin", "PAL1C", 0, 0
-
-\ Only need regular Guard for SIDE A
+\ Only need regular Guard for Demo on SIDE A
 PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB4.FAT.bin", "FAT", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB4.SHAD.bin", "SHAD", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB4.SKEL.bin", "SKEL", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB4.VIZ.bin", "VIZ", 0, 0
 
 IF _HALF_PLAYER
 ; All saved into single file for BANK1
