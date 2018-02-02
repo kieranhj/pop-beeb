@@ -2151,7 +2151,7 @@ ENDIF
  EQUB 37,Upfwd ;jump 1st pit
  EQUB 47,Ctr
  EQUB 48,Fwd ;& keep running
-d1 = 66                         \\ BEEB stop one frame later?!
+d1 = 65
  EQUB d1,Ctr ;stop
  EQUB d1+8,Back ;look back...
  EQUB d1+10,Ctr
