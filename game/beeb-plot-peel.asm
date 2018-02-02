@@ -50,11 +50,6 @@ EQUB HI(beeb_plot_peel_9bytes)
 
 .beeb_plot_peel
 {
-    \ Select MOS 4K RAM as our sprite bank
-    IF _PEEL_IN_ANDY
-    JSR swr_select_ANDY
-    ENDIF
-
     \ Can't use PREPREP or setimage here as no TABLE!
     \ Assume IMAGE has been set correctly
 
@@ -174,10 +169,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 \\ 26c per Apple byte + 24c per row
 
@@ -236,10 +228,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_3bytes
@@ -305,10 +294,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_4bytes
@@ -382,10 +368,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_5bytes
@@ -467,10 +450,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_6bytes
@@ -560,10 +540,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_7bytes
@@ -661,10 +638,7 @@ ENDIF
     BRA y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_8bytes
@@ -770,10 +744,7 @@ ENDIF
     JMP y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 
 .beeb_plot_peel_9bytes
@@ -887,10 +858,6 @@ ENDIF
     JMP y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
 }
 
 IF 0
@@ -1013,10 +980,7 @@ IF 0
     JMP y_loop
 
     .done_y
-
-    IF _PEEL_IN_ANDY
-    JMP swr_deselect_ANDY
-    ENDIF
+    RTS
 }
 ENDIF
 

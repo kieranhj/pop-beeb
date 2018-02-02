@@ -17,7 +17,6 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 _BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
-_PEEL_IN_ANDY = FALSE       ; store peel buffers in ANDY 4K RAM - BEEB REMOVE ME
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
@@ -441,14 +440,12 @@ PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
 
-IF _PEEL_IN_ANDY = FALSE
 SKIP (MAIN_TOP - P%) - &A00
 
 .peelbuf1
 .peelbuf2
 SKIP &A00       ; was &800
 .peelbuf_top
-ENDIF
 
 ; (screen buffers)
 
@@ -566,14 +563,6 @@ ANDY_TOP=&9000
 CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
-
-IF _PEEL_IN_ANDY
-.peelbuf1
-SKIP &800
-.peelbuf2
-SKIP &800
-.peelbuf_top
-ENDIF
 
 PRINT "--------"
 PRINT "ANDY Modules"

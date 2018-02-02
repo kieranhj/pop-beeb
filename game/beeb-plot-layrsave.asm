@@ -52,11 +52,6 @@ EQUB HI(beeb_plot_layrsave_9bytes)
 
     \ OK to page out sprite data now we have dimensions etc.
 
-    \ Select MOS 4K RAM
-    IF _PEEL_IN_ANDY
-    JSR swr_select_ANDY
-    ENDIF
-
     lda OPACITY
     bpl normal
 
@@ -215,9 +210,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -294,9 +286,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -381,9 +370,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -476,9 +462,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -579,9 +562,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -692,9 +672,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -813,9 +790,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -942,9 +916,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -1079,9 +1050,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
     JMP DONE                ; restore vars
 }
 
@@ -1225,10 +1193,6 @@ IF _DEBUG
     .buf_ok
 ENDIF
 
-    IF _PEEL_IN_ANDY
-    JSR swr_deselect_ANDY
-    ENDIF
-    JMP DONE                ; restore vars
 }
 ENDIF
 
