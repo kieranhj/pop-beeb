@@ -2196,3 +2196,4 @@ Can reduce larger &CD table to &34 size by shifting down during first lookup
 3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven?
 
 Automated palette matching Process - yay!
+Wait and see how many additional palettes are required for Palace sprites - might just keep them all in memory for RGB version (NULA prob different)

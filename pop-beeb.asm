@@ -19,8 +19,6 @@ _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 _BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
 _PEEL_IN_ANDY = FALSE       ; store peel buffers in ANDY 4K RAM - BEEB REMOVE ME
 
-_COULD_BE_OVERLAID_IN_THEORY = FALSE     ; save the memory for now! - BEEB REMOVE ME
-
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs

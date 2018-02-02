@@ -1001,9 +1001,6 @@ thinner = 3
 
 \*-------------------------------
 
-IF _COULD_BE_OVERLAID_IN_THEORY
-.getaltframe2
-ENDIF
 .getaltframe1 ;Enemy uses alt set 1
 {
  jsr getfindex
@@ -1019,7 +1016,7 @@ ENDIF
 
 \*-------------------------------
 
-IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
+\\ altset2 could be overlaid on top of altset1 to save RAM (in theory)
 .getaltframe2 ;Princess & Vizier use alt set 2
 {
  jsr getfindex
@@ -1032,7 +1029,6 @@ IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
  sta framepoint+1
  rts
 }
-ENDIF
 
 \*-------------------------------
 

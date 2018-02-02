@@ -331,7 +331,7 @@
 \*-------------------------------
 \ ds altset2-*
 
-IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
+\\ altset2 could be overlaid on top of altset1 to save RAM (in theory)
 
 .altset2
 
@@ -420,8 +420,6 @@ IF _COULD_BE_OVERLAID_IN_THEORY = FALSE
 .ALTSET2_83 EQUB $86,$80,2,0,$80 ;vcast-10a
 .ALTSET2_84 EQUB $87,$80,2,0,$80 ;vcast-10b
 .ALTSET2_85 EQUB $88,$80,1,0,$00 ;vcast-1
-
-ENDIF
 
 \*-------------------------------
 \*
