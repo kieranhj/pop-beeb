@@ -1,3 +1,4 @@
+.beeb_swr_start
 
 .swr_ram_banks          SKIP 4   ; 4 slots, each containing the rom bank ID of each available SW RAM bank or FF if none 
 .swr_ram_banks_count    SKIP 1
@@ -91,8 +92,14 @@
     sta &f4
     sta swr_slot_selected
     cli
+IF _DEBUG
+    rts
+.bad_socket
+    brk
+ELSE
 .bad_socket
     rts
+ENDIF
 }
 
 ; A contains ROM bank to be selected
@@ -104,3 +111,23 @@
 ;    cli
     rts
 }
+
+.swr_select_ANDY
+{
+    LDA &fe30
+    ORA #&80
+    sta &f4
+    STA &fe30
+    RTS
+}
+
+.swr_deselect_ANDY
+{
+    LDA &fe30
+    AND #&7F
+    sta &f4
+    STA &fe30
+    RTS
+}
+
+.beeb_swr_end

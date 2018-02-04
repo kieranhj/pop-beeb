@@ -15,15 +15,18 @@
 \*-------------------------------
 \ org org
 
-.AutoCtrl BRK           ; jmp AUTOCTRL
-.checkstrike RTS        ; jmp CHECKSTRIKE           BEEB TO DO
-.checkstab RTS          ; jmp CHECKSTAB             BEEB TO DO
-.AutoPlayback BRK       ; jmp AUTOPLAYBACK
-.cutcheck BRK           ; jmp CUTCHECK
+IF _JMP_TABLE=FALSE
+.AutoCtrl jmp AUTOCTRL
+.checkstrike jmp CHECKSTRIKE
+.checkstab jmp CHECKSTAB
+.AutoPlayback jmp AUTOPLAYBACK
+.cutcheck jmp CUTCHECK
 
-.cutguard BRK           ; jmp CUTGUARD
-.addguard RTS           ; jmp ADDGUARD              BEEB TO DO
-.cut BRK                ; jmp CUT
+.cutguard jmp CUTGUARD
+.addguard jmp ADDGUARD
+.cut jmp CUT
+.demo jmp DEMO
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -41,8 +44,8 @@
 \ dum $f0
 \ztemp ds 1
 \prob ds 1
-\]cutdir ds 1
-\ProgStart ds 2
+\auto_cutdir ds 1
+\auto_ProgStart ds 2
 \ dend
 
 \plus1 db -1,1
@@ -98,194 +101,207 @@ jumpthres = 50
 runthres = 40
 blocktime = 4
 
-IF _TODO
-*-------------------------------
-*
-* Fighter params (indexed by guardprog #)
-*
-* strikeprob = probability x255 of striking from ready posn
-* restrikeprob = prob x 255 of restriking after blocking
-* blockprob  = prob x255 of blocking opponent's strike
-* advprob = of advancing to within striking range
-* refractimer = length of refractory period after being hit
-*
-*               0   1   2   3   4   5   6   7   8   9   10  11
+\*-------------------------------
+\*
+\* Fighter params (indexed by guardprog #)
+\*
+\* strikeprob = probability x255 of striking from ready posn
+\* restrikeprob = prob x 255 of restriking after blocking
+\* blockprob  = prob x255 of blocking opponent's strike
+\* advprob = of advancing to within striking range
+\* refractimer = length of refractory period after being hit
+\*
+\*               0   1   2   3   4   5   6   7   8   9   10  11
 
-strikeprob
- db 075,100,075,075,075,050,100,220,000,060,040,060
-restrikeprob
- db 000,000,000,005,005,175,020,010,000,255,255,150
-blockprob
- db 000,150,150,200,200,255,200,250,000,255,255,255
-impblockprob
- db 000,075,075,100,100,145,100,250,000,145,255,175
-advprob
- db 255,200,200,200,255,255,200,000,000,255,100,100
-refractimer
- db 020,020,020,020,010,010,010,010,000,010,000,000
-specialcolor
- db 000,000,000,001,000,001,001,000,000,000,000,001
-extrastrength
- db 000,000,000,000,001,000,000,000,000,000,000,000
+.strikeprob
+ EQUB 075,100,075,075,075,050,100,220,000,060,040,060
+.restrikeprob
+ EQUB 000,000,000,005,005,175,020,010,000,255,255,150
+.blockprob
+ EQUB 000,150,150,200,200,255,200,250,000,255,255,255
+.impblockprob
+ EQUB 000,075,075,100,100,145,100,250,000,145,255,175
+.advprob
+ EQUB 255,200,200,200,255,255,200,000,000,255,100,100
+.refractimer
+ EQUB 020,020,020,020,010,010,010,010,000,010,000,000
+.specialcolor
+ EQUB 000,000,000,001,000,001,001,000,000,000,000,001
+.extrastrength
+ EQUB 000,000,000,000,001,000,000,000,000,000,000,000
 
 numprogs = 12
 
-*-------------------------------
-* Basic guard strength & uniform color (indexed by level #)
+\*-------------------------------
+\* Basic guard strength & uniform color (indexed by level #)
 
-basicstrength
- db 4,3,3,3,3,4,5 ;levels 0-6
- db 4,4,5,5,5,4,6 ;levels 7-13
+.basicstrength
+ EQUB 4,3,3,3,3,4,5 ;levels 0-6
+ EQUB 4,4,5,5,5,4,6 ;levels 7-13
 
-basiccolor
- db 1,0,0,0,1,1,1 ;0 = blue, 1 = red
- db 0,0,0,1,1,0,0
+.basiccolor
+ EQUB 1,0,0,0,1,1,1 ;0 = blue, 1 = red
+ EQUB 0,0,0,1,1,0,0
 
 shadstrength = 4
 
-*-------------------------------
-*
-* 10: kid (demo)
-* 11: enemy (demo)
-*
-*-------------------------------
-*
-*  Automatic enemy control routine
-*
-*  In: Char vars reflect position in PRECEDING frame;
-*      Op vars reflect position in UPCOMING frame
-*      guardprog = program #
-*
-*  (Exception: When used by kid fighting in demo, both
-*  Char & Op vars reflect preceding frame.)
-*
-*-------------------------------
-]rts rts
+\*-------------------------------
+\*
+\* 10: kid (demo)
+\* 11: enemy (demo)
+\*
+\*-------------------------------
+\*
+\*  Automatic enemy control routine
+\*
+\*  In: Char vars reflect position in PRECEDING frame;
+\*      Op vars reflect position in UPCOMING frame
+\*      guardprog = program #
+\*
+\*  (Exception: When used by kid fighting in demo, both
+\*  Char & Op vars reflect preceding frame.)
+\*
+\*-------------------------------
+.return_45 rts
 
-AUTOCTRL
+.AUTOCTRL
+{
  jsr DoRelease
 
  lda CharID
- beq :5 ;control kid in demo
+ beq label_5 ;control kid in demo
 
  lda justblocked
- beq :jb0
+ beq jb0
  dec justblocked
 
-:jb0 lda gdtimer
- beq :gt0
+.jb0 lda gdtimer
+ beq gt0
  dec gdtimer
-:gt0
+.gt0
  lda refract ;refractory period after being hit
- beq :2
+ beq label_2
  dec refract
-:2
+.label_2
  lda CharID
  cmp #24 ;mouse?
- beq :6
+ beq label_6
  cmp #4 ;skel?
- beq :3
+ beq label_3
  cmp #2 ;guard?
- bcc :1
+ bcc label_1
  lda level
  cmp #13 ;vizier?
- beq :4
+ beq label_4
  jmp GuardProg
-:1 jmp ShadowProg
-:3 jmp SkelProg
-:4 jmp VizierProg
-:5 jmp KidProg
-:6 jmp MouseProg
+.label_1 jmp ShadowProg
+.label_3 jmp SkelProg
+.label_4 jmp VizierProg
+.label_5 jmp KidProg
+.label_6 jmp MouseProg
+}
 
-*-------------------------------
-*  M O U S E
-*-------------------------------
-MouseProg
+\*-------------------------------
+\*  M O U S E
+\*-------------------------------
+
+.MouseProg
+{
  lda CharFace
  cmp #86
- beq ]rts
+ beq return_45
  lda CharAction
- beq :1 ;already stopped
+ beq label_1 ;already stopped
  lda CharX
  cmp #166
- bcs ]rts
+ bcs return_45
  lda #Mleave
  jsr jumpseq
  jmp animchar ;sets CharAction = 0
 
-:1 lda CharX
+.label_1 lda CharX
  cmp #200
- bcc ]rts
+ bcc return_45
  jmp VanishChar
+}
 
-*-------------------------------
-*  S H A D O W M A N
-*-------------------------------
+\*-------------------------------
+\*  S H A D O W M A N
+\*-------------------------------
 IF DemoDisk
-ShadowProg
-SkelProg
-VizierProg
+.ShadowProg
+.SkelProg
+.VizierProg
  brk
 
 ELSE
-ShadowProg
+.ShadowProg
+{
  lda level
  cmp #4
- bne :0
+ bne label_0
  jmp ShadLevel4
 
-:0 cmp #5
- bne :1
+.label_0 cmp #5
+ bne label_1
  jmp ShadLevel5
 
-:1 cmp #6
- bne :2
+.label_1 cmp #6
+ bne label_2
  jmp ShadLevel6
 
-:2 cmp #12
- bne :3
+.label_2 cmp #12
+ bne label_3
  jmp FinalShad
-:3
-]rts rts
+.label_3
+}
+.return_46
+ rts
 
-*-------------------------------
-* Level-specific code for:
-* Level 6 (plunge)
-*-------------------------------
-ShadLevel6
+\*-------------------------------
+\* Level-specific code for:
+\* Level 6 (plunge)
+\*-------------------------------
+
+.ShadLevel6
+{
  lda CharScrn
  cmp #1
  beq Shad6a
  rts
 
-* Level 6, screen 1
-* When kid jumps chasm, step on plate
+\* Level 6, screen 1
+\* When kid jumps chasm, step on plate
 
-Shad6a
+.Shad6a
  lda KidPosn
  cmp #43
- bne ]rts
+ bne return_46
  lda KidX
  cmp #$80
- bcs ]rts
+ bcs return_46
  jsr DoPress
  jmp DoFwd ;step fwd
+}
 
-*-------------------------------
-* Level 5 (THIEF)
-*-------------------------------
-ShadLevel5
+\*-------------------------------
+\* Level 5 (THIEF)
+\*-------------------------------
+
+.ShadLevel5
+{
  lda CharScrn
  cmp #flaskscrn
  beq Shad5
-]rts rts
+.return
+ rts
 
-* Level 5, screen 24
-* When gate opens, steal potion
+\* Level 5, screen 24
+\* When gate opens, steal potion
 
-Shad5
+.Shad5
  lda PlayCount
- bne :1 ;continue playback
+ bne label_1 ;continue playback
 
  lda #flaskscrn
  ldx #1 ;x
@@ -293,124 +309,130 @@ Shad5
  jsr rdblock ;gate
  lda (BlueSpec),y
  cmp #20
- bcc ]rts
+ bcc return
 ;begin playback
  lda #0
  sta PreRecPtr
 
-:1 lda #ShadProg5
- ldx #>ShadProg5
+.label_1 lda #LO(ShadProg5)
+ ldx #HI(ShadProg5)
  jsr AutoPlayback
 
  lda CharX
  cmp #15
- bcs ]rts
+ bcs return
  jmp VanishChar
+}
 
-*-------------------------------
-* Level 4 (mirror)
-*-------------------------------
-ShadLevel4
+\*-------------------------------
+\* Level 4 (mirror)
+\*-------------------------------
+
+.ShadLevel4
+{
  lda CharScrn
  cmp #4
- bne ]rts
+ bne return_46
  lda CharX
  cmp #80
- bcc :gone
+ bcc local_gone
  jmp DoFwd ;run o.s.
-:gone jmp VanishChar
+.local_gone jmp VanishChar
+}
 
-*-------------------------------
-* Level 12 (final battle)
-*-------------------------------
-FinalShad
+\*-------------------------------
+\* Level 12 (final battle)
+\*-------------------------------
 
-* Screen 15: Jump on top of kid
+.FinalShad
+{
+\* Screen 15: Jump on top of kid
 
  lda CharScrn
  cmp #swordscrn
- bne :cont
+ bne cont
  lda shadowaction
- bne :cont ;already did it
+ bne cont ;already did it
  lda OpX
  cmp #150
- bcs :hold ;hold shad at top until kid arrives
+ bcs local_hold ;hold shad at top until kid arrives
 
  lda #1
  sta shadowaction
- bne :cont
+ bne cont
 
-:hold lda #shadpos12
- ldx #>shadpos12
+.local_hold lda #LO(shadpos12)
+ ldx #HI(shadpos12)
  jmp csps
-]rts rts
+.return
+ rts
 
-* Continue
+\* Continue
 
-:cont lda CharSword
+.cont lda CharSword
  cmp #2
- bcs :fight
+ bcs local_fight
  lda OpSword
  cmp #2
- bcs :hostile
+ bcs local_hostile
  lda offguard
- bne :face
-:hostile
+ bne local_face
+.local_hostile
  lda EnemyAlert
  cmp #2
- bcc :2
+ bcc label_2
  jsr getopdist
  cmp #swordthres
- bcs :2 ;wait until kid gets close
+ bcs label_2 ;wait until kid gets close
 
  lda CharPosn
  cmp #15
- bne ]rts
- jmp DoEngarde ;draw on kid
+ bne return
+ jmp auto_DoEngarde ;draw on kid
 
-* turn to face kid
+\* turn to face kid
 
-:2 jsr getopdist
- bpl ]rts
+.label_2 jsr getopdist
+ bpl return
  jmp DoBack
 
-* Normal fighting
+\* Normal fighting
 
-:fight
+.local_fight
  lda offguard
- beq :1 ;has kid put up sword?
+ beq label_1 ;has kid put up sword?
  lda refract
- bne :1 ;yes--wait a moment--
+ bne label_1 ;yes--wait a moment--
  jmp DoDown ;--then lower your guard
 
-:1 jmp EnGarde ;normal fighting
+.label_1 jmp EnGarde ;normal fighting
 
-* Face to face--swords down
+\* Face to face--swords down
 
-:face jsr getopdist
- bmi :merge ;whammo!
+.local_face jsr getopdist
+ bmi local_merge ;whammo!
 
  lda EnemyAlert
  cmp #2
- bne :wait
+ bne local_wait
  lda OpPosn
  cmp #3
- bcc :wait
+ bcc local_wait
  cmp #15
- bcc :go
+ bcc local_go
  cmp #127
- bcc :wait
+ bcc local_wait
  cmp #133
- bcs :wait
+ bcs local_wait
 
-* If kid starts moving towards you, reciprocate
-* (Accept startrun & stepfwd)
+\* If kid starts moving towards you, reciprocate
+\* (Accept startrun & stepfwd)
 
-:go jmp DoFwd
+.local_go jmp DoFwd
 
-* Kid & shadow reunite
+\* Kid & shadow reunite
 
-:merge
+.local_merge
  lda #$ff ;white
  sta lightcolor
  lda #10
@@ -429,402 +451,453 @@ FinalShad
  sta CharID
  jsr SaveKid ;shadow turns into kid
  jmp VanishChar
-:wait
-]rts rts
+.local_wait
 
-*-------------------------------
-* S K E L E T O N
-*-------------------------------
-SkelProg
+ rts
+}
+
+\*-------------------------------
+\* S K E L E T O N
+\*-------------------------------
+
+.SkelProg
+{
  lda #2
  sta CharSword
  jmp GuardProg
+}
 
-*-------------------------------
-* V I Z I E R
-*-------------------------------
-VizierProg
+\*-------------------------------
+\* V I Z I E R
+\*-------------------------------
+
+.VizierProg
+{
  jmp GuardProg
-
+}
 ENDIF ;DemoDisk
 
-*-------------------------------
-* K I D (in demo)
-*-------------------------------
-KidProg
- jmp GuardProg
+\*-------------------------------
+\* K I D (in demo)
+\*-------------------------------
 
-*-------------------------------
-* G U A R D
-*-------------------------------
-GuardProg
+.KidProg
+{
+ jmp GuardProg
+}
+
+\*-------------------------------
+\* G U A R D
+\*-------------------------------
+
+.GuardProg
+{
  lda CharSword
  cmp #2 ;Are you already en garde?
  bcc Alert ;no
  jmp EnGarde ;yes
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Alert (not en garde)
-*
-*-------------------------------
-Alert
+\*-------------------------------
+\*
+\* Alert (not en garde)
+\*
+\*-------------------------------
+
+.Alert
+{
  lda KidLife
- bpl ]rts ;kid's dead--relax
+ bpl return ;kid's dead--relax
 
-* If kid is behind you, turn to face him
+\* If kid is behind you, turn to face him
 
  jsr getopdist
  ldx OpBlockY
  cpx CharBlockY
- bne :difflevel
- cmp #-8 ;if kid is right on top of you, go en garde!
- bcs :eng
-:difflevel
+ bne difflevel
+ cmp #LO(-8) ;if kid is right on top of you, go en garde!
+ bcs local_eng
+.difflevel
  ldx alertguard
- beq :ok ;otherwise wait for a sound to alert you
+ beq ok ;otherwise wait for a sound to alert you
  ldx #0
  stx alertguard
-:alert
+.local_alert
  cmp #128
- bcc :eng
- cmp #-4
- bcs :ok ;overlapping--stand still
- jmp DoTurn ;turn around
+ bcc local_eng
+ cmp #LO(-4)
+ bcs ok ;overlapping--stand still
+ jmp auto_DoTurn ;turn around
 
-* If you can see kid, go en garde
+\* If you can see kid, go en garde
 
-:ok cmp #128
- bcs ]rts ;kid is behind you
+.ok cmp #128
+ bcs return ;kid is behind you
 
-:eng lda EnemyAlert
- beq ]rts
+.local_eng lda EnemyAlert
+ beq return
 
  lda level
  cmp #13
- bne :1 ;Vizier only: wait for music to finish
+ bne label_1 ;Vizier only: wait for music to finish
  lda SongCue
- bne ]rts
+ bne return
 
-:1 jmp DoEngarde
-]rts rts
+.label_1 jmp auto_DoEngarde
+.return
+ rts
+}
 
-*-------------------------------
-*
-* En garde
-*
-*-------------------------------
-EnGarde
+\*-------------------------------
+\*
+\* En garde
+\*
+\*-------------------------------
+
+.EnGarde
+{
  lda CharPosn
  cmp #166
- beq ]rts
+ beq return
  cmp #150
- bcc ]rts ;wait till you're ready
+ bcc return ;wait till you're ready
 
  lda EnemyAlert
  cmp #2
- bcs :ea2
+ bcs ea2
  cmp #1 ;EnemyAlert = 1: Kid is in sight, but a
- beq ]rts ;gap or barrier separates you--stay put
+ beq return ;gap or barrier separates you--stay put
 
-* Kid is out of sight (EnemyAlert = 0)
-* If kid has "dropped out" of fight, follow him down
+\* Kid is out of sight (EnemyAlert = 0)
+\* If kid has "dropped out" of fight, follow him down
 
  lda droppedout ;flag set by CHECKFLOOR
- beq :1
+ beq label_1
  jmp FollowKid
 
-* else return to alert position
+\* else return to alert position
 
-:1 lda CharID
+.label_1 lda CharID
  cmp #4
- beq ]rts ;(except skeleton)
+ beq return ;(except skeleton)
  jmp DoDropguard
 
-* EnemyAlert = 2: Clear stretch of floor to player
+\* EnemyAlert = 2: Clear stretch of floor to player
 
-* If kid is stunned, let him recover...
+\* If kid is stunned, let him recover...
 
-:ea2 jsr getopdist
- bmi :norec
+.ea2 jsr getopdist
+ bmi norec
  cmp #12
- bcc :norec ;unless he's right on top of you
+ bcc norec ;unless he's right on top of you
  lda OpPosn
  cmp #102
- bcc :norec
+ bcc norec
  cmp #118
- bcs :norec
+ bcs norec
  lda OpAction
  cmp #5
- beq ]rts
-:norec
+ beq return
+.norec
 
-* Advance to closest safe distance
+\* Advance to closest safe distance
 
  jsr getopdist
  cmp #toofar
- bcs :outofrange
+ bcs outofrange
 
  ldx CharSword
  cpx #2
- bcc :offg
+ bcc offg
 
  cmp #tooclose
- bcc :tooclose
+ bcc local_tooclose
  jmp InRange
 
-:offg cmp #offguardthres
- bcc :tooclose
+.offg cmp #offguardthres
+ bcc local_tooclose
  jmp InRange
-]rts rts
+.return
+ rts
 
-* Out of range
+\* Out of range
 
-:outofrange
+.outofrange
  lda refract
- bne ]rts
+ bne return
 
  lda CharFace
  cmp OpFace
- beq :nojump ;chase him
+ beq local_nojump ;chase him
 
  lda OpPosn
  cmp #7
- bcc :norun
+ bcc local_norun
  cmp #15
- bcc :runwait
-:norun
+ bcc local_runwait
+.local_norun
  cmp #34
- bcc :nojump
+ bcc local_nojump
  cmp #44
- bcc :jumpwait ;If kid is running towards you, stay put
-:nojump
+ bcc local_jumpwait ;If kid is running towards you, stay put
+.local_nojump
  jsr getinfront
  jsr cmpspace ;Don't advance unless solid floor
- beq :gap
+ beq local_gap
  jsr get2infront
  jsr cmpspace
- bne :solid
+ bne local_solid
 
-:gap jmp DoRetreat
-:solid jmp DoAdvance
+.local_gap jmp auto_DoRetreat
+.local_solid jmp auto_DoAdvance
 
-* Kid is trying to get past you--cut him down!
+\* Kid is trying to get past you--cut him down!
 
-:jumpwait
+.local_jumpwait
  jsr getopdist
  cmp #jumpthres
- bcs ]rts ;wait
- jmp DoStrike
+ bcs return ;wait
+ jmp auto_DoStrike
 
-:runwait
+.local_runwait
  jsr getopdist
  cmp #runthres
- bcs ]rts
-:strike jmp DoStrike
+ bcs return
+.local_strike jmp auto_DoStrike
 
-* Too close to hit him
+\* Too close to hit him
 
-:tooclose
+.local_tooclose
  lda CharFace
  cmp OpFace
- beq :ret
- jmp DoAdvance
-:ret jmp DoRetreat
+ beq ret
+ jmp auto_DoAdvance
+.ret
+ jmp auto_DoRetreat
+}
 
-*-------------------------------
-*
-*  Kid has "dropped out" of fight
-*  Advance until you run out of floor--
-*  then decide whether to jump down after him
-*
-*-------------------------------
-FollowKid
+\*-------------------------------
+\*
+\*  Kid has "dropped out" of fight
+\*  Advance until you run out of floor--
+\*  then decide whether to jump down after him
+\*
+\*-------------------------------
+
+.FollowKid
+{
  lda OpAction
  cmp #2
- beq :hanging
+ beq local_hanging
  cmp #6
- beq :hanging ;wait--kid is hanging on ledge
+ beq local_hanging ;wait--kid is hanging on ledge
 
  jsr getinfront
  sta ztemp
  jsr cmpbarr
- bne :stopped
+ bne local_stopped
  lda ztemp
  jsr cmpspace
- beq :atedge
- jmp DoAdvance
+ beq local_atedge
+ jmp auto_DoAdvance
 
-* At edge of floor.  Follow kid down ONLY if:
-* (1) it's a 1-story drop to solid floor
-* (2) kid is still down there
+\* At edge of floor.  Follow kid down ONLY if:
+\* (1) it's a 1-story drop to solid floor
+\* (2) kid is still down there
 
-:atedge
+.local_atedge
  jsr getinfront
  inc tempblocky
  jsr rdblock1
  sta ztemp ;is it safe?
  cmp #spikes
- beq :stopped
+ beq local_stopped
  cmp #loose
- beq :stopped
+ beq local_stopped
  jsr cmpbarr
- bne :stopped
+ bne local_stopped
  lda ztemp
  jsr cmpspace
- beq :stopped
+ beq local_stopped
 
  lda CharBlockY
  clc
  adc #1
  cmp OpBlockY
- bne :stopped ;kid's not down there
+ bne local_stopped ;kid's not down there
 
-* It looks safe--follow him down
+\* It looks safe--follow him down
 
- jmp DoAdvance
+ jmp auto_DoAdvance
 
-:stopped lda #0
+.local_stopped lda #0
  sta droppedout
- jmp DoRetreat ;so you can kill him if he climbs up
-:hanging
-]rts rts
+ jmp auto_DoRetreat ;so you can kill him if he climbs up
+.local_hanging
+}
+.return_47
+ rts
 
-*-------------------------------
-*
-*  In range
-*
-*-------------------------------
-InRange
+\*-------------------------------
+\*
+\*  In range
+\*
+\*-------------------------------
+
+.InRange
+{
  lda OpSword ;is opponent armed & en garde?
  cmp #2
- beq :fight ;yes
+ beq local_fight ;yes
 
-* Opponent is unarmed or off guard--maul him!
+\* Opponent is unarmed or off guard--maul him!
 
  lda refract
- bne ]rts
+ bne return_47
 
  jsr getopdist
  cmp #strikethres2
- bcc :1
- jmp DoAdvance ;advance until within range...
-:1 jmp DoStrike ;then strike
+ bcc label_1
+ jmp auto_DoAdvance ;advance until within range...
+.label_1 jmp auto_DoStrike ;then strike
 
-* Opponent is en garde--use strategy
+\* Opponent is en garde--use strategy
 
-:fight
+.local_fight
  jmp GenFight
+}
 
-*-------------------------------
-*
-* General Fighting Routine
-*
-* (Fighters are en garde, face to face, and too close to
-* advance safely)
-*
-*-------------------------------
-GenFight
+\*-------------------------------
+\*
+\* General Fighting Routine
+\*
+\* (Fighters are en garde, face to face, and too close to
+\* advance safely)
+\*
+\*-------------------------------
+
+.GenFight
+{
  jsr getopdist
  cmp #blockthres1
- bcc :outofrange
+ bcc local_outofrange
  cmp #blockthres2
- bcs :outofrange
+ bcs local_outofrange
 
  jsr MaybeBlock ;block opponent's strike?
 
  lda refract
- bne ]rts
+ bne return
 
  jsr getopdist
  cmp #strikethres1
- bcc :outofrange
+ bcc local_outofrange
  cmp #strikethres2
- bcs :outofrange
+ bcs local_outofrange
 
  jmp MaybeStrike ;strike?
 
-:outofrange
+.local_outofrange
  jmp MaybeAdvance ;advance to within strike range?
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Advance to within strike range?
-* (Only consider it if gdtimer = 0)
-*
-*-------------------------------
-MaybeAdvance
+\*-------------------------------
+\*
+\* Advance to within strike range?
+\* (Only consider it if gdtimer = 0)
+\*
+\*-------------------------------
+
+.MaybeAdvance
+{
  lda guardprog
- beq :dumb ;Guard #0 is too dumb to care
+ beq local_dumb ;Guard #0 is too dumb to care
  lda gdtimer
- bne ]rts
+ bne return_47
 
-:dumb jsr rndp
+.local_dumb jsr rndp
  cmp advprob,x
- bcs ]rts
+ bcs return_47
 
- jmp DoAdvance
+ jmp auto_DoAdvance
+}
 
-*-------------------------------
-*
-* Block opponent's strike?
-*
-*-------------------------------
-MaybeBlock
+\*-------------------------------
+\*
+\* Block opponent's strike?
+\*
+\*-------------------------------
+
+.MaybeBlock
+{
  lda OpPosn
  cmp #152 ;guy4
- beq :99
+ beq label_99
  cmp #153 ;guy5
- beq :99
+ beq label_99
  cmp #162 ;guy22 (block to strike)
- bne ]rts
+ bne return_48
 
-:99 lda justblocked
- bne :impaired
+.label_99 lda justblocked
+ bne MaybeBlock_impaired
  jsr rndp
  cmp blockprob,x
- bcc :block
-]rts rts
+ bcc MaybeBlock_block
+}
+.return_48
+ rts
 
-:impaired
+.MaybeBlock_impaired
+{
  jsr rndp
  cmp impblockprob,x
- bcs ]rts
-:block jmp DoBlock
+ bcs return_48
+}
+.MaybeBlock_block
+{
+ jmp auto_DoBlock
+}
 
-*-------------------------------
-*
-* Strike?
-*
-*-------------------------------
-MaybeStrike
+\*-------------------------------
+\*
+\* Strike?
+\*
+\*-------------------------------
+
+.MaybeStrike
+{
  ldx OpPosn
  cpx #169
- beq ]rts
+ beq return_48
  cpx #151 ;opponent starting to strike?
- beq ]rts ;yes--don't strike
+ beq return_48 ;yes--don't strike
 
  ldx CharPosn
  cpx #161 ;have I just blocked?
- beq :restrike
+ beq local_restrike
  cpx #150
- beq :restrike ;yes--restrike?
+ beq local_restrike ;yes--restrike?
 
  jsr rndp
  cmp strikeprob,x
- bcs ]rts
- jmp DoStrike
+ bcs return_48
+ jmp auto_DoStrike
 
-:restrike
+.local_restrike
  jsr rndp
  cmp restrikeprob,x
- bcs ]rts
- jmp DoStrike
+ bcs return_48
+ jmp auto_DoStrike
+}
 
-*-------------------------------
-DoRelease
+\*-------------------------------
+
+.DoRelease
+{
  lda #0
  sta clrF
  sta clrB
@@ -835,95 +908,122 @@ DoRelease
  sta JSTKY
  sta btn
  rts
+}
 
-DoAdvance
-DoFwd
- lda #-1
+.auto_DoAdvance
+.DoFwd
+{
+ lda #LO(-1)
  sta clrF
  sta JSTKX
  rts
+}
 
-DoRetreat
-DoBack
- lda #-1
+.auto_DoRetreat
+.DoBack
+{
+ lda #LO(-1)
  sta clrB
  lda #1
  sta JSTKX
  rts
+}
 
-DoBlock
-DoUp lda #-1
+.auto_DoBlock
+.DoUp
+{
+ lda #LO(-1)
  sta clrU
  sta JSTKY
  rts
+}
 
-DoTurn
-DoDown lda #-1
+.auto_DoTurn
+.DoDown
+{
+ lda #LO(-1)
  sta clrD
  lda #1
  sta JSTKY
  rts
+}
 
-DoStandup
- lda #-1
+.DoStandup
+{
+ lda #LO(-1)
  sta clrU
  jmp DoBack
+}
 
-DoDropguard
-DoRunaway
- lda #-1
+.DoDropguard
+.DoRunaway
+{
+ lda #LO(-1)
  sta clrD
  jmp DoBack
+}
 
-DoEngarde
- lda #-1
+.auto_DoEngarde
+{
+ lda #LO(-1)
  sta clrD
  jmp DoFwd
+}
 
-DoStrike
-DoPress
- lda #-1
+.auto_DoStrike
+.DoPress
+{
+ lda #LO(-1)
  sta clrbtn
  sta btn
  rts
+}
 
-DoRelBtn
+.DoRelBtn
+{
  lda #0
  sta btn
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  R N D P
-*
-*  Return X = guardprog, A = rnd #
-*
-*-------------------------------
-rndp
+\*-------------------------------
+\*
+\*  R N D P
+\*
+\*  Return X = guardprog, A = rnd #
+\*
+\*-------------------------------
+
+.rndp
+{
  ldx guardprog
  jmp rnd
+}
 
-*-------------------------------
-*
-*  C H E C K   S T R I K E
-*
-*  Check for sword contact
-*
-*  Going in: Kid & Shad vars represent position in
-*   UPCOMING frame
-*
-*  Out: Kid & Shad vars
-*  (Return Action = 99 if stabbed)
-*
-*-------------------------------
-CHECKSTRIKE
+\*-------------------------------
+\*
+\*  C H E C K   S T R I K E
+\*
+\*  Check for sword contact
+\*
+\*  Going in: Kid & Shad vars represent position in
+\*   UPCOMING frame
+\*
+\*  Out: Kid & Shad vars
+\*  (Return Action = 99 if stabbed)
+\*
+\*-------------------------------
+
+.CHECKSTRIKE
+{
  lda KidPosn
- beq ]rts
+ beq return
  cmp #219
- bcc :noclimb
+ bcc local_noclimb
  cmp #229
- bcc ]rts ;on staircase
-:noclimb
+ bcc return ;on staircase
+.local_noclimb
  jsr LoadShadwOp
  jsr TestStrike
  jsr SaveShadwOp
@@ -932,94 +1032,101 @@ CHECKSTRIKE
  jsr TestStrike
  jsr SaveKidwOp
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-TestStrike
+\*-------------------------------
 
+.TestStrike
+{
  lda CharSword
  cmp #2 ;in fighting mode?
- bne ]rts ;no
+ bne return ;no
 
  lda CharBlockY
  cmp OpBlockY
- bne ]rts
+ bne return
 
-* Am I on a test (strike) frame?
+\* Am I on a test (strike) frame?
 
  lda CharPosn
  cmp #153 ;guy5 (frame before full ext.)
- beq :test
+ beq local_test
  cmp #154 ;guy6 (full ext.)
- bne ]rts
+ bne return
 
-* I'm striking--is opponent blocking?
+\* I'm striking--is opponent blocking?
 
-:test
+.local_test
  jsr getopdist
  cmp #blockrange1
- bcc :nobloc
+ bcc local_nobloc
 
  cmp #blockrange2
- bcs :nobloc
+ bcs local_nobloc
 
  lda OpPosn
  cmp #161
- beq :11
+ beq label_11
  cmp #150 ;blocking?
- bne  :nobloc ;no
+ bne  local_nobloc ;no
 
-* Yes -- opponent blocks my strike
+\* Yes -- opponent blocks my strike
 
-:1 lda #161
+.label_1 lda #161
  sta OpPosn ;change opp to "successful block"
 
-:11 lda CharID
- beq :12 ;am I a guard?
+.label_11 lda CharID
+ beq label_12 ;am I a guard?
  lda #blocktime ;yes--impair my blocking ability for a while
  sta justblocked
 
-:12 lda #blockedstrike
+.label_12 lda #blockedstrike
  jsr jumpseq
  jmp animchar
 
-* Skewer opponent?
+\* Skewer opponent?
 
-:nobloc
+.local_nobloc
  lda CharPosn
  cmp #154 ;full ext
- bne ]rts
+ bne return
 
  jsr getopdist
 
  ldx OpSword
  cpx #2
- bcs :ong
+ bcs local_ong
  cmp #offguardthres
- bcs :cont1
+ bcs cont1
  rts
-:ong cmp #strikerange1
- bcc ]rts
+.local_ong cmp #strikerange1
+ bcc return
 
-:cont1 cmp #strikerange2
- bcs ]rts
+.cont1 cmp #strikerange2
+ bcs return
 
- lda #99 "stabbed"
+ lda #99 ;"stabbed"
  sta OpAction
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*  C H E C K   S T A B
-*-------------------------------
-CHECKSTAB
+\*-------------------------------
+\*  C H E C K   S T A B
+\*-------------------------------
+
+.CHECKSTAB
+{
  lda ShadAction
  cmp #99
- bne :1
+ bne label_1
 
  lda KidAction
  cmp #99
- beq :doublestab
-:2
+ beq doublestab
+.label_2
  jsr LoadShad
  jsr StabChar
  jsr SaveShad
@@ -1028,35 +1135,39 @@ CHECKSTAB
  lda refractimer,x
  sta refract
 
-:1 lda KidAction
+.label_1 lda KidAction
  cmp #99
- bne ]rts
+ bne return
 
  jsr LoadKid
  jsr StabChar
  jmp SaveKid
 
-* Both chars finish lunge simultaneously
+\* Both chars finish lunge simultaneously
 
-:doublestab
+.doublestab
  lda #1
  sta KidAction
- bne :2 ;player wins a tie
-]rts rts
+ bne label_2 ;player wins a tie
+.return
+ rts
+}
 
-*-------------------------------
-* Change shadowman posn
-* In: A-X = shadpos L-H
-* Out: Char data
-*-------------------------------
-chgshadposn
+\*-------------------------------
+\* Change shadowman posn
+\* In: A-X = shadpos L-H
+\* Out: Char data
+\*-------------------------------
+
+.chgshadposn
+{
  sta ztemp
  stx ztemp+1
  ldy #6
-:loop lda (ztemp),y
+.loop lda (ztemp),y
  sta Char,y
  dey
- bpl :loop
+ bpl loop
 
  ldy #7
  lda (ztemp),y
@@ -1068,10 +1179,12 @@ chgshadposn
  lda #0
  sta PlayCount ;zero playback counter
  rts
+}
+\* ... & save
 
-* ... & save
-
-csps jsr chgshadposn
+.csps
+{
+ jsr chgshadposn
 
  lda #3
  sta guardprog
@@ -1081,21 +1194,22 @@ csps jsr chgshadposn
  sta OppStrength
 
  jmp SaveShad
+}
 
-*-------------------------------
-* (Posn, X, Y, Face, BlockX, BlockY, Action)
-*               0  1  2  3  4  5  6
+\*-------------------------------
+\* (Posn, X, Y, Face, BlockX, BlockY, Action)
+\*               0  1  2  3  4  5  6
 
-shadpos6a hex 0f,51,76,00,00,01,00
- db stand
+.shadpos6a EQUB $0f,$51,$76,$00,$00,$01,$00
+ EQUB stand
 
-shadpos5 hex 0f,37,37,00,ff,00,00
- db stand ;just o.s. to L
+.shadpos5 EQUB $0f,$37,$37,$00,$ff,$00,$00
+ EQUB stand ;just o.s. to L
 
-shadpos12 hex 0f,51,f0,00,00,00,00
- db stepfall
+.shadpos12 EQUB $0f,$51,$f0,$00,$00,$00,$00
+ EQUB stepfall
 
-*-------------------------------
+\*-------------------------------
 EndProg = -2
 EndDemo = -1
 Ctr = 0
@@ -1107,145 +1221,152 @@ Upfwd = 5
 Press = 6
 Release = 7
 
-* Commands:
-*
-* -2 - end of programmed sequence
-* -1 - end of demo
-*  0 - center jstk & release btn
-*  1 - jstk fwd
-*  2 - jstk back
-*  3 - jstk up
-*  4 - jstk down
-*  5 - jstk up & fwd
-*  6 - press & hold btn
-*  7 - release btn
+\* Commands:
+\*
+\* -2 - end of programmed sequence
+\* -1 - end of demo
+\*  0 - center jstk & release btn
+\*  1 - jstk fwd
+\*  2 - jstk back
+\*  3 - jstk up
+\*  4 - jstk down
+\*  5 - jstk up & fwd
+\*  6 - press & hold btn
+\*  7 - release btn
 
-*-------------------------------
-*
-* Prerecorded sequence format:
-*
-*  1.  Frame # (1 byte)
-*  2.  Command (1 byte)
-*
-* 255 frames = approx. 25-30 seconds
-*
-*-------------------------------
-* Level 5 (THIEF): Steal potion
+\*-------------------------------
+\*
+\* Prerecorded sequence format:
+\*
+\*  1.  Frame # (1 byte)
+\*  2.  Command (1 byte)
+\*
+\* 255 frames = approx. 25-30 seconds
+\*
+\*-------------------------------
+\* Level 5 (THIEF): Steal potion
 
-ShadProg5
- db 0,Ctr
- db 1,Fwd
- db 14,Ctr
- db 18,Press
- db 29,Release
- db 45,Back
- db 49,Fwd
- db 255,EndProg
+.ShadProg5
+ EQUB 0,Ctr
+ EQUB 1,Fwd
+ EQUB 14,Ctr
+ EQUB 18,Press
+ EQUB 29,Release
+ EQUB 45,Back
+ EQUB 49,Fwd
+ EQUB 255,EndProg
 
-*-------------------------------
-*
-*  Play back prerecorded movement sequence
-*
-*  In: A-X = program start addr
-*      PlayCount = frame #
-*      PreRecPtr = pointer to next command
-*
-*-------------------------------
-AUTOPLAYBACK
- sta ProgStart
- stx ProgStart+1
+\*-------------------------------
+\*
+\*  Play back prerecorded movement sequence
+\*
+\*  In: A-X = program start addr
+\*      PlayCount = frame #
+\*      PreRecPtr = pointer to next command
+\*
+\*-------------------------------
 
-* Inc frame counter
+.AUTOPLAYBACK
+{
+ sta auto_ProgStart
+ stx auto_ProgStart+1
+
+\* Inc frame counter
 
  lda PlayCount
  cmp #254
- bcs :rts
+ bcs return
  inc PlayCount
 
-* Look up time of next command
+\* Look up time of next command
 
  ldy PreRecPtr
 
  lda PlayCount
- cmp (ProgStart),y
- bcs :next
+ cmp (auto_ProgStart),y
+ bcs next
 
-* Not there yet--repeat last command
+\* Not there yet--repeat last command
 
  dey
- lda (ProgStart),y
- jmp :ex
+ lda (auto_ProgStart),y
+ jmp ex
 
-* We're there--
+\* We're there--
 
-:next iny
- lda (ProgStart),y ;command
+.next iny
+ lda (auto_ProgStart),y ;command
  iny
  sty PreRecPtr
 
-* Execute command
+\* Execute command
 
-:ex cmp #-1
- beq :enddemo
+.ex cmp #LO(-1)
+ beq enddemo
  cmp #0
- beq :ctr
+ beq local_ctr
  cmp #1
- beq :fwd
+ beq local_fwd
  cmp #2
- beq :back
+ beq local_back
  cmp #3
- beq :up
+ beq local_up
  cmp #4
- beq :down
+ beq local_down
  cmp #5
- beq :upfwd
+ beq local_upfwd
  cmp #6
- beq :press
+ beq local_press
  cmp #7
- beq :release
-:rts
-]rts rts
+ beq local_release
 
-* Commands
+.return
+ rts
 
-:ctr jmp DoRelease
-:fwd jmp DoFwd
-:back jmp DoBack
-:up jmp DoUp
-:down jmp DoDown
-:upfwd jsr DoUp
+\* Commands
+
+.local_ctr jmp DoRelease
+.local_fwd jmp DoFwd
+.local_back jmp DoBack
+.local_up jmp DoUp
+.local_down jmp DoDown
+.local_upfwd jsr DoUp
  jmp DoFwd
-:press jmp DoPress
-:release jmp DoRelBtn
+.local_press jmp DoPress
+.local_release jmp DoRelBtn
 
-:enddemo ; lda autopilot
+.enddemo ; lda autopilot
 ; bne :endpb
  jmp attractmode ;Game: end demo
-:endpb ; lda #0 ;Editor: end playback
+.endpb ; lda #0 ;Editor: end playback
 ; sta autopilot
 ; rts
+}
 
-*-------------------------------
-*
-*  C U T   C H E C K
-*
-*  Cut with kid
-*
-*-------------------------------
-CUTCHECK
+\*-------------------------------
+\*
+\*  C U T   C H E C K
+\*
+\*  Cut with kid
+\*
+\*-------------------------------
+
+.CUTCHECK
+{
  lda CUTTIMER
- beq :ok
+ beq ok
 
  dec CUTTIMER
-]rts rts
+.return
+ rts
 
-:ok
+.ok
  jsr LoadKid
  jsr setupchar
  jsr getedges
  jsr cutchar ;cut with character
- bmi ]rts ;no cut
- sta ]cutdir
+ bmi return ;no cut
+ sta auto_cutdir
 
  jsr SaveKid
 
@@ -1254,76 +1375,79 @@ CUTCHECK
 
  lda ShadFace
  cmp #86 ;is there a guard on old screen?
- beq ]rts ;no
+ beq return ;no
 
-* What to do with guard?  Two choices:
-*
-*  (1) UPDATE -- leave guard behind on old screen (& update
-*      his coords so he'll still be there when we come back)
-*  (2) TRANSFER -- transfer guard to new screen (& delete his
-*      coords from old screen)
+\* What to do with guard?  Two choices:
+\*
+\*  (1) UPDATE -- leave guard behind on old screen (& update
+\*      his coords so he'll still be there when we come back)
+\*  (2) TRANSFER -- transfer guard to new screen (& delete his
+\*      coords from old screen)
 
  lda ShadLife
- bpl :update ;dead guard on old screen--leave him behind
+ bpl update ;dead guard on old screen--leave him behind
 
  lda ShadSword
  cmp #2
- bne :update
+ bne update
 
-* Is there a live guard on new screen?
+\* Is there a live guard on new screen?
 
  ldx KidScrn
  lda GdStartBlock-1,x
  cmp #30
- bcs :nonew ;no
+ bcs nonew ;no
 
  lda GdStartSeqH-1,x
- beq :update ;yes
+ beq update ;yes
 
-* If guard is too far o.s., leave him behind
+\* If guard is too far o.s., leave him behind
 
-:nonew
- lda ]cutdir
- beq :left
+.nonew
+ lda auto_cutdir
+ beq local_left
  cmp #1
- beq :right
+ beq local_right
  cmp #2
- beq :up
+ beq local_up
 
-:down lda ShadBlockY
+.local_down lda ShadBlockY
  cmp #3
- bcs :transfer
- bcc :update
+ bcs transfer
+ bcc update
 
-:up lda ShadBlockY
- bmi :transfer
- bpl :update
+.local_up lda ShadBlockY
+ bmi transfer
+ bpl update
 
-:right lda ShadX
+.local_right lda ShadX
  cmp #ScrnWidth+25 ;25 is safety factor
- bcc :update
- bcs :transfer
+ bcc update
+ bcs transfer
 
-:left lda ShadX
+.local_left lda ShadX
  cmp #256-ScrnWidth-25
- bcs :update
+ bcs update
 
-* Take him with us
+\* Take him with us
 
-:transfer jmp transferguard
+.transfer jmp transferguard
 
-* Leave him behind
+\* Leave him behind
 
-:update jmp updateguard
+.update jmp updateguard 
+}
 
-*-------------------------------
-*
-* Transfer guard from old screen to new screen
-* (Also remove any dead guards from new scrn)
-*
-*-------------------------------
-transferguard
- lda #-1
+\*-------------------------------
+\*
+\* Transfer guard from old screen to new screen
+\* (Also remove any dead guards from new scrn)
+\*
+\*-------------------------------
+
+.transferguard
+{
+ lda #LO(-1)
  ldx KidScrn ;new scrn
  sta GdStartBlock-1,x
  ldx ShadScrn ;old scrn
@@ -1331,30 +1455,32 @@ transferguard
 
  jsr LoadShad
 
- lda ]cutdir
+ lda auto_cutdir
  jsr cut
 
  jmp SaveShad
 
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-* Leaving guard behind on old screen--
-* update guard coords
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Leaving guard behind on old screen--
+\* update guard coords
+\*
+\*-------------------------------
 
-updateguard
+.updateguard
+{
  lda ShadFace
  cmp #86
- beq ]rts ;no guard
+ beq return ;no guard
  lda ShadID
  cmp #1
- beq ]rts ;not for shadman
+ beq return ;not for shadman
  cmp #24
- beq ]rts ;or mouse
-:gd
+ beq return ;or mouse
+.gd
  lda #0 ;arbitrary--ADDGUARD will reconstruct
  sta tempblockx ;CharBlockX from CharX
  lda ShadBlockY
@@ -1374,80 +1500,85 @@ updateguard
  sta GdStartProg-1,x
 
  lda ShadLife
- bpl :ok
+ bpl ok
  lda #0
  sta GdStartSeqH-1,x
- beq :cont
+ beq cont
 
-:ok lda ShadSeq
+.ok lda ShadSeq
  sta GdStartSeqL-1,x
  lda ShadSeq+1
  sta GdStartSeqH-1,x
 
-* and deactivate enemy char
+\* and deactivate enemy char
 
-:cont lda #86
+.cont lda #86
  sta ShadFace
 
  lda #0
  sta OppStrength
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* If enemy has fallen to screen below, catch him before
-* he wraps around to top of VisScrn
-*
-*-------------------------------
-CUTGUARD
+\*-------------------------------
+\*
+\* If enemy has fallen to screen below, catch him before
+\* he wraps around to top of VisScrn
+\*
+\*-------------------------------
+
+.CUTGUARD
+{
  lda ShadFace
  cmp #86
- beq ]rts
+ beq return
 
  lda ShadY
  cmp #BotCutEdge
- bcc ]rts
+ bcc return
 
-* If guard, remove him altogether
+\* If guard, remove him altogether
 
  lda ShadID
  cmp #4
- beq :skel
+ beq local_skel
  cmp #1
- beq :shad
+ beq local_shad
 
-]RemoveGd
+.CUTGUARD_RemoveGd
  jsr deadenemy ;music, etc.
 
  ldx VisScrn
- lda #-1
+ lda #LO(-1)
  sta GdStartBlock-1,x
  lda #86
  sta ShadFace
  lda #0
  sta OppStrength
- lda #-1
+ lda #LO(-1)
  sta ChgOppStr
-]rts rts
+.return
+ rts
 
-* If shad, vanish him
+\* If shad, vanish him
 
-:shad lda ShadAction
+.local_shad lda ShadAction
  cmp #4
- bne ]rts
+ bne return
  jsr LoadShad
  jsr VanishChar
  jmp SaveShad
 
-* If skel, change scrn
+\* If skel, change scrn
 
-:skel lda ShadScrn
+.local_skel lda ShadScrn
  jsr getdown
  sta ShadScrn
  cmp #3
- bne ]RemoveGd
+ bne CUTGUARD_RemoveGd
 
-* Skel lands on scrn 3
+\* Skel lands on scrn 3
 
  lda #Splat
  jsr addsound
@@ -1457,183 +1588,200 @@ CUTGUARD
  sta ShadBlockY
  lda #0
  sta ShadFace
- lda #-1
+ lda #LO(-1)
  sta ShadLife
  jmp updateguard
+}
 
-*-------------------------------
-*
-*  C U T   C H A R
-*
-*  Is character passing o.s.?  If so, cut with him to next scrn
-*
-*  Change CharX,Y,BlockY,Scrn to reflect posn on new scrn
-*
-*  Return A = direction of cut, -1 if no cut
-*
-*-------------------------------
-cutchar
+\*-------------------------------
+\*
+\*  C U T   C H A R
+\*
+\*  Is character passing o.s.?  If so, cut with him to next scrn
+\*
+\*  Change CharX,Y,BlockY,Scrn to reflect posn on new scrn
+\*
+\*  Return A = direction of cut, -1 if no cut
+\*
+\*-------------------------------
+
+.cutchar
+{
  lda CharY
 
  ldx CharAction
  cpx #5
- beq :notup
+ beq notup
  cpx #4
- beq :notup ;In freefall--cut only down
+ beq notup ;In freefall--cut only down
  cpx #3
- beq :notup
+ beq notup
 
-*  Cut up/down?
+\*  Cut up/down?
 
  cmp #TopCutEdgePl
- bcc :CUTUP
+ bcc CUTUP
 
- cmp #TopCutEdgeMi
- bcs :CUTUP
-:notup
+ cmp #LO(TopCutEdgeMi)
+ bcs CUTUP
+.notup
  cmp #BotCutEdge
- bcs :CUTDOWN
+ bcs CUTDOWN
 
-*  Cut left/right?
+\*  Cut left/right?
 
  ldx CharPosn
  cpx #135
- bcc :nocu
+ bcc nocu
  cpx #150
- bcc :nocut ;don't cut L/R on climbup
-:nocu cpx #110
- bcc :nosu
+ bcc nocut ;don't cut L/R on climbup
+.nocu cpx #110
+ bcc nosu
  cpx #120
- bcc :nocut ;or on standup
-:nosu cpx #150
- bcc :nost
+ bcc nocut ;or on standup
+.nosu cpx #150
+ bcc nost
  cpx #163
- bcc :nocut
+ bcc nocut
  cpx #166
- bcc :nost
+ bcc nost
  cpx #169
- bcc :nocut ;or on strike/block
-:nost lda CharAction
+ bcc nocut ;or on strike/block
+.nost lda CharAction
  cmp #7
- beq :nocut ;or on turning
+ beq nocut ;or on turning
 
  ldx CharFace ;-1=left, 0=right
- beq :faceR
+ beq faceR
 ;facing left
  lda leftej
  cmp #LeftCutEdge
- bcc :CUTLEFT
- beq :CUTLEFT
+ bcc CUTLEFT
+ beq CUTLEFT
 
  cmp #ScrnRight+1
- bcs :CUTRIGHT
- bcc :nocut
+ bcs CUTRIGHT
+ bcc nocut
 
-:faceR
+.faceR
  lda CharScrn
  ldx #9
  ldy CharBlockY
  jsr rdblock
 
  cmp #panelwif
- beq :nocutr
+ beq nocutr
  cmp #panelwof
- beq :nocutr ;don't cut R if a panel blocks view
+ beq nocutr ;don't cut R if a panel blocks view
 
  lda rightej
  cmp #RightCutEdge
- bcs :CUTRIGHT
+ bcs CUTRIGHT
 
-:nocutr lda rightej
+.nocutr lda rightej
  cmp #ScrnLeft-1
- bcc :CUTLEFT
- beq :CUTLEFT
+ bcc CUTLEFT
+ beq CUTLEFT
 
-:nocut lda #-1
+.nocut lda #LO(-1)
  rts
 
-:CUTLEFT jsr mirrmusic
+\ BEEB TEMP comment out SOUND
+.CUTLEFT ;jsr mirrmusic
  jsr milestone3
  lda #0
- bpl :cut
+ bpl local_cut
 
-:CUTRIGHT jsr stealsword
- jsr jaffmusic
+.CUTRIGHT jsr stealsword
+\ BEEB TEMP comment out SOUND
+; jsr jaffmusic
  lda #1
- bpl :cut
+ bpl local_cut
 
-:CUTUP lda #2
- bpl :cut
+.CUTUP lda #2
+ bpl local_cut
 
-* Level 6 ("Plunge"): Kid falls off screen 1 into next level
+\* Level 6 ("Plunge"): Kid falls off screen 1 into next level
 
-:CUTDOWN
+.CUTDOWN
  jsr infinity
 
  lda level
  cmp #6
- bne :no6
+ bne no6
  lda CharScrn
  cmp #1
- beq :nocut
-:no6
+ beq nocut
+.no6
  lda #3
-:cut pha
+.local_cut pha
  jsr cut
  pla
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* Level 12--fall off into infinity
-*-------------------------------
-infinity rts
+\*-------------------------------
+\* Level 12--fall off into infinity
+\*-------------------------------
+.infinity
+ rts
 
-*-------------------------------
-* Passed Level 3 milestone?
-*-------------------------------
-milestone3
+\*-------------------------------
+\* Passed Level 3 milestone?
+\*-------------------------------
+
+.milestone3
+{
  lda level
  cmp #3
- bne ]rts
+ bne return
  lda #7 ;scrn to R of gate
-]mcheck cmp CharScrn
- bne ]rts
+.mcheck cmp CharScrn
+ bne return
  lda #1
  sta milestone
  lda MaxKidStr
  sta origstrength
+.return
  rts
+}
 
-*-------------------------------
-* Level 12: Shadow steals sword
-*-------------------------------
-stealsword
+\*-------------------------------
+\* Level 12: Shadow steals sword
+\*-------------------------------
+
+.stealsword
+{
  lda level
  cmp #12
- bne ]rts
+ bne return
  lda CharScrn
  cmp #18 ;scrn below swordscrn
- bne ]rts
+ bne return
  lda #swordscrn
  ldx #swordx
  ldy #swordy
  jsr rdblock
  lda #floor
  sta (BlueType),y
+.return
  rts
+}
 
+IF _TODO    ; MUSIC
 *-------------------------------
 * Level 13: Play Jaffar's Theme
 *-------------------------------
 jaffmusic
  lda level
  cmp #13
- bne ]rts
+ bne return
  lda exitopen
- bne ]rts
+ bne return
  lda CharScrn
  cmp #3
- bne ]rts
+ bne return
  lda #s_Jaffar
  ldx #25
  jmp cuesong
@@ -1661,18 +1809,21 @@ mirrmusic
  lda #77
  sta exitopen ;so we don't repeat theme
 :no4
-]rts rts
+return rts
+ENDIF
 
-*-------------------------------
-*
-*  C U T
-*
-*  Move char from CharScrn to adjacent screen
-*
-*  In: A = cut dir: 0 = left, 1 = right, 2 = up, 3 = down
-*
-*-------------------------------
-CUT
+\*-------------------------------
+\*
+\*  C U T
+\*
+\*  Move char from CharScrn to adjacent screen
+\*
+\*  In: A = cut dir: 0 = left, 1 = right, 2 = up, 3 = down
+\*
+\*-------------------------------
+
+.CUT
+{
  cmp #3
  beq Cdown
  cmp #1
@@ -1680,7 +1831,7 @@ CUT
  cmp #2
  beq Cup
 
-Cleft
+.Cleft
  lda CharScrn
  jsr getleft ;get new screen #
  sta CharScrn
@@ -1693,7 +1844,7 @@ Cleft
  ldx #1 ;new FromDir
  rts
 
-Cright
+.Cright
  lda CharScrn
  jsr getright
  sta CharScrn
@@ -1706,7 +1857,7 @@ Cright
  ldx #0
  rts
 
-Cup
+.Cup
  lda CharScrn
  jsr getup
  sta CharScrn
@@ -1724,7 +1875,7 @@ Cup
  ldx #3
  rts
 
-Cdown
+.Cdown
  lda CharScrn
  jsr getdown
  sta CharScrn
@@ -1740,55 +1891,59 @@ Cdown
  sta CharY
 
  ldx #2
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* A D D  G U A R D
-*
-* On cut to new screen--if guard is there, bring him to life
-* Also handles hard-wired shadowman appearances
-*
-* In: VisScrn
-*
-*-------------------------------
-ADDGUARD
+\*-------------------------------
+\*
+\* A D D  G U A R D
+\*
+\* On cut to new screen--if guard is there, bring him to life
+\* Also handles hard-wired shadowman appearances
+\*
+\* In: VisScrn
+\*
+\*-------------------------------
+
+.ADDGUARD
+{
  lda #0
  sta offguard
 
-* Level 12
+\* Level 12
 
  lda level
  cmp #12
- bne :not12
+ bne not12
  lda exitopen ;set when shadow drops
- bne ]rts
+ bne return_44
  lda mergetimer
- bne :1 ;shadow has been reabsorbed
+ bne label_1 ;shadow has been reabsorbed
  lda VisScrn
  cmp #swordscrn
-:1 bne ]rts
+.label_1 bne return_44
  sta CharScrn
 
  ldx #swordx
  ldy #swordy
  jsr rdblock
  cmp #sword
- beq ]rts ;sword is still there
+ beq return_44 ;sword is still there
  lda #0
  sta shadowaction
  lda #1
  sta exitopen
- lda #shadpos12
- ldx #>shadpos12
+ lda #LO(shadpos12)
+ ldx #HI(shadpos12)
  jmp csps
 
-* Level 6 (Plunge)
+\* Level 6 (Plunge)
 
-:not12
+.not12
  lda level
  cmp #6 ;plunge
- bne :not6
+ bne not6
 
  lda VisScrn
  sta CharScrn
@@ -1797,22 +1952,22 @@ ADDGUARD
 
  lda exitopen
  cmp #77
- beq :norepeat
+ beq norepeat
  lda #s_Danger
  ldx #50
  jsr cuesong
  lda #77
  sta exitopen
-:norepeat
- lda #shadpos6a
- ldx #>shadpos6a
+.norepeat
+ lda #LO(shadpos6a)
+ ldx #HI(shadpos6a)
  jmp csps
 
-* Level 5 (Thief)
+\* Level 5 (Thief)
 
-:not6 lda level
+.not6 lda level
  cmp #5 ;thief
- bne :not5
+ bne not5
 
  lda VisScrn
  sta CharScrn
@@ -1823,22 +1978,26 @@ ADDGUARD
  ldy #flasky
  jsr rdblock
  cmp #flask
- bne ]rts ;potion is gone
+ bne return_44 ;potion is gone
 
- lda #shadpos5
- ldx #>shadpos5
+ lda #LO(shadpos5)
+ ldx #HI(shadpos5)
  jmp csps
-]rts rts
-:not5
+}
+.return_44
+ rts
+.not5
 
-*-------------------------------
-AddNormalGd
+\*-------------------------------
+
+.AddNormalGd
+{
  ldx VisScrn
  lda GdStartBlock-1,x
  cmp #30
- bcs ]rts ;no guard on this scrn
+ bcs return_44 ;no guard on this scrn
 
-* Bring guard to life (or death)
+\* Bring guard to life (or death)
 
  stx CharScrn
 
@@ -1860,46 +2019,46 @@ AddNormalGd
 
  lda level
  cmp #3
- bne :3
+ bne label_3
 
  lda #4 ;skel
- bne :4
-:3 lda #2 ;guard
-:4 sta CharID
+ bne label_4
+.label_3 lda #2 ;guard
+.label_4 sta CharID
 
  lda GdStartSeqH-1,x
- bne :1 ;0 is code for fresh start
+ bne label_1 ;0 is code for fresh start
 
  lda CharID
  cmp #4
- bne :5
+ bne label_5
  lda #2
  sta CharSword
  lda #landengarde ;skel (ready)
- bne :6
-:5 lda #0
+ bne label_6
+.label_5 lda #0
  sta CharSword
  lda #alertstand ;guard
-:6 jsr jumpseq
- jmp :2
+.label_6 jsr jumpseq
+ jmp label_2
 
-:1 sta CharSeq+1
+.label_1 sta CharSeq+1
  lda GdStartSeqL-1,x
  sta CharSeq
 
-:2 jsr animchar
+.label_2 jsr animchar
 
  lda CharPosn
  cmp #185 ;killed
- beq :dead
+ beq local_dead
  cmp #177 ;impaled
- beq :dead
+ beq local_dead
  cmp #178 ;halved
- beq :dead
+ beq local_dead
 
-* Live guard
+\* Live guard
 
- lda #-1
+ lda #LO(-1)
  sta CharLife
 
  lda #0
@@ -1908,18 +2067,18 @@ AddNormalGd
  sta justblocked
 
  jsr getgdstrength
- jmp :cont
+ jmp cont
 
-* Dead guard
+\* Dead guard
 
-:dead lda #1
+.local_dead lda #1
  sta CharLife
  lda #0
  sta OppStrength
 
-* Continue
+\* Continue
 
-:cont lda #0
+.cont lda #0
  sta CharXVel
  sta CharYVel
  lda #1
@@ -1928,9 +2087,9 @@ AddNormalGd
  ldx VisScrn
  lda GdStartProg-1,x
  cmp #numprogs
- bcc :ok
+ bcc ok
  lda #3 ;default
-:ok sta guardprog
+.ok sta guardprog
 
  ldx level
  lda basiccolor,x
@@ -1939,11 +2098,14 @@ AddNormalGd
  sta GuardColor  ;0 = blue, 1 = red
 
  jmp SaveShad ;save ShadVars
+}
 
-*-------------------------------
-* Get guard fighting strength
-*-------------------------------
-getgdstrength
+\*-------------------------------
+\* Get guard fighting strength
+\*-------------------------------
+
+.getgdstrength
+{
  ldx level
  lda basicstrength,x
  ldx guardprog
@@ -1951,11 +2113,79 @@ getgdstrength
  adc extrastrength,x
  sta MaxOppStr
  sta OppStrength
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst
 \ ds 1
 \ usr $a9,17,$800,*-org
 \ lst off
+
+\\ Moved from subs.asm as needs to be in same RAM bank
+
+\*-------------------------------
+\* Demo commands
+\*-------------------------------
+
+\ All defined in auto.asm
+\EndProg = -2
+\EndDemo = -1
+\Ctr = 0
+\Fwd = 1
+\Back = 2
+\Up = 3
+\Down = 4
+\Upfwd = 5
+\Press = 6
+\Release = 7
+
+\*-------------------------------
+
+.DemoProg1 ;up to fight w/1st guard
+ EQUB 0,Ctr
+ EQUB 1,Fwd
+ EQUB 12,Ctr
+ EQUB 30,Fwd ;start running...
+ EQUB 37,Upfwd ;jump 1st pit
+ EQUB 47,Ctr
+ EQUB 48,Fwd ;& keep running
+d1 = 65
+ EQUB d1,Ctr ;stop
+ EQUB d1+8,Back ;look back...
+ EQUB d1+10,Ctr
+ EQUB d1+34,Back
+ EQUB d1+35,Ctr
+d2 = 115
+ EQUB d2,Upfwd ;jump 2nd pit
+ EQUB d2+13,Press ;& grab ledge
+ EQUB d2+21,Up
+ EQUB d2+42,Release
+ EQUB d2+43,Ctr
+ EQUB d2+44,Fwd
+ EQUB d2+58,Down
+ EQUB d2+62,Ctr
+ EQUB d2+63,Fwd
+ EQUB d2+73,Ctr
+d3 = 193
+ EQUB d3,Fwd
+ EQUB d3+12,Ctr
+ EQUB d3+40,EndDemo
+
+\*-------------------------------
+\*
+\*  D  E  M  O
+\*
+\*  Controls kid's movements during self-running demo
+\*
+\*  (Called from PLAYERCTRL)
+\*
+\*-------------------------------
+
+.DEMO
+{
+ lda #LO(DemoProg1)
+ ldx #HI(DemoProg1)
+ jmp AutoPlayback
+}

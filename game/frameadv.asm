@@ -9,9 +9,13 @@
 \*-------------------------------
 \ org org
 \
+IF _JMP_TABLE=FALSE
 .sure jmp SURE
 .fast jmp FAST
 .getinitobj jmp GETINITOBJ
+.calcblue jmp CALCBLUE
+.zerored jmp ZERORED
+ENDIF
 \
 \*-------------------------------
 \ lst
@@ -768,6 +772,7 @@
  cpx #slicer
  bne label_11
  jmp drawslicerf
+
 .label_11 cpx #flask
  bne label_1
  lda state
@@ -782,6 +787,7 @@
 .label_1 ldx objid
  lda fronti,x
  beq return_1
+
 .label_12 sta IMAGE
 
  lda Ay
@@ -809,6 +815,7 @@ ENDIF
 
  cpx #posts
  beq label_sta ;for dungeon bg set
+
 .ndunj cpx #block
  beq local_block
 
@@ -816,10 +823,12 @@ ENDIF
 
 \* Special handling for block
 
-.local_block ldy state
+.local_block
+ ldy state
  cpy #numblox
  bcc label_2
  ldy #0
+
 .label_2 lda blockfr,y
  sta IMAGE
 
@@ -882,7 +891,7 @@ ENDIF
 
 .label_6
 }
-return_1=*
+.return_1
  rts
 
 
@@ -945,7 +954,7 @@ return_1=*
  bcc return_2 ;C-section is hidden
 .vis sec ;C-section is visible
 }
-return_2=*
+.return_2
  rts
 
 \*-------------------------------
@@ -993,7 +1002,7 @@ return_2=*
 .label_1 lda blockc,y
  bne cont
 }
-return_3=*
+.return_3
  rts
 
 
@@ -1073,7 +1082,7 @@ ENDIF
  lda panelb,y
  bne drawb_cont1
 }
-return_4=*
+.return_4
  rts
 
 .drawb_block
@@ -1162,7 +1171,7 @@ return_4=*
  sta YCO
  jsr add
  lda #$ff
-return_5=*
+.return_5
  rts
 
 \* Block handling
@@ -1233,14 +1242,17 @@ return_5=*
  lda #HI(addmidezfast)
  sta add+2
 }
-return_6=*
+.return_6
  rts
 
 .maddfore
 {
- ldx #enum_mask
- stx OPACITY
- jsr addfore
+\ BEEB GFX PERF
+; ldx #enum_mask
+; stx OPACITY
+; jsr addfore
+\ I think I'm doing this in one operation?
+\ In POP enum_mask means generate a mask from the pixel data but I need this for ORA anyway
  ldx #enum_ora
  stx OPACITY
  jmp addfore
@@ -1305,7 +1317,7 @@ return_6=*
  bne label_5
  jmp drawsworda
 .label_5
-return_7=*
+.return_7
  rts
 }
 
@@ -1424,7 +1436,7 @@ return_7=*
  lda Dy
  sta YCO
 
- lda #$80
+ lda #$00           \ BEEB (was $80)
  jmp addwipe
 }
 .return_21
@@ -1545,7 +1557,7 @@ ENDIF
  lda #1
 .ok tay
 }
-return_11=*
+.return_11
  rts
 
 \*-------------------------------
@@ -1723,7 +1735,7 @@ ENDIF
  jmp maddfore
 .label_2
 }
-return_9=*
+.return_9
  rts
 
 
@@ -2247,24 +2259,24 @@ return_9=*
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* In builder: BlueSpec contains initial gadget settings
-*
-*-------------------------------
- do EditorDisk
-getobjbldr
+\*-------------------------------
+\*
+\* In builder: BlueSpec contains initial gadget settings
+\*
+\*-------------------------------
+IF EditorDisk
+.getobjbldr
+{
  lda (BlueType),y
  and #idmask
  pha
  jsr getinitobj1
- bcs :ok
+ bcs ok
  lda (BlueSpec),y
-:ok sta state
+.ok sta state
  pla
  rts
- fin
+}
 ENDIF
 
 \*-------------------------------
@@ -2411,3 +2423,98 @@ ENDIF
 \ ds 1
 \ usr $a9,3,$490,*-org
 \ lst off
+
+\*-------------------------------
+\* The following routines properly belong to FRAMEADV
+\* but have been moved here for lack of space
+\\ BEEB moved back to FRAMEADV module as do have space...
+\*-------------------------------
+\*
+\*  C A L C   B L U E
+\*
+\*  Given:  screen #, 1-24 (in acc)
+\*  Return: start of BLUETYPE table (in BlueType)
+\*          start of BLUESPEC table (in BlueSpec)
+\*
+\*  If A = 0...
+\*    In game: returns garbage
+\*    In builder: returns menu data
+\*
+\*-------------------------------
+.CALCBLUE
+{
+IF EditorDisk
+ cmp #0
+ beq calcmenu
+ENDIF
+
+ sec
+ sbc #1 ;reduce to 0-23
+ asl A
+ tax ;x2
+
+ lda Mult30,x
+ clc
+ adc #LO(blueprnt)
+ sta BlueType
+
+ lda Mult30+1,x
+ adc #HI(blueprnt)
+ sta BlueType+1
+
+ lda BlueType
+ clc
+ adc #LO(24*30)
+ sta BlueSpec
+
+ lda BlueType+1
+ adc #HI(24*30)
+ sta BlueSpec+1
+
+.return rts
+}
+
+IF EditorDisk
+.calcmenu
+{
+ lda #LO(menutype)
+ sta BlueType
+ lda #HI(menutype)
+ sta BlueType+1
+
+ lda #LO(menuspec)
+ sta BlueSpec
+ lda #HI(menuspec)
+ sta BlueSpec+1
+ rts
+}
+ENDIF
+
+\*-------------------------------
+\*
+\*  Z E R O   R E D
+\*
+\*  zero redraw buffers
+\*
+\*-------------------------------
+.ZERORED
+{
+ lda #0
+ ldy #29
+.loop sta redbuf,y
+ sta fredbuf,y
+ sta floorbuf,y
+ sta halfbuf,y
+ sta wipebuf,y
+ sta movebuf,y
+ sta objbuf,y
+ dey
+ bpl loop
+
+ ldy #9
+.loop2 sta topbuf,y
+ dey
+ bpl loop2
+
+ rts
+}

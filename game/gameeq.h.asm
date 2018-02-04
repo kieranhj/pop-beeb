@@ -9,38 +9,37 @@
 \*
 \*-------------------------------
 
-\ BEEB DEFINED IN pop-beeb.asm AS SWRAM BANKS
-\chtable1 = $6000
-\chtable2 = $8400
-\chtable3 = $0800
-\chtable4 = $9600
-\chtable5 = $a800
-\chtable6 = $6000
-\chtable7 = $9f00
+\chtable1 = $6000               ; see pop-beeb.asm
+\chtable2 = $8400               ; see pop-beeb.asm
+\chtable3 = $0800               ; see pop-beeb.asm
+\chtable4 = $9600               ; see pop-beeb.asm
+\chtable5 = $a800               ; see pop-beeb.asm
+\chtable6 = $6000               ; see pop-beeb.asm
+\chtable7 = $9f00               ; see pop-beeb.asm
 
-\bgtable1 = $6000
-\bgtable2 = $8400
+\bgtable1 = $6000               ; see pop-beeb.asm
+\bgtable2 = $8400               ; see pop-beeb.asm
 
-\topctrl = $2000                ; location determined by assembler
-seqtable = $2800
-seqtab = $3000
-\ctrl = $3a00                   ; location determined by assembler
-\coll = $4500                   ; location determined by assembler
-\gamebg = $4c00                 ; location determined by assembler
-\auto = $5400                   ; location determined by assembler
+\topctrl = $2000                ; see topctrl.asm
+\seqtable = $2800               ; see framedefs.asm
+\seqtab = $3000                 ; see seqtable.asm
+\ctrl = $3a00                   ; see ctrl.asm
+\coll = $4500                   ; see coll.asm
+\gamebg = $4c00                 ; see gamebg.asm
+\auto = $5400                   ; see auto.asm
 
 \mobtables = $b600              ; location determined by assembler
-savedgame = $b6f0
+;savedgame = $b6f0
 
-msys = $d400
-\ctrlsubs = $d000               ; location determined by assembler
-\specialk = $d900               ; location determined by assembler
-textline = $dfd8                ; location determined by assembler
+;msys = $d400
+\ctrlsubs = $d000               ; see ctrlsubs.asm
+\specialk = $d900               ; see specialk.asm
+;textline = $dfd8                
 \subs = $e000
-sound = $ea00
-\mover = $ee00                  ; location determined by assembler
-\misc = $f900                   ; location determined by assembler
-debugs = $fc00
+;sound = $ea00
+\mover = $ee00                  ; see mover.asm
+\misc = $f900                   ; see misc.asm
+;debugs = $fc00
 
 \*-------------------------------
 \*
@@ -200,108 +199,11 @@ ENDIF
 \*  $40-e7: Game globals
 \*-------------------------------
 
-;.yellowflag skip 1
-;.timebomb skip 1
-;.justblocked skip 1
-.gdtimer skip 1
 .framepoint skip 2
 .Fimage skip 1
 .Fdx skip 1
 .Fdy skip 1
 .Fcheck skip 1
-.exitopen skip 1
-;.collX skip 1
-.lightning skip 1
-.lightcolor skip 1
-.offguard skip 1
-.blockid skip 1
-.blockx skip 1
-;.blocky skip 1
-;.infrontx skip 1
-;.behindx skip 1
-;.abovey skip 1
-.tempblockx skip 1
-.tempblocky skip 1
-.tempscrn skip 1
-;.tempid skip 1
-.numtrans skip 1
-.tempnt skip 1
-.redrawflg skip 1
-;.xdiff skip 2
-;.ydiff skip 2
-;.xdir skip 1
-;.ydir skip 1
-.RNDseed skip 1
-.invert skip 1
-.PlayCount skip 1
-.refract skip 1
-;.backtolife skip 1
-.cutplan skip 1
-;.lastcmd skip 1
-;.distfallen skip 1
-.cutscrn skip 1
-.waitingtojump skip 1
-;.trigppabove skip 1
-;.direcpp skip 1
-;.blockaddr skip 2
-;.delay skip 1
-;.XCOORD skip 2
-;.savekidx skip 1
-;.mirrx skip 1
-;.dmirr skip 1
-;.barrdist skip 1
-;.barrcode skip 1
-;.imwidth skip 1
-;.imheight skip 1
-;.leadedge skip 1
-;.leftej skip 1
-;.rightej skip 1
-;.topej skip 1
-;.leftblock skip 1
-;.rightblock skip 1
-;.topblock skip 1
-;.bottomblock skip 1
-;.CDLeftEj skip 1
-;.CDRightEj skip 1
-;.endrange skip 1
-.bufindex skip 1
-;.blockedge skip 1
-;.collideL skip 1
-;.collideR skip 1
-.weightless skip 1
-.cutorder skip 1
-.AMtimer skip 1
-;.begrange skip 1
-;.scrn skip 1
-;.keybufptr skip 1
-.VisScrn skip 1
-.OppStrength skip 1
-;.jarabove skip 1
-.KidStrength skip 1
-.ChgKidStr skip 1
-.MaxKidStr skip 1
-.EnemyAlert skip 1
-.ChgOppStr skip 1
-.heroic skip 1
-.clrF skip 1
-.clrB skip 1
-.clrU skip 1
-.clrD skip 1
-.clrbtn skip 1
-.Fsword skip 1
-;.purpleflag skip 1 ;$da
-.msgtimer skip 1
-;.MaxOppStr skip 1
-.guardprog skip 1
-.ManCtrl skip 1
-.mergetimer skip 1
-;.lastpotion skip 1
-.origstrength skip 1
-;.jmpaddr skip 2
-.alertguard skip 1
-.createshad skip 1
-.stunned skip 1
-.droppedout skip 1
 
 \*-------------------------------
 \*
@@ -320,6 +222,7 @@ VertDist = 11
 UseFastlay = 0
 UseLay = 1
 UseLayrsave = 2
+UseCharTable = $80
 
 TypeKid = 0
 TypeShad = 1

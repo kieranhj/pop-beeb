@@ -126,13 +126,16 @@ ENDIF
 \*  Image lists
 \*
 \*-------------------------------
-maxback = 200 ;x4
-maxfore = 100 ;x4
-maxwipe = 20 ;x5
-maxpeel = 46 ;x4
-maxmid = 46 ;x11
-maxobj = 20 ;x12
-maxmsg = 32 ;x5
+\ BEEB - HALVED SIZE OF IMAGE LISTS TO SAVE RAM
+\ HAVE ADDED RUN-TIME BRK IN _DEBUG IF OVERFLOW OCCURS
+\ IDEALLY TRACK THE MAX VALUES OF THESE AND SET ACCORDINGLY
+maxback = 128   ;200    ;x4     - observed max = 108 on level 2
+maxfore = 50    ;100    ;x4
+maxwipe = 10    ;20     ;x5
+maxpeel = 23    ;46     ;x4
+maxmid = 23     ;46     ;x11
+maxobj = 10     ;20     ;x12
+maxmsg = 16     ;32     ;x5
 
 \dum imlists
 \ imlists moved to eq.asm
@@ -163,6 +166,8 @@ maxmsg = 32 ;x5
 .RIGHTCUT skip 1
 .BANK skip 1
 .BOTCUT skip 1
+.PALETTE skip 1         ; BEEB TO DO
+.BEEBHACK skip 1
 
 height = IMAGE
 width = IMAGE+1
@@ -181,8 +186,8 @@ width = IMAGE+1
 ;.b0down skip 1
 ;.b1down skip 1
 .SINGSTEP skip 1
-.blackflag skip 1
-.SCRNUM skip 1
+.blackflag skip 1               \ BEEB TO DO - remove me
+.SCRNUM skip 1 
 .BlueType skip 2
 .BlueSpec skip 2
 .CUTTIMER skip 1
@@ -198,10 +203,10 @@ width = IMAGE+1
 .scrnAboveL skip 1
 .scrnAboveR skip 1
 .scrnBelowR skip 1
-;.kbdX skip 1
-;.kbdY skip 1
-;.joyX skip 1
-;.joyY skip 1
+.kbdX skip 1
+.kbdY skip 1
+.joyX skip 1
+.joyY skip 1
 .btn skip 1
 ;.butt skip 1
 

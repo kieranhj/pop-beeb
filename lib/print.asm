@@ -1,3 +1,11 @@
+; print.asm
+; Printing library from Teletextr
+
+_MINIMAL_PRINT = TRUE
+
+.beeb_print_start
+
+IF _MINIMAL_PRINT = FALSE
 
 .print_temp EQUB 0
 
@@ -341,3 +349,35 @@ ENDMACRO
 .done
     rts
 }
+
+ELSE
+
+MACRO MPRINT string
+{
+    LDX #LO(string):LDY #HI(string):JSR print_XY
+}
+ENDMACRO
+
+.print_XY
+{
+    STX stringaddr+1
+    STY stringaddr+2
+
+    LDX #0
+    .loop
+
+    .stringaddr
+    LDA &FFFF, X
+    BEQ loop_done
+
+    JSR osasci
+    INX
+    BNE loop
+    
+    .loop_done
+    RTS
+}
+
+ENDIF
+
+.beeb_print_end

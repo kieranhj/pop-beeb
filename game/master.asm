@@ -20,20 +20,46 @@
 \*-------------------------------
 \ org org
 
- ._firstboot jmp FIRSTBOOT
- ._loadlevel jmp LOADLEVEL
- ._reload BRK       ;jmp RELOAD
- ._loadstage2 BRK   ;jmp LoadStage2
+ .firstboot jmp FIRSTBOOT
+ .loadlevel jmp LOADLEVEL
+ .reload BRK       ;jmp RELOAD                 EDITOR
+ .loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
  
- ._attractmode BRK  ;jmp ATTRACTMODE
- ._cutprincess BRK  ;jmp CUTPRINCESS
- ._savegame BRK     ;jmp SAVEGAME
- ._loadgame BRK     ;jmp LOADGAME
- ._dostartgame jmp DOSTARTGAME
+ .attractmode jmp ATTRACTMODE
+ .cutprincess jmp CUTPRINCESS
+ .savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
+ .loadgame BRK     ;jmp LOADGAME
+ .dostartgame jmp DOSTARTGAME
 
- ._epilog BRK       ;jmp EPILOG
- ._loadaltset BRK   ;jmp LOADALTSET
+ .epilog jmp EPILOG
+ .loadaltset BRK   ;jmp LOADALTSET
 \_screendump
+
+.LoadLevelX jmp LOADLEVELX             ; moved from misc.asm
+
+MACRO MASTER_LOAD_HIRES filename
+{
+ JSR beeb_set_game_screen
+ LDX #LO(filename)
+ LDY #HI(filename)
+ LDA #HI(beeb_screen_addr)
+ JSR disksys_load_file
+ JSR vblank
+ JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+}
+ENDMACRO
+
+MACRO MASTER_LOAD_DHIRES filename, lines
+{
+ LDX #LO(filename)
+ LDY #HI(filename)
+ LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
+ JSR disksys_load_file
+ JSR vblank
+ JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR beeb_show_screen       ; in case previous blackout
+}
+ENDMACRO
 
 \*-------------------------------
 \ lst
@@ -210,8 +236,11 @@ kresume = 'l'-$60
  lda #1
  sta soundon ;Sound on
 
-\ BEEB TEMP comment out
-\ jmp AttractLoop
+IF _BOOT_ATTRACT
+ jmp AttractLoop
+ELSE
+ jmp DOSTARTGAME
+ENDIF
 }
 
 IF _TODO
@@ -351,12 +380,14 @@ ENDIF
  rts
 }
 
-IF _TODO
-setdemolevel
+.setdemolevel
+{
  ldx demolevel
 \ ldx demolevel+1
  jmp SetLevel
+}
 
+IF _TODO
 *-------------------------------
 *
 * Check track 22 to make sure it's the right disk
@@ -484,7 +515,58 @@ ENDIF
 \ NOT BEEB
 \ jmp driveoff
 
-\ BEEB
+\ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
+
+ LDA #0
+ LDX #LO(fast_palette_lookup_0)
+ LDY #HI(fast_palette_lookup_0)
+ JSR beeb_expand_palette_table
+
+ LDA #1
+ LDX #LO(fast_palette_lookup_1)
+ LDY #HI(fast_palette_lookup_1)
+ JSR beeb_expand_palette_table
+
+ LDA #2
+ LDX #LO(fast_palette_lookup_2)
+ LDY #HI(fast_palette_lookup_2)
+ JSR beeb_expand_palette_table
+ 
+ LDA #3
+ LDX #LO(fast_palette_lookup_3)
+ LDY #HI(fast_palette_lookup_3)
+ JSR beeb_expand_palette_table
+
+ LDA #4
+ LDX #LO(fast_palette_lookup_4)
+ LDY #HI(fast_palette_lookup_4)
+ JSR beeb_expand_palette_table
+
+ LDA #5
+ LDX #LO(fast_palette_lookup_5)
+ LDY #HI(fast_palette_lookup_5)
+ JSR beeb_expand_palette_table
+
+ LDA #6
+ LDX #LO(fast_palette_lookup_6)
+ LDY #HI(fast_palette_lookup_6)
+ JSR beeb_expand_palette_table
+
+ LDA #7
+ LDX #LO(fast_palette_lookup_7)
+ LDY #HI(fast_palette_lookup_7)
+ JSR beeb_expand_palette_table
+
+ LDA #8
+ LDX #LO(fast_palette_lookup_8)
+ LDY #HI(fast_palette_lookup_8)
+ JSR beeb_expand_palette_table
+
+ LDA #9
+ LDX #LO(fast_palette_lookup_9)
+ LDY #HI(fast_palette_lookup_9)
+ JSR beeb_expand_palette_table
+
  RTS
 }
 
@@ -540,6 +622,7 @@ ENDIF
 \ Not sure what's going on here - suggests 3x sets of bg tiles
 \ As these are loaded by track/sector and not filename, presume
 \ The bg tiles are part loaded into memory location for bg
+\ ANSWER: Tracks 07 & 09 are BGTAB1.DUN and BGTAB2.DUN but on the second disk to reduce swapping
 
 \*-------------------------------
 \rdbg1 ldx newBGset1
@@ -556,21 +639,17 @@ ENDIF
 \:rts rts
 
 .bgset1_to_name
-EQUS "DUN1   $"
-EQUS "PAL1   $"
-EQUS "DUN1   $"
+EQUS "DUN1X  $"
+EQUS "PAL1X  $"
+\EQUS "DUN1X  $"         ; bgset1=$02 just means side A/B of original disc
 
 .rdbg1
 {
-\ BEEB TEMP comment out
     ldx newBGset1
+\ BEEB TEMP
 \    cpx BGset1
 \    beq return
     stx BGset1
-
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
 
     \ index into table for filename
 ;    txa
@@ -578,23 +657,56 @@ EQUS "DUN1   $"
     asl a:asl a:asl a       ; x8
     clc
     adc #LO(bgset1_to_name)
-    tax
+    STA beeb_writeptr
     lda #HI(bgset1_to_name)
     adc #0
-    tay
+    STA beeb_writeptr+1
 
-    lda #HI(bgtable1)
+    \ Now need to load 2x blocks for BGTAB1
+
+    \ Poke B into filename
+    LDA #'B'
+    LDY #4
+    STA (beeb_writeptr), Y
+
+    \ Set BANK for B
+    lda #BEEB_SWRAM_SLOT_BGTAB1_B
+    jsr swr_select_slot
+
+    \ Load file B
+    LDX beeb_writeptr
+    LDY beeb_writeptr+1
+    lda #HI(bgtable1b)
     jsr disksys_load_file
 
     \ Relocate the IMG file
-    LDA #LO(bgtable1)
+    LDA #LO(bgtable1b)
     STA beeb_readptr
-    LDA #HI(bgtable1)
+    LDA #HI(bgtable1b)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
+    JSR beeb_plot_reloc_img
+
+
+    \ Poke A into filename
+    LDA #'A'
+    LDY #4
+    STA (beeb_writeptr), Y
+
+    \ Set BANK for A
+    lda #BEEB_SWRAM_SLOT_BGTAB1_A
+    jsr swr_select_slot
+
+    \ Load file B
+    LDX beeb_writeptr
+    LDY beeb_writeptr+1
+    lda #HI(bgtable1a)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(bgtable1a)
+    STA beeb_readptr
+    LDA #HI(bgtable1a)
+    STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -614,18 +726,18 @@ EQUS "DUN1   $"
 .bgset2_to_name
 EQUS "DUN2   $"
 EQUS "PAL2   $"
-EQUS "DUN2   $"
+\EQUS "DUN2   $"            ; $02 just meant side B of original disc
 
 .rdbg2
 {
-\ BEEB TEMP comment out
     ldx newBGset2
+\ BEEB TEMP
 \    cpx BGset2
 \    beq return
     stx BGset2
 
     \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
+    lda #BEEB_SWRAM_SLOT_BGTAB2
     jsr swr_select_slot
 
     \ index into table for filename
@@ -647,10 +759,6 @@ EQUS "DUN2   $"
     STA beeb_readptr
     LDA #HI(bgtable2)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -707,8 +815,8 @@ EQUS "VIZ    $"
 
 .rdch4
 {
-\ BEEB TEMP comment out
     ldx newCHset
+\ BEEB TEMP
 \    cpx CHset
 \    beq return
     stx CHset
@@ -736,10 +844,6 @@ EQUS "VIZ    $"
     STA beeb_readptr
     LDA #HI(chtable4)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
 
     .return
@@ -774,6 +878,12 @@ EQUS "VIZ    $"
 
 .rdbluep
 {
+    TXA
+    BEQ set_drive
+    LDA #2
+    .set_drive
+    JSR disksys_set_drive
+
     cpx #10
     bcs double_digit
 
@@ -794,10 +904,6 @@ EQUS "VIZ    $"
     sta beeb_level_filename+5
 
     .do_load
-    \ Need to define slot numbers for different data block
-    lda #BEEB_SWRAM_SLOT_LEVELBG
-    jsr swr_select_slot
-
     lda #HI(blueprnt)
     ldx #LO(beeb_level_filename)
     ldy #HI(beeb_level_filename)
@@ -806,77 +912,113 @@ EQUS "VIZ    $"
     rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Copy one DHires page to another
-*
-*-------------------------------
-copy1to2
- lda #$40 ;dest
- ldx #$20 ;org
- bne copydhires
+\*-------------------------------
+\*
+\* Copy one DHires page to another
+\*
+\*-------------------------------
 
-copy2to1
- lda #$20
- ldx #$40
+.copy1to2
+{
+    LDA #HI(beeb_double_hires_addr)
+    JMP beeb_copy_shadow
 
-copydhires
- sta IMAGE+1 ;dest
- stx IMAGE ;org
+\ lda #$40 ;dest
+\ ldx #$20 ;org
+\ bne copydhires
+\
+\copy2to1
+\ lda #$20
+\ ldx #$40
+\
+\copydhires
+\ sta IMAGE+1 ;dest
+\ stx IMAGE ;org
+\
+\ jsr _copy2000aux
+\ jmp _copy2000 ;in hires
+}
 
- jsr _copy2000aux
- jmp _copy2000 ;in hires
+\*-------------------------------
+\*
+\*  Cut to princess screen
+\*
+\*-------------------------------
 
-*-------------------------------
-*
-*  Cut to princess screen
-*
-*-------------------------------
-CUTPRINCESS
+.pacRoom_name
+EQUS "PRIN   $"
+
+.CUTPRINCESS
+{
  jsr blackout
  lda #1 ;seek track 0
-cutprincess1
+}
+.cutprincess1
+{
  jsr LoadStage2 ;displaces bgtab1-2, chtab4
 
- lda #pacProom
- jsr SngExpand
+\ lda #pacProom
+\ jsr SngExpand
 
- lda #$40
- sta IMAGE+1
- lda #$20
- sta IMAGE ;copy page 1 to page 2
- jmp _copy2000 ;in HIRES
+ MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
-*-------------------------------
-*
-*  Epilog (You Win)
-*
-*-------------------------------
-EPILOG
+\ lda #$40
+\ sta IMAGE+1
+\ lda #$20
+\ sta IMAGE ;copy page 1 to page 2
+\ jmp _copy2000 ;in HIRES
+
+ LDA #HI(beeb_screen_addr)
+ JSR beeb_copy_shadow
+
+ JSR beeb_show_screen           ; BEEB show screen after blackout
+
+ RTS
+}
+
+\*-------------------------------
+\*
+\*  Epilog (You Win)
+\*
+\*-------------------------------
+
+.EPILOG
+{
  lda #1
  sta soundon
  sta musicon
  jsr blackout
- jsr LoadStage1B
+
+\ BEEB TODO check mem usage
+\ jsr LoadStage1B
 
  jsr Epilog
 
- lda #POPside1
- sta BBundID
- sta $c010
-:loop lda $c000
- bpl :loop ;fall thru
+\ NOT BEEB
+\ lda #POPside1
+\ sta BBundID
+\ sta $c010
 
-*-------------------------------
-*
-*  A  T  T  R  A  C  T
-*
-*  Self-running "attract mode"
-*
-*-------------------------------
-ATTRACTMODE
-AttractLoop
+\ BEEB TODO wait for keypress
+\.loop lda $c000
+\ bpl .loop ;fall thru
+}
+\\ Fall thru!
+
+\*-------------------------------
+\*
+\*  A  T  T  R  A  C  T
+\*
+\*  Self-running "attract mode"
+\*
+\*-------------------------------
+.ATTRACTMODE
+.AttractLoop
+{
+\ BEEB set drive 0 for attract
+ LDA #0
+ JSR disksys_set_drive
+
  lda #1
  sta musicon
 
@@ -889,7 +1031,7 @@ AttractLoop
  jsr TitleScreen
 
  jsr Prolog1
-]princess
+.princess
  jsr PrincessScene
 
  jsr SetupDHires
@@ -899,105 +1041,139 @@ AttractLoop
  jsr SilentTitle
 
  jmp Demo
+}
 
-*-------------------------------
-*
-* Set up double hi-res
-*
-*-------------------------------
-SetupDHires
-
-* Show black lo-res scrn
+\*-------------------------------
+\*
+\* Set up double hi-res
+\*
+\*-------------------------------
+.SetupDHires
+{
+\* Show black lo-res scrn
 
  jsr blackout
 
-* Load in Stage 1 data
+\* Load in Stage 1 data
 
- jmp LoadStage1A
+\ BEEB TODO check memory usage
+\ jmp LoadStage1A
 
-*-------------------------------
-*
-* "Broderbund Software Presents"
-*
-*-------------------------------
-PubCredit
+ JMP beeb_set_attract_screen
+}
 
-* Unpack splash screen into DHires page 1
+\*-------------------------------
+\*
+\* "Broderbund Software Presents"
+\*
+\*-------------------------------
+
+.presents_filename
+EQUS "PRESENT$"
+
+.PubCredit
+{
+\* Unpack splash screen into DHires page 1
 
  jsr unpacksplash
 
-* Show DHires page 1
+\* Show DHires page 1
 
- jsr setdhires
+\ jsr setdhires
 
-* Copy to DHires page 2
+\* Copy to DHires page 2
 
  jsr copy1to2
 
  lda #44
  jsr tpause
 
-* Unpack "Broderbund Presents" onto page 1
+\* Unpack "Broderbund Presents" onto page 1
 
- lda #delPresents
- jsr DeltaExpPop
+\ lda #delPresents
+\ jsr DeltaExpPop
 
- ldx #80
- lda #s_Presents
- jsr PlaySongI
+ MASTER_LOAD_DHIRES presents_filename, 12
+
+\ ldx #80
+\ lda #s_Presents
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
 
  jmp CleanScreen
+}
 
-*-------------------------------
-*
-* Credit line disappears
-*
-*-------------------------------
-CleanScreen
+\*-------------------------------
+\*
+\* Credit line disappears
+\*
+\*-------------------------------
 
-* Switch to DHires page 2
-* (credit line disappears)
+.CleanScreen
+{
+\* Switch to DHires page 2
+\* (credit line disappears)
 
- lda PAGE2on
+\ BEEB TODO
+\ lda PAGE2on
 
-* Copy DHires page 2 back to hidden page 1
+\* Copy DHires page 2 back to hidden page 1
 
- jsr copy2to1
+\ jsr copy2to1
 
-* Display page 1
+\* Display page 1
 
- lda PAGE2off
-]rts rts
+\ lda PAGE2off
+.return
+ rts
+}
 
-*-------------------------------
-*
-* "A Game by Jordan Mechner"
-*
-*-------------------------------
-AuthorCredit
+\*-------------------------------
+\*
+\* "A Game by Jordan Mechner"
+\*
+\*-------------------------------
 
+.byline_filename
+EQUS "BYLINE $"
+
+.AuthorCredit
+{
  lda #42
  jsr tpause
 
-* Unpack byline onto page 1
+\* Unpack byline onto page 1
 
- lda #delByline
- jsr DeltaExpPop
+\ lda #delByline
+\ jsr DeltaExpPop
 
- ldx #80
- lda #s_Byline
- jsr PlaySongI
+ MASTER_LOAD_DHIRES byline_filename, 12
 
-* Credit line disappears
+\ ldx #80
+\ lda #s_Byline
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+
+\* Credit line disappears
 
  jmp CleanScreen
+}
 
-*-------------------------------
-*
-* "Prince of Persia"
-*
-*-------------------------------
-SilentTitle
+\*-------------------------------
+\*
+\* "Prince of Persia"
+\*
+\*-------------------------------
+
+.title_filename
+EQUS "TITLE  $"
+
+.SilentTitle
+{
  jsr unpacksplash
 
  jsr copy1to2
@@ -1005,90 +1181,139 @@ SilentTitle
  lda #20
  jsr tpause
 
- lda #delTitle
- jsr DeltaExpPop
+\ lda #delTitle
+\ jsr DeltaExpPop
+ 
+ MASTER_LOAD_DHIRES title_filename, 12
 
  lda #160
  jmp tpause
+}
 
-*-------------------------------
-TitleScreen
+\*-------------------------------
+
+.TitleScreen
+{
  lda #38
  jsr tpause
 
-* Unpack title onto page 1
+\* Unpack title onto page 1
 
- lda #delTitle
- jsr DeltaExpPop
+\ lda #delTitle
+\ jsr DeltaExpPop
 
- ldx #140
- lda #s_Title
- jsr PlaySongI
+ MASTER_LOAD_DHIRES title_filename, 12
 
-* Credit line disappears
+\ ldx #140
+\ lda #s_Title
+\ jsr master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+
+\* Credit line disappears
 
  jmp CleanScreen
+}
 
-*-------------------------------
-*
-*  Prologue, part 1
-*
-*-------------------------------
-Prolog1
- lda #pacProlog
- sta RAMRDaux
- jsr DblExpand
+\*-------------------------------
+\*
+\*  Prologue, part 1
+\*
+\*-------------------------------
 
- ldx #250
- lda #s_Prolog
- jmp PlaySongI
+.prolog_filename
+EQUS "PROLOG $"
 
-*-------------------------------
-*
-*  Princess's room: Vizier starts hourglass
-*
-*-------------------------------
-PrincessScene
+.Prolog1
+{
+\ lda #pacProlog
+\ sta RAMRDaux
+\ jsr DblExpand
+
+ MASTER_LOAD_DHIRES prolog_filename, 0
+
+\ ldx #250
+\ lda #s_Prolog
+\ jmp master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+ RTS
+}
+
+\*-------------------------------
+\*
+\*  Princess's room: Vizier starts hourglass
+\*
+\*-------------------------------
+
+.PrincessScene
+{
  jsr blackout
 
- jsr ReloadStuff ;wiped out by dhires titles
+\ BEEB TODO check mem usage by titles
+\ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
  lda #0 ;cut #0 (intro)
- jmp xplaycut ;aux l.c. via grafix
+ jmp playcut ;Apple II was xplaycut aux l.c. via grafix
+}
 
-*-------------------------------
-*
-*  Prologue, part 2
-*
-*-------------------------------
-Prolog2
- lda #pacSumup
- sta RAMRDmain
- jsr DblExpand
+\*-------------------------------
+\*
+\*  Prologue, part 2
+\*
+\*-------------------------------
 
- jsr setdhires
+.sumup_filename
+EQUS "SUMUP  $"
 
- ldx #250
- lda #s_Sumup
- jmp PlaySongI
+.Prolog2
+{
+\ lda #pacSumup
+\ sta RAMRDmain
+\ jsr DblExpand
 
-*-------------------------------
-*
-* Epilog
-*
-*-------------------------------
-Epilog
- lda IIGS
- bne SuperEpilog ;super hi-res ending if IIGS
+\ jsr setdhires
 
- lda #pacEpilog
- sta RAMRDaux
- jsr DblExpand
+ MASTER_LOAD_DHIRES sumup_filename, 0
 
- jsr setdhires
+\ ldx #250
+\ lda #s_Sumup
+\ jmp master_PlaySongI
+
+ LDA #10
+ JSR tpause     \ BEEB TEMP pause not music
+ RTS
+}
+
+\*-------------------------------
+\*
+\* Epilog
+\*
+\*-------------------------------
+
+.epilog_filename
+EQUS "EPILOG $"
+
+.Epilog
+{
+\\ NOT BEEB
+\ lda IIGS
+\ bne SuperEpilog ;super hi-res ending if IIGS
+
+\ lda #pacEpilog
+\ sta RAMRDaux
+\ jsr DblExpand
+
+\ jsr setdhires
+
+ jsr SetupDHires
+
+ MASTER_LOAD_DHIRES epilog_filename, 0
 
  lda #s_Epilog
  jsr PlaySongNI
@@ -1104,12 +1329,23 @@ Epilog
  jsr pauseNI
 
  jmp blackout
+}
 
-unpacksplash
- lda #pacSplash
- sta RAMRDaux
- jmp DblExpand
+.splash_filename
+EQUS "SPLASH $"
 
+.unpacksplash
+{
+\ lda #pacSplash
+\ sta RAMRDaux
+\ jmp DblExpand
+
+ MASTER_LOAD_DHIRES splash_filename, 0
+
+ RTS
+}
+
+IF _NOT_BEEB
 *-------------------------------
 *
 * Super hi-res epilog (IIGS only)
@@ -1141,70 +1377,82 @@ SuperEpilog
 
  jmp * ;and hang (because it's too much
 ;trouble to restart)
+ENDIF
 
-*-------------------------------
-*
-*  Demo sequence
-*
-*-------------------------------
-Demo
+\*-------------------------------
+\*
+\*  Demo sequence
+\*
+\*-------------------------------
+
+.Demo
+{
  jsr blackout
 
- jsr LoadStage3
+\ NOT BEEB
+\ jsr LoadStage3
+
+\ BEEB set game screen mode (hires)
+ JSR beeb_set_game_screen
 
  jsr setdemolevel
  jsr rdbluep
 
- jsr driveoff
+\ jsr driveoff
 
-* Go to TOPCTRL
+\* Go to TOPCTRL
 
  lda #0
  jmp start
+}
 
-*-------------------------------
-* non-interruptible pause
+\*-------------------------------
+\* non-interruptible pause
 
-pauseNI
-:loop sta pausetemp
+.pauseNI
+{
+.loop sta pausetemp
  ldy #20
-:loop1 ldx #0
-:loop2 dex
- bne :loop2
+.loop1 ldx #0
+.loop2 dex
+ bne loop2
  dey
- bne :loop1
+ bne loop1
 
  lda pausetemp
  sec
  sbc #1
- bne :loop
-]rts rts
+ bne loop
+}
+.return_61
+ rts
 
-*-------------------------------
-*
-*  Start game? (if key or button pressed)
-*
-*-------------------------------
-StartGame?
+\*-------------------------------
+\*
+\*  Start game? (if key or button pressed)
+\*
+\*-------------------------------
+.master_StartGame
+{
  jsr musickeys
  cmp #$80 ;key or button press?
- bcc ]rts ;no
+ bcc return_61 ;no
 
  IF FinalDisk
  ELSE
  cmp #kdemo ;temp!
- bne :1
+ bne label_1
  jmp Demo
-:1 cmp #kprincess ;temp!
- bne :2
- jmp ]princess
+.label_1 cmp #kprincess ;temp!
+ bne label_2
+ jmp master_princess
  ENDIF
 
-:2 cmp #krestart
- bne :3
+.label_2 cmp #krestart
+ bne label_3
  jmp AttractLoop
-:3 ;fall thru to DOSTARTGAME
-ENDIF
+.label_3 ;fall thru to DOSTARTGAME
+}
 
 \*-------------------------------
 \*
@@ -1219,6 +1467,9 @@ ENDIF
 
 \ NOT BEEB
 \:1 jsr LoadStage3
+
+\ BEEB set game screen mode (hires)
+ JSR beeb_set_game_screen
 
 \* Load 1st level
 
@@ -1344,45 +1595,35 @@ EQUS "CHTAB3 $"
 EQUS "CHTAB2 $"
 EQUS "CHTAB5 $"
 
+.bank1_filename
+EQUS "BANK1  $"
+
 .loadperm
 {
+    LDA #0
+    JSR disksys_set_drive
+
     \ Start with CHTAB1 + 3
     lda #BEEB_SWRAM_SLOT_CHTAB13
     jsr swr_select_slot
 
+IF BEEB_SWRAM_SLOT_CHTAB13=BEEB_SWRAM_SLOT_CHTAB25
+    LDX #LO(bank1_filename)
+    LDY #HI(bank1_filename)
+    LDA #HI(SWRAM_START)
+    JSR disksys_load_file
+ELSE
     \ index into table for filename
     LDX #LO(perm_file_names)
     LDY #HI(perm_file_names)
     LDA #HI(chtable1)
     JSR disksys_load_file
 
-    \ Relocate the IMG file
-    LDA #LO(chtable1)
-    STA beeb_readptr
-    LDA #HI(chtable1)
-    STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
-    JSR beeb_plot_reloc_img
-
     \ index into table for filename
     LDX #LO(perm_file_names + 8)
     LDY #HI(perm_file_names + 8)
     LDA #HI(chtable3)
     JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
-    STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
-    JSR beeb_plot_reloc_img
 
     \ Then CHTAB2 + 5
     lda #BEEB_SWRAM_SLOT_CHTAB25
@@ -1394,35 +1635,40 @@ EQUS "CHTAB5 $"
     LDA #HI(chtable2)
     JSR disksys_load_file
 
-    \ Relocate the IMG file
-    LDA #LO(chtable2)
-    STA beeb_readptr
-    LDA #HI(chtable2)
-    STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
-    JSR beeb_plot_reloc_img
-
     \ index into table for filename
     LDX #LO(perm_file_names + 24)
     LDY #HI(perm_file_names + 24)
     LDA #HI(chtable5)
     JSR disksys_load_file
+ENDIF
+
+    \ Relocate the IMG file
+    LDA #LO(chtable1)
+    STA beeb_readptr
+    LDA #HI(chtable1)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Relocate the IMG file
+    LDA #LO(chtable3)
+    STA beeb_readptr
+    LDA #HI(chtable3)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Relocate the IMG file
+    LDA #LO(chtable2)
+    STA beeb_readptr
+    LDA #HI(chtable2)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
 
     \ Relocate the IMG file
     LDA #LO(chtable5)
     STA beeb_readptr
     LDA #HI(chtable5)
     STA beeb_readptr+1
-    LDA #LO(&6000)
-    STA beeb_writeptr
-    LDA #HI(&6000)
-    STA beeb_writeptr+1
     JSR beeb_plot_reloc_img
-
-    \ Probably need to load gameplay code into SHADOW RAM here
 
     .return
     rts
@@ -1528,75 +1774,144 @@ ReloadStuff
  db RdSeq.Inc,$4c
 
  jmp driveoff
+ENDIF
 
-*-------------------------------
-*
-*  Load stage 2 data (6000-a800)
-*
-*-------------------------------
-LoadStage2
- ldx BBundID
- cpx #POPside2
- beq LoadStage2B
+\*-------------------------------
+\*
+\*  Load stage 2 data (6000-a800)
+\*
+\*-------------------------------
+\LoadStage2
+\ ldx BBundID
+\ cpx #POPside2
+\ beq LoadStage2B
+\
+\LoadStage2A
+\ jsr driveon
+\
+\ lda #0
+\ jsr loadch7 ;side A only
+\
+\ lda #29
+\]ls2 sta track
+\
+\:test jsr rw18
+\ db RdSeqErr.Inc,$60
+\ bcc :ok
+\ jsr error
+\ jmp :test
+\:ok
+\ jsr rw18
+\ db RdSeq.Inc,$72
+\ jsr rw18
+\ db RdSeq.Inc,$84
+\ jsr rw18
+\ db RdGrp.Inc
+\ hex 96,97,98,99,9a,9b,9c,9d,9e
+\ hex 00,00,00,00,00,00,00,00,00
+\
+\ lda #$ff
+\ sta BGset1
+\ sta BGset2
+\ sta CHset
+\
+\ jmp driveoff
+\
+\* Load chtable7 (side A only)
+\
+\loadch7
+\ sta recheck0
+\:test lda #28
+\ sta track
+\ jsr rw18
+\ db RdGrpErr.Inc
+\ hex 00,00,00,00,00,00,00,00,00
+\ hex 00,00,00,00,9f,a0,a1,a2,a3
+\ bcc :ok
+\ jsr error
+\ jmp :test
+\:ok
+\]rts rts
+\
+\*-------------------------------
+\*
+\*  Load stage 2 routines (side B)
+\*
+\*-------------------------------
+\LoadStage2B
+\ jsr driveon
+\
+\ lda #24
+\ bne ]ls2
 
-LoadStage2A
- jsr driveon
+.chtab6_to_name
+EQUS "CHTAB6X$"
 
- lda #0
- jsr loadch7 ;side A only
+.LoadStage2
+{
+    LDA #0
+    JSR disksys_set_drive
 
- lda #29
-]ls2 sta track
+    \\ Need to switch sCHTAB6 A/B according to Apple II disc layout
 
-:test jsr rw18
- db RdSeqErr.Inc,$60
- bcc :ok
- jsr error
- jmp :test
-:ok
- jsr rw18
- db RdSeq.Inc,$72
- jsr rw18
- db RdSeq.Inc,$84
- jsr rw18
- db RdGrp.Inc
- hex 96,97,98,99,9a,9b,9c,9d,9e
- hex 00,00,00,00,00,00,00,00,00
+    LDA #0
+    CLC
+    ADC #'A'
+    STA chtab6_to_name+6
 
- lda #$ff
- sta BGset1
- sta BGset2
- sta CHset
+    lda #BEEB_SWRAM_SLOT_CHTAB67
+    jsr swr_select_slot
 
- jmp driveoff
+    lda #HI(chtable6)
+    ldx #LO(chtab6_to_name)
+    ldy #HI(chtab6_to_name)
+    jsr disksys_load_file
 
-* Load chtable7 (side A only)
+    \ Relocate the IMG file
+    LDA #LO(chtable6)
+    STA beeb_readptr
+    LDA #HI(chtable6)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
 
-loadch7
- sta recheck0
-:test lda #28
- sta track
- jsr rw18
- db RdGrpErr.Inc
- hex 00,00,00,00,00,00,00,00,00
- hex 00,00,00,00,9f,a0,a1,a2,a3
- bcc :ok
- jsr error
- jmp :test
-:ok
-]rts rts
+    LDA #&ff
+    sta BGset1
+    sta BGset2
 
-*-------------------------------
-*
-*  Load stage 2 routines (side B)
-*
-*-------------------------------
-LoadStage2B
- jsr driveon
+    JSR loadch7
 
- lda #24
- bne ]ls2
+    .return
+    rts    
+}
 
+.chtab7_file_name
+EQUS "CHTAB7 $"
+
+.loadch7
+{
+    lda #BEEB_SWRAM_SLOT_CHTAB67
+    jsr swr_select_slot
+
+    lda #HI(chtable7)
+    ldx #LO(chtab7_file_name)
+    ldy #HI(chtab7_file_name)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable7)
+    STA beeb_readptr
+    LDA #HI(chtable7)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    LDA #&ff
+    STA CHset
+
+    .return
+    rts
+}
+
+IF _TODO
 *-------------------------------
 *
 *  Load stage 3
@@ -1657,67 +1972,84 @@ LoadStage3
  jsr loadmusic2
 
  jmp setaux
+ENDIF
 
-*-------------------------------
-*
-* Play song--interruptible & non-interruptible
-*
-* (Enter & exit w/ bank 2 switched in)
-*
-* In: A = song #
-*     X = length to pause if sound is turned off
-*
-*-------------------------------
-PlaySongNI ;non-interruptible
+\*-------------------------------
+\*
+\* Play song--interruptible & non-interruptible
+\*
+\* (Enter & exit w/ bank 2 switched in)
+\*
+\* In: A = song #
+\*     X = length to pause if sound is turned off
+\*
+\*-------------------------------
+
+.PlaySongNI ;non-interruptible
+{
 ;(& ignores sound/music toggles)
- jsr setaux
- jsr xminit
-:loop jsr xmplay
+\ jsr setaux
+\ BEEB TODO music
+ jsr minit      ; was xminit
+ LDA #1
+.loop
+\ BEEB TODO music
+ jsr mplay      ; was xmplay
  cmp #0
- bne :loop
-]rts rts
+ bne loop
+.return
+ rts
+}
 
-*-------------------------------
-PlaySongI ;interruptible
- jsr setaux
- beq ]rts
+\*-------------------------------
+
+.master_PlaySongI ;interruptible
+{
+\ jsr setaux
+\ beq return
 
  tay
  lda musicon
  and soundon
- beq :pause
+ beq master_pause
 
  tya
- jsr xminit
-:loop jsr StartGame?
- jsr xmplay
+ jsr minit      ; was xminit
+.loop jsr master_StartGame
+ jsr mplay      ; was xmplay
  cmp #0
- bne :loop
-]rts rts
+ bne loop
+.return
+ rts
+}
 
-:pause txa ;falls thru to tpause
-*-------------------------------
-*
-*  In: A = delay (max = 255)
-*
-*-------------------------------
-tpause
-:loop sta pausetemp
+.master_pause txa ;falls thru to tpause
+\*-------------------------------
+\*
+\*  In: A = delay (max = 255)
+\*
+\*-------------------------------
+.tpause
+{
+.loop sta pausetemp
 
  ldy #2
-:loop1 ldx #0
-:loop2 jsr StartGame?
+.loop1 ldx #0
+.loop2 PHX:PHY:jsr master_StartGame:PLY:PLX
  dex
- bne :loop2
+ bne loop2
  dey
- bne :loop1
+ bne loop1
 
  lda pausetemp
  sec
  sbc #1
- bne :loop
-]rts rts
+ bne loop
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Disk error
@@ -1748,8 +2080,40 @@ ENDIF
 \*-------------------------------
 .blackout
 {
-    \\ BEEB TO BE IMPLEMENTED
-    RTS
+    JMP beeb_hide_screen
 }
 
 \ BEEB MOVED FROM MISC.S
+
+\*-------------------------------
+\* alt bg & char set list
+\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
+.bgset1 EQUB 00,00,00,00,01,01,01,00,00,00,01,01,00,00,01
+\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
+.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
+
+\*-------------------------------
+\*
+\* Load level from disk
+\* In: X = level # (0-14)
+\*
+\*-------------------------------
+.LOADLEVELX
+{
+\ Just keep X as level#
+
+\ lda bluepTRKlst,x
+\ sta bluepTRK
+\ lda bluepREGlst,x
+\ sta bluepREG
+
+ lda bgset1,x ;A
+\ pha
+\ lda bgset2,x ;X
+ ldy chset,x ;Y
+\ tax
+\ pla
+
+ jmp LOADLEVEL ;in MASTER
+}

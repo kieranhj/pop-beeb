@@ -89,3 +89,13 @@ MACRO CHIPNOISE freq, volume
 	LDA #&80 + (3<<5) + (freq AND 7): JSR psg_strobe    ; ch tone bits 0-3
 	; no need to write data byte for noise channel
 ENDMACRO
+
+
+MACRO BBC_SETBGCOL col
+    LDA #&00+col:STA &FE21
+ENDMACRO
+
+
+MACRO MODE2_PIXELS left_pair, right_pair
+    EQUB (left_pair AND MODE2_LEFT_MASK) OR (right_pair AND MODE2_RIGHT_MASK)
+ENDMACRO

@@ -3,6 +3,7 @@
 ; Animation frame definitions
 
 .framedef
+.seqtable
 \bof = $2800
 \ tr on ;TABS 15,20,40
 \ lst off
@@ -330,6 +331,8 @@
 \*-------------------------------
 \ ds altset2-*
 
+\\ altset2 could be overlaid on top of altset1 to save RAM (in theory)
+
 .altset2
 
 .ALTSET2_1 EQUB $8a,$40,0,0,$00 ;pslump-1
@@ -417,7 +420,6 @@
 .ALTSET2_83 EQUB $86,$80,2,0,$80 ;vcast-10a
 .ALTSET2_84 EQUB $87,$80,2,0,$80 ;vcast-10b
 .ALTSET2_85 EQUB $88,$80,1,0,$00 ;vcast-1
-
 
 \*-------------------------------
 \*

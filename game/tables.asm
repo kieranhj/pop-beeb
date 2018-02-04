@@ -2,6 +2,8 @@
 ; Originally TABLES.S
 ; All precalculated tables
 
+_DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DIV & MOD by 7
+
 .tables
 \org = $e00
 \ tr on
@@ -15,23 +17,21 @@
 
 \ dum org
 
-IF _TODO
-ByteTable ds $100
-OffsetTable ds $100
+\ByteTable ds $100
+\OffsetTable ds $100
 \BlockTable ds $100
 \PixelTable ds $100
 \Mult10 ds $10
 \Mult7 ds $10
 \Mult30 ds $40
 
-BlockEdge ds 20
-BlockTop ds 5
-BlockBot skip 5
-FloorY ds 5
-BlockAy ds 5
-
- dend
-ENDIF
+\BlockEdge ds 20
+\BlockTop ds 5
+\BlockBot skip 5
+\FloorY ds 5
+\BlockAy ds 5
+\
+\ dend
 
 \*-------------------------------
 \ org org
@@ -49,35 +49,56 @@ Blox2 = 2*BlockHeight
 Blox3 = 3*BlockHeight
 Blox4 = 4*BlockHeight
 
-IF _TODO
-*-------------------------------
-* ByteTable
-*
-* Index:  Real screen X-coord (0-255)
-* Yields: Byte # (0-36)
-*-------------------------------
+\*-------------------------------
+; Move PAGE aligned tables to start!
+\*-------------------------------
 
- ds ByteTable-*
+PAGE_ALIGN
 
-]byte = 0
- lup 36
- db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-]byte = ]byte+1
- --^
- db 36,36,36,36
+\*-------------------------------
+\* ByteTable
+\*
+\* Index:  Real screen X-coord (0-255)
+\* Yields: Byte # (0-36)
+\*-------------------------------
 
-*-------------------------------
-* OffsetTable
-*
-* Index:  Same as ByteTable
-* Yields: Offset (0-6)
-*-------------------------------
- ds OffsetTable-*
+\ ds ByteTable-*
+\
+\]byte = 0
+\ lup 36
+\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
+\]byte = ]byte+1
+\ --^
+\ db 36,36,36,36
 
- lup 36
- db 0,1,2,3,4,5,6
- --^
- db 0,1,2,3
+IF _DIV7_TABLES
+.ByteTable
+FOR n,0,35,1
+EQUB n,n,n,n,n,n,n
+NEXT
+EQUB 36,36,36,36
+ENDIF
+
+\*-------------------------------
+\* OffsetTable
+\*
+\* Index:  Same as ByteTable
+\* Yields: Offset (0-6)
+\*-------------------------------
+\ ds OffsetTable-*
+\
+\ lup 36
+\ db 0,1,2,3,4,5,6
+\ --^
+\ db 0,1,2,3
+\ENDIF
+
+IF _DIV7_TABLES
+.OffsetTable
+FOR n,1,36,1
+EQUB 0,1,2,3,4,5,6
+NEXT
+EQUB 0,1,2,3
 ENDIF
 
 \*-------------------------------

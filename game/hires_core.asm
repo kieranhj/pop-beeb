@@ -3,26 +3,37 @@
 
 .hires_core
 
-._boot3 BRK         ;jmp boot3
-._cls jmp hires_cls
-._lay jmp hires_lay
-._fastlay jmp hires_fastlay
-._layrsave jmp hires_layrsave
+.cls jmp hires_cls
+.lay jmp hires_lay
+.fastlay jmp hires_fastlay
+.layrsave jmp hires_layrsave
 
-._lrcls brk         ;jmp hires_lrcls    \ is implemented but not safe to call!
-._fastmask jmp hires_fastmask
-._fastblack BRK     ;jmp hires_fastblack
-._peel jmp hires_peel
-._getwidth jmp hires_getwidth
+.lrcls BRK         ;jmp hires_lrcls    \ is implemented but not safe to call!
+.fastmask jmp hires_fastmask
+.fastblack jmp hires_fastblack
+.peel jmp hires_peel
+.getwidth jmp hires_getwidth
 
-._copy2000 BRK      ;jmp copyscrnMM
-._copy2000aux BRK   ;jmp copyscrnAA
-._setfastaux BRK    ;jmp hires_SETFASTAUX
-._setfastmain BRK   ;jmp hires_SETFASTMAIN
-._copy2000ma BRK    ;jmp copyscrnMA
+.copy2000 BRK      ;jmp copyscrnMM
+.copy2000aux BRK   ;jmp copyscrnAA
+.setfastaux BRK    ;jmp hires_SETFASTAUX
+.setfastmain BRK   ;jmp hires_SETFASTMAIN
+.copy2000ma BRK    ;jmp copyscrnMA
 
-._copy2000am BRK    ;jmp copyscrnAM
-._inverty BRK       ;jmp INVERTY
+.copy2000am BRK    ;jmp copyscrnAM
+.inverty BRK       ;jmp INVERTY
+
+\ Moved from grafix.asm
+.rnd jmp RND
+.movemem BRK        ;jmp MOVEMEM
+.copyscrn BRK       ;jmp COPYSCRN
+.vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vbli BRK           ;jmp VBLI ;VBL interrupt
+
+\.normspeed RTS  ;jmp NORMSPEED         ; NOT BEEB
+\.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
+\.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
+
 
 \*-------------------------------
 \*
@@ -33,67 +44,115 @@
 
 .hires_cls
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
  jsr beeb_CLS
- jmp auxmem
+\ jsr hires_CLS
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_lay
 {
- jsr mainmem
- jsr beeb_plot_apple_mode_4
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_sprite_LAY
 \ jsr hires_LAY
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_fastlay
 {
- jsr mainmem
- jsr beeb_plot_apple_mode_4
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
+ jsr beeb_plot_sprite_FASTLAY
 \ jsr hires_FASTLAY
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_layrsave
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_layrsave
 \ jsr hires_LAYRSAVE
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_lrcls
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ BRK
 \ jsr hires_LRCLS
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_fastmask
 {
- jsr mainmem
- jsr beeb_plot_apple_mode_4
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+\ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
+ jsr beeb_plot_sprite_FASTMASK
 \ jsr hires_FASTMASK
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
-IF _TODO
-fastblack jsr mainmem
- jsr FASTBLACK
- jmp auxmem
-ENDIF
+.hires_fastblack
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_wipe
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
 
 .hires_peel
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_peel
 \ jsr hires_PEEL
- jmp auxmem
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
 }
 
 .hires_getwidth
 {
- jsr mainmem
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+
  jsr hires_GETWIDTH
- jmp auxmem
+
+\\ must preserve A&X
+ STA regA+1
+
+\\ must preserve callers SWRAM bank
+
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ 
+ .regA
+ LDA #0
+ RTS
 }
 
 IF _TODO
@@ -119,20 +178,284 @@ ENDIF
 
 \*-------------------------------
 
+IF _NOT_BEEB
 .mainmem
 {
-    JMP beeb_shadow_select_main
+ BRK
 \ NOT BEEB
 \sta $c004 ;RAMWRT off
 \sta $c002 ;RAMRD off
- rts
+\rts
 }
 
 .auxmem
 {
-    JMP beeb_shadow_select_aux
+ BRK
 \ NOT BEEB
 \sta $c005 ;RAMWRT on
 \sta $c003 ;RAMRD on
- rts
+\rts
 }
+ENDIF
+
+\\ Moved from grafix.asm
+
+\*-------------------------------
+\*
+\*  Generate random number
+\*
+\*  RNDseed := (5 * RNDseed + 23) mod 256
+\*
+\*-------------------------------
+.RND
+{
+ lda RNDseed
+ asl A
+ asl A
+ clc
+ adc RNDseed
+ clc
+ adc #23
+ sta RNDseed
+.return rts
+}
+
+IF _TODO
+*-------------------------------
+*
+*  Move a block of memory
+*
+*  In: A < X.Y
+*
+*  20 < 40.60 means 2000 < 4000.5fffm
+\*  WARNING: If x >= y, routine will wipe out 64k
+*
+*-------------------------------
+MOVEMEM sta grafix_dest+1
+ stx grafix_source+1
+ sty grafix_endsourc+1
+
+ ldy #0
+ sty grafix_dest
+ sty grafix_source
+ sty grafix_endsourc
+
+:loop lda (grafix_source),y
+ sta (grafix_dest),y
+ iny
+ bne :loop
+
+ inc grafix_source+1
+ inc grafix_dest+1
+ lda grafix_source+1
+ cmp grafix_endsourc+1
+ bne :loop
+ rts
+
+*-------------------------------
+*
+* Copy one hires page to the other
+*
+* In: PAGE = dest scrn (00/20)
+*
+*-------------------------------
+COPYSCRN
+ lda PAGE
+ clc
+ adc #$20
+ sta IMAGE+1 ;dest addr
+ eor #$60
+ sta IMAGE ;org addr
+
+ jmp copy2000
+ENDIF
+
+IF _NOT_BEEB
+*===============================
+vblflag ds 1
+*-------------------------------
+*
+* Wait for vertical blank (IIe/IIGS)
+*
+*-------------------------------
+VBLANK
+:loop1 lda $c019
+ bpl :loop1
+:loop lda $c019
+ bmi :loop ;wait for beginning of VBL interval
+return rts
+
+*-------------------------------
+*
+* Wait for vertical blank (IIc)
+*
+*-------------------------------
+VBLANKIIc
+ cli ;enable interrupts
+
+:loop1 bit vblflag
+ bpl :loop1 ;wait for vblflag = 1
+ lsr vblflag ;...& set vblflag = 0
+
+:loop2 bit vblflag
+ bpl :loop2
+ lsr vblflag
+
+ sei
+ rts
+
+* Interrupt jumps to ($FFFE) which points back to VBLI
+
+VBLI
+ bit $c019
+ sta $c079 ;enable IOU access
+ sta $c05b ;enable VBL int
+ sta $c078 ;disable IOU access
+ sec
+ ror vblflag ;set hibit
+:notvbl rti
+
+*-------------------------------
+*
+* Initialize VBLANK vector with correct routine
+* depending on whether or not machine is IIc
+*
+*-------------------------------
+InitVBLANK
+ lda $FBC0
+ bne return ;not a IIc--use VBLANK
+
+ sta RAMWRTaux
+
+ lda #VBLANKIIc
+ sta VBLvect+1
+ lda #>VBLANKIIc
+ sta VBLvect+2
+
+ sei ;disable interrupts
+ sta $c079 ;enable IOU access
+ sta $c05b ;enable VBL int
+ sta $c078 ;disable IOU access
+
+return rts
+
+\*-------------------------------
+\*
+\*  Is this a IIGS?
+\*
+\*  Out: IIGS (0 = no, 1 = yes)
+\*       If yes, set control panel to default settings
+\*       Exit w/RAM bank 2 switched in
+\*
+\*  Also initializes VBLANK routine
+\*
+\*-------------------------------
+CHECKIIGS
+ bit USEROM
+ bit USEROM
+
+ lda $FBB3
+ cmp #6
+ bne * ;II/II+/III--we shouldn't even be here
+ sec
+ jsr $FE1F
+ bcs :notGS
+
+ lda #1
+ bne :set
+
+:notGS lda #0
+:set sta IIGS
+
+ jsr InitVBLANK
+
+ bit RWBANK2
+ bit RWBANK2
+return rts
+
+*-------------------------------
+*
+*  Temporarily set fast speed (IIGS)
+*
+*-------------------------------
+ xc
+FASTSPEED
+ lda IIGS
+ beq return
+
+ lda #$80
+ tsb $C036 ;fast speed
+return rts
+
+*-------------------------------
+*
+* Restore speed to normal (& bg & border to black)
+*
+*-------------------------------
+NORMSPEED
+ lda IIGS
+ beq return
+
+ xc
+ lda $c034
+ and #$f0
+ sta $c034 ;black border
+
+ lda #$f0
+ sta $c022 ;black bg, white text
+
+ lda #$80
+ trb $c036 ;normal speed
+ xc off
+
+ rts
+
+*-------------------------------
+*
+*  Read control panel parameter (IIGS)
+*
+*  In: Y = location
+*  Out: A = current setting
+*
+*-------------------------------
+ xc
+ xc
+getparam
+ lda IIGS
+ beq return
+
+ clc
+ xce
+ rep $30
+ pha
+ phy
+ ldx #$0C03
+ hex 22,00,00,E1 ;jsl E10000
+ pla
+ sec
+ xce
+ tay
+ rts
+
+*-------------------------------
+*
+* Set control panel parameter (IIGS only)
+*
+* In: A = desired value, Y = location
+*
+*-------------------------------
+setparam
+ clc
+ xce
+ rep $30
+ and #$ff
+ pha
+ phy
+ ldx #$B03
+ hex 22,00,00,E1 ;jsl E10000
+ sec
+ xce
+ rts
+
+ xc off
+ENDIF

@@ -3,9 +3,19 @@
 ; http://chrisacorns.computinghistory.org.uk/docs/Acorn/Manuals/Acorn_DiscSystemUGI2.pdf
 ; Our SWR loader is 60% faster than *SRLOAD
 
+_USE_HAZEL_CATALOG = FALSE           ; this might not hold true for DataCentre and/or Turbo MMC etc.
+
+.beeb_disksys_start
+
 DISKSYS_DEBUG = FALSE
+
+IF _USE_HAZEL_CATALOG
+DISKSYS_CATALOG_ADDR = &C000    
+DISKSYS_BUFFER_ADDR = SCRATCH_RAM_ADDR
+ELSE
 DISKSYS_CATALOG_ADDR = SCRATCH_RAM_ADDR
 DISKSYS_BUFFER_ADDR = DISKSYS_CATALOG_ADDR+512 ; &1000 ; must be page aligned
+ENDIF
 DISKSYS_BUFFER_SIZE = 1 ; SECTORS TO READ, MUST BE ONE (for now)
 
 .osword_params
@@ -94,6 +104,20 @@ IF 0
 ENDIF
 
 ;--------------------------------------------------------------
+; Set drive number and invalidate cached catalog
+;--------------------------------------------------------------
+; on entry
+; A = drive number
+
+.disksys_set_drive
+{
+    STA osword_params_drive
+    LDA #0
+    STA disksys_catalogue_read
+    RTS
+}
+
+;--------------------------------------------------------------
 ; Fetch the 512 byte catalogue from the disk to memory
 ;--------------------------------------------------------------
 ; on entry
@@ -101,8 +125,15 @@ ENDIF
 ; Y = destination memory address MSB
 ; on exit
 ; 512 bytes written to buffer in X/Y
+
 .disksys_read_catalogue
 {
+IF _USE_HAZEL_CATALOG
+    rts
+ELSE
+    LDA disksys_catalogue_read
+    BMI return
+
  ;   jsr disksys_set_catalogue_addr
 
     ldx #0
@@ -112,9 +143,16 @@ ENDIF
     ldx #LO(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+0
     ldy #HI(DISKSYS_CATALOG_ADDR) ;disksys_catalogue_addr+1
     jsr disksys_read_sectors    
+
+    LDA #&FF
+    STA disksys_catalogue_read
+    .return
     rts
+ENDIF
 }
 
+.disksys_catalogue_read
+EQUB 0
 
 IF 0
 ; on entry
@@ -299,6 +337,9 @@ ENDIF
     jsr disksys_find_file
     bpl continue
     ; file not found
+IF _DEBUG
+    BRK
+ENDIF
     rts
 .file_length    EQUB 0,0,0
 .file_sector    EQUB 0,0
@@ -501,4 +542,4 @@ ENDIF
 ; . . . and so on
 ; Repeated for up to 31 files
 
-
+.beeb_disksys_end

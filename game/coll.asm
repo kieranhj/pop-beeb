@@ -14,19 +14,21 @@
 \*-------------------------------
 \ org org
 
-.checkbarr BRK      ; jmp CHECKBARR
-.collisions BRK     ; jmp COLLISIONS
-.getfwddist BRK     ; jmp GETFWDDIST
-.checkcoll BRK      ; jmp CHECKCOLL
+IF _JMP_TABLE=FALSE
+.checkbarr jmp CHECKBARR
+.collisions jmp COLLISIONS
+.getfwddist jmp GETFWDDIST
+.checkcoll jmp CHECKCOLL
 .animchar jmp ANIMCHAR
 
-.checkslice BRK     ; jmp if
-.checkslice2 BRK    ; jmp CHECKSLICE2
+.checkslice jmp CHECKSLICE
+.checkslice2 jmp CHECKSLICE2
 \ jmp markmeters ;temp
-.checkgate BRK      ; jmp CHECKGATE
+.checkgate jmp CHECKGATE
 \ jmp firstguard ;temp
 
-.enemycoll BRK      ; jmp ENEMYCOLL
+.enemycoll jmp ENEMYCOLL
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -43,8 +45,8 @@
 
 \ dum $f0
 \ztemp ds 1
-\CollFace ds 1
-\tempobjid ds 1
+\coll_CollFace ds 1
+\coll_tempobjid ds 1
 \tempstate ds 1
 \ dend
 
@@ -56,8 +58,8 @@
 \*  0 = clear, 1 = panel/gate, 2 = flask, 3 = mirror/slicer
 \*  4 = block
 
-\BarL db 0,12,2,0,0
-\BarR db 0,0,9,11,0
+.BarL EQUB 0,12,2,0,0
+.BarR EQUB 0,0,9,11,0
 
 \*-------------------------------
 \DeathVelocity = 33
@@ -65,31 +67,33 @@
 
 gatemargin = 6 ;higher = more generous
 
-IF _TODO
+.return_34
+ RTS
 
-\]rts rts
-*-------------------------------
-*
-*  C H E C K  B A R R I E R
-*
-*  Check for collisions with vertical barriers
-*
-*-------------------------------
-CHECKBARR
- lda #-1 ;"no-collision" flag
+\*-------------------------------
+\*
+\*  C H E C K  B A R R I E R
+\*
+\*  Check for collisions with vertical barriers
+\*
+\*-------------------------------
+
+.CHECKBARR
+{
+ lda #LO(-1) ;"no-collision" flag
  sta collideL
  sta collideR
 
-* Check for situations where character is temporarily
-* "collision-proof"
+\* Check for situations where character is temporarily
+\* "collision-proof"
 
  lda CharAction
  cmp #7 ;turning?
- beq ]rts
+ beq return_34
 
-* Initialize CD/SN buffers
-* (Copy "lastframe" data from "thisframe", "above", or "below";
-* init "thisframe" with FF)
+\* Initialize CD/SN buffers
+\* (Copy "lastframe" data from "thisframe", "above", or "below";
+\* init "thisframe" with FF)
 
  lda CharBlockY
  sta BlockYthis
@@ -99,17 +103,17 @@ CHECKBARR
  lda BlockYthis
  sta BlockYlast
 
-* Get beginning & end of range
+\* Get beginning & end of range
 
  lda CDRightEj
  jsr getblockxp
  clc
  adc #2
  cmp #11
- bcc :ok
+ bcc ok
  lda #11
   ;Last (rightmost) block in range +1
-:ok sta endrange
+.ok sta endrange
 
  lda CDLeftEj
  jsr getblockxp
@@ -117,89 +121,93 @@ CHECKBARR
  dex ;First (leftmost) block in range
  stx begrange
 
-* Get CD & SN data for every block in range [begrange..endrange]
-* on this level (BlockYthis) and on levels below & above
+\* Get CD & SN data for every block in range [begrange..endrange]
+\* on this level (BlockYthis) and on levels below & above
 
-* This level...
+\* This level...
 
  lda BlockYthis
  sta blocky
 
- lda #SNthisframe
- ldx #CDthisframe
+ lda #LO(SNthisframe)
+ ldx #LO(CDthisframe)
  jsr getCData
 
-* Level below...
+\* Level below...
 
  lda BlockYthis
  clc
  adc #1
  sta blocky
 
- lda #SNbelow
- ldx #CDbelow
+ lda #LO(SNbelow)
+ ldx #LO(CDbelow)
  jsr getCData
 
-* ...and level above
+\* ...and level above
 
  lda BlockYthis
  sec
  sbc #1
  sta blocky
 
- lda #SNabove
- ldx #CDabove
+ lda #LO(SNabove)
+ ldx #LO(CDabove)
  jsr getCData
 
-* Got new data... now compare thisframe with lastframe
-* If a nybble has changed from 0 to 1, we have a collision.
+\* Got new data... now compare thisframe with lastframe
+\* If a nybble has changed from 0 to 1, we have a collision.
 
  ldx #9
-:loop2
+.loop2
  lda SNthisframe,x
- bmi :no ;ff = no data for this frame
+ bmi no ;ff = no data for this frame
  cmp SNlastframe,x
- bne :no ;no corresponding data for last frame
+ bne no ;no corresponding data for last frame
 
  lda CDlastframe,x
  and #$0f ;low nybble first (L edge of barr)
- bne :noL
+ bne noL
 
  lda CDthisframe,x
  and #$0f
- beq :noL
+ beq noL
 
  stx collideL ;We have collision w/ L edge
 ;x = block # (0-9)
 
-:noL lda CDlastframe,x
+.noL lda CDlastframe,x
  and #$f0 ;hi nybble (R edge of barr)
- bne :noR
+ bne noR
 
  lda CDthisframe,x
  and #$f0
- beq :noR
+ beq noR
 
  stx collideR ;collision w/ R edge
-:noR
-:no dex
- bpl :loop2
+.noR
+.no dex
+ bpl loop2
 
  ldx collideL
  ldy collideR
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  G E T  C D A T A
-*
-*  Get "thisframe" data for specified blocky
-*
-*-------------------------------
-getCData
- sta :smodSN+1
- stx :smodCD+1
+\*-------------------------------
+\*
+\*  G E T  C D A T A
+\*
+\*  Get "thisframe" data for specified blocky
+\*
+\*-------------------------------
+
+.getCData
+{
+ sta smodSN+1
+ stx smodCD+1
 
  lda begrange
  jsr getblockej ;left edge of block
@@ -208,9 +216,9 @@ getCData
  sta blockedge
 
  ldx begrange
-:loop stx bufindex
+.loop stx bufindex
 
-* First compare L edge of barr with R edge of char
+\* First compare L edge of barr with R edge of char
 
  lda CharScrn
  ldx bufindex
@@ -218,15 +226,15 @@ getCData
  jsr getleftbar ;Get left edge of barrier
 
  cmp CDRightEj
- bcc :RofL
+ bcc RofL
  ;= means L of L
-:LofL lda #0
- beq :cont1
+.LofL lda #0
+ beq cont1
 
-:RofL lda #$f
-:cont1 sta ztemp
+.RofL lda #$f
+.cont1 sta ztemp
 
-* Now compare R edge of barr with L edge of char
+\* Now compare R edge of barr with L edge of char
 
  lda CharScrn
  ldx bufindex
@@ -234,20 +242,20 @@ getCData
  jsr getrightbar ;Get right edge of barrier
 
  cmp CDLeftEj
- bcc :RofR
- beq :RofR ;= means R of R
+ bcc RofR
+ beq RofR ;= means R of R
 
-:LofR lda #$f0
- bne :cont2
+.LofR lda #$f0
+ bne cont2
 
-:RofR lda #0
-:cont2 ora ztemp
+.RofR lda #0
+.cont2 ora ztemp
 
  ldx tempblockx ;guaranteed 0-9 by rdblock
-:smodCD sta CDthisframe,x
+.smodCD sta CDthisframe,x
 
  lda tempscrn
-:smodSN sta SNthisframe,x ;screen #
+.smodSN sta SNthisframe,x ;screen #
 
  lda blockedge
  clc
@@ -257,71 +265,75 @@ getCData
  ldx bufindex
  inx
  cpx endrange
- bne :loop
+ bne loop
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  I N I T   C D B U F S
-*
-*  Initialize SN and CD buffers
-*  (Take "lastframe" data from "thisframe", "above", or "below";
-*  init "thisframe" with FF)
-*
-*-------------------------------
-initCDbufs
+\*-------------------------------
+\*
+\*  I N I T   C D B U F S
+\*
+\*  Initialize SN and CD buffers
+\*  (Take "lastframe" data from "thisframe", "above", or "below";
+\*  init "thisframe" with FF)
+\*
+\*-------------------------------
+
+.initCDbufs
+{
  lda BlockYthis
  cmp BlockYlast ;same BlockY as last frame?
- beq :usethis ;yes--copy data from "thisframe"
+ beq usethis ;yes--copy data from "thisframe"
 
  clc
  adc #3
  cmp BlockYlast
- beq :usethis
+ beq usethis
 
  sec
  sbc #6
  cmp BlockYlast
- beq :usethis
+ beq usethis
 
-* BlockY has changed--copy data from "above" or "below"
+\* BlockY has changed--copy data from "above" or "below"
 
  lda BlockYthis
  clc
  adc #1
  cmp BlockYlast
- beq :useabove
+ beq useabove
  sec
  sbc #3
  cmp BlockYlast
- beq :useabove
+ beq useabove
 
-:usebelow
- lda #SNbelow
- ldx #CDbelow
- jmp :cont
+.usebelow
+ lda #LO(SNbelow)
+ ldx #LO(CDbelow)
+ jmp cont
 
-:useabove lda #SNabove
- ldx #CDabove
- jmp :cont
+.useabove lda #LO(SNabove)
+ ldx #LO(CDabove)
+ jmp cont
 
-:usethis lda #SNthisframe
- ldx #CDthisframe
+.usethis lda #LO(SNthisframe)
+ ldx #LO(CDthisframe)
 
-:cont sta :smodSN+1
- stx :smodCD+1
+.cont sta smodSN+1
+ stx smodCD+1
 
-* Copy contents of appropriate SN & CD buffers (thisframe,
-* below, or above) into lastframe buffers...
-* and initialize SN buffers with $ff
+\* Copy contents of appropriate SN & CD buffers (thisframe,
+\* below, or above) into lastframe buffers...
+\* and initialize SN buffers with $ff
 
  ldx #9
-:zloop
-:smodSN lda SNbelow,x
+.zloop
+.smodSN lda SNbelow,x
  sta SNlastframe,x
 
-:smodCD lda CDbelow,x
+.smodCD lda CDbelow,x
  sta CDlastframe,x
 
  lda #$ff
@@ -330,28 +342,32 @@ initCDbufs
  sta SNbelow,x
 
  dex
- bpl :zloop
+ bpl zloop
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  G E T   L E F T   B A R
-*
-*  Get X-coord of left edge of barrier
-*
-*  In:  X/Y/A = blockx/blocky/scrn
-*       blockedge
-*
-*  Out: A = screen X-coord (140)
-*       Return A = 255 if this block is no barrier
-*
-*-------------------------------
-getleftbar
+\*-------------------------------
+\*
+\*  G E T   L E F T   B A R
+\*
+\*  Get X-coord of left edge of barrier
+\*
+\*  In:  X/Y/A = blockx/blocky/scrn
+\*       blockedge
+\*
+\*  Out: A = screen X-coord (140)
+\*       Return A = 255 if this block is no barrier
+\*
+\*-------------------------------
+
+.getleftbar
+{
  jsr rdblock ;get block ID
 
  jsr cmpbarr ;return A = barrier code #
- beq :clear ;or -1 if clear
+ beq clear ;or -1 if clear
  tay
 
  lda blockedge
@@ -360,22 +376,25 @@ getleftbar
  sec
  rts
 
-:clear lda #255
+.clear lda #255
  clc
  rts
+}
 
-*-------------------------------
-*
-*  G E T   R I G H T   B A R
-*
-*  Get right edge of barrier, 0 if clear
-*
-*-------------------------------
-getrightbar
+\*-------------------------------
+\*
+\*  G E T   R I G H T   B A R
+\*
+\*  Get right edge of barrier, 0 if clear
+\*
+\*-------------------------------
+
+.getrightbar
+{
  jsr rdblock
 
  jsr cmpbarr
- beq :clear
+ beq clear
  tay
 
  lda blockedge
@@ -386,73 +405,82 @@ getrightbar
  sec
  rts
 
-:clear lda #0
+.clear lda #0
  clc
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  C O L L I S I O N S
-*
-*  If a collision was detected, act on it
-*
+\*-------------------------------
+\*
+\*  C O L L I S I O N S
+\*
+\*  If a collision was detected, act on it
+\*
 \*  In: collideL/R: - if no coll, 0-9 refers to block in
-*      which collision occurred
-*
-*  (CollideL is collision with LEFT EDGE of barrier
-*  CollideR is collision with RIGHT EDGE of barrier)
-*
-*-------------------------------
-COLLISIONS
+\*      which collision occurred
+\*
+\*  (CollideL is collision with LEFT EDGE of barrier
+\*  CollideR is collision with RIGHT EDGE of barrier)
+\*
+\*-------------------------------
+
+.COLLISIONS
+{
  lda AMtimer ;antimatter timer
- beq :cont
- lda $c030
+ beq cont
+\ NOT BEEB
+\ lda $c030
  dec AMtimer
  rts
-:cont
+.cont
 
-* Check for situations where we let character
-* pass thru barrier (e.g., climbing up onto ledge)
+\* Check for situations where we let character
+\* pass thru barrier (e.g., climbing up onto ledge)
 
  lda CharAction
  cmp #2 ;hanging?
- beq ]rts
+ beq return_32
  cmp #6 ;hanging?
- beq ]rts
+ beq return_32
  lda CharPosn
  cmp #135
- bcc :cont2
+ bcc cont2
  cmp #149
- bcc ]rts ;climbing?
+ bcc return_32 ;climbing?
 
-:cont2
+.cont2
  ldx collideL
- bmi :noL
+ bmi noL
  stx collX
  jmp leftcoll
 
-:noL ldx collideR
- bmi :noR
+.noL ldx collideR
+ bmi noR
  stx collX
  jmp rightcoll
-:noR
-]rts rts
+.noR
+}
+.return_32
+ rts
 
-*-------------------------------
-*
-*  R I G H T   C O L L I S I O N
-*
-*-------------------------------
-rightcoll
+\*-------------------------------
+\*
+\*  R I G H T   C O L L I S I O N
+\*
+\*-------------------------------
+
+.rightcoll
+{
  lda CharSword
  cmp #2 ;if in fighting mode,
- beq :1 ;waive front-facing requirement
+ beq label_1 ;waive front-facing requirement
 
  lda CharFace
- bpl ]rts
-:1
+ bpl return_32
+.label_1
  jsr checkcoll1
- bcc ]rts
+ bcc return_32
 
  lda tempscrn
  ldx tempblockx
@@ -464,22 +492,25 @@ rightcoll
 
  ldx #0 ;right
  jmp collide
+}
 
-*-------------------------------
-*
-*  L E F T   C O L L I S I O N
-*
-*-------------------------------
-leftcoll
+\*-------------------------------
+\*
+\*  L E F T   C O L L I S I O N
+\*
+\*-------------------------------
+
+.leftcoll
+{
  lda CharSword
  cmp #2
- beq :1
+ beq label_1
 
  lda CharFace
- bne ]rts
-:1
+ bne return_32
+.label_1
  jsr checkcoll1
- bcc ]rts
+ bcc return_32
 
  lda tempscrn
  ldx tempblockx
@@ -488,30 +519,33 @@ leftcoll
  sec
  sbc CDRightEj ;- dist to char
 
- ldx #-1 ;left
+ ldx #LO(-1) ;left
  jmp collide
+}
 
-*-------------------------------
-*
-* Call CHECKCOLL for block #X
-*
-* In: CD data; X = blockx
-*
-*-------------------------------
-checkcoll1
+\*-------------------------------
+\*
+\* Call CHECKCOLL for block #X
+\*
+\* In: CD data; X = blockx
+\*
+\*-------------------------------
+
+.checkcoll1
+{
  stx tempblockx
 
  lda CharBlockY
- bpl :2
+ bpl label_2
  clc
  adc #3
- bne :1
+ bne label_1
 
-:2 cmp #3
- bcc :1
+.label_2 cmp #3
+ bcc label_1
  sec
  sbc #3
-:1 sta tempblocky
+.label_1 sta tempblocky
 
  lda SNthisframe,x
  sta tempscrn
@@ -519,44 +553,47 @@ checkcoll1
  jsr rdblock1
 
  jmp CHECKCOLL
+}
 
-*-------------------------------
-*
-*  C H E C K   C O L L
-*
-*  In: RDBLOCK results (A = objid)
-*
-*  Out: tempblockx,tempblocky,tempscrn
-*       cs if collision, cc if not
-*
-*-------------------------------
-CHECKCOLL
+\*-------------------------------
+\*
+\*  C H E C K   C O L L
+\*
+\*  In: RDBLOCK results (A = objid)
+\*
+\*  Out: tempblockx,tempblocky,tempscrn
+\*       cs if collision, cc if not
+\*
+\*-------------------------------
+
+.CHECKCOLL
+{
  cmp #flask
- beq :no ;flask is not really a barrier
+ beq no ;flask is not really a barrier
 
  cmp #gate
- beq :gate
+ beq local_gate
 
  cmp #slicer
- beq :slicer
+ beq local_slicer
 
  cmp #mirror
- beq :mirror
- bne :c1
+ beq local_mirror
+ bne c1
 
-* You can pass thru mirror from R only if you take a
-* running jump
+\* You can pass thru mirror from R only if you take a
+\* running jump
 
-:mirror
+.local_mirror
  lda CharID
- bne :c1 ;must be kid
+ bne c1 ;must be kid
  lda CharPosn
  cmp #39
- bcc :c1
+ bcc c1
  cmp #44
- bcs :c1
+ bcs c1
  lda CharFace
- bpl :c1
+ bpl c1
 
  jsr smashmirror
  lda #$ff
@@ -565,245 +602,265 @@ CHECKCOLL
  clc
  rts
 
-* Is slicer closed?
+\* Is slicer closed?
 
-:slicer lda (BlueSpec),y
+.local_slicer lda (BlueSpec),y
  cmp #slicerExt
- bne :no ;no--pass thru
- beq :c1
+ bne no ;no--pass thru
+ beq c1
 
-* Is gate low enough to bar you?
+\* Is gate low enough to bar you?
 
-:gate jsr gatebarr? ;return cc if gate bars you
- bcc :c1
+.local_gate jsr gatebarr ;return cc if gate bars you
+ bcc c1
 
-* no collision--pass thru barrier
+\* no collision--pass thru barrier
 
-:no clc
+.no clc
  rts
 
-* Yes, collision--get blockedge & return cs
+\* Yes, collision--get blockedge & return cs
 
-:c1
+.c1
  lda tempblockx
  jsr getblockej
  jsr AdjustScrn
  clc
  adc #angle
  sta blockedge
-:yes sec
-]rts rts
+.yes sec
+}
+.return_33
+ rts
 
-*-------------------------------
-*
-* AdjustScrn
-*
-* In:  tempscrn, VisScrn
-*      scrnLeft/Right/BelowL/BelowR
-*      A = X-coord on tempscrn
-*
-* Out: A = X=coord on VisScrn
-*
-*-------------------------------
-AdjustScrn
+\*-------------------------------
+\*
+\* AdjustScrn
+\*
+\* In:  tempscrn, VisScrn
+\*      scrnLeft/Right/BelowL/BelowR
+\*      A = X-coord on tempscrn
+\*
+\* Out: A = X=coord on VisScrn
+\*
+\*-------------------------------
+
+.AdjustScrn
+{
  ldx tempscrn
  cpx VisScrn
- beq ]rts
+ beq return
  cpx scrnLeft
- beq :osL
+ beq osL
  cpx scrnBelowL
- beq :osL
+ beq osL
  cpx scrnRight
- beq :osR
+ beq osR
  cpx scrnBelowR
- beq :osR
+ beq osR
  rts
-:osR clc
+.osR clc
  adc #ScrnWidth
  rts
-:osL sec
+.osL sec
  sbc #ScrnWidth
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  C O L L I D E
-*
-*  In: A = distance from barrier to character
-*      X = coll direction (-1 = left, 0 = right)
-*      tempblockx,y,scrn set for collision block
-*
-*-------------------------------
-collide
- stx CollFace ;temp var
+\*-------------------------------
+\*
+\*  C O L L I D E
+\*
+\*  In: A = distance from barrier to character
+\*      X = coll direction (-1 = left, 0 = right)
+\*      tempblockx,y,scrn set for collision block
+\*
+\*-------------------------------
+
+.collide
+{
+ stx coll_CollFace ;temp var
 
  ldx CharLife ;dead?
- bpl ]rts ;yes--let him finish falling (or whatever)
+ bpl return_33 ;yes--let him finish falling (or whatever)
 
  ldx CharPosn
  cpx #177 ;impaled?
- beq ]rts ;yes--ignore collision
+ beq return_33 ;yes--ignore collision
 
  clc
  adc CharX
  sta CharX
 
-* In midair or on the ground?
+\* In midair or on the ground?
 
  jsr rdblock1
 
- ldx CollFace
- bpl :faceL
+ ldx coll_CollFace
+ bpl faceL
 
  cmp #block ;If this block has no floor,
- beq :2 ;use the one in front of it
- bne :1
+ beq label_2 ;use the one in front of it
+ bne label_1
 
-:2 dec tempblockx
- jmp :3
+.label_2 dec tempblockx
+ jmp label_3
 
-:faceL cmp #panelwof ;Panelwof is only a problem
- beq :4 ;when facing L
+.faceL cmp #panelwof ;Panelwof is only a problem
+ beq label_4 ;when facing L
  cmp #panelwif
- beq :4
+ beq label_4
  cmp #block
- bne :1
+ bne label_1
 
-:4 inc tempblockx
+.label_4 inc tempblockx
  lda tempscrn
- bne :3
+ bne label_3
  lda tempblockx
  cmp #10
- bne :3
+ bne label_3
  lda CharScrn
  sta tempscrn
  lda #0
  sta tempblockx ;screen 0 block 10 = CharScrn block 0
 
-:3 jsr rdblock1
+.label_3 jsr rdblock1
 
-:1 jsr cmpspace
+.label_1 jsr cmpspace
  bne GroundBump
+}
 
-*-------------------------------
-* Bump into barrier w/o floor
+\*-------------------------------
+\* Bump into barrier w/o floor
 
-AirBump
- lda #-4
+.AirBump
+{
+ lda #LO(-4)
  jsr addcharx
  sta CharX
 
  lda CharAction
  cmp #4 ;already falling?
- bne :3
+ bne label_3
 ;yes--just rebound off wall
  lda #0
  sta CharXVel
- beq :smackwall
+ beq smackwall
 
-:3 lda #bumpfall
+.label_3 lda #bumpfall
  jsr jumpseq
  jsr animchar
 
-:smackwall
+.smackwall
+}
 
-BumpSound
+.BumpSound
+{
  lda #1
  sta alertguard
  lda #SmackWall
  jmp addsound
+}
 
-*-------------------------------
-* Bump into barrier w/floor
+\*-------------------------------
+\* Bump into barrier w/floor
 
-GroundBump
+.GroundBump
+{
  ldx CharBlockY
 
  lda CharSword
  cmp #2
- beq :skipair ;no airbump if en garde
+ beq skipair ;no airbump if en garde
 
  lda FloorY+1,x
  sec
  sbc CharY
  cmp #15 ;constant
  bcs AirBump
-:skipair
+.skipair
  lda FloorY+1,x
  sta CharY
 
  lda CharYVel
  cmp #OofVelocity
- bcc :okvel
- lda #-5
+ bcc okvel
+ lda #LO(-5)
  jsr addcharx
  sta CharX
  rts ;let checkfloor take care of it
 
-:okvel lda #0
+.okvel lda #0
  sta CharYVel
 
  lda CharLife
- beq :deadbump
+ beq GroundBump_deadbump
 
-* Is he en garde?
+\* Is he en garde?
 
  lda CharSword
  cmp #2
- beq :CollideEng ;yes--collide en garde
+ beq CollideEng ;yes--collide en garde
 
-* Should it be a hard or a soft bump?
+\* Should it be a hard or a soft bump?
 
-:normal
+.normal
  ldx CharPosn ;last frame
 
  cpx #24
- beq :hard
+ beq local_hard
  cpx #25
- beq :hard ;standjump-->hard
+ beq local_hard ;standjump-->hard
 
  cpx #40
- bcc :1
+ bcc label_1
  cpx #43
- bcc :hard ;runjump-->hard
+ bcc local_hard ;runjump-->hard
 
-:1 cpx #102
- bcc :2
+.label_1 cpx #102
+ bcc label_2
  cpx #107
- bcc :hard ;freefall-->hard
+ bcc local_hard ;freefall-->hard
 
-:2
+.label_2
 
-:soft lda #bump
+.local_soft lda #bump
  jsr jumpseq
  jsr BumpSound ;soft bump sound?
  jmp animchar
 
-:hard lda #hardbump
-:doit jsr jumpseq
+.local_hard lda #hardbump
+}
+.GroundBump_doit
+{
+ jsr jumpseq
  jsr animchar
 
  jmp BumpSound
+}
+\* dead when he hits the wall
+.GroundBump_deadbump
+{
+.return
+ rts
+}
 
-* dead when he hits the wall
+\*-------------------------------
+\* Collide en garde
 
-:deadbump
-]rts rts
-
-*-------------------------------
-* Collide en garde
-
-:CollideEng
- lda CollFace
+.CollideEng
+{
+ lda coll_CollFace
  cmp CharFace
- beq :collback
+ beq collback
 
  lda #bumpengfwd
- bne :doit
+ bne GroundBump_doit
 
-* Char is en garde & trying to back into barrier
+\* Char is en garde & trying to back into barrier
 
-:collback
+.collback
  lda #bumpengback
  jsr jumpseq
  jsr animchar ;get new frame
@@ -812,146 +869,152 @@ GroundBump
  jsr addcharx
  sta CharX
  rts
+}
 
-*-------------------------------
-*
-*  G E T   F W D   D I S T
-*
-*  In: Char data
-*
-*  Out: A = size of "careful step" forward (0-14 pixels)
-*       X = what you're stepping up to
-*           (0 = edge, 1 = barrier, 2 = clear)
-*       RDBLOCK results for that block
-*
-*-------------------------------
-GETFWDDIST
+\*-------------------------------
+\*
+\*  G E T   F W D   D I S T
+\*
+\*  In: Char data
+\*
+\*  Out: A = size of "careful step" forward (0-14 pixels)
+\*       X = what you're stepping up to
+\*           (0 = edge, 1 = barrier, 2 = clear)
+\*       RDBLOCK results for that block
+\*
+\*-------------------------------
 
-* Get edges
+.GETFWDDIST
+{
+\* Get edges
 
  jsr GetBaseBlock
  jsr setupchar
  jsr getedges
 
-* If this block contains barrier, get distance
+\* If this block contains barrier, get distance
 
  jsr getunderft ;read block underfoot
- sta tempobjid
+ sta coll_tempobjid
 
  jsr cmpbarr
- beq :nextb ;This block is clear
+ beq nextb ;This block is clear
 
  lda CharBlockX
  sta tempblockx
  jsr DBarr ;returns A = dist to barrier
  tax
- bpl :tobarr
+ bpl tobarr
 
-* If next block contains barrier, get distance
+\* If next block contains barrier, get distance
 
-:nextb
+.nextb
  jsr getinfront
- sta tempobjid
+ sta coll_tempobjid
  cmp #panelwof
- bne :99 ;Panelwof is special case
+ bne label_99 ;Panelwof is special case
  ldx CharFace ;if you're facing R
- bpl :toEOB
+ bpl toEOB
 
-:99 jsr cmpbarr
- beq :nobarr
+.label_99 jsr cmpbarr
+ beq nobarr
 
  lda infrontx
  sta tempblockx
  jsr DBarr
  tax
- bpl :tobarr
+ bpl tobarr
 
-* If next block is dangerous (e.g., empty space)
-* or sword or potion, step to end of this block
+\* If next block is dangerous (e.g., empty space)
+\* or sword or potion, step to end of this block
 
-:nobarr
+.nobarr
  jsr getinfront ;read block in front
- sta tempobjid
+ sta coll_tempobjid
 
   cmp #loose
- beq :toEOB ;step to end of block
+ beq toEOB ;step to end of block
 
  cmp #pressplate
- beq :toEOB1
+ beq toEOB1
 
  cmp #sword
- beq :toEOB1
+ beq toEOB1
  cmp #flask
- beq :toEOB1
+ beq toEOB1
 
  jsr cmpspace
- beq :toEOB
+ beq toEOB
 
-* All clear--take a full step forward
+\* All clear--take a full step forward
 
-:fullstep lda #11 ;natural step size
+.local_fullstep lda #11 ;natural step size
 
  ldx #2 ;clear
- bne :done
+ bne done
 
-* Step to end of block (no "testfoot")
+\* Step to end of block (no "testfoot")
 
-:toEOB1 jsr getdist
- beq :fullstep
+.toEOB1 jsr getdist
+ beq local_fullstep
  ldx #0
- beq :done
+ beq done
 
-* Step to end of block
+\* Step to end of block
 
-:toEOB jsr getdist ;returns # pixels to end of block (0-13)
+.toEOB jsr getdist ;returns # pixels to end of block (0-13)
 
  ldx #0 ;edge
 
-:done ldy tempobjid
-]rts rts
+.done ldy coll_tempobjid
+.return
+ rts
 
-* Step up to barrier
+\* Step up to barrier
 
-:tobarr
+.tobarr
  cmp #14
- bcs :fullstep
+ bcs local_fullstep
 
  ldx #1 ;barrier
- bne :done
+ bne done
+}
 
-*-------------------------------
-*
-* Get distance to barrier
-*
-* In: rdblock results; tempobjid
-*     Must have called setupchar/getedges
+\*-------------------------------
+\*
+\* Get distance to barrier
+\*
+\* In: rdblock results; coll_tempobjid
+\*     Must have called setupchar/getedges
 \* Out: A = distance to barrier (- if barr is behind char)
-*
-*-------------------------------
-DBarr
- lda tempobjid
- cmp #gate
- bne :ok
-;treat gate as barrier only if down
- jsr gatebarr? ;returns cs if open
- bcs :clr
+\*
+\*-------------------------------
 
-:ok lda tempblockx
+.DBarr
+{
+ lda coll_tempobjid
+ cmp #gate
+ bne ok
+;treat gate as barrier only if down
+ jsr gatebarr ;returns cs if open
+ bcs local_clr
+
+.ok lda tempblockx
  jsr getblockej
  clc
  adc #angle
  sta blockedge ;L edge of this block
 
  lda CharFace
- bmi :checkL
+ bmi checkL
 
-* Char facing R -- get distance to barrier
+\* Char facing R -- get distance to barrier
 
-:checkR
- lda tempobjid ;block ID
+.checkR
+ lda coll_tempobjid ;block ID
 
  jsr cmpbarr ;return A = barrier code #
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -963,16 +1026,16 @@ DBarr
  sbc CDRightEj
  rts ;If -, barr is behind char
 
-:clr lda #-1
+.local_clr lda #LO(-1)
  rts
 
-* Char facing L -- get distance to barr
+\* Char facing L -- get distance to barr
 
-:checkL
- lda tempobjid
+.checkL
+ lda coll_tempobjid
 
  jsr cmpbarr
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -986,8 +1049,9 @@ DBarr
  sec
  sbc ztemp
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -1169,6 +1233,7 @@ ENDIF
 \* Char has gone upstairs
 \* What do we do?
 \*-------------------------------
+
 .GoneUpstairs
 {
  lda level
@@ -1187,60 +1252,61 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Sliced by slicer? (Does CD buf show char overlapping
-*  with a closed slicer?)
-*
-*  In: Char data, CD data
-*
-*-------------------------------
-CHECKSLICE
+\*-------------------------------
+\*
+\*  Sliced by slicer? (Does CD buf show char overlapping
+\*  with a closed slicer?)
+\*
+\*  In: Char data, CD data
+\*
+\*-------------------------------
+
+.CHECKSLICE
+{
  lda CharBlockY
  sta tempblocky
 
  ldx #9
 
-:loop stx tempblockx
+.loop stx tempblockx
 
  lda CDthisframe,x
  cmp #$ff ;char overlapping barr?
- bne :ok ;no
+ bne ok ;no
 
-* Yes--is it a slicer?
+\* Yes--is it a slicer?
 
  lda SNthisframe,x
  sta tempscrn
 
  jsr rdblock1
  cmp #slicer
- bne :ok
+ bne ok
 
  lda (BlueSpec),y
  and #$7f
  cmp #slicerExt ;slicer closed?
- beq :slice ;yes--slice!
+ beq local_slice ;yes--slice!
 
-* No--keep checking
+\* No--keep checking
 
-:ok ldx tempblockx
+.ok ldx tempblockx
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
 
-* Slice!
-* In: rdblock results for slicer block
+\* Slice!
+\* In: rdblock results for slicer block
 
-:slice
-]slice
+.local_slice
  lda (BlueSpec),y
  ora #$80
  sta (BlueSpec),y ;set hibit (smear)
 
-:cont lda CharPosn
+.cont lda CharPosn
  cmp #178 ;if already cut in half (e.g. by another slicer),
- beq ]rts ;leave him alone
+ beq return ;leave him alone
 
  lda tempblockx
  jsr getblockej ;edge of slicer block
@@ -1266,31 +1332,34 @@ CHECKSLICE
  lda #halve
  jsr jumpseq
  jmp animchar
+}
 
-*-------------------------------
-*
-*  Sliced by slicer?
-*
-*  (Use this routine for enemy, who has no CD data)
-*
-*  In: Char data; GETEDGES results
-*
-*-------------------------------
-CHECKSLICE2
+\*-------------------------------
+\*
+\*  Sliced by slicer?
+\*
+\*  (Use this routine for enemy, who has no CD data)
+\*
+\*  In: Char data; GETEDGES results
+\*
+\*-------------------------------
+
+.CHECKSLICE2
+{
  jsr getunderft
- jsr slice ;return cs if sliced
- bcs ]rts
+ jsr local_slice ;return cs if sliced
+ bcs return
 
  inc tempblockx
  jsr rdblock1
 
-.slice
+.local_slice
  cmp #slicer
- bne :safe
+ bne safe
  lda (BlueSpec),y
  and #$7f
  cmp #slicerExt
- bne :safe ;slicer open
+ bne safe ;slicer open
 
  lda tempblockx
  jsr getblockej
@@ -1303,143 +1372,156 @@ CHECKSLICE2
  ldy tempblocky
  jsr getleftbar
  cmp CDRightEj
- bcs :safe
+ bcs safe
 
  lda tempscrn
  ldx tempblockx
  ldy tempblocky
  jsr getrightbar
  cmp CDLeftEj
- bcc :safe
- beq :safe
+ bcc safe
+ beq safe
 
  jsr rdblock1
- jsr ]slice
+ jsr local_slice
  sec
  rts
 
-:safe clc
-]rts rts
+.safe clc
+.return
+ rts
+}
 
-*-------------------------------
-*
+\*-------------------------------
+\*
 \* Special situation: If char is standing directly under closing
-* gate, it knocks him aside when it shuts.
-*
-* In: Char data, CD data
-*
-*-------------------------------
-CHECKGATE
+\* gate, it knocks him aside when it shuts.
+\*
+\* In: Char data, CD data
+\*
+\*-------------------------------
+
+.CHECKGATE
+{
  lda CharAction
  cmp #7 ;turning
- beq :1
+ beq label_1
  lda CharPosn
  cmp #15 ;standing?
- beq :1
+ beq label_1
  cmp #108
- bcc ]rts
+ bcc return
  cmp #111 ;crouching?
- bcs ]rts
-:1
+ bcs return
+.label_1
  jsr getunderft
  cmp #gate
- beq :check
+ beq local_check
 
  dec tempblockx
  jsr rdblock1
  cmp #gate
- bne ]rts
-:check
+ bne return
+.local_check
  ldx tempblockx
  lda CDthisframe,x
  and CDlastframe,x
  cmp #$ff
- bne ]rts
+ bne return
 
- jsr gatebarr?
- bcs ]rts
+ jsr gatebarr
+ bcs return
 
  jsr BumpSound
 
-* bump him left or right?
+\* bump him left or right?
 
  lda tempblockx
  sta collX
  jsr getunderft
  lda tempblockx
  cmp collX
- beq :left
- bcs :right
+ beq local_left
+ bcs local_right
 
-:left lda #-5
- bne :10
-:right lda #5
-:10 clc
+.local_left lda #LO(-5)
+ bne label_10
+.local_right lda #5
+.label_10 clc
  adc CharX
  sta CharX
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Return cc if gate bars you, cs if clear
-*
-*-------------------------------
-gatebarr?
+\*-------------------------------
+\*
+\* Return cc if gate bars you, cs if clear
+\*
+\*-------------------------------
+
+.gatebarr
+{
  lda (BlueSpec),y
- lsr
- lsr
+ lsr A
+ lsr A
  clc
  adc #gatemargin
  cmp imheight
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Limited collision detection for enemies
-* (backing into wall or gate while fighting)
-*
-*-------------------------------
-ENEMYCOLL
+\*-------------------------------
+\*
+\* Limited collision detection for enemies
+\* (backing into wall or gate while fighting)
+\*
+\*-------------------------------
+
+.ENEMYCOLL
+{
  lda AMtimer ;antimatter timer
- bne ]rts
+ bne return
 
  lda CharAction
  cmp #1
- bne ]rts ;must be on ground
+ bne return ;must be on ground
  lda CharLife
- bpl ]rts ;& alive
+ bpl return ;& alive
  lda CharSword
  cmp #2
- bcc ]rts ;& en garde
+ bcc return ;& en garde
 
  jsr getunderft
  cmp #block
- beq :collide
+ beq local_collide
  cmp #panelwif
- beq :collide
+ beq local_collide
  cmp #gate
- bne :1
- jsr gatebarr?
- bcc :collide
+ bne label_1
+ jsr gatebarr
+ bcc local_collide
 
-* If facing R, check block behind too
+\* If facing R, check block behind too
 
-:1 lda CharFace
- bmi ]rts
+.label_1 lda CharFace
+ bmi return
  dec tempblockx
  jsr rdblock1
  cmp #panelwif
- beq :collide
+ beq local_collide
  cmp #gate
- bne ]rts
- jsr gatebarr?
- bcc :collide
-]rts rts
+ bne return
+ jsr gatebarr
+ bcc local_collide
+.return
+ rts
 
-* Char is en garde & trying to back into barrier
-* Put him right at edge
+\* Char is en garde & trying to back into barrier
+\* Put him right at edge
 
-:collide
+.local_collide
  jsr setupchar
  jsr getedges ;get edges
 
@@ -1447,13 +1529,13 @@ ENEMYCOLL
  ldx tempblockx
  ldy tempblocky
  jsr rdblock
- sta tempobjid
+ sta coll_tempobjid
  jsr checkcoll
- bcc ]rts
+ bcc return
 
  jsr DBarr2 ;get A = dist to barrier
  tax
- bpl ]rts
+ bpl return
  eor #$ff
  clc
  adc #1
@@ -1464,27 +1546,30 @@ ENEMYCOLL
  jsr jumpseq
  jsr animchar ;get new frame
  jmp rereadblocks
+}
 
-*-------------------------------
-*
-* Special version of DBarr for enemy collisions
-*
-* In: checkcoll results; tempobjid
-*     Must have called setupchar/getedges
+\*-------------------------------
+\*
+\* Special version of DBarr for enemy collisions
+\*
+\* In: checkcoll results; coll_tempobjid
+\*     Must have called setupchar/getedges
 \* Out: A = distance to barrier (- if barr is behind char)
-*
-*-------------------------------
-DBarr2
+\*
+\*-------------------------------
+
+.DBarr2
+{
  lda CharFace
- bpl :checkL ;Note: reversed from DBarr
+ bpl checkL ;Note: reversed from DBarr
 
-* Char's back facing R -- get distance to barrier
+\* Char's back facing R -- get distance to barrier
 
-:checkR
- lda tempobjid ;block ID
+.checkR
+ lda coll_tempobjid ;block ID
 
  jsr cmpbarr ;return A = barrier code #
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1496,16 +1581,16 @@ DBarr2
  sbc CDRightEj
  rts ;If -, barr is behind char
 
-:clr lda #-1
+.local_clr lda #LO(-1)
  rts
 
-* Char facing L -- get distance to barr
+\* Char facing L -- get distance to barr
 
-:checkL
- lda tempobjid
+.checkL
+ lda coll_tempobjid
 
  jsr cmpbarr
- beq :clr
+ beq local_clr
  tay
 
  lda blockedge
@@ -1519,8 +1604,9 @@ DBarr2
  sec
  sbc ztemp
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst

@@ -1,0 +1,2199 @@
+﻿POP notes
+
+Apple II screen = 280 x 192 pixels = 40 x 192 bytes = 7.5k
+One byte = 7 pixels
+
+Goal is MODE 1 for "hi-res" so reduce screen to 280x192 also
+70 x 24 CRTC characters = 70 x 24 x 8 bytes = 13.125k
+Ideally double-buffer these for flicker-free animation
+Use shadow ram - can store some other static data in remaining 6.875k
+
+Fallback is MODE 5 for "low-res" as Apple II can only change colour every 2 pixels anyway
+Equivalent would be 140 x 192 pixels = 35 x 24 CRTC characters = 6720 bytes
+Unfortunately the background tiles are 28 pixels wide in hi-res = 14 pixels wide in low-res
+This is not a multiple of 4 pixels, i.e. a whole number of bytes, in MODE 5
+
+Start with hi-res as we want this to look awesome!
+
+Background pieces are going to become 7x63 bytes = 441 bytes each
+
+/ auto.s - AI for guard
+/ bgdata.s - bg piece definitions and lookups, maps chtab entries to a/b/c/d in a piece (I think)
+X boot.s - entry, check machine type & memory
+! coll.s - collision detection, vertical barriers, left, right, slicer, gate
+! crtl.s - player character control inc. animtion frames, falling, floor, ledge grab, standing, fighting, crouching, running, hanging, jump, step, pick up
+! ctrlsubs.s - misc subroutines relating to character cotrol & movement
+/ eq.s - global constants, zero page, global vars, jump tables, image lists, blueprint info
+! frameadv.s - draw screen, draw block, draw objects, load objects, piece drawing logic, object sorting
+framedefs.s - animation tables, data for each animation frame
+/ gamebg.s - draw all special case objects, text boxes, strength meter, character objects
+/ gameeq.s - game constants, zero page, vars, jump tables, character vars, types
+/ grafix.s - background list, foreground, peel, messages, wipe, mid, drawall calls hires routines, keyboard / joystick routines, movemem, sound, rnd, frameadv routines, calc blue, vblank
+/ hires.s - screen render, cls, sprite draw w/ edge clipping, bit shifting & mirroring, fast render functions, double buffering
+/ hrparams.s - hires zero page, vars
+/ hrtables.s - hires tables, pixel shift, mirror, mask, self-mod opcodes
+/ master.s - main, first boot, init system, attract loop, load music, save game, load character set, load level, epilogue, splash, credits, prologue, demo sequence, start game, disk error
+/ misc.s - player misc, potion fx, mouse, stab, shadow, reflection, skeletons, health, save game, load level, version
+movedata.s - moveable objects definitions
+! mover.s - moveable objects, transitional objects, triggers, spikes, slicer, loose floor, press plate, gate, exit, animations
+/ seqdata.s - animation state definitions
+/ seqtable.s - animation state tables
+. sound.s - do sound effects
+/ soundnames.s - sound & music definitions
+/ specialk.s - special keys, freeze, restart, sound, save game etc., development keys
+/ subs.s - special cases for certain rooms, cutscenes, songs, demo player control, level start position, gravity, enemy start positions,  
+/ tables.s - screen coordinate lookups, multiplication tables
+/ topctrl.s - top level control, save game, resume save game, level restart, main loop, load next level, next frame (draw), player update, timers, game over check
+. unpack.s - decrunch hi-res screens, disk prompt, fades, palettes
+. version.s - version string
+
+
+Levels folder (both same contents)
+15 levels including demo & cut scenes
+&900 bytes per level, as per page 13 of doc
+Level blueprint
+24 screens * 30 pieces per screen = 720 bytes (&2D0) * 2 (types + spec)
+Link loc + Map = 256 bytes * 2
+Map = 96 bytes
+Info = 256 bytes
+Total = 2304 bytes (&900) = 2.25 kb
+
+Folder 04 Support contains images, not game data
+SS - screen shots
+F - frames before clean up and putting into appropriate format
+I - more animation frames, look much more cleaned up than F
+IP - possibly final sprite frames - someone has already extracted all these as PNG
+(Probably want to use final source data files, even if packed, as truth.)
+PAC. files are packed - check unpack function in source?
+I. IMG. files are Apple II image files
+
+Doesn't look like main sprite files are packed - just double-hires screen for start etc.
+No idea where these are!
+
+Image files in main source directory follow format on page 22
+<byte> # images in file
+<address first image> - starting at &6000
+<address second image> - etc.
+...
+<address first free>
+
+;address 1
+<width in bytes><height in bytes>
+<data>
+;address 2
+<width in bytes><height in bytes>
+<data>
+etc.
+
+Remember 1 bytes = 7 pixels (!)
+
+eg. img.chtab1
+first two sprites are 14x41 and 21x41
+Hmmm, definitely want to preprocess these files into Beeb format directly
+Some decisions to make as Apple II can have 6x colours simultaneously
+Options are MODE1 (prefered I think), MODE5 (fallback if memory impossible), MODE2 (wild card)
+Probably define which colour from palette we choose per sprite
+
+BGtab appears to be same format.  Could write a convertor that takes these IMG. files and
+keeps the format the same but adjusts to Beeb pixel format and #bytes - these are going to get larger!
+Should be able to check for columns of no pixels, particularly on animated frames
+e.g. chtab1.2 is 21x41 but sprite is actually only 15 wide
+Beeb sprites will be 4 pixels / byte
+Those examples chtab1.1 and chtab1.2 = 2x41 + 3x41 = 205 bytes on Apple
+Beeb equivalent would be 4x41 + 4x41 = 8x41 = 328 bytes on Beeb... ~60% increase
+
+Propose first step is to write a Beeb convertor for the IMG files
+Can calculate size of Beeb files in MODE 1/2/5 and #colours used
+Save back out in Beeb format
+
+Hard code a routine to plot bg & character sprites to Beeb screen
+Next step would be to get level draw module ported, move code into Beeb hires module
+Goal would be to try and draw all the screens in all the levels on Beeb
+
+Next step would be to get character animation rendering going
+
+Directives
+put = INCLUDE
+ds = SKIP
+db = EQUB
+dum locals - might have to rename these to avoid collision?
+
+Color name    phase ampl luma -R- -G- -B-
+purple HCOLOR=2  45 100  50   255  68 253
+orange HCOLOR=5 135 100  50   255 106  60
+green  HCOLOR=1 225 100  50    20 245  60
+blue   HCOLOR=6 315 100  50    20 207 253
+
+and it never explained clearly what the colour output really looked like, in
+case you had no colour monitor (like me). Comparing different emulators I
+finally came to the decision that the following algorithm might give
+good results. (It may still be improved. This is only a base.)
+Important: always take 3 bits to define the colour of the pixel, i.e. the
+original bit + 2 surrounding bits.
+odd columns (1,3,5...)  even columns (0,2,4...)
+000 = black             000 = black
+001 = black             001 = black
+010 = green/orange      010 = purple/blue
+011 = white             011 = white
+100 = black             100 = black
+101 = purple/blue       101 = green/orange
+110 = white             110 = white
+111 = white             111 = white
+I think this is the way AppleWin or Apple2000 work. ApplePC only looks at the
+preceding pixel (i.e. 2 pixels only).
+
+Hmm, converting to MODE1 at 2bpp (4ppb) increases gfx size by 50-66%, i.e. a lot.
+POP doc says in memory image tables ~49.5K this would become more like 80K. Arse.
+Plus MODE1 screen is substantially larger than Apple hires (see above.)
+Also need to be able to plot sprites on any pixel offset. 0-6
+
+Maybe convert sprites on the fly using the algo above?!
+Probably some cunning way to roll the Apple screen bits into the Beeb screen byte format
+The data source parity problem presumably fixes itself as well in this case as will be displaying
+equivalent to Apple screen?  Ponder.
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+7xbytes 1bpp = 56pixels
+AAAAAAAB BBBBBBCC CCCCCDDD DDDDEEEE EEEFFFFF FFGGGGGG GHHHHHHH
+01234560 12345601 23456012 34560123 45601234 56012345 60123456
+
+In theory just rotate the source bytes right into Carry
+then left into the destination byte.
+All based on whole number of source bytes.
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+2bpp
+ABCDABCD colour bits
+
+EOEO EOEO E
+ZAAA AAAA`
+Z012 3456
+AAAA AAAB
+0123 4560
+AAAA AABB
+1234 5601
+
+Continually rotate pixels out of the Apple byte into a 3-bit index
+For each index, lookup Beeb bits from table and mask in
+Toggle lookup table
+Every four look ups, write to screen and increment column
+
+Actually lose last pixel column when 3 bytes = 21 pixels
+because have plotted 20 pixels and no more data to rotate
+14 pixels works fine, 28 pixels should work fine..
+
+This works but is very slow (unsurprisingly!)
+Can surely just look up 7-bits directly into 4 colours?
+3-bits lookup one colour pixel (2 bits) then shifted each pixel
+Therefore 6-bits used to lookup 4 pixels
+
+8xbytes 7ppb = 56pixels
+AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD EEEEEEEE FFFFFFFF GGGGGGGG HHHHHHHH
+G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210 G6543210
+
+Four pixels from 6 bits:
+XXZAAAAA XXAAAABB XXBBBBBB XXBBBCCC XXCCCCCC XXCCDDDD XXDDDDDE | XXDEEEEE XXEEEEFF XXFFFFFF
+XXZ01234 XX345601 XX012345 XX456012 XX123456 XX560123 XX234560 | XX601234 XX345601 XX012345
+
+Shift left 4 bits
+Add next 4 bits in sequence
+Mask off top 2 bits (or duplicate table x4)
+
+abcdef
+abc = even3
+bcd = odd2
+cde = even1
+def = odd0
+
+Still having to rotate every bit of sprite data, so 3x32 bytes = 672 bits
+672 x LSR + ROL + DEC + DEC = 672 x (5 + 5 + 5 + 5) = 13440 cycles not including everything else !!
+Clearly lots of room for optimisation here. Given how infrequently new bytes are written/read
+would make more sense to keep the bit counters in X&Y rather than data indices, etc.
+But at least it works for now.  :)
+
+IMG.BGTAB1.DUN (9056 b - INTERNAL = 8871b) = dungeon background tiles - walls, floor, spikes etc. also text boxes
+IMG.BGTAB2.DUN (4299 b - INTERNAL = 3580b) = dungeon background tiles - walls, windows, etc.
+IMG.BGTAB1.PAL (9185 b - INTERNAL = 9017b) = palace background tiles - walls, floor, spikes etc. also text boxes
+IMG.BGTAB2.PAL (4593 b - CORRECT) = palace background files  walls, windows, etc.
+
+Max background RAM required = 13778 bytes
+
+IMG.CHTAB1 (9165 b - INTERNAL = 8999b) = kid run, jump etc.
+IMG.CHTAB2 (9189 b - INTERNAL = 8893b) = kid swing, crouch, die spikes etc.
+IMG.CHTAB3 (5985 b - CORRECT) = kid step, fight, sword etc.
+
+IMG.CHTAB4 (5281 b - guard) = enemy fight, die, etc.
+IMG.CHTAB4.GD: file size = 8999b / internal ptr end = 5281 ($14a1)
+IMG.CHTAB4.FAT: file size = 5469b / internal ptr end = 5262 ($148e)
+IMG.CHTAB4.SHAD: file size = 5011b / internal ptr end = 5011 ($1393)
+IMG.CHTAB4.SKEL: file size = 4749b / internal ptr end = 4493 ($118d)
+IMG.CHTAB4.VIZ: file size = 5445b / internal ptr end = 5218 ($1462)
+
+IMG.CHTAB5 (6134 b - CORRECT) = kid fight, drink, die sword etc.
+
+IMG.CHTAB6A (9201 b - CORRECT) = princess scenes, levels 1 & 2
+IMG.CHTAB6B (8092 b - INTERNAL = 8052b) = princess scenes, levels 3+
+IMG.CHTAB7 (1155 b - CORRECT) = princess scenes, all
+
+At run-time: kid needs CHTAB1,2,3,5 resident = 30473 bytes
+Plus background set = 13778 bytes
+Plus enemy CHTAB4.X = 8999 bytes
+
+During cutscenes need to load max 9201 + 1155 = 10356 bytes
+
+In theory with 4x SWRAM banks can have 2x banks for kid, 1x for background 1x enemy
+16kb = 16384 bytes
+BANK1 = CHTAB1 + CHTAB3 = 15150 bytes (1234 bytes)
+BANK2 = CHTAB2 + CHTAB5 = 15323 bytes (1061 bytes)
+BANK3 = CHTAB4.X = 8999 bytes max (7385 bytes free)  <--- ACTUALLY 5281 bytes max !!!
+BANK4 = BGTABX.Y = 13778 bytes (2606 bytes free)
+
+REVISED AFTER INTERNAL IMG PTR CHECK:
+bg dun = 8871 + 3580 = 12451
+bg pal = 9017 + 4593 = 13610
+kid = 8999 + 8893 + 5985 + 6134 = 30011
+guard = 5281
+max resident = 48902 < 48k!  can we get these in just 3x swram banks?!
+
+BANK1 = CHTAB1 + CHTAB3 + 1400b
+BANK2 = CHTAB2 + CHTAB5 + 1357b
+BANK3 = CHTAB.X + 11103b
+BANK4 = BGTAB1.Y + BGTAB2.Y + 2774b
+Total of 16634 bytes free in swram
+
+Level blueprint = &900 bytes = 2304 bytes - so can fit in BANK4 with bg tiles potentially...
+Screen = 13440 bytes (&3480 size, resident at &4B80)
+
+Main challenge is going to be code size as estimated at 48K of code!!!
+Free user memory on Master &4B80 - &E00 = &3D80 = 15744 bytes = 15.375k
+Can steal language workspace = &400 - &800 = 1024 bytes = 1k
+Plus another &900 - &D00 = 1024 = 1k
+Spare in SWRAM banks 1,2,3 = 1k + 1k + 7k
+On Master extra 4k MOS RAM &8000 - &9000 (NAUG p.161)
+
+Total RAM 15+1+1+1+1+7+4 = 30K for code (not contiguous)
+Will need some clever paging or alternative approach...
+
+Alternatively move to MODE 5 for gfx - but would only save screen RAM if keep sprites in Apple format
+FS RAM = 8k but don't know how this is used.  Will need to load files from disc...
+Looks like possibilities for some overlays of code for frontend etc.
+
+Shadow RAM switches 20k in, so in theory have another 20-13.125k = 6.875k of code space
+but this would only be available when shadow buffer paged in
+Alternatively think about some scheme in which we don't double buffer with shadow screen
+but use this space for code
+
+RTW suggests MODE 2 but would ideally need CPC gfx that have more colours
+Could also potentially use MODE 5 if sorted out the pixel alignment issue
+
+Framework thoughts
+Need to draw Apple II memory map to get this clear
+Then get EQ.S ported, this defines all major buffers, jump tables, pre calc tables, data addresses etc.
+Also ZP variables and constants
+
+Accordingt to Apple II docs, overall memory map is:
+
+$0000 - $BFFF = 48K RAM
+$C000 - $CFFF = 4K I/O DEVICES
+$D000 - $DFFF = 2x 4K BANKED (aka language card)
+$E000 - $FFFF = 8K RAM SWITCHED WITH ROM (aka language card)
+
+$4000 - $5FFF = hi-res page 2
+$2000 - 3FFFF = hi-res page 1
+$0400 - $07FF = I/O devices?
+
+Whole lots is then x2 (auxmem) for 128K
+
+*-------------------------------
+*
+* Notes: (from master.s)
+*
+* Game code sits in auxmem & aux l.c. and uses aux z.p.
+*
+* Routines in main l.c. (including MASTER and HIRES)
+* are called via intermediary routines in GRAFIX (in auxmem).
+*
+* RW18 sits in bank 1 of main language card;
+* driveon switches it in, driveoff switches it out.
+*
+*-------------------------------
+
+POP Apple II RAM
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Vars (sparse - total 17 bytes) - Apple II Input Buffer
+$0300 - Small arrays and some vars (sparse - total 48 + 9 = 56 bytes) - Apple II Vectors
+
+game code in auxmem
+$0400 - grafix.s module, includes eq.s, gameeq.s, soundnames.s
+$0e00 - tables in EQ.S (dense - $488 total)
+$1290 - frameadv.s module, includes eq.s, gameeq.s, bgdata.s <- included after jump table
+
+$5e00 - redbufs (redraw buffers) (60 bytes unused then 250 bytes = 310 bytes total)
+$960f - enudata (editor only)
+$ac00 - imlists (image lists) (200x4 + 100x4 + 20x5 + 46x8 + 46x11 + 20x12 + 32x5 = 2574 bytes $a0e)
+$b600 - endimspace (end of image lists) - buffer overrun here?
+$b700 - blueprnt (blue print) - $900 size (runs up to $c000)
+
+aux l.c. (language card)
+$d000 - bluecopy (bank 1) (used to save a copy of the blueprint) (only used in editor)
+music in aux l.c. somewhere?
+
+main l.c. (language card)
+$d000 - rw18 (something to do with disc loader)
+$d000 - peelbuf1 (presume size = $800)
+$d800 - peelbuf2 (presume size = $800)
+$e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes)
+$ea00 - unpack.s module, includes gameeq.s, eq.s
+$ee00 - hires.s module, includes hrparams.s
+$f880 - master.s module, includes eq.s, gameeq.s
+
+boot code will start in main ram
+$0800 - boot.s - uses rw18, probably not required?
+
+game code in auxmem
+$5400 - auto.s module, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4500 - coll.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$3a00 - ctrl.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$d000 - ctrlsubs.s, includes eq.s, gameeq.s, movedata.s, seqdata.s, soundnames.s
+$2800 - framedef.s (animation frames) (1200 + 200 + 450 + 192 = 2042 bytes)
+$4c00 - gamebg.s, includes eq.s, gameeq.s
+$f900 - misc.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$ee00 - mover.s includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$3000 - seqtable.s (animation sequences)
+$ea00 - sound.s
+$d900 - specialk.s, includes eq.s, gameeq.s, soundnames.s, movedata.s
+$e000 - subs.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$2000 - topctrl.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$dfd8 - version.s (text string = 28 bytes)
+
+
+FINAL MEMORY MAP?
+
+main ram
+-----
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Apple II Input Buffer (Vars = total 17 bytes) 
+$0300 - Apple II Vectors (Small arrays and some vars = 48 + 9 = 56 bytes)
+$0400 - $07FF = I/O devices?
+$0800 - chtab3 (kid) - main (5985 = $1761 bytes)
+$2000 - 3FFFF = hi-res page 1
+$4000 - $5FFF = hi-res page 2
+$6000 - chtab1 (kid) - main (9165 = $23cd bytes)
+$8400 - chtab2 (kid) - main (9189 = $23e5 bytes)
+$a800 - chtab5 (kid) - main (6134 = $17f6 bytes)
+-----
+$C000 - $CFFF = 4K I/O DEVICES
+-----
+$d000 - rw18 (something to do with disc loader)
+$d000 - peelbuf1 (presume size = $800)
+$d800 - peelbuf2 (presume size = $800)
+$e000 - hrtables (YLO & YHI, SHIFT, CARRY, MIRROR etc. = 192*2 + 16*128 + 7*6 + 6 = 2288 bytes $8f0)
+$ea00 - unpack.s module, includes gameeq.s, eq.s
+$ee00 - hires.s module, includes hrparams.s
+$f880 - master.s module, includes eq.s, gameeq.s
+-----
+2k system + 16k screens + 30k kid sprites (48k main mem) + 4k disc buffer + 12k rendering code & buffers (main l.c.) = 64k
+
+
+auxmem
+-----
+$0000 - ZP vars and locals at $e8
+$0100 - Stack
+$0200 - Apple II Input Buffer?
+$0300 - Apple II Vectors?
+$0400 - grafix.s module, includes eq.s, gameeq.s, soundnames.s
+$0e00 - tables in EQ.S (dense - $488 total)
+$1290 - frameadv.s module, includes eq.s, gameeq.s, bgdata.s <- included after jump table
+$2000 - topctrl.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$2800 - framedef.s (animation frames) (1200 + 200 + 450 + 192 = 2042 bytes)
+$3000 - seqtable.s (animation sequences)
+$3a00 - ctrl.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4500 - coll.s, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$4c00 - gamebg.s, includes eq.s, gameeq.s
+$5400 - auto.s module, includes eq.s, gameeq.s, seqdata.s, soundnames.s, movedata.s
+$5e00 - redbufs (redraw buffers) (60 bytes unused then 250 bytes = 310 bytes total)
+$6000 - bgtab1 (max 9185 = $23e1 bytes)
+$6000 - chtab6 (princess in cutscenes) (overlaid)
+$8400 - bgtab2 (max 4593 = $11f1 bytes )
+$9600 - chtab4 (guard) (max 5281 = $14a1 bytes; top = $ab00)
+$9f00 - chtab7 (princess in cutscenes) (overlaid)
+$ac00 - imlists (image lists) (200x4 + 100x4 + 20x5 + 46x8 + 46x11 + 20x12 + 32x5 = 2574 bytes $a0e)
+$b600 - mobtables
+$b6f0 - savedgame
+$b700 - blueprnt (blue print) - $900 size (runs up to $c000)
+-----
+$C000 - $CFFF = 4K I/O DEVICES
+-----
+$d000 - ctrlsubs.s, includes eq.s, gameeq.s, movedata.s, seqdata.s, soundnames.s
+$d400 - msys (music system ii)
+$d900 - specialk.s, includes eq.s, gameeq.s, soundnames.s, movedata.s
+$dfd8 - version.s (text string = 28 bytes)
+$e000 - subs.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$ea00 - sound.s
+$ee00 - mover.s includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+$f900 - misc.s, includes eq.s, gameeq.s, seqdata.s, movedata.s, soundnames.s
+-----
+1k system + 23k game code & data + 19k sprites + 2k level + 3k buffers (48k aux mem) + 4k music + 12k more game code (aux l.c.) = 64k
+
+
+*-------------------------------
+*
+*  Calls to hires & master routines
+*
+*  Hires & master routines are in main lc & use main zp;
+*  rest of code uses aux lc, zp.
+*
+*-------------------------------
+
+Added complication - looks like Apple II can read/write from different banks?!
+Guess can read code & data from one bank but write to different one (screen?)
+
+Too much code for double buffering MODE 1 on Beeb
+Propose single buffer MODE1 or double-buffer MODE 5
+Use SHADOW RAM to hold all game code then switch to main RAM for render
+If double-buffered then use two 70 column MODE5 screens in same bank
+
+beeb mem
+-----
+&0000 - ZP
+&0100 - stack
+&0200 - vectors
+&0300 - system
+&0400 - buffers x 1k
+&0800 - sound
+&0900 - buffers x 1k
+&0D00 - NMI
+&0E00 - rendering code + buffers ($2200 below SHADOW, additional $1B80 x2 in MAIN + SHADOW = $3700 ~13.75k)
+&4B80 - screen
+-----
+&8000 - swram bank 1 - player sprites
+&8000 - swram bank 2 - player sprites
+&8000 - swram bank 3 - background + level
+&8000 - swram bank 4 - enemy sprites + ?
+-----
+&C000 - MOS
+-----
+shadow ram = 20K
+&3000 - &8000 = game code + data
+-----
+mos ram = 4K
+&8000 - &9000 = more game code?!
+-----
+
+
+Code structure
+Ideally build everything with one source file in BeebAsm
+Keep original Source folder
+Have a new Beeb source folder and move files across one at a time
+Put static rendering tables in main RAM under screen
+Could use 4k MOS ram above BANK 3 to give another ~15KB contiguous memory
+
+Assembler
+Find out which assembler was used and check documentation for syntax?
+Looks like each module is assembled separately at given address.
+Could do this to avoid clashing of local var names etc.
+But start by using BeebAsm top-level file?
+
+put = include
+org = org
+labels are any strings that are not operands or directives
+vars are just assigned with =
+db = equb byte
+hex = equb $ byte
+dfb = signed byte
+ds = skip
+dum / dend = declare variables starting from address dum
+
+
+Approach
+Setup top-level asm file to build everything
+Include data files in SWRAM bank files
+Create beeb bootstrap module to load swram banks, set screen mode etc.
+Port frameadv module starting with SURE fn
+    Depends on eq.s (495 lines), gameeq.s (675 lines), bgdata.s (199 lines)
+Use this to start to solidify memory map for rendering (no shadow)
+Use this to solidify labelling convention & patterns for Beeb code vs Apple II code
+Continue to use jump tables or not?!  Could be useful for debugging?
+
+
+bgdata.s
+- defines (PIECE ID#)
+- ABCD mask data tables
+- various masks and special piece defines
+
+eq.s
+- addresses for buffers in l.c. slots
+- jump tables for main mem modules
+    master
+    hrtables - data tables
+    hires
+    unpack
+    grafix
+    redbufs
+    menudata (ed only)
+    frameadv
+    tables - data tables
+    blueprnt - data tables
+- main mem buffers
+    INFO (blueprint info)
+    imlists (image lists)
+    ZP
+    global vars
+    pages 2 & 3
+- misc constants
+
+gameeq.s
+- addresses for character and bg data
+- addresses for gameplay code modules
+- jump tables for gameplay modules aux mem
+    mobtables
+    savedgame
+    topctrlctrl
+    auto
+    col1
+    gamebg
+    specialk
+    mover
+    ctrlsubs
+    subs
+    sound
+    msys
+    seqtable
+    misc
+    debugs
+- aux mem vars
+    locals
+    game globals
+    pages 2 & 3
+- character data
+    Char
+    Op
+    Kid
+    Shad
+    FCharVars
+- misc data
+
+17/8/2017 Managed to get all level screens plotted in MODE 4
+Many, many things to do.  Some notes:
+
+- No attempt to place ZP variables, just letting assembler assign them
+- Need to figure out local ZP variable usage
+- Had to move to MODE 4 for memory purposes and simpler with pixel bit shifting
+- Seems to always assume there is a wall to the left-hand side of each screen so not looking up screen to left correctly - need to implement GETSCRNS from CTRLUBS.S
+- Consistent glitch in same place on certain screens - not sure what this is - might be flash or other object?
+- Need to move to smaller 280x192 screen
+- At some point need to move to MODE 1 screen for colour...
+
+What are the next steps?!
+- Get TopCtrl main loop assembled and move to this?
+- Create appropriate RAM banks for all sprite data
+- Ultimately get Kid animating under control and moving between screens...
+- Get MASTER.S ported as this controls boot and initialisation
+- Need to sort out the memory arrangement for game logic vs rendering code
+- Split out more of the Beeb support code
+
+*-------------------------------
+*
+* Notes:
+*
+* Game code sits in auxmem & aux l.c. and uses aux z.p.
+*
+* Routines in main l.c. (including MASTER and HIRES)
+* are called via intermediary routines in GRAFIX (in auxmem).
+*
+* RW18 sits in bank 1 of main language card;
+* driveon switches it in, driveoff switches it out.
+*
+
+Want all game logic code to be in SHADOW RAM
+There shouldn't be any direct access to rendering from game logic, all interfaced through GRAFIX
+GRAFIX can be located much lower down in main memory
+Can put HRTABLES in low part of SHADOW ram underneath the screen
+
+Don't need to port BOOT.S
+
+*-------------------------------
+*
+*  Stage 1: static dbl hires screens -- no animation
+*  Stage 2: character animation only (bg is unpacked)
+*  Stage 3: full game animation
+*
+*-------------------------------
+
+6/9/2017 Time to bite the SHADOW RAM bullet
+~~~
+
+Assemble in 3 parts:
+core = &E00 -  &3000
+main = &3000 - &8000
+aux (shadow) = &3000 - &8000
+
+
+7/9/2017 Plotting needs to be addressed
+~~~
+Game runs at 1 fps without "advanced" plot functions
+Even "fast" plot routine is doing 2x shift operations per pixel before considering any memory access
+This is always going to be incredibly slow
+
+We have plenty of memory for lookup tables and don't need the ones used by Apple hires module
+Suggest think about a direct lookup of Apple 7 bits to Beeb byte in 8 possible shifts
+
+Apple II already has this SHIFTx and CARRYx = 128 x 7 x 2 = &700 bytes (7 pages)
+Might need to think about multiplying this by 8 for Beeb?! 56 pages = &3800 (14k)
+Unlikely to have this much RAM...  Or maybe have double lookup.
+
+Alternatively convert Apple II data into Beeb screen format and arrange in column order
+
+Start with the simple case of plotting to Apple byte alignment (7 pixels) and what tables needed from there
+Ideally want to loop:
+
+Start with existing Beeb screen byte
+Load apple data byte = 7 bits (pixels back to front)
+Convert to Beeb screen format with look up table
+Shift those pixels right by N pixels with look up
+Mask into Beeb screen byte
+Write byte to screen
+Lookup pixels carried by shift as existing screen byte
+Calculate new shift
+
+This is basically what PoP does already but with an extra conversion lookup
+Addressing conversion required as well
+Can read sprite data sequentially most easily
+Means incrementing write index Y by 8 each time (8c)
+
+Shifts are always sequential 0, 7, 6, 5, 4, 3, 2, 1
+Could setup ZP vars to point at various tables then increment the code
+LDA (&70), Y becomes LDA (&72), Y etc.
+Also LDA (&70,X)
+Can also use CMOS instructions don't forget! BRA, STZ, DEC A, INC A, PHX/Y etc.
+
+What is the max width & height of the sprites?
+MODE 4 data is always going to be smaller than Apple II data as 8ppb not 7ppb
+This is not true with MODE 1 or MODE 2 sprites!
+
+With Beeb 8 pixel aligned data the shift is constant between bytes plotted
+Particularly if plotting in column order...
+
+We have pop2beeb that will parse the image files already!
+Keep the same data format just rearrange the data into Beeb MODE 4 screen format
+Bake these out ahead of time.  Worry about colour sprites later!
+
+
+Plot at Apple byte 1 - pixel pos 7
+Rem=7
+
+; byte 0
+LDA screen
+AND b0
+ORA shift>>7
+STA screen
+
+LDA screen+8
+AND b7-b1
+ORA carry>>7
+STA screen+8
+
+; byte1
+LDA screen+8
+AND b0
+ORA shift>>7
+STA screen
+
+
+; no mask
+LDX sprite
+LDA shift, X
+ORA carry
+STA screen
+LDA carry, X
+
+Is there any way to arrange the data so using one index for both sprite & screen?  :\
+
+Still need to ORA always becuase 8ppb means that a typical 28 pixel wide bg tile is 4x beeb bytes
+= 32 pixels.  So have 4 pixels extra at the end which we never want to plot to the screen.
+
+Eeek!  And level 5 starts to go to crap.  Think this is because there is a genuine bg tile > 255 bytes
+Largest genuine tile is 6 Apple bytes wide = 42 pixels
+
+Width in Beeb bytes = width in Apple bytes up to 42 pixels (<=8 Apple bytes)
+For each byte in width, don't want to attempt to plot 'width' number of bits at the end
+
+A sprite that is "width" bytes wide can span width or width+1 bytes on screen
+Check how hires plot fn handles this?  Writes carry over byte to screen with BMASK as expected
+
+Ponder: create individual functions for plotting sprites of width 1/2/3/4/5/6/7 to handle left over bits?
+
+Simple case that goes wrong (still)
+Plot at XC0=16 (5th bg piece)  pixel pos = 112 which is Beeb byte aligned
+Plot 4 Apple byte width tile (28 pixels) means plotting 4 Beeb bytes no carry over
+Need to do carryover masking on last byte plotted not just carry over to +1 byte
+Because Beeb bytes are wider than Apple bytes
+Apple can always assume a carry over which may be 0 when shift = 0
+
+If shift < width then loop width - 1 times?  Would have to make next_carry 
+
+
+18/9/2017
+~~~
+Dealing with 7 pixel increments getting very difficult  complicated
+Ponder moving to 8 pixel wide bytes properly?
+
+Moveable objects have own coordinate system 58 left border, 140 pixels across, 58 right border
+SETUPCHAR in ctrlsubs.asm converts these into 280 pixel X positions
+
+-> could convert this into 320 pixel screen coordiantes then into XCO & OFFSET?
+
+CVTX in grafix.asm converts 16-bit X position (already in screen coordinates) into XCO and OFFSET values
+
+What eventual screen mode would we want to use?
+Don't want to keep MODE 4 in long run
+Options are MODE 5 - 2bpp but 1/2 horizontal resolution
+2bpp format but plotted in MODE2/5 - use MODE 2 masking trick
+Could potentially use different sprite formats for bg vs characters
+Also expand chars to be multiples of 8 wide?
+
+Lots of opportunities to store sprite data in more interesting way, particularly as it is sparse
+e.g. with increment tables ala Thrust.  Check Exile code as sprite plot bound to be derive from that.
+
+For MODE 2 plot ala Exile
+Unroll one row of pixels into a buffer
+Make the 2bpp lookup transform to Beeb format such that left/right pixel pairs are accounted for based on parity
+Then plot loop just becomes LDA buffer,X; INX; ORA buffer,X;EOR (screen),Y;STA (screen),Y;Y+=8
+Can switch INX/DEX to reverse plot order - set parity accordingly for L/R pixels
+Exile uses direct lookup into ZP to save cycles and unrolls into stack to save memory, but keep it simple!
+
+How would this extend to MODE1 or MODE4?
+For MODE4 - unpack 1bpp into shifted version but would need to pop x8 per byte write - doesn't make sense
+Wonder how Imogen did sprite plotting..
+
+MODE1 - unpack 2bpp and map into appropriate pixel position according to X fraction
+Still seems expensive to pop 4 bytes off the stack to plot one byte
+Looks like Thrust stores sprites as 1bpp and unpacks to multiple bytes
+
+If use MODE2 free masking then foreground & background use separate parts of palette
+So fg is 0-3 and bg is 4&8 | fg
+bg0 = 0
+fg = (mask), 1,2,3
+bg1 = 4,5,6,7
+bg2 = 8,9,10,11
+bg3 = 12,13,14,15
+
+left pixel $AA right pixel $55
+Storing & loading ZP directly saves saveing & restoring index registers
+Don't just use X&Y as index registers - 2c to save or restore accumulator
+Exile stores 2bpp data in MODE1 pixel format so can load this directly into screen memory for preview
+
+Now have sprite data in Beeb MODE5 format ready to expand into MODE 2 but widened to 8 pixel multiples not 7.
+Will change CVTX routine to convert 0-279 screen coordinates into XCO 0-39 and OFFSET [0-7]
+
+Need to set screen mode to MODE 2.  MEMORY?  Screen that is 160x192 is &3C00 in size, starting at &4400.
+Current hwm ~&5400 but can remove &1000 of shift tables
+
+Start with STA plot...
+
+0123456012345601234560123456
+A B C DA B C DA B C D
+
+0123456012345601234560123456
+A B C D
+
+0123456012345601234560123456
+A B C D
+      A B C D
+
+0123456012345601234560123456
+A B C D A B
+          C D A B C D
+
+0123456012345601234560123456
+A B C D
+      A B C D A B C D
+                    A B C D
+
+Probably going to need a 3 colour palette per sprite ala Exile for best results
+Will mean not using XOR trick for free sprite masking but using top bit for backgrounds instead
+
+XCO [0-39] OFFSET [0-6]
+Map [0-279] to MODE2 [0-159]
+Important that XCO remain the same
+So really just mapping OFFSET from [0-6] into [0-3]
+0123456
+0 1 2 3
+
+Parity vs Mirror
+  R P M P
+0   r   l    
+H r l l r
+G l r r l
+F r l l r
+E l r r l
+D r l l r
+C l r r l
+B r l l r
+A l r r l
+0   l   r <- parity
+Mirror inverts parity when swapping pixel mapping
+
+Exile plotting uses standard palette with top bit as background indicator
+All objects sprites EOR'd to screen but don't overwrite background if top bit set
+Therefore attempt to always draw on black background where possible
+We need proper sprite mask as large sprites always drawn on top of complex background
+If want "free" masking then need to stick to 4 colour bg + 3 colour fg
+
+Maybe take PC DOS sprites as a starting point instead of Apple II?
+
+Load mask; AND (screen); ORA sprite: STA (screen)
+Mask derived from whether l & r pixels are 0
+
+For a pixel we have &00,&01,&10,&11 or &00,&02,&20,&22
+And we know in code whether we are decoding left or right pixel
+And we know whether the pixels have been flipped
+
+Right pixel &00 -> mask &55
+Right pixel &01,&10,&11 -> mask &00
+Left pixel &00 -> mask &AA
+Left pixel &02,&20,&22 -> mask &00
+
+But mask need to be flipped if parity reversed
+
+Could have a left_mask
+[&00] = &AA
+[&02] = [&20] = [&22] = &0 
+And a right_mask
+[&00] = &55
+[&01] = [&10] = [&11] = &0 
+Then just swap &AA and &55 if parity reversed
+
+Also pondering a much larger lookup table for palettes that go directly from 2bpp to bytes
+Have two versions of the table and switch the lookup address rather than table contents
+Will use a lot more memory but need to look at the tradeoffs in the inner loop
+Current version uses the stack as a "free" index register
+And then stores accumulator value in X register as temp storage
+Probably quicker to store in ZP var for now and work out faster inner loop methods later
+
+Need to profile exactly what's going on before optimising inner loops
+PoP sprite plotting modes need adjusting for MODE 2
+AND means remove background using sprite as a mask
+ORA means add to background but think this means regular MASK in MODE 2
+If bg always AND followed by ORA might be replaced by a single MASK call instead?
+
+Notes on Apple II I/O device addresses:
+
+http://apple2.org.za/gswv/a2zine/faqs/csa2pfaq.html
+KEYBOARD = $C000 ;keyboard data (latched) (Read) 
+                 ;Bit 7 is set to indicate a keypress 
+                 ;is waiting, with the ASCII 
+                 ;code in bits 6-0. 
+OPNAPPLE = $C061 ;open apple (command) key data (read) 
+CLSAPPLE = $C062 ;closed apple (option) key data (read) 
+These are actually the first two game Pushbutton inputs (PB0 
+and PB1) which are borrowed by the Open Apple and Closed Apple 
+keys. Bit 7 is set (=1) in these locations if the game switch or 
+corresponding key is pressed. 
+PB2 =      $C063 ;game Pushbutton 2 (read) 
+This input has an option to be connected to the shift key on 
+the keyboard. (See info on the 'shift key mod'.) 
+
+ v123
+abcdef
+
+654321
+abcdef
+
+Normally all pixels are pushed onto the stack from right most to left most
+
+Regular plot reads these upwards from the bottom to the top to plot left to right
+Crop just offset sprite data from left-hand side and push viswidth pixels
+
+Mirror plot reads these downwards from the top to the bottom to plot left to right
+For mirror crop
+Cropping left side means losing pixels from the top of the stack - the last thing pushed
+Means start from right most pixel and push less (viswidth)
+But this implies right most pixel always visible
+Need to start from right hand side less 
+
+Left crop = 1 then start reading one byte less than right most
+Continue viswidth bytes
+In theory could subtract left crop from image pointer?!
+
+Could also not have to reverse the stack read direction for mirror if unroll the pixels in opposite direction
+If this is quicker / easier?
+Exile prefers one sprite routine that can do mirroring in place
+
+OK, right hand cropping results in overrunning the edge of the line because of OFFSET
+There maybe 4 visible sprite bytes becoming 8 visible pixels
+But offset parity will add one more "visible" byte = 2 more visible pixels - potentially plot 10 pixels
+Plus when offset > 3 we move plot position along by a 2 more visible pixels...
+So potentially moved 2 more pixels from original start address = 12 pixels across in total
+Still need to clip to original 4 visible bytes = 8 visible pixels
+
+Still losing pixels at side of the screen when plotting with crop
+E.g. player drawn on left side before exiting at XCO -1 OFFSET 3
+Gets turns into XCO 0 with OFFSET still = 3
+
+So if clipping left we should 0 the OFFSET and add OFFSET/2 pixels to how many are drawn
+Maximum 3 pixels = 1 extra sprite byte
+
+(In theory could push three extra 0's onto the bototm of the stack and always draw from original XCO...)
+
+W=2
+XCO
+0   1   2   3
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        abcdefgh
+      0abcdefgh
+      abcdefgh
+    0abcdefgh0
+    abcdefgh
+  0abcdefgh0
+  abcdefgh
+0abcdefgh0
+abcdefgh
+
+XCO=0 OFFSET=6   WIDTH=W -> XC0=0 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=4|5 WIDTH=W -> XC0=0 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=1 SCRBYTES=W*2
+XCO=0 OFFSET=2|3 WIDTH=W -> XCO=0 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=0|1 WIDTH=W -> XCO=0 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=1 SCRBYTES=W*2
+
+(Could always push extra zero and compute appropriate stack start as PARTY ^ 1) - done
+BEEBPTR+=(OFFSET/2)&2*4
+SPRPIXELS=VISWIDTH*4
+VISPIXELS=VISWIDTH*4
+SCRBYTES=VISPIXELS/2+PARITY
+STACKDEPTH=SPRPIXLS+2
+STACKSTART=PARITY^1
+
+W=2
+XCO
+-1  0   1   2
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        abcdefgh
+      0abcdefgh
+      abcdefgh
+    0abcdefgh0
+    abcdefgh            -> at the moment:....efgh (correct)
+  -.bcdefgh0            -> at the moment:..0efgh0
+  ..cdefgh              -> at the moment:..efgh
+-...defgh0              -> at the moment:0efgh0
+....efgh
+
+INCORRECT:
+XCO=-1 OFFSET=2|3 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=(W-1)*2+1
+XCO=-1 OFFSET=4|5 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=(W-1)*2
+XCO=-1 OFFSET=6   WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=(W-1)*2+1
+
+XCO=-1 OFFSET=0|1 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+2 STACKSTART=1 SCRBYTES=(W-1)*2
+CORRECT: 0abcdefgh0
+XCO=-1 OFFSET=2|3 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=4 SCRBYTES=3
+XCO=-1 OFFSET=4|5 WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=2 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=3 SCRBYTES=3
+XCO=-1 OFFSET=6   WIDTH=W -> XCO=0 OFFLEFT=1 OFFSET/2=3 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W VISPIXELS=(W-1)*4+OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=2 SCRBYTES=4
+
+IF OFFLEFT && OFFSET THEN
+BEEBPTR+=0
+VISPIXELS=VISWIDTH*4+OFFSET/2
+SPRBYTES=VISWIDTH+1
+SCRBYTES=VISPIXELS/2+PARITY
+STACKSTART=4-(OFFSET/2)+PARITY  5-(OFFSET/2)
+
+Alternative approach might be to push three blanks on the bottom of the stack (can store them directly as know stack depth)
+Then just offset the stack start appropriately according to MODE 2 offset.  Would result in plotting an extra blank column
+of bytes for OFFSET>3 but need to weigh up the overhead of all the clipping code vs extra loop cost.  It is proportional to
+the sprite height, which can be quite large, so likely better to clip to the byte
+
+W=2
+XCO
+38  39  40  41
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        ........
+      0a.......-
+      ab......
+    0abc.....-          -> at the moment:....0abcd0
+    abcd....            -> at the moment:....abcd (correct)
+  0abcde...-            -> at the moment:..0abcdefgh0
+  abcdef..              -> at the moment:..abcdefgh
+0abcdefg..              -> at the moment:0abcdefgh0
+abcdefgh
+
+XC0=38 OFFSET=0|1 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+INCORRECT:
+XCO=38 OFFSET=2|3 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=38 OFFSET=4|5 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=W*2
+XCO=38 OFFSET=6   WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+
+CORRECT:
+XCO=38 OFFSET=2|3 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=4
+XCO=38 OFFSET=4|5 WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+1 STACKSTART=0 SCRBYTES=3
+XCO=38 OFFSET=6   WIDTH=W -> XCO=38 OFFRIGHT=1 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4-OFFSET/2 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=3
+
+XC0=39 OFFSET=0|1 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=(W-1)*2
+
+XCO=39 OFFSET=2|3 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=2
+XCO=39 OFFSET=4|5 WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+1 STACKSTART=0 SCRBYTES=1
+XCO=39 OFFSET=6   WIDTH=W -> XCO=39 OFFRIGHT=2 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W-1 SPRBYTES=W-1 VISPIXELS=(W-1)*4-OFFSET/2 STACKDEPTH=(W-1)*4+2 STACKSTART=0 SCRBYTES=1
+
+IF OFFRIGHT && OFFSET THEN
+VISPIXELS=VISWITH*4-OFFSET/2
+SPRBYTES=VISWIDTH
+SCRBYTES=VISPIXELS/2+PARITY
+// works also when OFFSET=0
+
+
+MIRROR case
+~~~
+W=2
+XCO
+0   1   2   3
+OFFSET
+024 024 024 0
+1356135613561
+ P8P P8P P8P
+012301230123
+        zyxwvuts
+      0zyxwvuts
+      zyxwvuts
+    0zyxwvuts0
+    zyxwvuts
+  0zyxwvuts0
+  zyxwvuts
+0zyxwvuts0
+zyxwvuts
+
+XCO=0 OFFSET=6   WIDTH=W -> XC0=0 OFFSET/2=3 BEEBPTR+=8 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=4|5 WIDTH=W -> XC0=0 OFFSET/2=2 BEEBPTR+=8 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=1 SCRBYTES=W*2
+XCO=0 OFFSET=2|3 WIDTH=W -> XCO=0 OFFSET/2=1 BEEBPTR+=0 PARITY=1 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=0 SCRBYTES=W*2+1
+XCO=0 OFFSET=0|1 WIDTH=W -> XCO=0 OFFSET/2=0 BEEBPTR+=0 PARITY=0 VISWIDTH=W SPRBYTES=W VISPIXELS=W*4 STACKDEPTH=W*4+2 STACKSTART=1 SCRBYTES=W*2
+
+BEEBPTR+=(OFFSET/2)&2*4
+SPRPIXELS=VISWIDTH*4
+VISPIXELS=VISWIDTH*4
+SCRBYTES=VISPIXELS/2+PARITY
+STACKDEPTH=SPRPIXLS+2
+STACKSTART=PARITY^1
+
+Exile reads sprite data backwards so reads right most to left most pixel as push onto stack
+So bottom of stack is left most pixel, with top of stack right most
+Could just reverse how the sprite data is unrolled?
+Start at 0 and unroll bytes_per_line_in_sprite from left most pixel
+So bottom of stack is right-most pixel with top of stack left most pixel
+But for mirror purposes this is correct
+Everything else should be as before for clipping etc.
+Always start at 0
+
+Player is min 24 lines max 40 lines for sprite
+Loadig ZP + STA abs = 7c to save 1c per line = 24c
+
+Sprite savings
+Move to MODE 5 or MODE 4 :(
+Would need to rewrite sprite plot functions (again) and figure out per-pixel offset
+
+Could half the number of sprite frames and store in more convenient format
+Need to take advantage of the fact that background sprites are plotted without offset
+
+For masked sprites EOR to screen with 3:4 palette setup - avoid layrsave & peel
+Peel becomes plot same sprite but with previous coordinates
+Hard to do this as fg sprites can only be on top of bg - can't have mid
+Need to have moving bg objects - falling floor etc.
+Hard to get flames drawing as bg objects because of palette
+Can't plot & erase fg sprites on top of each other with EOR without them clashing
+Flames could be special cased to draw last but only if nothing else there
+
+
+Profiling
+Standing still at start
+64 lines layrsave, 64 lines peel
+Min 128 lines sprite LAY
+128 lines of image lists
+Min 128 lines of gameplay
+
+Runs 2 vsyncs standing still
+Runs at 3-4 vsyncs when moving around
+Can go as low as 8 vsyncs when multiple sprites are active - loose floor / spikes etc.
+That's 320k cycles - seems like a lot?!
+
+objX = 1 (player) + falling objects etc. <- not an imagelist drawn in midX
+
+Image lists
+wipeX = 0 standing still
+bgX = 2 standing still (flames) - up to 16 whilst moving! (all bg sections marked as dirty)
+midX = 1 (player) + falling floor etc. - only MID objects do layrsave & peel
+fgX = 0 + pillars in front of player, debris on floor etc.
+
+1. erase mid objects (copy back layrsaved screen buffers for mid objects) - peel
+2. draw wipes (used to blank transitional bg sprites before next draw) - wipe
+3. draw bg sprites - fastlay (can be masked)
+4. draw mid objects - optionally layrsave screen buffer area first - layrsave and lay
+5. draw fg objects in front of player etc. - fastlay
+
+Need to count cycles for all functions
+Setup cost plus cost per typical bg, mid & fg sprite
+Cost of layrsave & peel
+
+Compare equivalent cost on Apple II for same operation
+
+Could implement a save & mask function so save screen buffer data into layrsave at same
+time as writing masked sprite on top of background
+
+We do know all possible objects in the game, so OK to special case them as required
+Player is the most important sprite
+
+Background sprites are always plotted with fastlay
+Foreground sprites are always plotted with fastmask
+
+\*  F A S T L A Y
+\*
+\*  Streamlined LAY routine
+\*
+\*  No offset - no clipping - no mirroring - no masking -
+\*  no EOR - trashes IMAGE - may crash if overtaxed -
+\*  but it's fast.
+\*
+\*  10/3/88: OK for images to protrude PARTLY off top
+
+Must be able to convert directly from MODE 5 packed 2bpp into left & right MODE 2 pixel pairs
+Remember that the Exile sprite plot routine was optimised for RAM space over speed
+We can use more memory and lookups to increase speed
+
+Instead of unrolling sprite data and pushing onto stack shouldn't need any stack at all:
+
+STX beeb_sprite_index
+LDA &FFFF, X    ; sprite data
+STA beeb_data
+AND #&CC
+TAX
+LDA 2bpp_to_paletteN, X
+STA (beeb_writeptr), Y
+TYA:ADC #8:TAY
+LDA beeb_data
+AND #&33
+LDA 2bpp_to_paletteN, X
+STA (beeb_writeptr), Y
+LDX beeb_sprite_index
+INX
+TYA:ADC #8:TAY
+CPX #smYMAX
+BCC loop
+
+\\ Actually just an expanded palette to 256 bytes
+
+.2bpp_to_paletteN
+FOR byte,0,255,1
+; map &88 to left pixel for colours 0,1,2,3
+; map &44 to right pixel for colours 0,1,2,3
+; map &22 to left pixel for colours 0,1,2,3
+; map &11 to right pixel for colours 0,1,2,3
+NEXT
+
+\\ Set palette by writing palette address to code
+
+Could still use 4:3 colour setup with this method or keep different (expensive) palettes
+
+Other observations for performance:
+Layrsave is always in multiple of 2 bytes as aligned to Apple II byte = 2x MODE 2 bytes
+Typically between 6 and 12 bytes copied - could be unrolled in some way?
+Hard to use smod code when unrolled
+
+Wipe is always 4 Apple II bytes wide = 8 Beeb MODE 2 bytes - can unroll?
+Maybe but note that can't use STZ indirect
+
+Exile ZP
+Using X register to store temporary data saves 2 cycles in 
+
+Algorithm optimisation
+~~~
+Found that the plot routines often get called twice for same piece - opportunity to combine!
+Try and optimise by reducing number of sprites that get drawn rather than saving cycles!
+
+Falling floor:
+1. Floor mask A piece (sprite #3) AND + layrsave
+2. Falling floor animated A piece ORA
+3. Loose floor animated D piece STA + layrsave
+4. Loose floor B piece ORA + layrsave
+No wonder it is so expensive!
+
+Can we at least change this to one layrsave?!
+Layrsaves: (w,h) 4,c + 4,4 + 3,c
+e.g. (x,y) $18,$50 + $18,$53 + $1c,$4f
+           $0c,$44 + $0c,$47 + $10,$43
+
+Always have to save (XCO,YCO+3) to (XCO+4,YCO-12) and (XCO+4,YCO-4) to (XCO+8,YCO+8)
+= 4 x 15 + 4 x 12 = 60 + 48 = 108 bytes but in three blocks :(  Actually x2 because MODE 2
+
+This would benefit from a peel + lay function
+Unfortunately Layrsave goes to MOS 4K RAM whilst sprite comes from SWRAM :(
+Hard to do this anyway because stride of saved screen buffer is double that of sprite data
+Becomes a juggling act of indices.
+
+Layrsave is weird because it only ever puts back the exact same screen data in the same place
+Despite saving it as sprite data that can theoretically be plotted back anywhere on screen
+Is there a way to speed up the inner & outer loop of the layrsave & peel functions for Beeb?
+
+AND/MASKING
+If we know that calling plot with AND operation is only for masking then can we optimise this?
+Don't need to look up pixel colours as always going to be white for mask
+ - set solid white palette - doesn't need swapping
+Only two types of floor masks - maska table and maskb table
+Points to sprite# 3 and 4 in background set - removes floor piece
+And/or optimise AND function for two main mask sprites (store them uncompressed?)
+
+Plot function usage
+~~~
+LayMask - used for player & guard
+MLayMask - used for player & guard
+
+LayAND is used by falling floor but bet this is OFFSET 0 - probably just need crop?
+LaySTA ditto
+Also used for flasks with OFFSET hardcoded to 2 or 3 for alt colour - can fix for Beeb
+Looks like we can replace these two with FastLay equivalents as they are safe for top/bottom crop
+
+MLayAND - not used?
+MLaySTA - not used?
+
+FastLaySTA - used for background and foreground pieces
+FastLayAND - used for drawing the background
+FastMask - only use for foreground pieces
+
+ORA only used after explicit AND so can probably separate ORA from MASK
+
+Double-buffering
+~~~
+Not enough RAM to add second MODE2 screen in Main/Core - would need PAGE=&800 NMI=&D00 :(
+If move 2nd screen buffer to SHADOW then need to find room for &3D00 of code + data
+Current free = &A00  + &400 + &400 + &400 + &200 + &500 = &1D00 :(
+Can steal 4K MOS RAM but still only an extra &1000
+(Also would be prohibitively difficult with complex bank switching.)
+
+Only render fns access sprite data? - not true as collision detection system asks for sprite width
+Could potentially use top 8K FS RAM but only during level as would be nuked by disk access
+Not even sure if this needs to be preserved between FS calls?
+
+Multi-pass
+~~~
+Naive approach to multi-pass doesn't work because required to peel all sprites before layrsave
+Gah!  Would require double peel lists per pass...
+
+RAM
+~~~
+Can save 1262 bytes from bgset 1 by removing the messge boxes and numbers etc.
+
+
+C64 sprite routines are optimised (unrolled) for 2/3/4 byte widths
+~~~
+draw2ColumnsOpaque: 
+{
+        ldx #$00
+        {
+            lda BgImageBuffer+2,x   ; read byte from image
+            ldy #$00
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            lda BgImageBuffer+2,x   ; read byte from image
+            ldy #$08
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+            
+            lda BitmapPtr
+            and #$07
+            beq oneRowUp
+            
+            dec BitmapPtr
+            dec BlockImageVisibleHeight
+            bne _cont
+            jmp endDraw
+
+oneRowUp:               
+            lda BitmapPtr               ; move one char row up
+            sec
+            sbc #$39
+            sta BitmapPtr
+            
+            lda BitmapPtr+1
+            sbc #$01
+            sta BitmapPtr+1
+        
+            dec BlockImageVisibleHeight
+            bne _cont
+        }
+
+        jmp endDraw
+;----------------------------------
+}
+
+;----------------------------------
+draw3ColumnsNormal:
+{
+        ldx #$00
+        {
+            ldy #$00
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$00
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            ldy #$08
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$08
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            ldy #$10
+            lda (BitmapPtr),y       ; read from bitmap 
+            ldy BgImageBuffer+2,x   ; read byte from image
+            and MaskTable,y         ; get masking outline of image byte and clear covered bits in bitmap
+            ora BgImageBuffer+2,x   ; now or the image bytes on top of the background
+            ldy #$10
+            sta (BitmapPtr),y       ; and store in bitmap
+            inx
+
+            lda BitmapPtr
+            and #$07
+            beq oneRowUp                
+
+            dec BitmapPtr
+            dec BlockImageVisibleHeight
+            bne _cont
+            jmp endDraw
+
+oneRowUp:               
+            lda BitmapPtr               ; move one char row up
+            sec
+            sbc #$39
+            sta BitmapPtr
+            
+            lda BitmapPtr+1
+            sbc #$01
+            sta BitmapPtr+1
+        
+            dec BlockImageVisibleHeight
+            bne _cont
+        }
+
+        jmp endDraw
+;----------------------------------
+}
+
+Store layrsave in character mapped arrangement
+So step in 8 byte increments and skip a width*8 number of bytes when moving row
+
+18/10/17
+~~~
+Unrolling sprite loops has proven very fruitful
+Layrsave & Peel functions now store sprite data in Beeb screen character row format
+Uses more memory but much quicker as sharing a single index
+Unrolled up to 10 Apple byte width - 20 bytes across in MODE 2 - big!
+
+Unrolling FASTLAY function also easy and provides speed improvement
+Unfortunately each unrolled set of functions expands to at least 4 pages (or more)
+Desperately running out of memory again...
+Plenty free in AUX and some pockets of SWRAM
+
+Could put layrsave & peel functions into MOS 4K RAM where the peel buffer is stored...
+
+Slowest function is the fully clipped & masked plot routine used for the player
+There is a lot of setup but also a lot of work done inside the loop
+For the player would need variations up to 10 bytes wide...
+
+Could mix & match unrolled functions with looped variant depending on frequency of use
+E.g. 1 byte FASTSTA function used by flames animated each frame
+Also 4 byte variants used for most background pieces
+Anything that is foreground plotted needs to be unrolled
+
+If unrolling main sprite plot, do we still need the stack?
+Preamble can be shared to do clipping and calculate screen size etc.
+Challenge is that have to decode a given number of sprite bytes but might not plot all of them
+Stack helps here as we decode those bytes into pixels on the stack then plot the ones we need
+
+Unrolling decode doesn't help much - would be better to move palette to ZP to save 2 cycles
+per sprite byte - this is as much as 10 bytes = 20c per row for some player sprites
+
+Actually player is max 8 bytes across so why does layrsave go up to 10?
+Should only be max 9 as need +1 byte for offset...
+
+Maybe leave decode loop in place and push pixels onto the stack but unroll the number of bytes
+to plot to the screen. smod a JSR in the loop to the correct function.
+
+Change byte plot loop to use low byte increment approach first and verify
+Convert stack_depth and stack_start into an index from &100
+(Just add stack_depth to stack_start surely?)
+
+Memory
+~~~
+Screen buffer = &3C
+Core: &22 total, < 1 page free
+Main: &50 total = &13 code/data + &3C screen = <1 page free
+Aux: &50 total = &1D code + &17 data + &9 BSS = &13 free
+Bank0: &40 total = &24 + &12 = &36 sprites = &A free
+Bank1: &40 total = &24 + &18 = &3C sprites = &4 free
+Bank2: &40 total = &24 + &18 = &3C sprites = &4 free
+Bank3: &40 total = &15 sprites + &27 code = &4 free
+
+IF could move &15 sprites from Bank3 to Bank0/1/2 then code move max &19 code from Aux
+Aux: &50 total = &4 code + &17 data + &9 BSS = &2C free
+If could put BSS (BlueSpec) into FS 8K slot then:
+Aux: &50 total = &4 code + &17 data = &35 free
+Need to find another &7 pages elsewhere.
+MOS 4K RAM currently:
+MOS4K (ANDY): &10 total = &C peel buffer = &4 free <- could be an option as peelbuf supposed to be &8 pages
+
+FS 8K RAM aka HAZEL:
+&C000 - &DBFF = &1C pages = Sideways ROM workspace (DFS uses first &4 pages before boot)
+&DC00 - &DCFF = &1 page = OSCLI string buffer (can use)
+&DD00 - &DEFF = &2 pages = transient command workspace (can use)
+&DF00 - &DFFF = &1 page = filing system control variables (can't use)
+
+Notes: DFS tramples &C2 when loading?
+Ha! Looks like C000 & C100 contain the first two sectors of the disc so we don't need to store this ourselves
+Could either use the DFS version directly or perhaps just load our own over the top...
+Because we're handling loading ourselves no more writes to HAZEL after !BOOT
+To be safe could use pages &C500 upwards but likely could go lower...
+Minimum &DF - &C5 = &1A pages, maximum &1F pages  :)
+
+Not sure if HAZEL will stay paged in all the time?
+If not then can put a sprite bank in here as we know exactly when we need to page it in
+Could put both a sprite bank and BlueSpec data here?
+Should be OK to force map HAZEL in when switching to AUX
+Unless OS pages itself in on interupt?
+
+Could put all AUX data into HAZEL (&93 bytes over - although &63 of this is lost by PAGE ALIGNMENT)
+Aux: &50 total = &1D code = &33 free - still not enough!
+Ideally would move all gameplay code to SWRAM bank and run from there
+But need &1D + &27 = &44 pages for gameplay code and not finished yet!
+Also need second peel buffer which could be larger than Apple II peel because of MODE 2 requirements
+Would have to put screen buffer + peel buffer in SHADOW space
+Say &3C + &C = &48 w/ 2 pages spare for tables that might be duplicated?
+Put rendering code in ANDY
+
+Still need to get &15 guard sprite + &44 gameplay code + &17 data + &9 bluespec into RAM = &79
+&40 SWRAM + &1F HAZEL + &A BANK0 + &4 BANK1 + &4 BANK2 = &71 so 8 pages = 2K short :(((
+
+Might be able to crunch some tables :S
+Amount & size of unrolling in plot functions still TBD
+Could reduce size of render tables - max values seem very high?
+maxback = 200
+maxfore = 100
+maxwipe = 20
+maxpeel = 46
+maxmid = 46
+maxobj = 20
+maxmsg = 32
+If there were 46 active peels on the screen it would run at one frame every 5 seconds!
+For back there are 30 pieces - are there 6 separate sections per piece - 4 plus masking?
+Need to run code to track the peak values and assert in _DEBUG
+Can remove &4 pages from BG1 sprite set so BANK0 could have upto &E pages free
+This would be just enough to split the guard sprite set across all 3 banks...
+Might be easier to split large BG1 sprite set into three smaller sets as this is already split
+Currently switched on high bit but could hijack the setbgimg function
+
+BGSET1 goes from &24 pages to &19 + &4 + &4
+Image#111 onwards are cut
+Image#102-110 < &4 pages
+Image#87-101 < &4 pages
+Perhaps!!
+
+DUN:
+Image#1-#9 = 759 bytes
+Image#10-#22 = 983 bytes
+Image#23-#111 = 5873 bytes
+
+PAL:
+Image#1-#9 = 917 bytes
+Image#10=#22 = 1017 bytes
+Image#23-#111 = 5827 bytes
+
+To do:
+- rearrange sprite banks to fit into 3x SWRAM banks
+- add 3x bg files to disc layout
+- loading of 3x bg files
+- additional code to switch swram bank based on bg sprite
+DONE
+
+Now need to squeeze &44 gameplay code + &17 data + &9 bluespec into RAM = &64
+&40 SWRAM + &1F HAZEL = &5F = 5 pages short :(
+And need room free for more gameplay code + music!!
+Roll back unrolled loops for the time being and move graphics tables out of core
+4x pages of tables used (mostly) by grafix module
+
+Can't put sprite plotting code in ANDY as this overlaps SWRAM needed for sprite banks
+Can't use ANDY for double peel buffers if they are going to be larger than &4 pages each
+Not sure if I can put peel buffer in same bank as screen as need to plot one set of saves back from
+two frames ago then save a new set - might work out would need to check the code
+
+Timings
+~~~
+Player only in starting screen: ~40 scanlines for layrsave + ~40 scanlines for peel (restore)
+Looks like plotting the player is taking ~128 scanlines!
+Actually more like 7*64/3 = 150 scanlines!!
+When unrolled this is still 6.5*64/3 = 140 scanline..
+Sometimes a hefty chunk of the same colour (maybe 20 scanlines) during player plot - but this
+changes colour (between different parts of the loop) - is this a stall during interupts?
+Can we turn all unnecessary interupts off?  Yes, that seems to work.
+~~~
+
+Can we crunch any data?
+~~~
+BGDATA size =  &1EB - no, used all the time to draw floor pieces
+FRAMEDEFS size =  &7B7 - not really, possibly &215 bytes as overlay for altset2 (Princess & Vizer only)
+SEQTABLE size =  &9F1 - not really, possible &13A bytes as overlay for Princess & Vizer animations
+
+TABLES size =  &4F3 - potentially &4 pages worth of DIV & MOD tables:
+
+ByteTable = real screen x-coord (0-255) -> byte # (0-36) = X DIV 7
+OffsetTable = ByteTable remainder = X MOD 7
+BlockTable = screen x-coord (0-255) -> block number (-5 to 14) = (X + 12) DIV 14
+PixelTable = BlockTable remainder = (X + 12) MOD 14
+
+ByteTable & OffsetTable only used in CVTX in grafix.asm - only used by ADDCHAROBJ in gamebg.asm - kid/guard/sword - used once per frame per character object so could be replaced by division loop
+BlockTable & PixelTable only used in getblockx in ctrlsubs.asm - this fn used a lot in collision detection etc.
+
+HAZEL
+~~~
+Hmmm, doesn't look like we can use the first 2x pages of HAZEL and still load files from the disc :S
+But does mean that our direct file loader can just use though pages directly for the disc catalog maybe
+Still need a page of scratch space during load but that's fine
+Likely can't use last page either so total &1D pages available for AUX data + Blueprint
+Can't use page &C200 either as seems to get trashed randomly by DFS
+
+Crunch time
+~~~
+Where can we save more memory?
+
+Core lib size =  &3AF 
+Core code size =  &17A0  <- includes several pages of palette tables 
+Core data size =  &1A4   <- hrtables.asm (missing above)
+Core BSS size =  &464    <- can be placed in lower RAM
+
+BGDATA size =  &1EB - no, used all the time to draw floor pieces
+FRAMEDEFS size =  &7B7 - not really, possibly &215 bytes as overlay for altset2 (Princess & Vizer only)
+SEQTABLE size =  &9F1 - not really, possible &13A bytes as overlay for Princess & Vizer animations
+TABLES size =  &2F3 - if removing the DIV/MOD 7 tables and replacing with loop
+
+Module sizes are massive!!  (All AUX)
+CTRL size =  &B5F 
+FRAMEADV size =  &B27 
+GAMEBG size =  &18C 
+SUBS size =  &239 
+SPECIALK size =  &37A 
+MOVER size =  &A94 
+MISC size =  &28F 
+AUTO size =  &963 
+CTRLSUBS size =  &93F 
+COLL size =  &751 
+
+&1 page free in HAZEL, &2 pages in bank 0, &1 page in bank 2
+Are there any tables etc. that are only accessed in limited place so can page in SWRAM?
+(Needs to be from CORE not AUX)
+
+9/11/2017
+~~~
+Got double buffering working in MODE 2 - looks awesome!
+But seriously out of memory to finish the port :(
+
+Zero page free =  &19 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &84 
+Core RAM free =  &8D 
+Main RAM free =  &DC 
+HAZEL RAM free =  &0 
+ANDY RAM free =  &0 
+BANK 0 free =  &25F 
+BANK 1 free =  &7 
+BANK 2 free =  &16B 
+BANK 3 free =  &13D 
+Total RAM free = &714
+
+ALIGN LOST  &1  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &DF  BYTES 
+ALIGN LOST  &10  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &D9  BYTES 
+ALIGN LOST  &9F  BYTES 
+ALIGN LOST  &43  BYTES 
+ALIGN LOST  &A  BYTES 
+ALIGN LOST  &29  BYTES 
+Total bytes lost = &312
+
+Theoretical RAM remaining = &A26
+That's over 2K!! :S
+
+All code modules:
+
+DISKSYS size =  &178 
+SWR size =  &9A 
+PRINT size =  &14 - shrunk
+INIT size =  &C9 
+BEEB CORE size =  &12D 
+
+MASTER size =  &230 - 5x TODO's (attract, demo, cutscenes, savegame)
+TOPCTRL size =  &63D - 2x TODO's (attract, savegame)
+GRAFIX size =  &5A7 - TODO's (sound, jouystick, cutscenes, flash, savegame, attract)
+HIRES (CORE) size =  &83 - can likely be removed
+HIRES size =  &10D - 1x TODO's (potion fx)
+MISC size =  &28F - 3x TODO's (meters, gameplay, savegame)
+SPECIALK size =  &37A - 5zx TODO's (sound, music, timer, keys, cheats)
+
+CTRL size =  &B5F - all implemented!
+FRAMEADV size =  &B27 - all implemented!
+GAMEBG size =  &18C - 5x TODO's (meters, messages, hit fx, princess fx)
+SUBS size =  &23B - 5x TODO's (flash, timer, cutscene, sound, demo)
+MOVER size =  &A94 - all implemented!
+AUTO size =  &963 - 1x TODO (music)
+CTRLSUBS size =  &92E - all implemented (ALTSET2 - probably in master)
+COLL size =  &751 - all implemented!
+
+TODO's
+~~~
+IN-GAME
+- meters (energy bars) _FEATURE_METERS = &148 bytes AUX
+- hit fx _FEATURE_HITFX = &B9 bytes AUX
+- flash screen fx - needs bespoke Beeb implementation, probably set palette directly
+- game timer
+- potion fx - upside down screen requires bespoke Beeb implementation :S
+- level specific gameplay (unholy, reflection, bonesrise, mouse) _FEATURE_GAMEPLAY = &100 bytes CORE
+- messages (time left, continue) - needs bespoke Beeb implementation, where does font come from?!
+
+PRE-GAME
+- cutscenes (princess, epilogue)
+- princess room fx (flame, post, hourglass, twinkle)
+- attract mode (intro sequence & music)
+- demo level
+
+SYSTEM
+- load cutscene overlays
+- multiple keypress support & ctrl keys
+- sound effects
+- music
+- cheats
+- joystick support?
+
+BEEB
+- ask Dethmunk to redraw all sprites for MODE 2 resolution
+- pick palettes for all sprites (+ implement palette selection code for guards, shadow, etc.)
+- NULA implementation
+- disk layout optimisation
+
+RAM (again, again)
+~~~
+Realistically need up to 8K RAM to finish the game (perhaps more because of PEEL buffers)
+Unlikely to be able to chip away to find 8K in the system..
+~2K left over + alignment gaps
+1 page unused at &800 (sound workspace)
+4 pages in HAZEL that need to fight the FS for
+If move PEEL buffers to screen space this doesn't save us as definitely need enlarged buffers
+
+Drastic measures - shrink amount of RAM used for sprites as currently 48K
+
+Options:
+1/ Halve number of animation frames = ~14K for player alone
+    Pros: been done on other platforms, could be player and/or all sprites, keep 3bpp colours
+    Cons: might look crap, likely to mess with animation system & gameplay if not done correctly
+
+2/ Halve vertical resolution = ~14K for player alone
+    Pros: already reduced horizontal resolution so making pixels squarer, keep 3bpp colours, all anim frames
+    Cons: already reduced horizontal resolution so looks blocky, relies on artist to make look awesome
+
+3/ Halve colour depth
+    Pros: Apple II only used 4 colours anyway, would massively reduce RAM usage & increase peel speed
+    Cons: already reduced horizontal resolution, not competitive with other ported platforms
+
+4/ Aggresive compression of background sprites?
+    Pros: most background is static
+    Cons: still need to be able draw background pieces in realtime, what compression scheme?
+
+Exomiser compresses BGTAB1.DUN to 2685/8871 bytes = 30%
+
+14/11/2017
+~~~
+Zero page free =  &19 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &4 
+Core RAM free =  &14A 
+Main RAM free =  &DC 
+HAZEL RAM free =  &EF 
+BANK 0 free =  &25F 
+BANK 1 free =  &7 
+BANK 2 free =  &16B 
+BANK 3 free =  &37 
+
+Total = &737 bytes free
+
+ALIGN LOST  &D4  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &B  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &F  BYTES 
+ALIGN LOST  &D9  BYTES 
+ALIGN LOST  &9F  BYTES 
+ALIGN LOST  &43  BYTES 
+ALIGN LOST  &A  BYTES 
+ALIGN LOST  &29  BYTES 
+
+Total = &2F6 bytes lost
+
+Possible
+Sound workspace @ &800 = &100
+Rest of HAZEL = &400
+Some of MOS page &200 <= &80
+Some of NMI page &D00 <= &80
+
+Total <= &700 bytes theoretical
+
+All up remaining = &102D bytes ~= 4K
+
+If were to go with half height player sprites how would the sprite banks be arranged in RAM?
+CHTAB1+2+3+5 = 4701 + 4747 + 3195 + 3195 = 15838 bytes = 1x SWRAM bank (depending on alignment)
+
+
+From crj:
+OK. Having put on my 8-bit Acorn hacker hat and suggested tricks for scavenging more RAM from the Master, I'll now take it off and instead put on my computer sciencist hat...
+
+I've not seen this code, but I assume that there's a large pool of sprites to plot, and a relatively small number of routines which do that plotting. I also assume that the amount of foreground is a small proportion of the toal screen area.
+
+If both those conditions are true, you could get sneaky. When plotting a sprite, don't actually write the data to screen memory. Instead, have two instances of a data structure that is:
+A linear buffer of blocks (screen address+size+mask+data) to be written to the screen
+A binary min-heap of pointers to those blocks, sorted by screen address
+For each frame, do the following:
+Perform all your sprite writes into the this-frame structure
+Wait for Vsync
+Commit the this-frame structure to screen in screen-address order.
+As you commit each block, save the data you overwrite as a block in the next-frame structure
+Swap which structure you're using as this-frame and which as next-frame
+That should be a (very) efficient way to get a mixture of removing the previous frame's sprites and applying this frame's sorted into a flicker-free order. And the resulting data structure would probably be a lot smaller than a second bank of screen memory.
+
+The commit routine would be the only thing that had to access screen memory. If you placed the structures in low memory, you could run most of the time with shadow memory in place, and code anywhere could add things to the this-frame structure.
+
+If that basically worked but wasn't compact enough, you could finesse things:
+Put the this-frame and next-frame heaps in the same block of memory, one ascending and the other descending.
+Only store masks when necessary.
+Directly refer to sprites rather than copying them into the buffer whenever they're suitably aligned and in appropriate memory.
+
+From RTW:
+Awesome Kieran, thanks! It does look undeniably awesome double buffered like that (in fact, I'm even wondering whether the frame rate is actually too fast most of the time, i.e. when there's not another character on-screen!).
+
+So back to your quandary. Seems to me that neither reducing screen bit depth or sprite vertical resolution are really good compromises. I know that the Beeb can do flicker-free sprite plotting for PoP with a single screen buffer (we have a double speed 6502 after all!), but I understand that this isn't trivial as it effectively means recoding the low-level layer (although I always imagined that a Beeb port would do that anyway).
+
+I'm happy to help any way I can if you decide to opt for this approach in the long term! Even just throwing ideas around. I was already contemplating routines to identify overlaps (by maintaining a <32 byte table, 1 bit per sprite which occupies that screen row) for quick collision detection, and putting sprites into non-overlapping groups so they can be erased/plotted one group at a time. If you can find a way to restructure the order that it plots things so you minimise the time between erase and replot, you've basically cracked it!
+
+But yeah, I can imagine that, now you've seen it working as intended with the double buffer, it must be psychologically difficult to go back. For me, the fun bit of doing the port would actually be working on the custom platform code, but I couldn't ever get through the drudgery of just getting someone else's code working - for this, you have my utmost respect 
+
+Side note: 40 scans seems like a long time to save or restore the background. If you're not already doing so, I'd do this as a straightforward character row aligned block copy, so you can just do a trivial LDA (),Y / STA (),Y in a loop for the bounding box width * 8.
+
+Are you making use of the 'plot at any horizontal pixel' facility of the Exile sprite routine? If not, you might find it better to plot column-wise, and then there's an extra simple bit of sprite compression which might be worthwhile, namely that any 00 byte in the sprite data is always followed by a byte count to skip, so you can avoid storing vertical runs of empty space.
+
+
+~~~
+Care most about player / moving characters (middle plane objects that layrsave)
+A peel will remove previous player sprite and need to plot new one back asap
+Rather than do all operations per layer, need to localise the draw operations to each moving object
+So for each middle plane (moving) object need to complete the operations in correct order that affect the sprite pot area
+
+Imagine a bounding box around the player sprite, for each peel/wipe/back/fore sprite that affects that bounding box - need to do those in order.  Worst case would be sword fighting a guard standing in front of a torch and behind a pillar (which happens all the time e.g. 1st level guard.)  Would have to combine the guard, player & sword objects into one bounding box which puts us back where we started in terms of essentially drawing everything on screen in layer/pass order.  Would be:
+
+Peel x4, update bg (flame), layrsave + mask x4, update fore (pillar)
+
+Only seems feasible if can remove redraw of foreground for a start.  Could use top-bit as foreground indicator, would need to ensure that all plot functions, including background & wipe didn't overwrite foreground (e.g. spikes next to a pillar)
+
+Tricky's suggestion for 2x 1bpp planes for player
+~~~
+Estimated memory usage:
+CHTAB1 = 5219 + 2668 vs 8999
+CHTAB2 = 5158 + 2177 vs 8893
+CHTAB3 = 3552 + 1700 vs 5985
+CHTAB5 = 3526 + 1830 vs 6134
+
+25830 vs 30011 saves 4K almost exactly
++2K slush + 2K remaining in the system :S
+
+Could save more by removing the socks!! - given John a memory limit?
+
+Player sprites
+~~~
+All sprite widths multiple of 4 pixels
+Worst case is 32 pixels wide = 8 bytes @ 2bpp
+Tallest sprite is 57 pixels high
+Largest single sprite is 287 bytes (28 x 41 pixels = 7 x 41 bytes)
+Currently 2bpp = 4 colours (black/mask, white, orange, blue) but could be reduced to 2 colours + mask
+Sprite plot requires a row of pixel data at a time
+Sprite plot supports mirroring so ideally want to decode from either end (but not essential)
+Sprite plot requires starting from any row due to clipping against top of screen
+
+MODE 5 sprite data = ABCDabcd
+But if only using 3x colours then never have colour 1=%01 in a combination
+
+So following are not possible:
+0BCD1bcd
+A0CDa1cd
+AB0Dab1d
+ABC0abc1
+81 valid pixel combinations - but player sprites use max 67 of them - could squeeze this down to 64 and store in 6 bits
+But even at 6 bits / 4 pixels (1.5bpp) the rounding up to whole bytes means only ~10% saving overall :\
+
+Now looking at 1bpp vs 2bpp lines and whether these can be interleaved in some way
+Most common width is 3 bytes with 2 and 4 bytes about equal
+So would need to reliably save 1 byte from a 3 byte width line to make a meaningful difference
+4 bytes = 16 pixels = 32 bits -> 3 bytes = 24/16 = 1.5 bpp (6 bits=4 pixels) <- achievable 'just about' lossless with 3 colours (3^4=81 but only 67 used max)
+3 bytes = 12 pixels = 24 bits -> 2 bytes = 16/12 = 1.333 bpp (4 bits=3 pixels) <- 27 possible combos - max used = 24 :\
+2 bytes = 8 pixels = 16 bits
+
+Could fix the bits used to encode 12 pixels into 2 bytes?
+Most likely that the outer bits will be black or white... - not true as players face is on left hand side
+00112233 44556677 8899aabb
+01233445 566778ab
+
+3 bytes = 12 pixels = 24 bits -> 2 bytes = 16/12 = 1.333 bpp - attribute mode? 12 bits for pixels then 4 bits for whether "on" pixels are white or orange in each row of 3?!
+So this would be each nibble = 1 bit attribute + 3 bits pixels.
+
+CHTAB1 = 6847 vs 8999
+CHTAB2 = 6885 vs 8893
+CHTAB3 = 4694 vs 5985
+CHTAB5 = 4547 vs 6134
+22971 vs 30011 ~= 77%
+Saving = 7040 bytes = 6.875K
+
+Tricky 2x bit planes
+Saving = 4K
+Pros: keep original full resolution without data loss
+Cons: new plot routine required, increased plot complexity (2 pass), slower plotting as have to overdraw, some authoring restrictions (orange in top half only)
+Highest quality, smallest saving
+
+Attribute mode
+Saving =  6.9K
+Pros: keep vertical & horizontal resolution
+Cons: some loss of data in horizontal resolution, fiddly authoring restrictions (white/orange in 3 pixel groups), new plot routine required, aretefacts not very beeb-like
+Medium quality, medium saving
+
+Half height mode
+Saving = 14K
+Pros: keep existing plot routine, could have faster plotting (two scanlines together), full 3 colours available, square pixels, keep horizontal resolution
+Cons: reduced vertical resolution, looks very chunky, not competitive with other 8-bit versions?
+Lowest quality, highest saving
+
+28/11/2017
+Half height player sprites is done for now
+
+How to move gameplay code into a second SWRAM bank?
+Use jump table interface to select appropriate bank for module
+Ideally use self-contained modules to avoid continual bank switching
+Find locality of code & data - harder to switch on data access
+
+Apple II implies these groupings:
+(0) master, hires, unpack, hrtables (main ram)
+(1) grafix, tables, frameadv, bgdata, topctrl, framedefs, seqtable, ctrl, coll, gamebg, auto (aux)
+(2) ctrlsubs, specialk, subs, sound, mover, misc (aux lc)
+
+NB. blueprint is accessed freely across the gameplay code
+
+Current Layout
+Core: master, topctrl, grafix, hires (jump), hires, misc, specialk + hrtables, bgdata (core)
+Main: plot
+Hazel: blueprint, tables, bgdata (high), seqtable, framedefs
+Aux High (swram): ctrl, frameadv, gamebg, subs, mover, auto, ctrlsubs, coll
+
+DATA Usage:
+bgdata.asm - (auxmem swram) data only used by frameadv.asm
+bgdata_high.asm - (hazel) data only used by frameadv.asm
+seqtable.asm - (hazel) data only used by ctrlsubs.asm - called by coll.asm
+framedefs.asm - (hazel) data only used by ctrlsubs.asm
+tables.asm - (hazel) Byte&Offset,Mult30 tables used by grafix.asm, Block&Pixel tables used by ctrlsubs.asm, Mult7&10 used by many
+
+Propose groups:
+
+Only gameplay code can be in SWRAM
+Need to split gameplay code between multiple SWRAM banks
+All plot code must be in Core (or Hazel potentially)
+Change notion of Aux to be all gameplay code not rendering or Core
+Any data that can be accessed randomly is moved up to Hazel
+
+1/ Vector all jumps through swram bank switch - have to restore prev bank!
+2/ Move all data next to used code - split tables.asm, rejoin bgdata.asm
+3/ Remove notion of Main & Aux RAM switch as no longer applies
+
+Aux (A): ctrlsubs, coll, auto, mover + seqtable, framedefs
+Aux (B): frameadv, grafix + bgdata
+Hazel: blueprint, Mult7&10,
+Andy: music (reserve - keep font?)
+
+Note: currently &269 bytes of jump tables alone!!
+
+BGTAB1.DUN = 8871
+BGTAB1.DUNA = 759
+BGTAB1.DUNB = 983
+BGTAB1.DUNC = 5873 (&1700)
+
+BGTAB1.PAL = 9017 (&2300) - comes down to &1F00
+BGTAB1.PALA = 917 (&400)
+BGTAB1.PALB = 1017 (&400)
+BGTAB1.PALC = 5827
+BGTAB2.PAL = 4593 (&1200)
+
+CHTAB4.X = 5281 (&1500)
+
+CHTAB1.HALF = 4701 (&1300)
+CHTAB2.HALF = 4647 (&1300)
+CHTAB3.HALF = 3195 (&D00)
+CHTAB5.HALF = 3195 (&D00)
+Total=&4000 exactly :)
+
+Note: need to load new AUX code into SWRAM - remember data is loaded in a different
+way!!
+
+30/11/2017
+~~~
+Crazy DLL system works!  Redirecting every single gameplay fn call through another function to select & restore the appropriate swram bank
+Now hardcoded to banks 6 & 7
+
+Current memory free:
+Zero page free =  &15 
+Language workspace RAM free =  &0 
+Lower workspace RAM free =  &4 
+Core RAM free =  &339 
+Main RAM free =  &6A 
+HAZEL RAM free =  &8D9 
+ANDY RAM free =  &0 
+BANK 0 free =  &25F 
+BANK 1 free =  &85 
+BANK 2 free =  &101A 
+BANK 3 free =  &1B40 
+> Glorious!
+
+After adding already ported missing gameplay features:
+Core RAM free =  &1A1 
+Main RAM free =  &36 
+BANK 2 free =  &CFA 
+BANK 3 free =  &195D 
+> It disappears quickly!
+
+14/12/2017
+~~~
+Screens for cutscenes
+Port SngExpand in UNPACK.S to separate asm file
+Build disk image with packed files
+Unpack in emulator and save Apple II screen buffer
+Could turn into sprite bank with 1x large sprite?
+Pass through pop2beeb convertor
+Take a look at the output in MODE 5 res
+NB. Just princess room
+
+Attract mode contains double hires screens
+Need to learn more about this Apple II screen mode
+Looks like 4x packed double hires screens
+And 3x delta for the text at the bottom
+Broderbund presents PoP by Jordan etc.
+
+\*-------------------------------
+\* Hi bytes of crunch data
+\* Double hi-res (stage 1)
+
+pacSplash = $40
+delPresents = $70
+delByline = $72
+delTitle = $74
+pacProlog = $7c
+pacSumup = $60 ;mainmem
+pacEpilog = $76 ;side B
+
+\* Single hires (stage 2)
+
+pacProom = $84
+
+
+20/12/2017
+~~~
+Gah!  Run out of files on a single DFS disc.
+
+Level files = 14 (original A=3 B=11)
+BG image sets = 2x 3 = 6 (both)
+Guards = 5 (both)
+Player = 4 (or can be 1x bank) (side A)
+Cutscenes = 4 (both)
+Attract = 7 (side A)
+Code = Core+Main+Hazel+Andy+AuxB+High = 6 (side A)
+Boot = 1 (side A)
+
+Both = 6+5+4 = 15
+Side A = 3+4+7+6+1 = 21
+Side B = 11
+
+Probably easiest to put all levels except 0 on Side B
+Then only need data for demo level set on Side A
+
+Side B = 15 + 13 = 28
+Side A = 1 + 3 + 1 + 4/1 + 4 + 7 + 6 + 1 = 27
+
+
+Side B:
+LEVEL1
+..
+LEVEL13
+PAL1A
+PAL1B
+PAL2
+DUN1A
+DUN1B
+DUN2
+FAT
+GD
+SHAD
+SKEL
+VIZ
+CHTAB6
+CHTAB7
+PRIN (PROOM)
+(EPILOG?)
+
+Side A:
+!BOOT
+Core+Main+Hazel+Andy+AuxB+High
+SPLASH
+..
+SUMUP
+CHTAB6
+CHTAB7
+GD
+BANK1
+
+16/1/2018
+~~~
+Better palettes needed
+Characters all mapped through Exile style palette table - trivial
+FASTLAY functions all go through expanded 2bpp -> 3bpp pixel look up &CD in size
+Also because of unrolled loops this is hard to switch at runtime
+Original loops can be poked directly for 6x locations but unrolled = 42x
+Can be indirected through a palette lookup (palptr), Y
+
+    LDY #2
+    LDA (IMAGE), Y
+    STA beeb_data:AND #&CC:TAX      ; 3c+2c+2c
+    LDA map_2bpp_to_mode2_palN, X   ; 4c
+    LDY #32
+    STA (beeb_writeptr), Y
+    LDA beeb_data:AND #&33:TAX      ; 3c+2c+2c
+    LDA map_2bpp_to_mode2_palN, X   ; 4c
+    LDY #40
+    STA (beeb_writeptr), Y
+
+    LDY #2
+    LDA (IMAGE), Y
+    TAX:AND #&CC:TAY                ; 2c+2c+2c
+    LDA (palptr), Y                 ; 5c
+    LDY #32
+    STA (beeb_writeptr), Y
+    TXA:AND #&33:TAY                ; 2c+2c+2c
+    LDA (palptr), Y                 ; 5c
+    LDY #40
+    STA (beeb_writeptr), Y
+
+For palette swap
+Can switch player / enemy palette at setcharimg
+Use enum_eor to toggle alternate palette set (shadow vs Kid + 2x guards)
+
+Palettes needed:
+Kid
+Shadow
+Guard x levels
+Alt guard (per level?)
+Viz
+Princess
+
+Default DUN piece
+Default PAL piece
+Torches
+Spikes
+Slicers
+Exit
+Hourglass
+
+Easiest way to specify palette?  Ideally would have encoded this in sprite table as 6 MODE2 pixel bytes
+but this wouldn't work for our expanded 2bpp->3bpp lookup table anyway
+Need to be able to specify a palette per sprite that is defined somewhere else
+Want to make this easier to generate NULA versions later.
+Say 16 3x colour palettes are sufficient.  Define a palette file as 16x RGB entries (for NULA proof)
+Then 16x 3x indices into that table for our 16x 3x colour palettes.  Finally define a text file that
+is optionally loaded alongside the image bank with a single digit 0-F for each sprite to specify palette
+
+E.g.
+0 0 0 
+255 0 0 
+0 255 0
+255 255 0
+0 0 255
+255 0 255
+0 255 255
+255 255 255
+...
+1 2 7           <- palette 0 = (black)/red/green/white
+6 2 7           <- palette 1 = (black)/cyan/green/white
+
+Process for converting sprites to new palette
+Define colour table in code (currently fixed to Beeb - but could be read with config file)
+Define 16x 3x colour palettes in code and tool
+<input>.pal.txt file specifies palette selection per sprite for pixel matching
+Define those 16x palettes in runtime and specify same table for palette selection
+Could generate larger pixel look up tables at runtime for each level as required
+
+Now have a function to expand a 6 byte palette table into expanded &CD lookup
+So define 16x 3x colour palettes in just one place
+Expand those palettes used by the background pieces at runtime for each level
+Update pointer table accordingly so all palette values get mapped to something
+Say each level picks 4x palettes that are used for background pieces
+(Perhaps more with NULA but certainly enough to cover immediate Beeb requirements)
+DUN pieces background + torches, spikes, slicers etc.
+PAL background pieces + torches etc.
+This way can keep the palette indices constant but limit space used when expanded
+
+Palettes mapped to bgset sprites - unless want to chang the look of a particular
+level as variation from just dungeon / palace?
+
+Propose bg tiles use 4-7 for Dungeon and 12-15 for Palace (toggle bit 3)
+Alt sets on a level also toggle bit 3.  So player = 0 and shadow = 8
+
+31/1/2018
+~~~
+Need way more palettes than this!  John has used 10x 3x colour palettes for Dungeon
+Will probably need the same again for Palace.  Assume still < 16 palettes in total?
+Need several for player (player, sword, dead, drink?) plus guards, princess etc.
+Plus colours for shadow and alt guard
+
+Sprites in Palace set will map to different palette numbers vs Dungeon so need to be
+able to specify these.  Can either add a palette byte to sprite data (after width & height)
+or compress run-time table.  Having palette in sprite data would mean not having to keep
+code and pal.txt in sync.
+
+Expand palette set (Dungeon or Palace) at run-time into same 10x tables
+Can reduce larger &CD table to &34 size by shifting down during first lookup
+10x &CD = ~2K (8 pages) 10x &34 = 520 (2 pages + 8 bytes, doh!)
+
+1/ Smaller expanded palettes - done
+2/ Move palette info to sprite banks - done
+3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven?
+
+Automated palette matching Process - yay!
+Wait and see how many additional palettes are required for Palace sprites - might just keep them all in memory for RGB version (NULA prob different)

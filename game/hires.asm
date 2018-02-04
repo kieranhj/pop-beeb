@@ -94,7 +94,7 @@
 \*
 \*-------------------------------
 
-IF 0
+IF _NOT_BEEB
 .hires_CLS
 {
  lda PAGE ;00 = page 1; 20 = page 2
@@ -123,31 +123,6 @@ IF 0
 
  rts
 }
-ELSE
-.beeb_CLS
-{
-\\ Ignore PAGE as no page flipping yet
-\\ Fixed to MODE 1 screen address for now &3000 - &8000
-
-IF BEEB_SCREEN_MODE == 4
-  ldx #&80 - HI(beeb_screen_addr)
-  lda #HI(beeb_screen_addr)
-ELSE
-  ldx #&50
-  lda #&30
-ENDIF
-  sta loop+2
-  lda #0
-  ldy #0
-  .loop
-  sta &3000,Y
-  iny
-  bne loop
-  inc loop+2
-  dex
-  bne loop
-  rts
-}
 ENDIF
 
 \*-------------------------------
@@ -160,6 +135,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .hires_LRCLS
 {
  LDY #$F7
@@ -175,6 +151,7 @@ ENDIF
  BNE label_2
  RTS
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -187,6 +164,15 @@ ENDIF
 
 .setimage
 {
+\\ Bounds check that image# is not out of range of the table
+IF _DEBUG
+ LDA (TABLE)
+ CMP IMAGE
+ BCS image_ok
+ BRK
+.image_ok
+ENDIF
+
  lda IMAGE
  asl A
  sec
@@ -199,6 +185,13 @@ ENDIF
  iny
  lda (TABLE),y
  sta IMAGE+1
+
+\\ Bounds check that sprite data pointer is in swram
+IF _DEBUG
+ BMI addr_ok
+ BRK
+ .addr_ok
+ENDIF
 
  rts
 }
@@ -218,6 +211,10 @@ ENDIF
 \ sta RAMRD+1
 \
 \.RAMRD sta $c003
+
+ \\ Select swram bank for sprite data
+ LDA BANK
+ JSR swr_select_slot
 
  jsr setimage
 
@@ -243,6 +240,14 @@ ENDIF
 \* Save IMAGE, XCO, YCO
 
  LDA IMAGE
+
+\\ Bounds check that image# is not zero
+IF _DEBUG
+ BNE image_ok
+ BRK
+.image_ok
+ENDIF
+
  STA IMSAVE
  LDA XCO
  STA XSAVE
@@ -265,13 +270,33 @@ ENDIF
  LDA (IMAGE),Y
  STA WIDTH
 
+\\ Bounds check that width <=16 bytes
+IF _DEBUG
+ CMP #16
+ BCC width_ok
+ BRK
+ .width_ok
+ENDIF
+
  INY
  LDA (IMAGE),Y
  STA HEIGHT
 
+ INY
+ LDA (IMAGE),Y
+ STA PALETTE
+
+\\ Bounds check
+IF _DEBUG
+ CMP #16
+ BCC pal_ok
+ BRK
+ .pal_ok
+ENDIF
+
  LDA IMAGE
  CLC
- ADC #2
+ ADC #3
  STA IMAGE
  BCC label_3
  INC IMAGE+1
@@ -348,20 +373,59 @@ ENDIF
  clc
  adc #1 ;top line
  cmp BOTCUT
+IF _HALF_PLAYER
+ bcc not_os
+ JMP cancel
+ .not_os
+ELSE
  bcs cancel ;Entire shape is o.s.
+ENDIF
  sec
  sbc #1
  sta TOPEDGE ;top line -1
+
+IF _HALF_PLAYER
+    LDA BEEBHACK
+    BEQ no_beebhack
+
+    \ The ugliest hack :(
+    LDA WIDTH
+    STA smEOR+1
+    LDA #0
+    STA smWIDTH+1
+    BEQ done_beebhack
+
+    .no_beebhack
+    LDA WIDTH
+    STA smWIDTH+1
+    LDA #0
+    STA smEOR+1
+
+    .done_beebhack
+ENDIF
 
  ldx YCO
 .loop
  lda IMAGE
  clc
+IF _HALF_PLAYER
+ .smWIDTH
+ adc #0
+ELSE
  adc WIDTH
+ENDIF
  sta IMAGE
  bcc label_1
  inc IMAGE+1
 .label_1
+
+IF _HALF_PLAYER         \\ :(
+ LDA smWIDTH+1
+ .smEOR
+ EOR #0
+ STA smWIDTH+1
+ENDIF
+
  dex
  cpx BOTCUT
  bcs loop
@@ -441,6 +505,7 @@ ENDIF
 .return rts
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \* Shift offset 1 bit right or left
@@ -478,12 +543,6 @@ ENDIF
 
 .hires_LAYRSAVE
 {
-\ BEEB TO DO
-\ Switch in MOS 4K RAM
-\ Sort out whether we need two buffers if screen not double-buffered?
-\ LDA #BEEB_BUFFER_RAM_SOCKET
-\ STA &FE34
-
  jsr PREPREP
 
  lda OPACITY
@@ -576,13 +635,18 @@ ENDIF
  BNE loop
 
  JMP DONE
+}
+ENDIF
 
-.SKIPIT lda #0
+.SKIPIT
+{
+ lda #0
  sta PEELIMG+1 ;signal that peelbuf is empty
 
  JMP DONE
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \*  L A Y
@@ -763,6 +827,8 @@ ENDIF
 
 \*  Restore parameters
 }
+ENDIF
+
 \\ Drop through!
 .DONE
 {
@@ -777,6 +843,7 @@ ENDIF
  RTS
 }
 
+IF _NOT_BEEB
 \*-------------------------------
 \*
 \*  Mask, then OR
@@ -1944,8 +2011,9 @@ ENDIF
 
  rts
 }
+ENDIF
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  S E T F A S T   M A I N / A U X
@@ -1968,7 +2036,9 @@ SETFASTMAIN
 SETFASTAUX
  lda #$03 ;RAMRD aux
  bne ]setfast
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 *  F A S T B L A C K
@@ -2024,7 +2094,9 @@ FASTBLACK
  bne :outloop
 
  rts
+ENDIF
 
+IF _TODO
 *-------------------------------
 *
 *  C O P Y   S C R E E N
@@ -2069,7 +2141,9 @@ COPYSCRN
  bne :loop
 
  rts
+ENDIF
 
+IF _TODO
 *-------------------------------
 * Invert Y-tables
 *-------------------------------
@@ -2100,10 +2174,10 @@ INVERTY
  cpy #96
  bcc :loop
 ]rts rts
-
-*-------------------------------
- lst
- ds 1
- usr $a9,1,$0000,*-org
- lst off
 ENDIF
+
+\*-------------------------------
+\ lst
+\ ds 1
+\ usr $a9,1,$0000,*-org
+\ lst off

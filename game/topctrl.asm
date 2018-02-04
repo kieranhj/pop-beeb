@@ -23,10 +23,10 @@
 .restart jmp RESTART
 .startresume BRK  ; jmp STARTRESUME
 .initsystem jmp INITSYSTEM
-\ jmp showpage
+\ jmp showpage                        DEBUG
 
-.docrosscut BRK   ; jmp showpage
-.goattract BRK    ; jmp GOATTRACT
+\.docrosscut BRK   ; jmp showpage     UNUSED
+.goattract jmp GOATTRACT
 
 \*-------------------------------
 \ lst
@@ -62,7 +62,7 @@ LastSideB = 14 ;& last
 \TEXTon = $c051
 \PAGE2off = $c054
 
-kresurrect = 'R'
+kresurrect = IKN_r OR $80
 
 \*-------------------------------
 \* Misc. changeable parameters
@@ -103,7 +103,8 @@ miry = 0
 \*-------------------------------
 .START
 {
- sta ALTZPon
+\ NOT BEEB
+\ sta ALTZPon
  jsr StartGame
  jmp RESTART
 }
@@ -138,12 +139,20 @@ ENDIF
  cpx #locals_top      ; BEEB don't zero all ZP
  bne loop
 
- jsr setcenter ;Center joystick
+\ BEEB TO DO JOYSTICK
+\ jsr setcenter ;Center joystick
+
+\ BEEB set keyboard mode
+ LDA #0
+ STA joyon
+ sta jvert
+ sta jhoriz
+ sta jbtns ;set normal params
 
 \ NOT BEEB
 \ jsr setfastaux ;bgtable in auxmem
 
- lda #FinalDisk EOR 1
+ lda #LO(_DEBUG)
  sta develment
 
  jsr initgame
@@ -284,11 +293,12 @@ ENDIF
  jsr reloadblue
  ELSE
 
- lda #' '
- jsr lrcls
- jsr vblank
- lda PAGE2off
- lda TEXTon
+\ NOT BEEB
+\ lda #' '
+\ jsr lrcls
+\ jsr vblank
+\ lda PAGE2off
+\ lda TEXTon
 
  ldx level
  jsr LoadLevelX ;load blueprint & image sets from disk
@@ -379,6 +389,8 @@ ENDIF
 
  jsr FirstFrame ;Generate & display first frame
 
+ JSR beeb_show_screen     ; BEEB in case of blackout
+
  jmp MainLoop
 }
 
@@ -387,8 +399,22 @@ ENDIF
 \*  Main loop
 \*
 \*-------------------------------
+IF _DEBUG
+.temp_last_count EQUB 0
+.temp_vsync_diff EQUB 0
+ENDIF
+
 .MainLoop
 {
+IF _DEBUG
+ SEC
+ LDA beeb_vsync_count
+ TAY
+ SBC temp_last_count
+ STA temp_vsync_diff
+ STY temp_last_count
+ENDIF
+
  jsr rnd
 
  lda #0
@@ -410,13 +436,14 @@ ENDIF
 
  jsr FrameAdv ;Draw next frame & show it
 
-\ BEEB TEMP comment out
+
+\ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds
  jsr zerosound ;& zero sound table
 
  jsr flashoff
 
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOND
 \ jsr songcues ;Play music
 
  lda NextLevel
@@ -500,16 +527,22 @@ ENDIF
  cmp #12
  beq cut5 ;Princess cuts before certain levels
 
-.cont jmp RESTART ;Start new level
+.cont
+IF _ALL_LEVELS
+ jmp RESTART ;Start new level
+ELSE
+ jmp GOATTRACT
+ENDIF
 
 \* Princess cuts before certain levels
 
 .cut1 lda #1
 .label_pcut pha
 .repeat jsr cutprincess ;cut to princess's room...
- jsr setrecheck0
- jsr recheckyel ;if wrong-disk error, recheck track 0
- bne repeat ;& repeat
+\ NOT BEEB
+\ jsr setrecheck0
+\ jsr recheckyel ;if wrong-disk error, recheck track 0
+\ bne repeat ;& repeat
  pla
  jsr playcut ;& play cut #1
  jmp cont
@@ -552,11 +585,10 @@ ENDIF
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
 .label_1
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOUND
 \ jsr addsfx ;Add additional sound fx
 
-\ BEEB TEMP comment out
-\ jsr chgmeters ;Change strength meters
+ jsr chgmeters ;Change strength meters
 
  jsr cutcheck ;Has kid moved offscreen?
  jsr PrepCut ;If so, prepare to cut to new screen
@@ -646,12 +678,17 @@ ENDIF
 .FrameAdv
 {
  lda cutplan ;set by PrepCut
- bne cut
+ bne local_cut
 
  jsr DoFast
+ ; in theory wait for vsync / vblank here
+ ; but as background doesn't change tearing is less noticable
+ ; even if swapping screens mid-frame
+ ; probably need a min frame counter (25Hz)
+ ; so wait for 2 vblanks or swap immediately (ala Banjo)
  jmp PageFlip ;Update current screen...
 
-.cut jmp DoCleanCut ;or draw new screen from scratch
+.local_cut jmp DoCleanCut ;or draw new screen from scratch
 }
 
 \*-------------------------------
@@ -795,8 +832,7 @@ ENDIF
 .addchars
 {
  jsr topctrl_reflection
-\ BEEB TEMP comment out
-\ jsr topctrl_shadowman
+ jsr topctrl_shadowman
  jsr topctrl_kid
 
  jsr checkmeters
@@ -943,7 +979,8 @@ IF UseQuick
 
  jsr PageFlip
 
- jsr copyscrn ;copy bg to p2
+\ NOT BEEB
+\ jsr copyscrn ;copy bg to p2
  jsr DoFast ;add chars
 
  jsr PageFlip ;show complete frame
@@ -953,6 +990,7 @@ ELSE
 
 .DoCleanCut
 {
+IF _NOT_BEEB
  jsr fastspeed ;IIGS
 
  lda #$20
@@ -968,6 +1006,20 @@ ELSE
 ;jsr vblank2
  jsr PageFlip
  jmp normspeed
+ELSE
+ jsr drawbg ;draw bg on p2 - has a vblank call?
+
+ jsr vblank
+ jsr PageFlip
+
+\ BEEB would need spare page for copying data over to shadow?
+
+ jsr drawbg ;draw bg on p1
+ jsr DoFast ;add chars
+
+ jsr vblank
+ JMP PageFlip
+ENDIF
 }
 ENDIF
 
@@ -987,11 +1039,12 @@ ENDIF
  lda #2
  sta CUTTIMER ;min # of frames between cuts
 
- lda #' '
- jsr lrclse
- jsr vblank
- lda PAGE2off
- lda TEXTon
+\ lda #' '
+\ jsr lrclse
+\ jsr vblank
+\ NOT BEEB
+\ lda PAGE2off
+\ lda TEXTon
 
  jsr DoSure ;draw b.g. w/o chars
 
@@ -1046,8 +1099,11 @@ ENDIF
  jsr fast ;Assemble image lists (including objects
 ;from obj list and necessary portions of bg)
 
-\ BEEB TEMP comment out
-\ jsr dispmsg ;Superimpose message (if any)
+ jsr dispmsg ;Superimpose message (if any)
+
+\ BEEB TEMP TEST
+\ JSR beeb_wait_vsync
+
 .label_1
  jmp drawall ;Dump contents of image lists to screen
 }
@@ -1195,7 +1251,7 @@ ENDIF
 
  lda CharLife
  bne label_inc
-\ BEEB TEMP comment out
+\ BEEB TEMP comment out SOUND
 \ jsr deathsong ;cue death music
 
 .label_inc lda CharLife
@@ -1233,9 +1289,7 @@ ENDIF
 .ok cmp #1
  beq gameover ;End game when msgtimer = 1
 
- IF FinalDisk
- ELSE
-
+IF _DEBUG
  lda develment
  beq nodevel
  lda keypress
@@ -1258,8 +1312,7 @@ ENDIF
 
 \* Raise kid from the dead (TEMP!)
 
- IF FinalDisk
- ELSE
+IF _DEBUG
 .raise
  lda #0
  sta msgtimer
@@ -1276,8 +1329,7 @@ ENDIF
  lda #stand
  jsr jumpseq
  jmp startkid1
-
- ENDIF
+ENDIF
 }
 
 IF _TODO
@@ -1410,55 +1462,57 @@ ENDIF
  jmp MarkOppMeter
 }
 
-IF _TODO
-*-------------------------------
-*
-* Change strength meters as specified
-*
-*-------------------------------
-chgmeters
+\*-------------------------------
+\*
+\* Change strength meters as specified
+\*
+\*-------------------------------
+
+.chgmeters
+{
  lda level
  cmp #12
- bne :cont
+ bne cont
  lda OpID
  ora CharID
  cmp #1 ;kid vs. shadowman?
- bne :cont
+ bne cont
  ;yes
  lda ChgKidStr
- bpl :1
+ bpl label_1
  sta ChgOppStr
- bne :cont
+ bne cont
 
-:1 lda ChgOppStr
- bpl :cont
+.label_1 lda ChgOppStr
+ bpl cont
  sta ChgKidStr
 
-* Kid's meter
+\* Kid's meter
 
-:cont lda KidStrength
+.cont lda KidStrength
  clc
  adc ChgKidStr
 
  cmp MaxKidStr
- beq :ok1
- bcs :opp
+ beq ok1
+ bcs opp
 
-:ok1 sta KidStrength
+.ok1 sta KidStrength
 
-* Opponent's meter
+\* Opponent's meter
 
-:opp lda OppStrength
+.opp lda OppStrength
  clc
  adc ChgOppStr
 
  cmp MaxOppStr
- beq :ok2
- bcs ]rts
+ beq ok2
+ bcs return
 
-:ok2 sta OppStrength
-]rts rts
-ENDIF
+.ok2 sta OppStrength
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -1594,60 +1648,66 @@ addsfx
  lda #SwordClash2
 :clash jmp addsound
 :2
-]rts rts
+ENDIF
+.return_62
+ rts
 
-*-------------------------------
-*
-* Display message ("Press button to continue" or "Level #"
-* or "# minutes left")
-*
-*-------------------------------
-dispmsg
+\*-------------------------------
+\*
+\* Display message ("Press button to continue" or "Level #"
+\* or "# minutes left")
+\*
+\*-------------------------------
+
+.dispmsg
+{
  lda msgtimer
- beq ]rts
+ beq return_62
  dec msgtimer
 
  lda KidLife
- bmi :alive
+ bmi local_alive
 
-* Kid is dead -- message is "Press button to continue"
+\* Kid is dead -- message is "Press button to continue"
 
  lda msgtimer
  cmp #contoff
- bcc ]rts
+ bcc return_62
 
  cmp #contflash
- bcs :steady
+ bcs local_steady
 
  and #7
  cmp #3
- bcs ]rts
+ bcs return_62
  cmp #2
- bne :steady
+ bne local_steady
 
  lda soundon
- bne :2
+ bne label_2
  jsr gtone ;if sound off
-:2 lda #FlashMsg
+.label_2 lda #FlashMsg
  jsr addsound
 
-:steady jmp continuemsg ;Kid is dead--superimpose continue msg
+.local_steady jmp continuemsg ;Kid is dead--superimpose continue msg
 
-* Kid is alive -- message is "Level #" or "# Minutes"
+\* Kid is alive -- message is "Level #" or "# Minutes"
 
-:alive lda msgtimer
+.local_alive lda msgtimer
  cmp #leveltimer-2
- bcs ]rts
+ bcs return_62
 
  lda message
  cmp #LevelMsg
- bne :1
+ bne label_1
  jmp printlevel
 
-:1 cmp #TimeMsg
- bne ]rts
+.label_1 cmp #TimeMsg
+ bne return_62
  jmp timeleftmsg
+}
 
+IF _NOT_BEEB
 *-------------------------------
 *
 * Display "Turn disk over" and wait for button press

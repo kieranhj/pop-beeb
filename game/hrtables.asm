@@ -20,12 +20,14 @@
 \\ Needs to be changed for Beeb screen addressing!
 
 \\ Apple II hi-res
-\\ For Scanline y address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
+\\ For Scanline y address = 
+\\ &2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
 
+; Would ideally be PAGE_ALIGN
 .YLO
 FOR y,0,191,1
-\address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
-address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_WIDTH) + (y MOD 8)
+\\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
+address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB LO(address)
 NEXT
 \ hex 00000000000000008080808080808080
@@ -43,10 +45,11 @@ NEXT
 \ hex 5050505050505050D0D0D0D0D0D0D0D0
 \ hex 5050505050505050D0D0D0D0D0D0D0D0
 
+; Would ideally be PAGE_ALIGN
 .YHI
 FOR y,0,191,1
-\address = $2000 + ((y DIV 8) * $80) + ((y MOD 8) * $400)
-address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_WIDTH) + (y MOD 8)
+\\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
+address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB HI(address)
 NEXT
 \ hex 2024282C3034383C2024282C3034383C
@@ -76,9 +79,16 @@ NEXT
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
+
+PAGE_ALIGN
+
 .SHIFT0
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 0)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 0)
+\NEXT
+FOR byte,0,255,1
+\EQUB LO(byte >> 0)
 NEXT
 \ hex 808182838485868788898A8B8C8D8E8F
 \ hex 909192939495969798999A9B9C9D9E9F
@@ -91,8 +101,11 @@ NEXT
 \ hex F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
 
 .SHIFT1
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 1)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 1)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 1)
 NEXT
 \ hex 80828486888A8C8E90929496989A9C9E
 \ hex A0A2A4A6A8AAACAEB0B2B4B6B8BABCBE
@@ -105,8 +118,11 @@ NEXT
 \ hex E0E2E4E6E8EAECEEF0F2F4F6F8FAFCFE
 
 .SHIFT2
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 2)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 2)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 2)
 NEXT
 \ hex 8084888C9094989CA0A4A8ACB0B4B8BC
 \ hex C0C4C8CCD0D4D8DCE0E4E8ECF0F4F8FC
@@ -119,8 +135,11 @@ NEXT
 \ hex C0C4C8CCD0D4D8DCE0E4E8ECF0F4F8FC
 
 .SHIFT3
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 3)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 3)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 3)
 NEXT
 \ hex 80889098A0A8B0B8C0C8D0D8E0E8F0F8
 \ hex 80889098A0A8B0B8C0C8D0D8E0E8F0F8
@@ -133,8 +152,11 @@ NEXT
 \ hex 80889098A0A8B0B8C0C8D0D8E0E8F0F8
 
 .SHIFT4
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 4)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 4)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 4)
 NEXT
 \ hex 8090A0B0C0D0E0F08090A0B0C0D0E0F0
 \ hex 8090A0B0C0D0E0F08090A0B0C0D0E0F0
@@ -147,8 +169,11 @@ NEXT
 \ hex 8090A0B0C0D0E0F08090A0B0C0D0E0F0
 
 .SHIFT5
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 5)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 5)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 5)
 NEXT
 \ hex 80A0C0E080A0C0E080A0C0E080A0C0E0
 \ hex 80A0C0E080A0C0E080A0C0E080A0C0E0
@@ -161,8 +186,11 @@ NEXT
 \ hex 80A0C0E080A0C0E080A0C0E080A0C0E0
 
 .SHIFT6
-FOR byte,0,127,1
-EQUB $80 OR LO(byte << 6)
+\FOR byte,0,127,1
+\EQUB $80 OR LO(byte << 6)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte >> 6)
 NEXT
 \ hex 80C080C080C080C080C080C080C080C0
 \ hex 80C080C080C080C080C080C080C080C0
@@ -174,9 +202,18 @@ NEXT
 \ hex 80C080C080C080C080C080C080C080C0
 \ hex 80C080C080C080C080C080C080C080C0
 
+.SHIFT7
+FOR byte,0,255,1
+EQUB LO(byte >> 7)
+NEXT
+
+
 .CARRY0
-FOR byte,0,127,1
-EQUB ((LO(byte << 0) AND $80)>>7) OR (HI(byte << 0)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 0) AND $80)>>7) OR (HI(byte << 0)<<1)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte << 8)
 NEXT
 \ hex 00000000000000000000000000000000
 \ hex 00000000000000000000000000000000
@@ -189,8 +226,11 @@ NEXT
 \ hex 00000000000000000000000000000000
 
 .CARRY1
-FOR byte,0,127,1
-EQUB ((LO(byte << 1) AND $80)>>7) OR (HI(byte << 1)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 1) AND $80)>>7) OR (HI(byte << 1)<<1)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte << 7)
 NEXT
 \ hex 00000000000000000000000000000000
 \ hex 00000000000000000000000000000000
@@ -203,8 +243,11 @@ NEXT
 \ hex 01010101010101010101010101010101
 
 .CARRY2
-FOR byte,0,127,1
-EQUB ((LO(byte << 2) AND $80)>>7) OR (HI(byte << 2)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 2) AND $80)>>7) OR (HI(byte << 2)<<1)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte << 6)
 NEXT
 \ hex 00000000000000000000000000000000
 \ hex 00000000000000000000000000000000
@@ -217,8 +260,11 @@ NEXT
 \ hex 03030303030303030303030303030303
 
 .CARRY3
-FOR byte,0,127,1
-EQUB ((LO(byte << 3) AND $80)>>7) OR (HI(byte << 3)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 3) AND $80)>>7) OR (HI(byte << 3)<<1)
+\NEXT
+FOR byte,0,255,1
+EQUB LO(byte << 5)
 NEXT
 \ hex 00000000000000000000000000000000
 \ hex 01010101010101010101010101010101
@@ -231,8 +277,11 @@ NEXT
 \ hex 07070707070707070707070707070707
 
 .CARRY4
-FOR byte,0,127,1
-EQUB ((LO(byte << 4) AND $80)>>7) OR (HI(byte << 4)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 4) AND $80)>>7) OR (HI(byte << 4)<<1)
+\NEXT
+FOR byte,0,255,1
+\EQUB LO(byte << 4)
 NEXT
 \ hex 00000000000000000101010101010101
 \ hex 02020202020202020303030303030303
@@ -245,8 +294,11 @@ NEXT
 \ hex 0E0E0E0E0E0E0E0E0F0F0F0F0F0F0F0F
 
 .CARRY5
-FOR byte,0,127,1
-EQUB ((LO(byte << 5) AND $80)>>7) OR (HI(byte << 5)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 5) AND $80)>>7) OR (HI(byte << 5)<<1)
+\NEXT
+FOR byte,0,255,1
+\EQUB LO(byte << 3)
 NEXT
 \ hex 00000000010101010202020203030303
 \ hex 04040404050505050606060607070707
@@ -259,8 +311,11 @@ NEXT
 \ hex 1C1C1C1C1D1D1D1D1E1E1E1E1F1F1F1F
 
 .CARRY6
-FOR byte,0,127,1
-EQUB ((LO(byte << 6) AND $80)>>7) OR (HI(byte << 6)<<1)
+\FOR byte,0,127,1
+\EQUB ((LO(byte << 6) AND $80)>>7) OR (HI(byte << 6)<<1)
+\NEXT
+FOR byte,0,255,1
+\EQUB LO(byte << 2)
 NEXT
 \ hex 00000101020203030404050506060707
 \ hex 080809090A0A0B0B0C0C0D0D0E0E0F0F
@@ -272,6 +327,12 @@ NEXT
 \ hex 30303131323233333434353536363737
 \ hex 383839393A3A3B3B3C3C3D3D3E3E3F3F
 
+.CARRY7
+FOR byte,0,255,1
+EQUB LO(byte << 1)
+NEXT
+
+
 \*-------------------------------
 \*
 \* MIRROR
@@ -279,10 +340,12 @@ NEXT
 \* Index: byte value w/hibit clr (0-127)
 \* Returns mirrored byte w/hibit set
 \*
+\* BEEB - just reverse all 8 bits
+\*
 \*-------------------------------
 
 .MIRROR
-FOR byte,0,127,1
+FOR byte,0,255,1
 b0=byte AND 1
 b1=byte AND 2
 b2=byte AND 4
@@ -290,7 +353,8 @@ b3=byte AND 8
 b4=byte AND 16
 b5=byte AND 32
 b6=byte AND 64
-EQUB $80 OR (b0<<6) OR (b1<<4) OR (b2<<2) OR b3 OR (b4>>2) OR (b5>>4) OR (b6>>6)
+b7=byte AND 128
+EQUB (b0<<7) OR (b1<<5) OR (b2<<3) OR (b3<<1) OR (b4>>1) OR (b5>>3) OR (b6>>5) OR (b7>>7)
 NEXT
 \ hex 80C0A0E090D0B0F088C8A8E898D8B8F8
 \ hex 84C4A4E494D4B4F48CCCACEC9CDCBCFC
@@ -311,26 +375,37 @@ NEXT
 \*
 \*-------------------------------
 
+\.MASKTAB
+\ EQUB $FF,$FC,$F8,$F8,$F1,$F0,$F0,$F0
+\ EQUB $E3,$E0,$E0,$E0,$E1,$E0,$E0,$E0
+\ EQUB $C7,$C4,$C0,$C0,$C1,$C0,$C0,$C0
+\ EQUB $C3,$C0,$C0,$C0,$C1,$C0,$C0,$C0
+\
+\ EQUB $8F,$8C,$88,$88,$81,$80,$80,$80
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\ EQUB $87,$84,$80,$80,$81,$80,$80,$80
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\
+\ EQUB $9F,$9C,$98,$98,$91,$90,$90,$90
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\ EQUB $87,$84,$80,$80,$81,$80,$80,$80
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\
+\ EQUB $8F,$8C,$88,$88,$81,$80,$80,$80
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\ EQUB $87,$84,$80,$80,$81,$80,$80,$80
+\ EQUB $83,$80,$80,$80,$81,$80,$80,$80
+
 .MASKTAB
- EQUB $FF,$FC,$F8,$F8,$F1,$F0,$F0,$F0
- EQUB $E3,$E0,$E0,$E0,$E1,$E0,$E0,$E0
- EQUB $C7,$C4,$C0,$C0,$C1,$C0,$C0,$C0
- EQUB $C3,$C0,$C0,$C0,$C1,$C0,$C0,$C0
+FOR byte,0,255,1
 
- EQUB $8F,$8C,$88,$88,$81,$80,$80,$80
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
- EQUB $87,$84,$80,$80,$81,$80,$80,$80
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\ Simpler way of providing a 1 pixel mask
+\EQUB LO(byte OR byte<<1 OR byte>>1) EOR &FF
 
- EQUB $9F,$9C,$98,$98,$91,$90,$90,$90
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
- EQUB $87,$84,$80,$80,$81,$80,$80,$80
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
+\ Potentially use a 2 pixel mask:
+\EQUB LO(byte OR byte<<1 OR byte>>1 OR byte<<2 OR byte>>2) EOR &FF
 
- EQUB $8F,$8C,$88,$88,$81,$80,$80,$80
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
- EQUB $87,$84,$80,$80,$81,$80,$80,$80
- EQUB $83,$80,$80,$80,$81,$80,$80,$80
+ NEXT
 
 \*-------------------------------
 \*
@@ -341,7 +416,7 @@ NEXT
 \*
 \*-------------------------------
 
-.SHIFTL
+.SHIFTL     ; should be 0
  EQUB LO(SHIFT0)    ;-$80
  EQUB LO(SHIFT1)    ;-$80
  EQUB LO(SHIFT2)    ;-$80
@@ -349,6 +424,7 @@ NEXT
  EQUB LO(SHIFT4)    ;-$80
  EQUB LO(SHIFT5)    ;-$80
  EQUB LO(SHIFT6)    ;-$80
+ EQUB LO(SHIFT7)    ;-$80
 
 .SHIFTH
  EQUB HI(SHIFT0)    ;-$80
@@ -358,8 +434,9 @@ NEXT
  EQUB HI(SHIFT4)    ;-$80
  EQUB HI(SHIFT5)    ;-$80
  EQUB HI(SHIFT6)    ;-$80
+ EQUB HI(SHIFT7)    ;-$80
 
-.CARRYL
+.CARRYL     ; should be 0
  EQUB LO(CARRY0)    ;-$80
  EQUB LO(CARRY1)    ;-$80
  EQUB LO(CARRY2)    ;-$80
@@ -367,6 +444,7 @@ NEXT
  EQUB LO(CARRY4)    ;-$80
  EQUB LO(CARRY5)    ;-$80
  EQUB LO(CARRY6)    ;-$80
+ EQUB LO(CARRY7)    ;-$80
 
 .CARRYH
  EQUB HI(CARRY0)    ;-$80
@@ -376,6 +454,7 @@ NEXT
  EQUB HI(CARRY4)    ;-$80
  EQUB HI(CARRY5)    ;-$80
  EQUB HI(CARRY6)    ;-$80
+ EQUB HI(CARRY7)    ;-$80
 
 \*-------------------------------
 \*
@@ -401,6 +480,55 @@ NEXT
  EQUB %11110000
  EQUB %11100000
  EQUB %11000000
+
+ .CARRY_MASK
+ FOR n,0,7,1
+ EQUB (&FF >> n) EOR &FF
+ NEXT
+
+.CARRY_MASK1
+ FOR n,0,7,1
+ EQUB (&FE >> n) EOR &FF
+ NEXT
+
+\ Don't need carry masks above 1 as > 7 bits
+
+ .SHIFT_MASK
+ FOR n,0,7,1
+ EQUB LO(&FF >> n)
+ NEXT
+
+.SHIFT_MASK1
+ FOR n,0,7,1
+ EQUB LO(&1FF >> n)
+ NEXT
+
+.SHIFT_MASK2
+ FOR n,0,7,1
+ EQUB LO(&3FF >> n)
+ NEXT
+
+.SHIFT_MASK3
+ FOR n,0,7,1
+ EQUB LO(&7FF >> n)
+ NEXT
+
+.SHIFT_MASK4
+ FOR n,0,7,1
+ EQUB LO(&FFF >> n)
+ NEXT
+
+.SHIFT_MASK5
+ FOR n,0,7,1
+ EQUB LO(&1FFF >> n)
+ NEXT
+
+.SHIFT_MASK6
+ FOR n,0,7,1
+ EQUB LO(&3FFF >> n)
+ NEXT
+
+ENDIF
 
 \*-------------------------------
 \*

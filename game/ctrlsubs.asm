@@ -18,87 +18,89 @@
 \*-------------------------------
 \ org org
 
+IF _JMP_TABLE=FALSE
 .getframe jmp GETFRAME
 .getseq jmp GETSEQ
 .getbasex jmp GETBASEX
-.getblockx BRK      ; jmp GETBLOCKX
+.getblockx jmp GETBLOCKX
 .getblockxp jmp GETBLOCKXP
 
-.getblocky BRK      ; jmp GETBLOCKY
+.getblocky jmp GETBLOCKY
 .getblockej jmp GETBLOCKEJ
-.addcharx BRK       ; jmp ADDCHARX
-.getdist BRK        ; jmp GETDIST
-.getdist1 BRK       ; jmp GETDIST1
+.addcharx jmp ADDCHARX
+.getdist jmp GETDIST
+.getdist1 jmp GETDIST1
 
-.getabovebeh BRK    ; jmp GETABOVEBEH
+.getabovebeh jmp GETABOVEBEH
 .rdblock jmp RDBLOCK
 .rdblock1 jmp RDBLOCK1
-.setupsword RTS     ; jmp SETUPSWORD                BEEB TO DO
+.setupsword jmp SETUPSWORD
 .getscrns jmp GETSCRNS
 
-.addguardobj BRK    ; jmp ADDGUARDOBJ
-.opjumpseq BRK      ; jmp OPJUMPSEQ
-.getedges BRK       ; jmp GETEDGES
-.indexchar BRK      ; jmp INDEXCHAR
-.quickfg BRK        ; jmp QUICKFG
+.addguardobj jmp ADDGUARDOBJ
+.opjumpseq jmp OPJUMPSEQ
+.getedges jmp GETEDGES
+.indexchar jmp INDEXCHAR
+.quickfg jmp QUICKFG
 
-.cropchar BRK       ; jmp CROPCHAR
+.cropchar jmp CROPCHAR
 .getleft jmp GETLEFT
 .getright jmp GETRIGHT
 .getup jmp GETUP
 .getdown jmp GETDOWN
 
-.cmpspace BRK       ; jmp CMPSPACE
-.cmpbarr BRK        ; jmp CMPBARR
-.addkidobj BRK      ; jmp ADDKIDOBJ
-.addshadobj BRK     ; jmp ADDSHADOBJ
-.addreflobj BRK     ; jmp ADDREFLOBJ
+.cmpspace jmp CMPSPACE
+.cmpbarr jmp CMPBARR
+.addkidobj jmp ADDKIDOBJ
+.addshadobj jmp ADDSHADOBJ
+.addreflobj jmp ADDREFLOBJ
 
 .LoadKid jmp LOADKID
-.LoadShad BRK       ; jmp LOADSHAD
+.LoadShad jmp LOADSHAD
 .SaveKid jmp SAVEKID
-.SaveShad BRK       ; jmp SAVESHAD
-.setupchar BRK      ; jmp SETUPCHAR
+.SaveShad jmp SAVESHAD
+.setupchar jmp SETUPCHAR
 
 .GetFrameInfo jmp GETFRAMEINFO
-.indexblock BRK         ; jmp INDEXBLOCK
-.markred BRK            ; jmp MARKRED
-.markfred BRK           ; jmp MARKFRED
-.markwipe BRK           ; jmp MARKWIPE
+.indexblock jmp INDEXBLOCK
+.markred jmp MARKRED
+.markfred jmp MARKFRED
+.markwipe jmp MARKWIPE
 
-.markmove BRK           ; jmp MARKMOVE
-.markfloor BRK          ; jmp MARKFLOOR
+.markmove jmp MARKMOVE
+.markfloor jmp MARKFLOOR
 .unindex jmp UNINDEX
-.quickfloor BRK         ; jmp QUICKFLOOR
-.unevenfloor BRK        ; jmp UNEVENFLOOR
+.quickfloor jmp QUICKFLOOR
+.unevenfloor jmp UNEVENFLOOR
 
-.markhalf BRK           ; jmp MARKHALF
-.addswordobj BRK        ; jmp ADDSWORDOBJ
-.getblocky1 BRK         ; jmp GETBLOCKYP
-.checkledge BRK         ; jmp CHECKLEDGE
-.get2infront BRK        ; jmp GET2INFRONT
+.markhalf jmp MARKHALF
+.addswordobj jmp ADDSWORDOBJ
+.getblocky1 jmp GETBLOCKYP
+.checkledge jmp CHECKLEDGE
+.get2infront jmp GET2INFRONT
 
-.checkspikes BRK        ; jmp CHECKSPIKES
-.rechargemeter BRK      ; jmp RECHARGEMETER
-.addfcharx BRK          ; jmp ADDFCHARX
+.checkspikes jmp CHECKSPIKES
+.rechargemeter jmp RECHARGEMETER
+.addfcharx jmp ADDFCHARX
 .facedx jmp FACEDX
 .jumpseq jmp JUMPSEQ
 
 .GetBaseBlock jmp GETBASEBLOCK
 .LoadKidwOp jmp LOADKIDWOP
-.SaveKidwOp BRK         ; jmp SAVEKIDWOP
-.getopdist BRK          ; jmp GETOPDIST
-.LoadShadwOp BRK        ; jmp LOADSHADWOP
+.SaveKidwOp jmp SAVEKIDWOP
+.getopdist jmp GETOPDIST
+.LoadShadwOp jmp LOADSHADWOP
 
-.SaveShadwOp BRK        ; jmp SAVESHADWOP
-.boostmeter BRK         ; jmp BOOSTMETER
-.getunderft BRK         ; jmp GETUNDERFT
-.getinfront BRK         ; jmp GETINFRONT
-.getbehind BRK          ; jmp GETBEHIND
+.SaveShadwOp jmp SAVESHADWOP
+.boostmeter jmp BOOSTMETER
+.getunderft jmp GETUNDERFT
+.getinfront jmp GETINFRONT
+.getbehind jmp GETBEHIND
 
-.getabove BRK           ; jmp GETABOVE
-.getaboveinf BRK        ; jmp GETABOVEINF
-.cmpwall BRK            ; jmp CMPWALL
+.getabove jmp GETABOVE
+.getaboveinf jmp GETABOVEINF
+.cmpwall jmp CMPWALL
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -116,7 +118,7 @@
 \*-------------------------------
 \ dum locals
 \
-\tempright ds 1
+\ctrlsubs_tempright ds 1
 \ztemp ds 2
 \tempstate ds 1
 \]cutdir ds 1
@@ -430,21 +432,24 @@ thinner = 3
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* In: CharFace,CharBlockX,CharBlockY,CharScrn
-*
-* Out: Results of RDBLOCK for block underfoot/in front/etc.
-*
-*-------------------------------
-GETUNDERFT
+\*-------------------------------
+\*
+\* In: CharFace,CharBlockX,CharBlockY,CharScrn
+\*
+\* Out: Results of RDBLOCK for block underfoot/in front/etc.
+\*
+\*-------------------------------
+
+.GETUNDERFT
+{
  ldx CharBlockX
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETINFRONT
+.GETINFRONT
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -456,8 +461,10 @@ GETINFRONT
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GET2INFRONT
+.GET2INFRONT
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -470,8 +477,10 @@ GET2INFRONT
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETBEHIND
+.GETBEHIND
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -483,8 +492,10 @@ GETBEHIND
  ldy CharBlockY
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVE
+.GETABOVE
+{
  ldy CharBlockY
  dey
  sty abovey
@@ -492,8 +503,10 @@ GETABOVE
  ldx CharBlockX
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVEINF
+.GETABOVEINF
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -508,8 +521,10 @@ GETABOVEINF
 
  lda CharScrn
  jmp RDBLOCK
+}
 
-GETABOVEBEH
+.GETABOVEBEH
+{
  ldx CharFace
  inx
  lda CharBlockX
@@ -524,36 +539,39 @@ GETABOVEBEH
 
  lda CharScrn
  jmp RDBLOCK
+}
 
-*-------------------------------
-*
-*  G E T   D I S T A N C E
-*
-*  In: Char data
-*
-*  Out: A = # of pixels (0-13) to add to CharX to move
-*       char base X-coord to end of current block
-*
-*-------------------------------
-GETDIST
+\*-------------------------------
+\*
+\*  G E T   D I S T A N C E
+\*
+\*  In: Char data
+\*
+\*  Out: A = # of pixels (0-13) to add to CharX to move
+\*       char base X-coord to end of current block
+\*
+\*-------------------------------
+
+.GETDIST
  jsr GETBASEX ;returns A = base X-coord
 
-GETDIST1
+.GETDIST1
+{
  jsr GETBLOCKXP ;returns A = block #, OFFSET = pixel #
 
  lda CharFace ;0=right, -1=left
- beq :facingright
+ beq facingright
 
-:facingleft
+.facingleft
  lda OFFSET
  rts
 
-:facingright
+.facingright
  lda #13
  sec
  sbc OFFSET
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -602,58 +620,63 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G E T   B L O C K   Y
-*
-*  In: A = screen Y-coord (0-255)
-*
-*  Out: A = block y (3 = o.s.)
-*
-*  - Use GETBLOCKYP for objects on center plane
-*  - Use GETBLOCKY for absolute Y-coords & foreground plane
-*
-*-------------------------------
-GETBLOCKY
+\*-------------------------------
+\*
+\*  G E T   B L O C K   Y
+\*
+\*  In: A = screen Y-coord (0-255)
+\*
+\*  Out: A = block y (3 = o.s.)
+\*
+\*  - Use GETBLOCKYP for objects on center plane
+\*  - Use GETBLOCKY for absolute Y-coords & foreground plane
+\*
+\*-------------------------------
+
+.GETBLOCKY
+{
  ldx #3
-:loop cmp BlockTop+1,x
- bcs :gotY
+.loop cmp BlockTop+1,x
+ bcs gotY
  dex
- bpl :loop
-:gotY txa
+ bpl loop
+.gotY txa
  rts
+}
 
-
-GETBLOCKYP
+.GETBLOCKYP
+{
  ldx #3
-:loop cmp FloorY+1,x
- bcs :gotY
+.loop cmp FloorY+1,x
+ bcs gotY
  dex
- bpl :loop
-:gotY txa
-]rts rts
+ bpl loop
+.gotY txa
+ rts
+}
 
-*-------------------------------
-*
-*  I N D E X   B L O C K
-*
-*  Index (tempblockx,tempblocky)
-*
-*  Return y = block # (0-29) and cc if block is onscreen
-*         y = 0 to 9 and cs if block is on screen above
-*         y = 30 and cs if block is o.s.
-*
-*-------------------------------
-INDEXBLOCK
+\*-------------------------------
+\*
+\*  I N D E X   B L O C K
+\*
+\*  Index (tempblockx,tempblocky)
+\*
+\*  Return y = block # (0-29) and cc if block is onscreen
+\*         y = 0 to 9 and cs if block is on screen above
+\*         y = 30 and cs if block is o.s.
+\*
+\*-------------------------------
+
+.INDEXBLOCK
+{
  ldy tempblocky
- bmi :above
+ bmi above
  cpy #3
- bcs :os
+ bcs os
 
  lda tempblockx
  cmp #10
- bcs :os ;0 <= tempblockx <= 9
+ bcs os ;0 <= tempblockx <= 9
 
  clc
  adc Mult10,y
@@ -662,14 +685,15 @@ INDEXBLOCK
  clc ;and carry clr
  rts
 
-:os ldy #30
+.os ldy #30
  sec ;and carry set
  rts
 
-:above ldy tempblockx
+.above ldy tempblockx
  sec
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -755,16 +779,17 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Similar routine for Opponent
-*
-*-------------------------------
-OPJUMPSEQ
+\*-------------------------------
+\*
+\*  Similar routine for Opponent
+\*
+\*-------------------------------
+
+.OPJUMPSEQ
+{
  sec
  sbc #1
- asl
+ asl A
  tax ;x = 2(a-1)
 
  lda seqtab,x
@@ -772,72 +797,79 @@ OPJUMPSEQ
 
  lda seqtab+1,x
  sta OpSeq+1
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  I N D E X   C H A R
-*
-*  In: Char data; GETEDGES results
-*
-*  Out: FCharIndex = character block index
-*
-*-------------------------------
-INDEXCHAR
+\*-------------------------------
+\*
+\*  I N D E X   C H A R
+\*
+\*  In: Char data; GETEDGES results
+\*
+\*  Out: FCharIndex = character block index
+\*
+\*-------------------------------
+
+.INDEXCHAR
+{
  lda CharAction
  cmp #1
- bne :4
+ bne label_4
 ;If CharAction = 1 (on solid ground)
 ;use leftblock/bottomblock
  lda bottomblock
  sta tempblocky
 
  lda leftblock
-:1 sta tempblockx
+.label_1 sta tempblockx
 
  lda CharPosn
  cmp #135
- bcc :2
+ bcc label_2
  cmp #149
- bcc :climbup
+ bcc local_climbup
 
-:2 cmp #2
- beq :fall
+.label_2 cmp #2
+ beq local_fall
  cmp #3
- beq :fall
+ beq local_fall
  cmp #4
- beq :fall
+ beq local_fall
  cmp #6
- bne :3
-:fall
-:climbup dec tempblockx  ;if falling or climbing up
+ bne label_3
+.local_fall
+.local_climbup dec tempblockx  ;if falling or climbing up
 
-:3 jsr indexblock
+.label_3 jsr indexblock
  sty FCharIndex
  rts
 
-* else use CharBlockX/Y
+\* else use CharBlockX/Y
 
-:4 lda CharBlockY
+.label_4 lda CharBlockY
  sta tempblocky
 
  lda CharBlockX
- jmp :1
+ jmp label_1
+}
 
-*-------------------------------
-*
-*  S E T   U P   C H A R
-*
-*  Set up character for FRAMEADV
-*
-*  In: Char data
-*  Out: FChar data
-*
-*  Translate char data into the form "addchar" expects
-*  (Decode image #; get actual 280 x 192 screen coords)
-*
-*-------------------------------
-SETUPCHAR
+\*-------------------------------
+\*
+\*  S E T   U P   C H A R
+\*
+\*  Set up character for FRAMEADV
+\*
+\*  In: Char data
+\*  Out: FChar data
+\*
+\*  Translate char data into the form "addchar" expects
+\*  (Decode image #; get actual 280 x 192 screen coords)
+\*
+\*-------------------------------
+
+.SETUPCHAR
+{
  jsr zerocrop ;(can call cropchar later)
 
  jsr GETFRAMEINFO
@@ -858,14 +890,14 @@ SETUPCHAR
 
  asl FCharX
  rol FCharX+1
- beq :pos
+ beq pos
 
  lda FCharX
  cmp #$f0
- bcc :pos
+ bcc pos
  lda #$ff
  sta FCharX+1
-:pos  ;X := 2X
+.pos  ;X := 2X
  lda Fdy
  clc
  adc CharY
@@ -875,50 +907,54 @@ SETUPCHAR
 
  lda Fcheck
  eor FCharFace ;Look only at the hibits
- bmi :ok ;They don't match-->even X-coord
+ bmi ok ;They don't match-->even X-coord
 ;They match-->odd X-coord
  lda FCharX
  clc
  adc #1
  sta FCharX
- bcc :ok
+ bcc ok
  inc FCharX+1
-:ok
-]rts rts
+.ok
+}
+.return_43
+ rts
 
-*-------------------------------
-*
-*  S E T   U P   S W O R D
-*
-*  In: Char & FChar data
-*
-*  If character's sword is visible, add it to obj table
-*
-*-------------------------------
-SETUPSWORD
+\*-------------------------------
+\*
+\*  S E T   U P   S W O R D
+\*
+\*  In: Char & FChar data
+\*
+\*  If character's sword is visible, add it to obj table
+\*
+\*-------------------------------
+
+.SETUPSWORD
+{
  lda CharID
  cmp #2
- bne :3
+ bne label_3
  lda CharLife
- bmi :2 ;live guard's sword is always visible
+ bmi label_2 ;live guard's sword is always visible
 
-:3 lda CharPosn
+.label_3 lda CharPosn
  cmp #229
- bcc :1
+ bcc label_1
  cmp #238
- bcc :2 ;sheathing
-:1 lda CharSword
- beq ]rts
-:2
+ bcc label_2 ;sheathing
+.label_1 lda CharSword
+ beq return_43
+.label_2
  lda Fsword
  and #$3f ;frame #
- beq ]rts ;no sword for this frame
+ beq return_43 ;no sword for this frame
 
  jsr getswordframe
 
  ldy #0
  lda (framepoint),y
- beq ]rts
+ beq return_43
 
  jsr decodeswim ;get FCharImage & Table
 
@@ -939,7 +975,7 @@ SETUPSWORD
  sta FCharY
 
  jmp ADDSWORDOBJ
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -949,6 +985,7 @@ ENDIF
 \*  Out: framepoint = 2-byte pointer to frame def table
 \*
 \*-------------------------------
+
 .GETFRAME ;Kid uses main char set
 {
  jsr getfindex
@@ -963,6 +1000,7 @@ ENDIF
 }
 
 \*-------------------------------
+
 .getaltframe1 ;Enemy uses alt set 1
 {
  jsr getfindex
@@ -977,6 +1015,8 @@ ENDIF
 }
 
 \*-------------------------------
+
+\\ altset2 could be overlaid on top of altset1 to save RAM (in theory)
 .getaltframe2 ;Princess & Vizier use alt set 2
 {
  jsr getfindex
@@ -991,6 +1031,7 @@ ENDIF
 }
 
 \*-------------------------------
+
 .getfindex
 {
  sec
@@ -1018,16 +1059,17 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* getswordframe
-*
-* In: A = frame #
-* Out: framepoint
-*
-*-------------------------------
-getswordframe
+\*-------------------------------
+\*
+\* getswordframe
+\*
+\* In: A = frame #
+\* Out: framepoint
+\*
+\*-------------------------------
+
+.getswordframe
+{
  sec
  sbc #1
  sta ztemp
@@ -1051,26 +1093,29 @@ getswordframe
 
  lda framepoint
  clc
- adc #swordtab
+ adc #LO(swordtab)
  sta framepoint
 
  lda framepoint+1
- adc #>swordtab
+ adc #HI(swordtab)
  sta framepoint+1
 
  rts
+}
 
-*-------------------------------
-*
-* Decode char image
-*
-* In:  Fimage, Fsword (encoded)
-*
-* Out: FCharImage (image #, 0-127)
-*      FCharTable (table #, 0-7)
-*
-*-------------------------------
-decodeim
+\*-------------------------------
+\*
+\* Decode char image
+\*
+\* In:  Fimage, Fsword (encoded)
+\*
+\* Out: FCharImage (image #, 0-127)
+\*      FCharTable (table #, 0-7)
+\*
+\*-------------------------------
+
+.decodeim
+{
  lda Fimage
  and #%10000000 ;bit 2 of table #
  sta ztemp
@@ -1078,53 +1123,60 @@ decodeim
  lda Fsword
  and #%11000000 ;bits 0-1 of table #
 
- lsr
+ lsr A
  adc ztemp
- lsr
- lsr
- lsr
- lsr
- lsr
+ lsr A
+ lsr A
+ lsr A
+ lsr A
+ lsr A
  sta FCharTable
 
  lda Fimage
  and #$7f
- ora timebomb ;must be 0!
+\ NOT BEEB
+\ ora timebomb ;must be 0!
  sta FCharImage
 
  rts
+}
 
-*-------------------------------
-*
-* Decode sword image
-*
-* In: A = image #
-*
-* Out: FCharImage, FCharTable
-*
-*-------------------------------
-decodeswim
+\*-------------------------------
+\*
+\* Decode sword image
+\*
+\* In: A = image #
+\*
+\* Out: FCharImage, FCharTable
+\*
+\*-------------------------------
+
+.decodeswim
+{
  sta FCharImage ;image #
 
  lda #2 ;chtable3
  sta FCharTable
  rts
+}
 
-*-------------------------------
-*
-*  G E T   E D G E S
-*
-*  Get edges of character image
-*
-*  In: FChar data as set by "setframe"
-*
-*  Out: leftej/rightej/topej = boundaries of image (140-res)
-*       leftblock, rightblock, topblock, bottomblock
-*       CDLeftEj, CDRightEj (for coll detection)
-*       imheight, imwidth
-*
-*-------------------------------
-GETEDGES
+\*-------------------------------
+\*
+\*  G E T   E D G E S
+\*
+\*  Get edges of character image
+\*
+\*  In: FChar data as set by "setframe"
+\*
+\*  Out: leftej/rightej/topej = boundaries of image (140-res)
+\*       leftblock, rightblock, topblock, bottomblock
+\*       CDLeftEj, CDRightEj (for coll detection)
+\*       imheight, imwidth
+\*
+\*-------------------------------
+
+.GETEDGES
+{
  lda FCharImage
  ldx FCharTable
  jsr dimchar ;return A = image width, x = height
@@ -1134,26 +1186,26 @@ GETEDGES
  lda Mult7,x ;in 1/2 pixels
  clc
  adc #1 ;add 1/2 pixel
- lsr ;and divide by 2
+ lsr A;and divide by 2
  sta imwidth ;to get width in pixels
 
  lda FCharX+1
- lsr
+ lsr A
  lda FCharX
- ror
+ ror A
  clc
  adc #ScrnLeft ;convert back to 140-res
 
-* (If facing LEFT, X-coord is leftmost pixel of LEFTMOST byte
-* of image; if facing RIGHT, leftmost pixel of RIGHTMOST byte.)
+\* (If facing LEFT, X-coord is leftmost pixel of LEFTMOST byte
+\* of image; if facing RIGHT, leftmost pixel of RIGHTMOST byte.)
 
  ldx CharFace
- bmi :ok ;facing L
+ bmi ok ;facing L
 ;facing R
  sec
  sbc imwidth
 
-:ok sta leftej
+.ok sta leftej
  clc
  adc imwidth
  sta rightej
@@ -1165,18 +1217,18 @@ GETEDGES
  adc #1
 
  cmp #192
- bcc :ok2
+ bcc ok2
  lda #0
 
-:ok2 sta topej
+.ok2 sta topej
 
  jsr getblocky
 
  cmp #3
- bne :1
- lda #-1 ;if o.s., call it -1
+ bne label_1
+ lda #LO(-1) ;if o.s., call it -1
 
-:1 sta topblock
+.label_1 sta topblock
 
  lda FCharY
  jsr getblocky ;if o.s., call it 3
@@ -1190,19 +1242,19 @@ GETEDGES
  jsr getblockx ;rightmost affected block
  sta rightblock
 
-* get leading edge (for collision detection)
+\* get leading edge (for collision detection)
 
  lda #0
  sta ztemp
 
  lda Fcheck
  and #Fthinmark
- beq :nothin
+ beq nothin
 
  lda #thinner ;make character 3 bits thinner
  sta ztemp ;on both sides
 
-:nothin lda leftej
+.nothin lda leftej
  clc
  adc ztemp
  sta CDLeftEj
@@ -1212,128 +1264,133 @@ GETEDGES
  sbc ztemp
  sta CDRightEj
 
-]rts rts
+ rts
+}
 
-*===============================
-*
-*  Q U I C K   F L O O R
-*
-*  Mark for redraw whatever floorpieces character might be
-*  impinging on
-*
-*  In: CharData; GETEDGES results
-*
-*-------------------------------
-QUICKFLOOR
+\*===============================
+\*
+\*  Q U I C K   F L O O R
+\*
+\*  Mark for redraw whatever floorpieces character might be
+\*  impinging on
+\*
+\*  In: CharData; GETEDGES results
+\*
+\*-------------------------------
+
+.QUICKFLOOR
+{
  lda CharPosn
  cmp #135
- bcc :2
+ bcc label_2
  cmp #149
- bcc :climbup
+ bcc local_climbup
 
-:2 lda CharAction
+.label_2 lda CharAction
  cmp #1
- bne :1
+ bne label_1
 
  lda CharPosn
  cmp #78
- bcc ]rts
+ bcc return
  cmp #80
- bcc :fall
-]rts rts
+ bcc local_fall
+.return rts
 
-:1 cmp #2
- beq :fall
+.label_1 cmp #2
+ beq local_fall
  cmp #3
- beq :fall
+ beq local_fall
  cmp #4
- beq :fall
+ beq local_fall
  cmp #6
- bne ]rts
+ bne return
 
-:fall lda #markfloor
- ldx #>markfloor
- bne :cont1
+.local_fall lda #LO(markfloor)
+ ldx #HI(markfloor)
+ bne cont1
 
-:climbup
- lda #markhalf
- ldx #>markhalf
+.local_climbup
+ lda #LO(markhalf)
+ ldx #HI(markhalf)
 
-* Mark floorbuf/halfbuf for up to 6 affected blocks
-* Start with rightblock, work left to leftblock
+\* Mark floorbuf/halfbuf for up to 6 affected blocks
+\* Start with rightblock, work left to leftblock
 
-:cont1
+.cont1
  sta marksm1+1
  sta marksm2+1
  stx marksm1+2
  stx marksm2+2
 
  lda rightblock
-:loop sta tempblockx
+.loop sta tempblockx
 
  jsr markul
 
  lda tempblockx
  cmp leftblock
- beq ]rts
+ beq return
  sec
  sbc #1
- bpl :loop
+ bpl loop
+}
+.return_26
+ rts
 
-]rts rts
+\* mark upper & lower blocks for this blockx
 
-* mark upper & lower blocks for this blockx
-
-markul
+.markul
  lda bottomblock
  sta tempblocky
 
  jsr indexblock ;lower block
- lda #2
-marksm1 jsr markhalf
+ lda #REDRAW_FRAMES
+.marksm1 jsr markhalf
 
  lda topblock
  cmp bottomblock
- beq ]rts
+ beq return_26
  sta tempblocky
 
  jsr indexblock ;upper block
  lda #2
-marksm2 jmp markhalf
+.marksm2 jmp markhalf
 
-*-------------------------------
-*
-*  Q U I C K  F G
-*
-*  Mark for redraw any f.g. elements char (or his sword)
-*  might be impinging on
-*
-*  In: Char data; left/right/top/bottomblock
-*
-*-------------------------------
-QUICKFG
+\*-------------------------------
+\*
+\*  Q U I C K  F G
+\*
+\*  Mark for redraw any f.g. elements char (or his sword)
+\*  might be impinging on
+\*
+\*  In: Char data; left/right/top/bottomblock
+\*
+\*-------------------------------
 
-* Quick fix to cover sword
+.QUICKFG
+{
+\* Quick fix to cover sword
 
  lda CharSword
  cmp #2
- bcc :cont
+ bcc cont
 
  lda CharFace
- bpl :faceR
+ bpl faceR
  dec leftblock
- jmp :cont
+ jmp cont
 
-:faceR inc rightblock
+.faceR inc rightblock
 
-* Continue
+\* Continue
 
-:cont lda bottomblock
-:outloop
+.cont lda bottomblock
+.outloop
  sta tempblocky
 
  lda rightblock
-:loop sta tempblockx
+.loop sta tempblockx
 
  jsr indexblock
  lda #3
@@ -1341,107 +1398,114 @@ QUICKFG
 
  lda tempblockx
  cmp leftblock
- beq :end
+ beq end
  sec
  sbc #1
- bpl :loop
-:end
+ bpl loop
+.end
  lda tempblocky
  cmp topblock
- beq ]rts
+ beq return
  sec
  sbc #1
- bpl :outloop
+ bpl outloop
+.return
  rts
 
-]bug jmp showpage
+\ NOT BEEB
+\.bug jmp showpage
+}
 
-*-------------------------------
-*
-*  C R O P   C H A R A C T E R
-*
-*  In: FChar data as set by "setframe"
-*      leftej,rightej, etc. as set by "getedges"
-*
-*  Out: FCharCL/CR/CU/CD
-*
-*-------------------------------
-CROPCHAR
+\*-------------------------------
+\*
+\*  C R O P   C H A R A C T E R
+\*
+\*  In: FChar data as set by "setframe"
+\*      leftej,rightej, etc. as set by "getedges"
+\*
+\*  Out: FCharCL/CR/CU/CD
+\*
+\*-------------------------------
 
-* If char is climbing stairs, mask door
+.CROPCHAR
+{
+\* If char is climbing stairs, mask door
 
  lda CharPosn
  cmp #224
- bcc :nost
+ bcc nost
  cmp #229
- bcs :nost
+ bcs nost
  lda doortop ;set by drawexitb
  clc
  adc #2
  cmp FCharY
- bcs :bug ;temp!
+ bcs return         ;:bug ;temp!
  sta FCharCU
-]rts rts
-:bug ldy #$F0
- jsr showpage
-:nost
+.return rts
 
-* If char is under solid (a&b) floor, crop top
+\ NOT BEEB
+\.bug ldy #$F0
+\ jsr showpage
+
+.nost
+
+\* If char is under solid (a&b) floor, crop top
 
  ldx leftblock
  ldy topblock
  lda CharScrn
  jsr rdblock
  cmp #block
- beq :1
+ beq label_1
  jsr cmpspace
- beq :not
+ beq local_not
 
 \* Special case (more lenient): if char is jumping
-* up to touch ceiling
+\* up to touch ceiling
 
-:1 lda CharAction
- bne :10
+.label_1 lda CharAction
+ bne label_10
  lda CharPosn
  cmp #79
- beq :2
+ beq label_2
  cmp #81
- bne :10
- beq :2
+ bne label_10
+ beq label_2
 
-* Otherwise, both left & right topblocks must be solid
+\* Otherwise, both left & right topblocks must be solid
 
-:10 ldx rightblock
+.label_10 ldx rightblock
  ldy topblock
  lda CharScrn
  jsr rdblock
  cmp #block
- beq :2
+ beq label_2
  jsr cmpspace
- beq  :not
+ beq local_not
 
-:2 ldx CharBlockY
+.label_2 ldx CharBlockY
  inx
  cpx #1
- beq :ok
+ beq ok
 
  lda BlockTop,x
  cmp FCharY
- bcs :not
+ bcs local_not
 
  sec
  sbc #floorheight
  cmp topej
- bcs :not
+ bcs local_not
 
-:ok lda BlockTop,x
+.ok lda BlockTop,x
  sta FCharCU
  sta topej
-:not
+.local_not
 
-* If char is standing left of a panel, crop R
-* Char is considered "left" if CDLeftEj falls within
-* panel block
+\* If char is standing left of a panel, crop R
+\* Char is considered "left" if CDLeftEj falls within
+\* panel block
 
  lda CDLeftEj
  jsr getblockx
@@ -1453,50 +1517,50 @@ CROPCHAR
  jsr rdblock
 
  cmp #panelwof
- beq :r
+ beq local_r
  cmp #panelwif
- bne :nor
+ bne nor
 
-* Char's foot is within panel block
+\* Char's foot is within panel block
 \* Special case: If character is hanging R, we don't
-* need to check his head
+\* need to check his head
 
-:r lda CharFace
- bmi :cont
+.local_r lda CharFace
+ bmi cont
 
  lda CharAction
  cmp #2
- beq :r2 ;yes--hanging R
+ beq r2 ;yes--hanging R
 
-* Check block to right of char's head
+\* Check block to right of char's head
 
-:cont
+.cont
  ldx blockx
  ldy topblock
  lda CharScrn
  jsr rdblock
 
  cmp #block
- beq :r2
+ beq r2
  cmp #panelwof
- beq :r2
+ beq r2
  cmp #panelwif
- bne :nor
+ bne nor
 
-* Also a panel -- make a wall
+\* Also a panel -- make a wall
 
-:r2 lda tempblockx
- asl
- asl
+.r2 lda tempblockx
+ asl A
+ asl A
  clc
  adc #4
  sta FCharCR
  rts
 
-* Is char standing to L of solid block?
-* (i.e. does CDRightEj fall within block?)
+\* Is char standing to L of solid block?
+\* (i.e. does CDRightEj fall within block?)
 
-:nor
+.nor
  lda CDRightEj
  jsr getblockx
  sta blockx
@@ -1507,9 +1571,9 @@ CROPCHAR
  jsr rdblock
 
  cmp #block
- bne :nob
+ bne nob
 
-* Foot is under block--what about head?
+\* Foot is under block--what about head?
 
  ldx blockx
  ldy topblock
@@ -1517,28 +1581,31 @@ CROPCHAR
  jsr rdblock
 
  cmp #block
- bne :nob
+ bne nob
 
-* Also a panel -- make a wall
+\* Also a panel -- make a wall
 
-:yescrop
+.yescrop
  lda tempscrn
  cmp CharScrn
- bne :nob
+ bne nob
 
  lda tempblockx
- asl
- asl
+ asl A
+ asl A
  sta FCharCR
-:nob
+.nob
  rts
+}
 
-*-------------------------------
-*
-*  Z E R O   C R O P
-*
-*-------------------------------
-zerocrop
+\*-------------------------------
+\*
+\*  Z E R O   C R O P
+\*
+\*-------------------------------
+
+.zerocrop
+{
  lda #0
  sta FCharCU
  sta FCharCL
@@ -1547,133 +1614,157 @@ zerocrop
  lda #192
  sta FCharCD
  rts
+}
 
-*===============================
-*
-*  C O M P A R E   S P A C E
-*
-*  Is it a space (can you pass thru)?
-*  NOTE: Solid block is considered a space (it has no floor)
-*
-*  In: A = objid
-*  Out: 0 = space, 1 = floor
-*
-*-------------------------------
-CMPSPACE
+\*===============================
+\*
+\*  C O M P A R E   S P A C E
+\*
+\*  Is it a space (can you pass thru)?
+\*  NOTE: Solid block is considered a space (it has no floor)
+\*
+\*  In: A = objid
+\*  Out: 0 = space, 1 = floor
+\*
+\*-------------------------------
+
+.CMPSPACE
+{
  cmp #space
- beq :space
+ beq local_space
  cmp #pillartop
- beq :space
+ beq local_space
  cmp #panelwof
- beq :space
+ beq local_space
  cmp #block
- beq :space
+ beq local_space
  cmp #archtop1
- bcs :space
+ bcs local_space
 
  lda #1
  rts
 
-:space lda #0
+.local_space lda #0
  rts
+}
 
-*-------------------------------
-*
-*  C O M P A R E   B A R R I E R
-*
-*  Is it a barrier?
-*
-*  Return A = 0 if clear, else A = barrier code #
-*
-*-------------------------------
-CMPBARR
+\*-------------------------------
+\*
+\*  C O M P A R E   B A R R I E R
+\*
+\*  Is it a barrier?
+\*
+\*  Return A = 0 if clear, else A = barrier code #
+\*
+\*-------------------------------
+
+.CMPBARR
+{
  cmp #panelwif
- beq :b1
+ beq b1
  cmp #panelwof
- beq :b1
+ beq b1
  cmp #gate
- bne :2
+ bne label_2
 
-:b1 lda #1 ;panel/gate
+.b1 lda #1 ;panel/gate
  rts
 
-:2 cmp #mirror
- beq :yes3
+.label_2 cmp #mirror
+ beq yes3
 
  cmp #slicer
- bne :3
+ bne label_3
 
-:yes3 lda #3 ;mirror/slicer
+.yes3 lda #3 ;mirror/slicer
  rts
 
-:3 cmp #block
- bne :4
+.label_3 cmp #block
+ bne label_4
 
  lda #4 ;block
  rts
-:4
-:clear lda #0
-:rts rts
+.label_4
+.local_clear lda #0
+.return rts
 
-:barr lda #1
-]rts rts
+.barr lda #1
+ rts
+}
 
-*-------------------------------
-*
-* Is it a wall? Return 0 if yes, 1 if no
-* (Solid block, or panel if you're facing L)
-*
-*-------------------------------
-CMPWALL
+\*-------------------------------
+\*
+\* Is it a wall? Return 0 if yes, 1 if no
+\* (Solid block, or panel if you're facing L)
+\*
+\*-------------------------------
+
+.CMPWALL
+{
  cmp #block
- beq :yes
+ beq yes
  ldx CharFace
- bpl :no
+ bpl no
  cmp #panelwif
- beq :yes
+ beq yes
  cmp #panelwof
- beq :yes
-:no lda #1
+ beq yes
+.no lda #1
  rts
-:yes lda #0
+.yes lda #0
  rts
+}
 
-*-------------------------------
-*
-*  Add kid/reflection/shadowman/guard to object table
-*
-*  In: FChar data
-*
-*-------------------------------
-ADDKIDOBJ
+\*-------------------------------
+\*
+\*  Add kid/reflection/shadowman/guard to object table
+\*
+\*  In: FChar data
+\*
+\*-------------------------------
+
+.ADDKIDOBJ
+{
  lda #TypeKid
  jmp addcharobj
+}
 
-*-------------------------------
-ADDREFLOBJ
+\*-------------------------------
+
+.ADDREFLOBJ
+{
  lda #TypeReflect
  jmp addcharobj
+}
 
-*-------------------------------
-ADDSHADOBJ
+\*-------------------------------
+
+.ADDSHADOBJ
+{
  lda #TypeShad
  jmp addcharobj
+}
 
-*-------------------------------
-ADDGUARDOBJ
+\*-------------------------------
+
+.ADDGUARDOBJ
+{
  lda #TypeGd
  jmp addcharobj
+}
 
-*-------------------------------
-*
-* Add sword to object table
-* In: FChar data for character holding sword
-*
-*-------------------------------
-ADDSWORDOBJ
+\*-------------------------------
+\*
+\* Add sword to object table
+\* In: FChar data for character holding sword
+\*
+\*-------------------------------
+
+.ADDSWORDOBJ
+{
  lda #TypeSword
  jmp addcharobj
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1777,77 +1868,98 @@ ENDIF
  jmp getaltframe2
 }
 
-IF _TODO
-*===============================
-*
-*  M A R K
-*
-*  In: A = mark value (usually 2)
-*      Results of INDEXBLOCK:
-*      Y = block #; carry set or clear
-*
-*  Out: Preserve A, Y, carry
-*
-*-------------------------------
-]os cpy #10 ;top line from scrn above?
- bcs ]rts ;no
+\*===============================
+\*
+\*  M A R K
+\*
+\*  In: A = mark value (usually 2)
+\*      Results of INDEXBLOCK:
+\*      Y = block #; carry set or clear
+\*
+\*  Out: Preserve A, Y, carry
+\*
+\*-------------------------------
+
+.mark_os
+{
+ cpy #10 ;top line from scrn above?
+ bcs return ;no
  sta topbuf,y
  sec ;preserve cs
-]rts rts
+.return
+ rts
+}
 
-MARKRED
- bcs ]os
+.MARKRED
+{
+ bcs mark_os
  sta redbuf,y
  rts
+}
 
-MARKFRED
- bcs ]rts
+.MARKFRED
+{
+ bcs return
  sta fredbuf,y
+.return
  rts
+}
 
-MARKWIPE
- bcs ]rts
+.MARKWIPE
+{
+ bcs return
  pha
  lda wipebuf,y
- beq :2
+ beq label_2
  lda height
  cmp whitebuf,y ;if wipebuf is already marked,
- bcc :1 ;use larger of 2 whitebuf values
-:2 lda height
+ bcc label_1 ;use larger of 2 whitebuf values
+.label_2 lda height
  sta whitebuf,y
-:1 pla
+.label_1 pla
  sta wipebuf,y
  clc ;return with cc
+.return
  rts
+}
 
-MARKMOVE
- bcs ]os
+.MARKMOVE
+{
+ bcs mark_os
  sta movebuf,y
  rts
+}
 
-MARKFLOOR
- bcs ]os
+.MARKFLOOR
+{
+ bcs mark_os
  sta floorbuf,y
  rts
+}
 
-MARKHALF
- bcs ]os
+.MARKHALF
+{
+ bcs mark_os
  sta halfbuf,y
  rts
+}
 
-*-------------------------------
-*
-*  Z E R O   R E D
-*
-*  zero redraw buffers
-*
-*-------------------------------
-ZERORED
+IF 0    \\ Weirdly duped from grafix.asm
+\*-------------------------------
+\*
+\*  Z E R O   R E D
+\*
+\*  zero redraw buffers
+\*
+\*-------------------------------
+
+.ZERORED
+{
  lda #0
 
  ldy #29
 
-:loop sta redbuf,y
+.loop sta redbuf,y
  sta fredbuf,y
  sta floorbuf,y
  sta wipebuf,y
@@ -1856,122 +1968,130 @@ ZERORED
  sta halfbuf,y
 
  dey
- bpl :loop
+ bpl loop
 
  ldy #9
-:dloop sta topbuf,y
+.dloop sta topbuf,y
  dey
- bpl :dloop
+ bpl dloop
 
  rts
+}
+ENDIF
 
-*-------------------------------
-*
-*  C H E C K L E D G E
-*
-*  In: blockid = block that must be clear;
-*      A = RDBLOCK results for block that must be ledge
-*
-*  Out: A = 1 if grabbable, 0 if not
-*
-*-------------------------------
-CHECKLEDGE
+\*-------------------------------
+\*
+\*  C H E C K L E D G E
+\*
+\*  In: blockid = block that must be clear;
+\*      A = RDBLOCK results for block that must be ledge
+\*
+\*  Out: A = 1 if grabbable, 0 if not
+\*
+\*-------------------------------
+
+.CHECKLEDGE
+{
  sta ztemp
 
  lda (BlueSpec),y
- sta tempstate
+ sta coll_tempstate
 
  lda blockid ;must be clear
 
  cmp #block
- beq :no
+ beq local_no
 
  cmp #panelwof ;CMPSPACE considers panel w/o floor
-  bne :cont ;to be clear--
+  bne cont ;to be clear--
 
  bit CharFace ;but it isn't if char wants to grab
- bpl :no ;floorpiece to right
-:cont
+ bpl local_no ;floorpiece to right
+.cont
  jsr cmpspace
- bne :no
+ bne local_no
 
-* Clear above -- is there a ledge in front?
+\* Clear above -- is there a ledge in front?
 
  lda ztemp ;must be a solid floorpiece
 ;with exposed ledge
  cmp #loose
- bne :notloose
+ bne local_notloose
 
- bit tempstate
- bne :no ;floor is already loose
+ bit coll_tempstate
+ bne local_no ;floor is already loose
 
-:notloose
+.local_notloose
  cmp #panelwif
- bne :cont2 ;panel w/floor can be grabbed
+ bne cont2 ;panel w/floor can be grabbed
 ;only if facing right
  bit CharFace
- bmi :no
+ bmi local_no
 
-:cont2 jsr cmpspace
- beq :no
+.cont2 jsr cmpspace
+ beq local_no
 
-:yes lda #1
+.local_yes lda #1
  rts
 
-:no lda #0
-]rts rts
+.local_no lda #0
+}
+.return_41
+ rts
 
-*-------------------------------
-*
-*  C H E C K   S P I K E S
-*
-*  Spikes spring out when char passes over them (at any
-*  height).
-*
-*-------------------------------
-CHECKSPIKES
+\*-------------------------------
+\*
+\*  C H E C K   S P I K E S
+\*
+\*  Spikes spring out when char passes over them (at any
+\*  height).
+\*
+\*-------------------------------
+
+.CHECKSPIKES
+{
  lda rightej
  jsr getblockxp
- bmi ]rts
- sta tempright
+ bmi return_41
+ sta ctrlsubs_tempright
 
-* for blockx = leftblock to rightblock
+\* for blockx = leftblock to rightblock
 
  lda leftej
  jsr getblockxp
-:loop sta blockx
+.loop_1 sta blockx
 
  jsr sub
 
  lda blockx
- cmp tempright
- beq ]rts
+ cmp ctrlsubs_tempright
+ beq return_41
  clc
  adc #1
- jmp :loop
+ jmp loop_1
 
-sub sta tempblockx
+.sub sta tempblockx
  lda CharBlockY
  sta tempblocky
  lda CharScrn
  sta tempscrn
-:loop jsr rdblock1
+.loop_2 jsr rdblock1
 
  cmp #spikes
- bne :again
+ bne again
  jmp trigspikes
 
-:again jsr cmpspace
- bne ]rts
+.again jsr cmpspace
+ bne return_41
 
  lda tempscrn
- beq ]rts ;null scrn
+ beq return_41 ;null scrn
  cmp CharScrn
- bne ]rts ;wait till he's on same screen
+ bne return_41 ;wait till he's on same screen
 
  inc tempblocky
- jmp :loop ;check 1 level below
-ENDIF
+ jmp loop_2 ;check 1 level below
+}
 
 \*===============================
 \*
@@ -2004,28 +2124,30 @@ numvars = 16
  rts
 }
 
-IF _TODO
-LOADSHAD
+.LOADSHAD
+{
  ldx #numvars-1
 
-:loop lda Shad,x
+.loop lda Shad,x
  sta Char,x
 
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
+}
 
-
-SAVESHAD
+.SAVESHAD
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Shad,x
 
  dex
- bpl :loop
+ bpl loop
  rts
-ENDIF
+}
 
 \*  Load kid w/ opponent
 
@@ -2059,136 +2181,152 @@ ENDIF
  rts
 }
 
-IF _TODO
-* Load shadowman w/ opponent
+\* Load shadowman w/ opponent
 
-LOADSHADWOP
+.LOADSHADWOP
+{
  ldx #numvars-1
 
-:loop lda Shad,x
+.loop lda Shad,x
  sta Char,x
 
  lda Kid,x
  sta Op,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-SAVESHADWOP
+.SAVESHADWOP
+{
  ldx #numvars-1
 
-:loop lda Char,x
+.loop lda Char,x
  sta Shad,x
 
  lda Op,x
  sta Kid,x
 
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-*-------------------------------
-*
-* Recharge strength meter to max
-*
-*-------------------------------
-RECHARGEMETER
+\*-------------------------------
+\*
+\* Recharge strength meter to max
+\*
+\*-------------------------------
+
+.RECHARGEMETER
+{
  lda MaxKidStr
  sec
  sbc KidStrength
  sta ChgKidStr
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Boost strength meter max by 1 and recharge
-*
-*-------------------------------
-BOOSTMETER
+\*-------------------------------
+\*
+\* Boost strength meter max by 1 and recharge
+\*
+\*-------------------------------
+
+.BOOSTMETER
+{
  lda MaxKidStr
  cmp #maxmaxstr
- bcs :1
+ bcs label_1
 
  clc
  adc #1
  sta MaxKidStr
 
-:1 jmp RECHARGEMETER
+.label_1 jmp RECHARGEMETER
+}
 
-*-------------------------------
-*
-* Get distance between char & opponent
-* (# pixels char must move fwd to reach opponent)
-* If dist is greater than 127, return 127 (+ or -)
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Get distance between char & opponent
+\* (# pixels char must move fwd to reach opponent)
+\* If dist is greater than 127, return 127 (+ or -)
+\*
+\*-------------------------------
 estwidth = 13 ;rough est of char width
 
-GETOPDIST
+.GETOPDIST
+{
  lda CharScrn
  cmp OpScrn
- bne :safe
+ bne safe
 
-* First, get A = OpX-CharX (abs. value <= 127)
+\* First, get A = OpX-CharX (abs. value <= 127)
 
  lda OpX
  cmp CharX
- bcc :neg
+ bcc neg
  sec
  sbc CharX
- bpl :got
+ bpl got
  lda #127
- bpl :got
+ bpl got
 
-:neg lda CharX
+.neg lda CharX
  sec
  sbc OpX
- bpl :1
+ bpl label_1
  lda #127
-:1 eor #$ff
+.label_1 eor #$ff
  clc
  adc #1 ;negate
 
-* If CharFace = left, negate
+\* If CharFace = left, negate
 
-:got ldx CharFace
- bpl :cont
+.got ldx CharFace
+ bpl cont
  eor #$ff
  clc
  adc #1
 
-* If chars are facing in opposite directions,
-* adjust by estimate of width of figure
+\* If chars are facing in opposite directions,
+\* adjust by estimate of width of figure
 
-:cont tax
+.cont tax
  lda CharFace
  eor OpFace
- bpl :done
+ bpl done
  txa
  cmp #127-estwidth
- bcs :done2
+ bcs done2
  clc
  adc #estwidth
-:done2 tax
+.done2 tax
  rts
 
-:safe ldx #127 ;arbitrary large dist.
-:done txa ;return value in A
-]rts rts
+.safe ldx #127 ;arbitrary large dist.
+.done txa ;return value in A
+.return
+ rts
+}
 
-*-------------------------------
-*
-*  Adjust CharY for uneven floor
-*
-*-------------------------------
-UNEVENFLOOR
+\*-------------------------------
+\*
+\*  Adjust CharY for uneven floor
+\*
+\*-------------------------------
+
+.UNEVENFLOOR
+{
  jsr getunderft
  cmp #dpressplate
- bne ]rts
+ bne return
  inc CharY
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \ lst

@@ -10,28 +10,30 @@
 \*-------------------------------
 \ org org
 
-.VanishChar BRK     ; jmp VANISHCHAR
+IF _JMP_TABLE=FALSE
+.VanishChar jmp VANISHCHAR
 .movemusic BRK      ; jmp MOVEMUSIC
 .moveauxlc clc
 BRK ; bcc MOVEAUXLC ;relocatable
-.firstguard BRK     ; jmp FIRSTGUARD
-.markmeters RTS     ; jmp MARKMETERS                    BEEB TO DO
+.firstguard jmp FIRSTGUARD
+.markmeters jmp MARKMETERS
 
-.potioneffect BRK   ; jmp POTIONEFFECT
-.mouserescue BRK    ; jmp MOUSERESCUE
-.stabchar brk       ; jmp STABCHAR
-.unholy RTS         ; jmp UNHOLY                        BEEB TO DO
-.reflection RTS     ; jmp REFLECTION                    BEEB TO DO
+.potioneffect jmp POTIONEFFECT
+.mouserescue jmp MOUSERESCUE
+.StabChar jmp STABCHAR
+.unholy jmp UNHOLY
+.reflection jmp REFLECTION
 
-.MarkKidMeter BRK   ; jmp MARKKIDMETER
-.MarkOppMeter BRK   ; jmp MARKOPPMETER
-.bonesrise RTS      ; jmp BONESRISE                     BEEB TO DO
-.decstr BRK         ; jmp DECSTR
-.DoSaveGame BRK     ; jmp DOSAVEGAME
+.MarkKidMeter jmp MARKKIDMETER
+.MarkOppMeter jmp MARKOPPMETER
+.bonesrise jmp BONESRISE
+.decstr jmp DECSTR
+.DoSaveGame BRK     ; jmp DOSAVEGAME                    BEEB TODO SAVEGAME
 
-.LoadLevelX jmp LOADLEVELX
-.checkalert RTS     ; jmp CHECKALERT                    BEEB TO DO
+\.LoadLevelX jmp LOADLEVELX         ; moved to master.asm
+.checkalert jmp CHECKALERT
 .dispversion BRK    ; jmp DISPVERSION
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -47,8 +49,8 @@ BRK ; bcc MOVEAUXLC ;relocatable
 \ lst off
 
 \ dum $f0
-\]Xcount ds 1
-\]Xend ds 1
+\misc_Xcount ds 1
+\misc_Xend ds 1
 \ dend
 
 \*-------------------------------
@@ -68,13 +70,14 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 \FirstSideB = 3
 
-IF _TODO
-*-------------------------------
-*
-* Vanish character
-*
-*-------------------------------
-VANISHCHAR
+\*-------------------------------
+\*
+\* Vanish character
+\*
+\*-------------------------------
+
+.VANISHCHAR
+{
  lda #86
  sta CharFace
  lda #0
@@ -83,8 +86,11 @@ VANISHCHAR
  sec
  sbc OppStrength
  sta ChgOppStr
-]rts rts
+.return
+ rts
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Move a block of memory
@@ -187,33 +193,36 @@ MOVEAUXLC
  sta $FFFF ;set in main l.c. too
 
  rts
+ENDIF
 
-*-------------------------------
-*
-* Player can't run or jump past en-garde guard
-*
-*-------------------------------
-FIRSTGUARD
+\*-------------------------------
+\*
+\* Player can't run or jump past en-garde guard
+\*
+\*-------------------------------
+
+.FIRSTGUARD
+{
  lda EnemyAlert
  cmp #2
- bcc ]rts
+ bcc return_50
  lda CharSword
- bne ]rts
+ bne return_50
  lda OpSword
- beq ]rts
+ beq return_50
  lda OpAction
  cmp #2
- bcs ]rts
+ bcs return_50
 
  lda CharFace
  cmp OpFace
- beq ]rts
+ beq return_50
 
  jsr getopdist
- cmp #-15
- bcc ]rts
+ cmp #LO(-15)
+ bcc return_50
 
-* Bump off guard
+\* Bump off guard
 
  ldx CharBlockY
  lda FloorY+1,x
@@ -221,53 +230,67 @@ FIRSTGUARD
  lda #bump
  jsr jumpseq
  jmp animchar
+}
+.return_50
+ rts
 
-*-------------------------------
-*
-* Mark strength meters
-*
-*-------------------------------
-Mark3 jsr Mark1 ;mark 3 blocks
+\*-------------------------------
+\*
+\* Mark strength meters
+\*
+\*-------------------------------
+
+.Mark3 jsr Mark1 ;mark 3 blocks
  iny
-Mark2 jsr Mark1 ;mark 2 blocks
+.Mark2 jsr Mark1 ;mark 2 blocks
  iny
-Mark1 lda #4
+.Mark1
+{
+ lda #4
  sta height
  clc
- lda #2
+ lda #REDRAW_FRAMES
  jsr markwipe
  jmp markred
+}
 
-MARKMETERS
+.MARKMETERS
+{
  jsr MARKKIDMETER
  jmp MARKOPPMETER
+}
 
-MARKKIDMETER
+.MARKKIDMETER
+{
  ldy #20
  bne Mark3
+}
 
-MARKOPPMETER
+.MARKOPPMETER
+{
  ldy #28
  bne Mark2
-]rts rts
+ rts
+}
 
-*-------------------------------
-*
-* Potion takes effect
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Potion takes effect
+\*
+\*-------------------------------
 wtlesstimer = 200
 vibetimer = 3
 
-POTIONEFFECT
+.POTIONEFFECT
+{
  lda CharID
- bne ]rts
+ bne return_50
 
  ldx lastpotion
- beq ]rts
- bpl :notswd
+ beq return_50
+ bpl notswd
 
-* Sword (-1)
+\* Sword (-1)
 
  lda #1
  sta gotsword
@@ -280,14 +303,14 @@ POTIONEFFECT
  sta lightning ;3 white flashes
  rts
 
-* Recharge meter (1)
+\* Recharge meter (1)
 
-:notswd cpx #1
- bne :2
+.notswd cpx #1
+ bne label_2
 
  lda KidStrength
  cmp MaxKidStr
- beq ]rts ;already at full strength
+ beq return ;already at full strength
 
  lda #$99
  sta lightcolor
@@ -300,10 +323,10 @@ POTIONEFFECT
  sta ChgKidStr
  rts
 
-* Boost meter (2)
+\* Boost meter (2)
 
-:2 cpx #2
- bne :3
+.label_2 cpx #2
+ bne label_3
  lda #$99
  sta lightcolor
  lda #5
@@ -313,10 +336,10 @@ POTIONEFFECT
  jsr cuesong
  jmp boostmeter
 
-* Weightless (3)
+\* Weightless (3)
 
-:3 cpx #3
- bne :4
+.label_3 cpx #3
+ bne label_4
  lda #s_ShortPot
  ldx #25
  jsr cuesong
@@ -326,10 +349,10 @@ POTIONEFFECT
  sta vibes
  rts
 
-* Upside down (4)
+\* Upside down (4)
 
-:4 cpx #4
- bne :5
+.label_4 cpx #4
+ bne label_5
  lda invert
  eor #$ff
  sta invert
@@ -337,24 +360,27 @@ POTIONEFFECT
  sta redrawflg
  jmp inverty
 
-* Yecch (5)
+\* Yecch (5)
 
-:5 cpx #5
- bne :6
+.label_5 cpx #5
+ bne label_6
  lda #Splat ;yecch
  jsr addsound
- lda #-1
+ lda #LO(-1)
  sta ChgKidStr
  rts
-:6
-]rts rts
+.label_6
+.return
+  rts
+}
 
-*-------------------------------
-*
-* Mouse rescues you
-*
-*-------------------------------
-MOUSERESCUE
+\*-------------------------------
+\*
+\* Mouse rescues you
+\*
+\*-------------------------------
+.MOUSERESCUE
+{
  jsr LoadKid
 
  lda #24 ;mouse
@@ -365,7 +391,7 @@ MOUSERESCUE
  stx CharBlockY
  lda FloorY+1,x
  sta CharY
- lda #-1
+ lda #LO(-1)
  sta CharFace
  sta CharLife
  lda #1
@@ -376,42 +402,46 @@ MOUSERESCUE
  jsr animchar
 
  jmp SaveShad
+}
 
-*-------------------------------
-*
-* Stab character
-*
-*-------------------------------
-STABCHAR
+\*-------------------------------
+\*
+\* Stab character
+\*
+\*-------------------------------
+
+.STABCHAR
+{
  lda CharLife
- bpl ]rts ;already dead
+ bpl return ;already dead
  lda CharSword
  cmp #2
- bne :DL ;defenseless
+ bne local_DL ;defenseless
  lda CharID
  cmp #4
- beq :wounded ;skel has no life points
+ beq local_wounded ;skel has no life points
 
  lda #1
  jsr decstr
- bne :wounded
+ bne local_wounded
 
  ldx CharID
- beq :killed
+ beq local_killed
 
  ldx CharID
  cpx #4 ;skeleton
- bne :killed
+ bne local_killed
  lda #0
  sta ChgOppStr ;skel is invincible
-]rts rts
+.return
+ rts
 
-:killed jsr getbehind
+.local_killed jsr getbehind
  cmp #space
- bne :onground
+ bne local_onground
  jsr getdist ;to EOB
  cmp #4
- bcc :onground
+ bcc local_onground
 ;if char is killed at edge, knock him off
  sec
  sbc #14
@@ -420,52 +450,55 @@ STABCHAR
  inc CharBlockY
  lda #fightfall
  jsr jumpseq
- jmp :3
+ jmp label_3
 
-:onground lda #stabkill
- bne :2
+.local_onground lda #stabkill
+ bne label_2
 
-:wounded lda #stabbed
-:2 jsr jumpseq
+.local_wounded lda #stabbed
+.label_2 jsr jumpseq
 
-:1 ldx CharBlockY
+.label_1 ldx CharBlockY
  lda FloorY+1,x
  sta CharY
  lda #0
  sta CharYVel
 
-:3 lda #Splat
+.label_3 lda #Splat
  jsr addsound
 
  jmp animchar
 
-* stabbed when defenseless
+\* stabbed when defenseless
 
-:DL lda #100
+.local_DL lda #100
  jsr decstr
 
  lda #stabkill ;dropdead?
- jmp :killed
+ jmp local_killed
+}
 
-*-------------------------------
-*
-* If shadow dies, you die (& vice versa)
-*
-*-------------------------------
-UNHOLY
+\*-------------------------------
+\*
+\* If shadow dies, you die (& vice versa)
+\*
+\*-------------------------------
+
+.UNHOLY
+{
  lda level
  cmp #12
- bne ]rts
+ bne return_54
 
  lda OpID
  ora CharID
  cmp #1 ;kid & shadow?
- bne ]rts
+ bne return_54
 
  lda CharLife
- bpl ]rts
+ bpl return_54
  lda OpLife
- bmi ]rts
+ bmi return_54
 ;live char, dead opponent
  lda #$ff
  sta lightcolor
@@ -475,20 +508,18 @@ UNHOLY
  jsr addsound
  lda #100
  jmp decstr
-]rts rts
+}
+.return_54
+ rts
 
-*-------------------------------
-*
-*  R E F L E C T I O N
-*
-*-------------------------------
-IF DemoDisk
-REFLECTION
-BONESRISE
- brk
-ELSE
+\*-------------------------------
+\*
+\*  R E F L E C T I O N
+\*
+\*-------------------------------
 
-REFLECTION
+.REFLECTION
+{
  jsr LoadKid
  jsr GetFrameInfo
 
@@ -498,39 +529,41 @@ REFLECTION
 
  jsr getunderft
  cmp #mirror ;is kid standing before mirror?
-  bne ]rts ;no
+  bne return_54 ;no
 
  jsr getreflect ;get char data for reflection
 
  lda dmirr ;if kid is on wrong side of mirror,
- bmi ]rts ;don't draw reflection
+ bmi return_54 ;don't draw reflection
 
-*  Draw kid's reflection (as a pseudo-character)
+\*  Draw kid's reflection (as a pseudo-character)
 
  jsr setupchar
 
-*  Crop edges
+\*  Crop edges
 
  ldx CharBlockY
  inx
  lda BlockTop,x
  cmp FCharY
- bcs ]rts
+ bcs return_54
  sta FCharCU
 
  lda CharBlockX ;of mirror
- asl
- asl ;x 4
+ asl A
+ asl A;x 4
  clc
  adc #1
  sta FCharCL
 
  jmp addreflobj ;normal reflection
+}
 
-*-------------------------------
-* Get char data for kid's reflection
+\*-------------------------------
+\* Get char data for kid's reflection
 
-getreflect
+.getreflect
+{
  lda CharBlockX
  jsr getblockej
  clc
@@ -540,18 +573,18 @@ getreflect
  jsr getdist
 
  ldx CharFace
- bmi :left
+ bmi left
 
  eor #$ff ;facing right--
  clc
  adc #14 ;get dist to back of block
 
-:left sec
+.left sec
  sbc #2 ;another fudge factor
  sta dmirr ;distance from mirror
 
  lda mirrx
- asl
+ asl A
  sec
  sbc CharX
  sta CharX ;reflection x-coord
@@ -560,12 +593,15 @@ getreflect
  eor #$ff
  sta CharFace
 
-]rts rts
+}
+.return_55
+ rts
 
-*-------------------------------
-* Bring reflection to life as shadowman
+\*-------------------------------
+\* Bring reflection to life as shadowman
 
-CreateShad
+.CreateShad
+{
  jsr getreflect ;get char data for reflection
 
  lda #0
@@ -585,40 +621,42 @@ CreateShad
  lda #1
  sta KidStrength
  jmp markmeters
+}
 
-*-------------------------------
-*
-* Bones rise
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Bones rise
+\*
+\*-------------------------------
 skelscrn = 1
 skelx = 5
 skely = 1
 skeltrig = 2
 skelprog = 2
 
-BONESRISE
+.BONESRISE
+{
  lda level
  cmp #3
- bne ]rts
+ bne return_55
 
  lda ShadFace
  cmp #86
- bne ]rts
+ bne return_55
  lda VisScrn
  cmp #skelscrn
- bne ]rts
+ bne return_55
  lda exitopen
- beq ]rts
+ beq return_55
  lda KidBlockX
  cmp #skeltrig
- beq :trig
+ beq trig
  cmp #skeltrig+1
- bne ]rts
+ bne return_55
 
-* Remove dead skeleton
+\* Remove dead skeleton
 
-:trig lda VisScrn
+.trig lda VisScrn
  ldx #skelx
  ldy #skely
  jsr rdblock
@@ -627,7 +665,7 @@ BONESRISE
  sta (BlueType),y
  lda #24
  sta height
- lda #2
+ lda #REDRAW_FRAMES
  jsr markred
  jsr markwipe
  iny
@@ -635,9 +673,9 @@ BONESRISE
  jsr markwipe
  pla
  cmp #bones
- bne ]rts
+ bne return_55
 
-* Create live skeleton
+\* Create live skeleton
 
  lda VisScrn
  sta CharScrn
@@ -654,7 +692,7 @@ BONESRISE
  adc #angle+7
  sta CharX
 
- lda #-1 ;left
+ lda #LO(-1) ;left
  sta CharFace
 
  lda #arise
@@ -664,7 +702,7 @@ BONESRISE
  lda #skelprog
  sta guardprog
 
- lda #-1
+ lda #LO(-1)
  sta CharLife
  lda #3
  sta OppStrength
@@ -682,20 +720,21 @@ BONESRISE
  sta CharID
 
  jmp SaveShad ;save ShadVars
+}
 
-ENDIF
+\*-------------------------------
+\*
+\* Decrease strength by A (non-0)
+\*
+\* Out: non-0 if char lives, 0 if he dies
+\*      ChgStrength
+\*
+\*-------------------------------
 
-*-------------------------------
-*
-* Decrease strength by A (non-0)
-*
-* Out: non-0 if char lives, 0 if he dies
-*      ChgStrength
-*
-*-------------------------------
-DECSTR
+.DECSTR
+{
  ldx CharID
- bne :enemy
+ bne local_enemy
 
  cmp KidStrength
  bcs killkid
@@ -706,7 +745,7 @@ DECSTR
  sta ChgKidStr
  rts
 
-:enemy
+.local_enemy
  cmp OppStrength
  bcs killopp
 
@@ -715,31 +754,40 @@ DECSTR
  adc #1
  sta ChgOppStr
  rts
+}
 
-*-------------------------------
-* Kill character (or opponent)
-* Return A = 0
-*-------------------------------
-killkid
+\*-------------------------------
+\* Kill character (or opponent)
+\* Return A = 0
+\*-------------------------------
+
+.killkid
+{
  lda #0
  sec
  sbc KidStrength
  sta ChgKidStr
 
  lda #0
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-killopp
+\*-------------------------------
+
+.killopp
+{
  lda #0
  sec
  sbc OppStrength
  sta ChgOppStr
 
  lda #0
-]rts rts
+.return
+ rts
+}
 
-
+IF _TODO
 *-------------------------------
 * Save current game to disk
 *
@@ -772,209 +820,185 @@ DOSAVEGAME
 ENDIF
 
 \*-------------------------------
-\* alt bg & char set list
-\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-
-.bgset1 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
-\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
-.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
-
-\*-------------------------------
 \*
-\* Load level from disk
-\* In: X = level # (0-14)
+\* In: Kid & Shad data
+\* Out: EnemyAlert
+\*   2: kid & shad are on same stretch of floor
+\*   1: slicer, gaps in floor, or other obstacles, but
+\*      line of sight is clear
+\*   0: can't see each other
 \*
 \*-------------------------------
-.LOADLEVELX
-{
-\ Just keep X as level#
-
-\ lda bluepTRKlst,x
-\ sta bluepTRK
-\ lda bluepREGlst,x
-\ sta bluepREG
-
- lda bgset1,x ;A
-\ pha
-\ lda bgset2,x ;X
- ldy chset,x ;Y
-\ tax
-\ pla
-
- jmp _loadlevel ;in MASTER
- rts
-}
-
-IF _TODO
-*-------------------------------
-*
-* In: Kid & Shad data
-* Out: EnemyAlert
-*   2: kid & shad are on same stretch of floor
-*   1: slicer, gaps in floor, or other obstacles, but
-*      line of sight is clear
-*   0: can't see each other
-*
-*-------------------------------
 gfightthres = 28*4
 
-]safe lda #0
+.CHECKALERT_safe
+{
+ lda #0
  sta EnemyAlert
-]rts rts
+}
+.return_49
+ rts
 
-CHECKALERT
+.CHECKALERT
+{
  lda ShadID
  cmp #24 ;mouse?
- beq ]rts
+ beq return_49
  cmp #1 ;shadowman?
- bne :notshad
+ bne notshad
  lda level
  cmp #12
- bne ]safe ;fight shadow only on level 12
+ bne CHECKALERT_safe;fight shadow only on level 12
 
-:notshad
+.notshad
  lda KidPosn
- beq ]safe
+ beq CHECKALERT_safe
  cmp #219
- bcc :noclimb
+ bcc local_noclimb
  cmp #229
- bcc ]safe ;on staircase
-:noclimb
+ bcc CHECKALERT_safe ;on staircase
+.local_noclimb
  lda ShadFace
  cmp #86
- beq ]safe
+ beq CHECKALERT_safe
 
  lda KidLife
  and ShadLife
- bpl ]safe ;one is dead
+ bpl CHECKALERT_safe ;one is dead
 
  lda KidScrn
  cmp ShadScrn
- bne ]safe
+ bne CHECKALERT_safe
 
  lda KidBlockY
  cmp ShadBlockY
- bne ]safe
+ bne CHECKALERT_safe
 
  lda #2 ;clear path
  sta EnemyAlert
 
-* Get range of blocks to scan (]Xcount --> ]Xend)
+\* Get range of blocks to scan (misc_Xcount --> misc_Xend)
 
  lda KidBlockX
  jsr getblockej
  clc
  adc #7 ;middle of block
- sta ]Xcount
+ sta misc_Xcount
 
  lda ShadBlockX
  jsr getblockej
  clc
  adc #7
- sta ]Xend
+ sta misc_Xend
 
- do 0
- lda ]Xcount
+ IF 0
+ lda misc_Xcount
  jsr getblockxp
  ldx #1
  jsr showpage
- lda ]Xend
+ lda misc_Xend
  jsr getblockxp
  ldx #2
  jsr showpage
- fin
+ ENDIF
 
- lda ]Xend
- cmp ]Xcount
- bcs :cont
+ lda misc_Xend
+ cmp misc_Xcount
+ bcs cont
  tax
- lda ]Xcount
- sta ]Xend
- stx ]Xcount
-:cont
+ lda misc_Xcount
+ sta misc_Xend
+ stx misc_Xcount
 
-* If leftmost block is a slicer, skip it
+.cont
 
- lda ]Xcount
- jsr :rdblock
+\* If leftmost block is a slicer, skip it
+
+ lda misc_Xcount
+ jsr misc_rdblock
  cmp #slicer
- bne :1
+ bne label_1
  lda #14
  clc
- adc ]Xcount
- sta ]Xcount
+ adc misc_Xcount
+ sta misc_Xcount
 
-* If rightmost block is a gate, skip it
+\* If rightmost block is a gate, skip it
 
-:1 lda ]Xend
- jsr :rdblock
+.label_1 lda misc_Xend
+ jsr misc_rdblock
  cmp #gate
- bne :20
- lda ]Xend
+ bne label_20
+ lda misc_Xend
  sec
  sbc #14
- sta ]Xend
+ sta misc_Xend
 
-:20 lda ]Xend
- cmp ]Xcount
- bcc :rts
+.label_20 lda misc_Xend
+ cmp misc_Xcount
+ bcc return
 
-* Scan from ]Xcount to ]Xend (left to right)
+\* Scan from misc_Xcount to misc_Xend (left to right)
 
- lda ]Xcount
-:loop cmp ]Xend
- beq :9
- bcs :rts
+ lda misc_Xcount
+.loop cmp misc_Xend
+ beq label_9
+ bcs return
 
-:9 jsr :rdblock
+.label_9 jsr misc_rdblock
 
  cmp #block
- beq :safe
+ beq local_safe
  cmp #panelwif
- beq :safe
+ beq local_safe
  cmp #panelwof
- beq :safe ;solid barrier blocks view
+ beq local_safe ;solid barrier blocks view
 
  cmp #loose
- beq :view
+ beq local_view
  cmp #gate
- bne :2
+ bne label_2
  lda (BlueSpec),y
  cmp #gfightthres
- bcs :clear
- bcc :view
+ bcs local_clear
+ bcc local_view
 
-:2 cmp #slicer
- beq :view
+.label_2 cmp #slicer
+ beq local_view
 
  jsr cmpspace
- bne :clear ;closed gate, slicer, gap in floor, etc.
+ bne local_clear ;closed gate, slicer, gap in floor, etc.
 ;are obstacles but don't block view
-:view lda #1
+.local_view lda #1
  sta EnemyAlert
 
-:clear lda ]Xcount
+.local_clear lda misc_Xcount
  clc
  adc #14
- sta ]Xcount
- bne :loop
-:rts
-]rts rts
+ sta misc_Xcount
+ bne loop
+ rts
 
-:safe lda #0
+.local_safe lda #0
  sta EnemyAlert
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* In: A = X-coord
-* Out: rdblock results
-*-------------------------------
-:rdblock jsr getblockxp
+\*-------------------------------
+\* In: A = X-coord
+\* Out: rdblock results
+\*-------------------------------
+.misc_rdblock
+{
+ jsr getblockxp
  tax
  ldy KidBlockY
  lda KidScrn
  jmp rdblock
+}
 
+IF _TODO
 *-------------------------------
 *
 *  Display version # on text page 1 (& wait for keypress)

@@ -16,38 +16,41 @@
 \*-------------------------------
 \ org org
 
-.updatemeters RTS   ; jmp UPDATEMETERS          BEEB TO DO
-.DrawKidMeter BRK   ; jmp DRAWKIDMETER
-.DrawSword BRK      ; jmp DRAWSWORD
-.DrawKid BRK        ; jmp DRAWKID
-.DrawShad BRK       ; jmp DRAWSHAD
+IF _JMP_TABLE = FALSE
+.updatemeters jmp UPDATEMETERS
+.DrawKidMeter jmp DRAWKIDMETER
+.DrawSword jmp DRAWSWORD
+.DrawKid jmp DRAWKID
+.DrawShad jmp DRAWSHAD
 
-.setupflame RTS     ; jmp SETUPFLAME            BEEB TO DO
-.continuemsg BRK    ; jmp CONTINUEMSG
-.addcharobj BRK     ; jmp ADDCHAROBJ
-.setobjindx BRK     ; jmp SETOBJINDX
-.printlevel BRK     ; jmp PRINTLEVEL
+.setupflame jmp SETUPFLAME
+.continuemsg RTS    ; jmp CONTINUEMSG           BEEB TODO MESSAGES
+.addcharobj jmp ADDCHAROBJ
+.setobjindx jmp SETOBJINDX
+.printlevel RTS     ; jmp PRINTLEVEL            BEEB TODO MESSAGES
 
-.DrawOppMeter BRK   ; jmp DRAWOPPMETER
-.flipdiskmsg BRK    ; jmp FLIPDISKMSG
-.timeleftmsg BRK    ; jmp TIMELEFTMSG
-.DrawGuard BRK      ; jmp DRAWGUARD
-.DrawGuard2 BRK     ; jmp DRAWGUARD
+.DrawOppMeter jmp DRAWOPPMETER
+.flipdiskmsg BRK    ; jmp FLIPDISKMSG           NOT BEEB
+.timeleftmsg RTS    ; jmp TIMELEFTMSG           BEEB TODO MESSAGES
+.DrawGuard jmp DRAWGUARD
+.DrawGuard2 jmp DRAWGUARD
 
-.setupflask RTS     ; jmp SETUPFLASK            BEEB TO DO
-.setupcomix BRK     ; jmp SETUPCOMIX
-.psetupflame BRK    ; jmp PSETUPFLAME
-.drawpost BRK       ; jmp DRAWPOST
-.drawglass BRK      ; jmp DRAWGLASS
+.setupflask jmp SETUPFLASK
+.setupcomix jmp SETUPCOMIX
+.psetupflame jmp PSETUPFLAME
+.drawpost jmp DRAWPOST
+.drawglass jmp DRAWGLASS
 
-.initlay BRK        ; jmp INITLAY
+.initlay jmp INITLAY
 .twinkle BRK        ; jmp TWINKLE
-.flow BRK           ; jmp FLOW
-.pmask BRK          ; jmp PMASK
-.yellow BRK         ; jmp YELLOW
+.flow jmp FLOW
+.pmask jmp PMASK
+ENDIF
 
-.setrecheck0 BRK    ; jmp SETRECHECK0
-.recheckyel BRK     ; jmp RECHECKYEL
+\ NOT BEEB COPY PROTECTION
+\.yellow BRK         ; jmp YELLOW
+\.setrecheck0 BRK    ; jmp SETRECHECK0
+\.recheckyel BRK     ; jmp RECHECKYEL
 \ ds 3
 \ ds 3
 \ ds 3
@@ -89,77 +92,84 @@ addr ds 2
 temp ds 1
 
  dend
+ENDIF
 
-tempsave ds $10
+.gamebg_tempsave skip $10
 
-*-------------------------------
-* Strength meters
+\*-------------------------------
+\* Strength meters
 
-KidStrX db 00,01,02,03,04,05,06,08,09,10,11,12
-KidStrOFF db 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
+.KidStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
+\\.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-OppStrX db 39,38,37,36,35,34,32,31,30,29,28,27
-OppStrOFF db 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 27,28,29,30,31,32,34,35,36,37,38,39       \\ BEEB TODO MIRROR
+.OppStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
+\\.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+\\.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
-bline hex 89,8a,8b
+.bline EQUB $89,$8a,$8b
 
-*-------------------------------
-* Post in Princess's room
+\*-------------------------------
+\* Post in Princess's room
 
 postx = 31
 posty = 152
 postimg = $c ;chtable6
 
-*-------------------------------
-* Stars outside Princess's window
+\*-------------------------------
+\* Stars outside Princess's window
 
 starx = 2
-stary hex 62,65,6d,72
-stari hex 2a,2b,2b,2a ;chtable6
+.stary EQUB $62,$65,$6d,$72
+.stari EQUB $2a,$2b,$2b,$2a ;chtable6
 
-*-------------------------------
-* Hourglass
+\*-------------------------------
+\* Hourglass
 
 glassx = 19
 glassy = 151
-glassimg hex 15,0d,0e,0f,10,11,12,13,14 ;chtable6
-sandht db 0,1,2,3,4,5,6,7
+.glassimg EQUB $15,$0d,$0e,$0f,$10,$11,$12,$13,$14 ;chtable6
+.sandht EQUB 0,1,2,3,4,5,6,7
 
 flowx = glassx+1
 flowy = glassy-2
-flowimg hex 16,17,18 ;chtable6
+.flowimg EQUB $16,$17,$18 ;chtable6
 
-*-------------------------------
-* Masks for Princess's face & hair
+\*-------------------------------
+\* Masks for Princess's face & hair
 
-pmaskdx hex 00,00
-pmaskdy db -4,-33
-pmaski hex 2c,22
+IF _TODO
+.pmaskdx EQUB $00,$00
+.pmaskdy EQUB LO(-4),LO(-33)
+.pmaski EQUB $2c,$22
+ENDIF
 
-*-------------------------------
-* Comix
+\*-------------------------------
+\* Comix
 
 starimage = $41
 startable = 0 ;chtable1
 
-*-------------------------------
-* Torch animation frames
-*               0  1  2  3  4  5  6  7  8  9 10 11
-*              12 13 14 15 16 17
+\*-------------------------------
+\* Torch animation frames
+\*               0  1  2  3  4  5  6  7  8  9 10 11
+\*              12 13 14 15 16 17
 
-torchflame hex 52,53,54,55,56,61,62,63,64,52,54,56
- hex 63,61,55,53,64,62
+.torchflame EQUB $52,$53,$54,$55,$56,$61,$62,$63,$64,$52,$54,$56
+ EQUB $63,$61,$55,$53,$64,$62
 
-ptorchflame db 1,2,3,4,5,6,7,8,9,3,5,7,1,4,9,2,8,6
+.ptorchflame EQUB 1,2,3,4,5,6,7,8,9,3,5,7,1,4,9,2,8,6
 
-*-------------------------------
-* Bubbling flask frames
-*               0  1  2  3  4  5  6  7  8  9 10 11
+\*-------------------------------
+\* Bubbling flask frames
+\*               0  1  2  3  4  5  6  7  8  9 10 11
 
-bubble hex b2,af,b0,b1,b0,af,b1,b0,af
+.bubble EQUB $b2,$af,$b0,$b1,$b0,$af,$b1,$b0,$af
 
+IF _TODO
 *-------------------------------
 * Message data: YCO, XCO, OFFSET, IMAGE
 
@@ -268,7 +278,7 @@ TIMELEFTMSG
  jsr setupimage
  pla
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
  jmp addmsg ;replace "minutes" with "seconds"
 
@@ -361,7 +371,7 @@ FLIPDISKMSG
 superimage
  jsr setupimage
 superim1
- lda #sta.$40
+ lda #enum_sta.$40
  sta OPACITY
  jmp addmsg
 
@@ -388,321 +398,368 @@ setupimage
  lda (addr),y
  sta IMAGE
 ]rts
-:rts rts
+ENDIF
+.return_28
+ rts
 
-*-------------------------------
-* Draw Kid
-*-------------------------------
-DRAWKID
+\*-------------------------------
+\* Draw Kid
+\*-------------------------------
+
+.DRAWKID
+{
+IF _DEBUG
  lda backtolife
- beq :2
+ beq label_2
+ DEC backtolife
  lda PAGE
- beq ]rts ;flash when coming back to life
+ beq return_28 ;flash when coming back to life
+ENDIF
 
-:2 lda mergetimer
- bmi :1
+.label_2 lda mergetimer
+ bmi label_1
  and #1
- beq :1
+ beq label_1
  jmp DrawEored ;flash between kid & shadowman
 
-:1 jmp DrawNormal
+.label_1 jmp DrawNormal
+}
 
-*-------------------------------
-* Draw Sword
-*-------------------------------
-DRAWSWORD
+\*-------------------------------
+\* Draw Sword
+\*-------------------------------
+
+.DRAWSWORD
+{
  jmp DrawNormal
+}
 
-*-------------------------------
-* Draw Shadowman
-*-------------------------------
-DRAWSHAD
+\*-------------------------------
+\* Draw Shadowman
+\*-------------------------------
+
+.DRAWSHAD
+{
  jmp DrawEored
+}
 
-*-------------------------------
-* Draw Guard
-*-------------------------------
-DRAWGUARD
- do EditorDisk
+\*-------------------------------
+\* Draw Guard
+\*-------------------------------
+
+.DRAWGUARD
+{
+IF EditorDisk
  lda #EditorDisk
  cmp #2
  beq DrawNormal
- fin
+ENDIF
 
  lda GuardColor ;set by "ADDGUARD" in AUTO
  beq DrawNormal
  bne DrawShifted
+}
 
-*-------------------------------
-DrawNormal
- lda #mask
+\*-------------------------------
+
+.DrawNormal
+{
+ lda #enum_mask
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-DrawShifted
- lda #1
- jsr chgoffset
+\*-------------------------------
 
- lda #mask
+.DrawShifted
+{
+\ lda #1
+\ jsr chgoffset
+
+\ lda #enum_mask
+
+ lda #enum_eor          ; BEEB - this increments palette index at lowest level
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
+}
 
-*-------------------------------
-DrawEored
- lda #eor
+\*-------------------------------
+
+.DrawEored
+{
+ lda #enum_eor          ; BEEB - this increments palette index at lowest level
  sta OPACITY
 
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR UseCharTable
  jmp addmid
+}
 
-*-------------------------------
-chgoffset
+\*-------------------------------
+
+IF _NOT_BEEB
+.chgoffset
+{
  clc
  adc OFFSET
  cmp #7
- bcc :1
+ bcc label_1
 
  inc XCO
  sec
  sbc #7
 
-:1 sta OFFSET
+.label_1 sta OFFSET
  rts
+}
+ENDIF
 
-*-------------------------------
-*
-* Update strength meters
-*
-*-------------------------------
-UPDATEMETERS
+\*-------------------------------
+\*
+\* Update strength meters
+\*
+\*-------------------------------
+
+.UPDATEMETERS
+{
  lda redkidmeter
- beq :1
+ beq label_1
 
  jsr DrawKidMeter
 
-:1 lda redoppmeter
- beq ]rts
+.label_1 lda redoppmeter
+ beq return
 
  jmp DrawOppMeter
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Draw kid's strength meter at lower left
-*
-*-------------------------------
-DRAWKIDMETER
+\*-------------------------------
+\*
+\* Draw kid's strength meter at lower left
+\*
+\*-------------------------------
+
+.DRAWKIDMETER
+{
  lda inbuilder
- bne ]rts
+ bne return_53
 
  lda #191
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  ldx #0
  stx xsave ;# of bullets drawn so far
 
-:loop lda KidStrength
+.loop lda KidStrength
  sec
  sbc xsave ;# of bullets left to draw
- beq :darkpart
+ beq darkpart
  cmp #4
- bcs :draw3
+ bcs draw3
  cmp #3
- bcs :draw2
+ bcs draw2
  cmp #2
- bcc :drawlast
+ bcc drawlast
 ;Draw 1 bullet
-:draw1 ldy #1
- bne :drline
+.draw1 ldy #1
+ bne drline
  ;Draw 2 bullets
-:draw2 ldy #2
- bne :drline
+.draw2 ldy #2
+ bne drline
 ;Draw 3 bullets
-:draw3 ldy #3
- bne :drline
+.draw3 ldy #3
+ bne drline
 
-:drawlast lda KidStrength
+.drawlast lda KidStrength
  cmp #2
- bcs :steady
+ bcs steady
  lda PAGE
- beq :skip ;flashes when down to 1
-:steady lda #bullet
+ beq skip ;flashes when down to 1
+.steady lda #bullet
  ldy #1
- jsr :draw
-:skip jmp :darkpart
+ jsr draw
+.skip jmp darkpart
 
-* Draw line of 1-3 bullets
+\* Draw line of 1-3 bullets
 
-:drline lda bline-1,y ;image #
- jsr :draw
- jmp :loop
+.drline lda bline-1,y ;image #
+ jsr draw
+ jmp loop
 
-:draw sta IMAGE
+.draw sta IMAGE
  ldx xsave
  tya
  clc
  adc xsave
  sta xsave
 
-* In: IMAGE; x = unit # (0 = leftmost)
+\* In: IMAGE; x = unit # (0 = leftmost)
 
-:drawimg lda KidStrX,x
+.drawimg lda KidStrX,x
  sta XCO
  lda KidStrOFF,x
  sta OFFSET
  jmp addmsg
 
-* Draw blanks to limit of MaxKidStr
+\* Draw blanks to limit of MaxKidStr
 
-:darkpart
- lda #and
+.darkpart
+ lda #enum_and
  sta OPACITY
  lda #blank
  sta IMAGE
-:dloop ldx xsave
+.dloop ldx xsave
  cpx MaxKidStr
- bcs ]rts
- jsr :drawimg
+ bcs return_53
+ jsr drawimg
  inc xsave
- bne :dloop
-]rts rts
+ bne dloop
+}
+.return_53
+ rts
 
-*-------------------------------
-*
-* Draw opp's strength meter at lower right
-*
-*-------------------------------
-DRAWOPPMETER
+\*-------------------------------
+\*
+\* Draw opp's strength meter at lower right
+\*
+\*-------------------------------
+
+.DRAWOPPMETER
+{
  lda inbuilder
- bne ]rts
+ bne return_53
 
  lda OppStrength
- beq ]rts
+ beq return_53
 
  lda ShadID
  cmp #24 ;mouse
- beq ]rts
+ beq return_53
  cmp #4 ;skel
- beq ]rts
+ beq return_53
  cmp #1 ;shadow
- bne :1
+ bne label_1
  lda level
  cmp #12
- bne ]rts ;shad strength shows only on level 12
-:1
+ bne return_53 ;shad strength shows only on level 12
+.label_1
  lda #191
  sta YCO
- lda #sta.$80 ;mirror
+ lda #enum_sta OR $80 ;mirror
  sta OPACITY
 
  ldx #0
  stx xsave ;# of bullets drawn so far
 
-:loop lda OppStrength
+.loop lda OppStrength
  sec
  sbc xsave ;# of bullets left to draw
- beq :darkpart
+ beq darkpart
  cmp #4
- bcs :draw3
+ bcs draw3
  cmp #3
- bcs :draw2
+ bcs draw2
  cmp #2
- bcc :drawlast
+ bcc drawlast
 ;Draw 1 bullet
-:draw1 ldy #1
- bne :drline
+.draw1 ldy #1
+ bne drline
  ;Draw 2 bullets
-:draw2 ldy #2
- bne :drline
+.draw2 ldy #2
+ bne drline
 ;Draw 3 bullets
-:draw3 ldy #3
- bne :drline
+.draw3 ldy #3
+ bne drline
 
-:drawlast lda OppStrength
+.drawlast lda OppStrength
  cmp #2
- bcs :steady
+ bcs steady
  lda PAGE
- beq :darkpart ;flashes when down to 1
-:steady lda #bullet
+ beq darkpart ;flashes when down to 1
+.steady lda #bullet
  ldy #1
- jmp :draw
+ jmp draw
 
-* Draw line of 1-3 bullets
+\* Draw line of 1-3 bullets
 
-:drline lda bline-1,y ;image #
- jsr :draw
- jmp :loop
+.drline lda bline-1,y ;image #
+ jsr draw
+ jmp loop
 
-:draw sta IMAGE
+.draw sta IMAGE
  ldx xsave
  tya
  clc
  adc xsave
  sta xsave
 
-:drawimg lda OppStrX,x
+.drawimg lda OppStrX,x
  sta XCO
  lda OppStrOFF,x
  sta OFFSET
  jmp addmsg
 
-:darkpart
- lda #and.$80
+.darkpart
+ lda #enum_and OR $80
  sta OPACITY
  lda #blank
  sta IMAGE
  ldx xsave
- jmp :drawimg
+ jmp drawimg
+}
 
-*-------------------------------
-*
-* Set up to draw bubbling flask
-*
-* In/out: same as SETUPFLAME
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Set up to draw bubbling flask
+\*
+\* In/out: same as SETUPFLAME
+\*
+\*-------------------------------
 EmptyPot = 0
 RefreshPot = %00100000
 BoostPot = %01000000
 MystPot = %01100000
 
-boffset = 2
+boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or equiv
 
-SETUPFLASK
+.SETUPFLASK
+{
  lda #boffset
  sta OFFSET
 
  txa
  and #%11100000
  cmp #EmptyPot
- beq :0
+ beq label_0
  cmp #BoostPot
- beq :tall ;special flask (taller)
- bcc :cont
+ beq local_tall ;special flask (taller)
+ bcc cont
 
- inc OFFSET ;mystery potion (blue)
+\ BEEB TEMP - comment out
+\ inc OFFSET ;mystery potion (blue)      ; BEEB TO DO - different palette
 
-:tall lda YCO
+.local_tall lda YCO
  sec
  sbc #4
  sta YCO
 
-:cont txa
+.cont txa
  and #%00011111
  tax
  cpx #bubbLast+1
- bcc :ok
+ bcc ok
  ldx #0
-:ok lda bubble,x
+.ok lda bubble,x
  sta IMAGE
 
  inc XCO
@@ -713,33 +770,37 @@ SETUPFLASK
  sbc #14
  sta YCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
- lda #bgtable2
+ lda #LO(bgtable2)
  sta TABLE
- lda #>bgtable2
+ lda #HI(bgtable2)
  sta TABLE+1
 
-]rts rts
+.return
+ rts
 
-:0 ldx #0
- beq :ok
+.label_0 ldx #0
+ beq ok
+}
 
-*-------------------------------
-*
-* Setup to draw flame
-*
-* In: XCO = blockxco
-*     YCO = Ay
-*     X   = spreced
-*
-* Out: ready to call ADDBACK (or FASTLAY)
-*
-*-------------------------------
-SETUPFLAME
+\*-------------------------------
+\*
+\* Setup to draw flame
+\*
+\* In: XCO = blockxco
+\*     YCO = Ay
+\*     X   = spreced
+\*
+\* Out: ready to call ADDBACK (or FASTLAY)
+\*
+\*-------------------------------
+
+.SETUPFLAME
+{
  cpx #torchLast+1
- bcs ]rts
+ bcs return
 
  lda torchflame,x
  sta IMAGE
@@ -751,43 +812,54 @@ SETUPFLAME
  sbc #43
  sta YCO
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
- lda #bgtable1
+ lda #LO(bgtable1a)
  sta TABLE
- lda #>bgtable1
+ lda #HI(bgtable1a)
  sta TABLE+1
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Setup to draw flame (Princess's room)
-*
-* In: XCO, YCO; X = frame #
-* Out: Ready to call ADDMID or LAY
-*
-*-------------------------------
-PSETUPFLAME
+\*-------------------------------
+\*
+\* Setup to draw flame (Princess's room)
+\*
+\* In: XCO, YCO; X = frame #
+\* Out: Ready to call ADDMID or LAY
+\*
+\*-------------------------------
+
+.PSETUPFLAME
+{
  cpx #torchLast+1
- bcs ]rts
+ bcs return_59
 
  lda ptorchflame,x
  sta IMAGE
 
- lda #sta
+ lda #enum_sta
  sta OPACITY
 
  jsr initlay
-
-]setch6 lda #chtable6
+}
+.gamebg_setch6
+{
+ lda #LO(chtable6)
  sta TABLE
- lda #>chtable6
+ lda #HI(chtable6)
  sta TABLE+1
+ LDA #&FF           ; BEEB hideous hack :)
+ STA BANK
+}
+.return_59
+ rts
 
-]rts rts
 
+IF _TODO
 *-------------------------------
 *
 * Twinkle one of the stars outside Princess's window
@@ -803,7 +875,7 @@ TWINKLE
  sta YCO
  lda stari,x
  sta IMAGE
- lda #eor
+ lda #enum_eor
  sta OPACITY
  jsr ]setch6
  jsr fastlay ;<--DIRECT HIRES CALL
@@ -815,67 +887,80 @@ TWINKLE
  eor #$20
  sta PAGE
  rts
+ENDIF
 
-*-------------------------------
-*
-* Draw big white post in Princess's room
-*
-*-------------------------------
-DRAWPOST
+\*-------------------------------
+\*
+\* Draw big white post in Princess's room
+\*
+\*-------------------------------
+
+.DRAWPOST
+{
  lda #postx
  sta XCO
  lda #posty
  sta YCO
  lda #postimg
  sta IMAGE
- lda #ora
+ lda #enum_ora
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
  jmp addfore
+}
 
-*-------------------------------
-*
-* Draw hourglass in Princess's room
-*
-* In: X = glass state (0-8, 0 = full)
-*
-*-------------------------------
-DRAWGLASS
+\*-------------------------------
+\*
+\* Draw hourglass in Princess's room
+\*
+\* In: X = glass state (0-8, 0 = full)
+\*
+\*-------------------------------
+
+.DRAWGLASS
+{
  lda #glassx
  sta XCO
  lda #glassy
  sta YCO
  lda glassimg,x
  sta IMAGE
- lda #sta
+ lda #enum_sta
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
  jmp addback
+}
 
-*-------------------------------
-*
-* Mask princess's face & hair for certain CharPosns
-*
-* (Called after ADDCHAROBJ)
-*
-*-------------------------------
-PMASK
+\*-------------------------------
+\*
+\* Mask princess's face & hair for certain CharPosns
+\*
+\* (Called after ADDCHAROBJ)
+\*
+\*-------------------------------
+
+IF _TODO
+.PMASK
+{
  ldx CharPosn
  cpx #19 ;plie
- bne :1
+ bne label_1
  ldx #0
- bpl :mask
-:1 cpx #1 ;pslump-1
- beq :m1
+ bpl PMASK_mask
+.label_1 cpx #1 ;pslump-1
+ beq m1
  cpx #18 ;pslump-2
- bne :2
-:m1 ldx #1
- bpl :mask
-:2
-
-]rts rts
-
-:mask
+ bne label_2
+.m1 ldx #1
+ bpl PMASK_mask
+.label_2
+}
+ENDIF
+.return_60
+ rts
+IF _NOT_BEEB
+.PMASK_mask
+{
  lda FCharY
  clc
  adc pmaskdy,x
@@ -892,11 +977,14 @@ PMASK
  lda #5 ;chtable6
  sta TABLE
 
- lda #and
+ lda #enum_and
  sta OPACITY
- lda #UseLayrsave.$80
+ lda #UseLayrsave OR $80
  jmp addmid
+}
+ENDIF
 
+IF _NOT_BEEB
 *-------------------------------
 * If failed copy prot check due to disk not in drive, recheck
 * In: a = 0 (Call after setrecheck0)
@@ -911,18 +999,21 @@ RECHECKYEL
  jsr yellow
  lda #$ff
  rts
+ENDIF
 
-*-------------------------------
-*
-* Draw sand flowing through hourglass
-*
-* In: X = frame # (0-3)
-*     Y = hourglass state (0-8)
-*
-*-------------------------------
-FLOW
+\*-------------------------------
+\*
+\* Draw sand flowing through hourglass
+\*
+\* In: X = frame # (0-3)
+\*     Y = hourglass state (0-8)
+\*
+\*-------------------------------
+
+.FLOW
+{
  cpy #8
- bcs ]rts ;glass is empty
+ bcs return_60 ;glass is empty
  jsr initlay
  lda #glassy
  sec
@@ -936,95 +1027,105 @@ FLOW
  sta OFFSET
  lda #flowy
  sta YCO
- lda #sta
+ lda #enum_sta
  sta OPACITY
- jsr ]setch6
+ jsr gamebg_setch6
+ LDA #BEEB_SWRAM_SLOT_CHTAB67
+ STA BANK       ; BEEB hideous hack
  jmp lay ;<---DIRECT HIRES CALL
+}
 
-*-------------------------------
-* Save/restore FCharVars
+\*-------------------------------
+\* Save/restore FCharVars
 
-saveFChar
+.saveFChar
+{
  ldx #$f
-:loop lda FCharVars,x
- sta tempsave,x
+.loop lda FCharVars,x
+ sta gamebg_tempsave,x
  dex
- bpl :loop
+ bpl loop
  rts
+}
 
-restoreFChar
+.restoreFChar
+{
  ldx #$f
-:loop lda tempsave,x
+.loop lda gamebg_tempsave,x
  sta FCharVars,x
  dex
- bpl :loop
-]rts rts
+ bpl loop
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Draw "comix" star
-*
-* In: Char data
-*
-*-------------------------------
-SETUPCOMIX
+\*-------------------------------
+\*
+\* Draw "comix" star
+\*
+\* In: Char data
+\*
+\*-------------------------------
+
+.SETUPCOMIX
+{
  jsr saveFChar
- jsr :sub
+ jsr local_sub
  jmp restoreFChar
 
-:sub lda #$ff
+.local_sub lda #$ff
  sta FCharIndex
 
-* Get y-coord
+\* Get y-coord
 
  lda CharPosn
  cmp #185 ;dead
- beq :low
+ beq local_low
  cmp #177 ;impaled
- beq :imp
+ beq local_imp
  cmp #106
- bcc :80
+ bcc label_80
  cmp #111 ;crouching
- bcc :low
-:80 cmp #178 ;halved
- beq ]rts
+ bcc local_low
+.label_80 cmp #178 ;halved
+ beq return_27
 
- lda #-15
+ lda #LO(-15)
  ldx CharID
- beq :3
- lda #-11 ;kid strikes lower than opponent
-:3 clc
+ beq label_3
+ lda #LO(-11) ;kid strikes lower than opponent
+.label_3 clc
  adc FCharY
  sta FCharY
- jmp :8
+ jmp label_8
 
-:low lda #4
+.local_low lda #4
  clc
  adc FCharY
  sta FCharY
- jmp :8
+ jmp label_8
 
-* Get x-coord
+\* Get x-coord
 
-:imp lda #-5 impaled
- bne :9
-:8 lda #5
-:9 jsr addfcharx
+.local_imp lda #LO(-5)  ; impaled
+ bne label_9
+.label_8 lda #5
+.label_9 jsr addfcharx
 
-* Get color (kid red, opps blue)
+\* Get color (kid red, opps blue)
 
  lda CharID
- beq :2 ;kid: 0
+ beq label_2 ;kid: 0
  lda #1 ;opponents: 1
-:2
+.label_2
  eor FCharX
  eor FCharFace
  and #1 ;look only at low bits
- bne :1
+ bne label_1
  inc FCharX
- bne :1
+ bne label_1
  inc FCharX+1
-:1
+.label_1
  lda #starimage
  sta FCharImage
  lda #startable
@@ -1040,23 +1141,33 @@ SETUPCOMIX
 
  lda #TypeComix
  jmp addcharobj
-]rts rts
+}
+.return_27
+ rts
 
-*-------------------------------
-*
-*  A D D   C H A R   O B J
-*
-*  Add a character to object table
-*
-*  In: FCharVars
-*      A = object type
-*
-*-------------------------------
-ADDCHAROBJ
+\*-------------------------------
+\*
+\*  A D D   C H A R   O B J
+\*
+\*  Add a character to object table
+\*
+\*  In: FCharVars
+\*      A = object type
+\*
+\*-------------------------------
+
+.ADDCHAROBJ
+{
  ldx objX ;# objects already in list
  inx
  cpx #maxobj
- bcs ]rts ;list full (shouldn't happen)
+IF _DEBUG
+ BCC max_ok
+ BRK
+ .max_ok
+ELSE
+ bcs return_27 ;list full (shouldn't happen)
+ENDIF
  stx objX
 
  sta objTYP,x
@@ -1099,28 +1210,33 @@ ADDCHAROBJ
  sta objFACE,x
 
  jmp SETOBJINDX
+}
 
-*-------------------------------
-*
-*  S E T  O B J  I N D X
-*
-*  Set object index
-*
-*-------------------------------
-SETOBJINDX
+\*-------------------------------
+\*
+\*  S E T  O B J  I N D X
+\*
+\*  Set object index
+\*
+\*-------------------------------
+
+.SETOBJINDX
+{
  lda FCharIndex
  sta objINDX,x
 
  cmp #30
- bcs :os
+ bcs os
 
  tax
 
  lda #1
  sta objbuf,x
-:os
+.os
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Text routines
@@ -1153,11 +1269,15 @@ SETRECHECK0
  sta locals
  lda #>recheck0
  sta locals+1 ;fall thru (& return A = 0)
+ENDIF
 
-*-------------------------------
-INITLAY
- lda #3 ;auxmem
- sta BANK
+\*-------------------------------
+
+.INITLAY
+{
+\ NOT BEEB
+\ lda #3 ;auxmem
+\ sta BANK          \\ BANK handled by setcharimg or setbgimg in grafix.asm
 
  lda #40
  sta RIGHTCUT
@@ -1167,7 +1287,9 @@ INITLAY
  sta LEFTCUT
  sta TOPCUT
  rts
+}
 
+IF _TODO
 *-------------------------------
 *
 * Print character

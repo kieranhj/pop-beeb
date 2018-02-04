@@ -16,35 +16,37 @@ CheckTimer = 0
 \*-------------------------------
 \ org org
 
-.addtorches RTS         ; jmp ADDTORCHES            BEEB TO DO
-.doflashon RTS          ; jmp DOFLASHON             BEEB TO DO
-.PageFlip RTS           ; jmp PAGEFLIP              BEEB TO DO OR NOT NEEDED?
-.demo BRK               ; jmp DEMO
-.showtime BRK           ; jmp SHOWTIME
+IF _JMP_TABLE=FALSE
+.addtorches jmp ADDTORCHES
+.doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
+.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
+\\.demo jmp DEMO        \\ moved to auto.asm
+.showtime jmp SHOWTIME
 
-.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TO DO
-.lrclse RTS             ; jmp LRCLSE                BEEB TO DO OR NOT NEEDED?
+.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
+.lrclse RTS             ; jmp LRCLSE                BEEB TODO FLASH
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
 
-.addslicers RTS         ; jmp ADDSLICERS            BEEB TO DO
+.addslicers jmp ADDSLICERS
 .pause jmp PAUSE
 \ jmp bonesrise
-.deadenemy BRK          ; jmp DEADENEMY
-.playcut BRK            ; jmp PLAYCUT
+.deadenemy jmp DEADENEMY
+.playcut jmp PLAYCUT
 
-.addlowersound BRK      ; jmp ADDLOWERSOUND
-.RemoveObj BRK          ; jmp REMOVEOBJ
-.addfall BRK            ; jmp ADDFALL
+.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TODO SOUND
+.RemoveObj jmp REMOVEOBJ
+.addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
 .startkid jmp STARTKID
 
 .startkid1 jmp STARTKID1
-.gravity BRK            ; jmp GRAVITY
-.initialguards RTS      ; jmp INITIALGUARDS         BEEB TO DO
-.mirappear BRK          ; jmp MIRAPPEAR
-.crumble RTS            ; jmp CRUMBLE               BEEB TO DO
+.gravity jmp GRAVITY
+.initialguards jmp INITIALGUARDS
+.mirappear jmp MIRAPPEAR
+.crumble jmp CRUMBLE
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -63,7 +65,7 @@ CheckTimer = 0
 \ dum $f0
 \]Xcount ds 1
 \]Xend ds 1
-\tempstate ds 1
+\subs_tempstate ds 1
 \ dend
 
 \
@@ -100,94 +102,100 @@ ENDIF ;actual frame rate approx. 11 fps)
 \RAMRDaux = $c003
 \RAMRDmain = $c002
 
-IF _TODO
 \*-------------------------------
-\SceneCount ds 2
+.SceneCount SKIP 2
 
-*-------------------------------
-* Level 13 only:  When you enter, trigger loose floors on
-* screen above
-*-------------------------------
-]rts rts
+\*-------------------------------
+\* Level 13 only:  When you enter, trigger loose floors on
+\* screen above
+\*-------------------------------
 
-CRUMBLE
+.CRUMBLE
+{
  lda level
  cmp #13
- bne ]rts
+ bne return_52
  lda VisScrn
  cmp #23
- beq :1
+ beq label_1
  cmp #16
- bne ]rts
+ bne return_52
 ;Trigger blocks 2-7 on bottom row of scrn above
-:1 lda scrnAbove
+.label_1 lda scrnAbove
  sta tempscrn
  lda #2
  sta tempblocky
  ldx #7
-:loop stx tempblockx
- jsr :trigloose
+.loop stx tempblockx
+ jsr trigloose
  ldx tempblockx
  dex
  cpx #2
- bcs :loop
-]rts rts
+ bcs loop
+}
+.return_52
+ rts
 
-:trigloose
+.trigloose
+{
  jsr rdblock1
  cmp #loose
- bne ]rts
+ bne return_52
  jsr rnd
  and #$0f
  eor #$ff
  clc
  adc #1
  jmp breakloose1
+}
 
-*-------------------------------
-* Add all flasks & torches on VisScrn to trans list
-* & swords
-*-------------------------------
-ADDTORCHES
+\*-------------------------------
+\* Add all flasks & torches on VisScrn to trans list
+\* & swords
+\*-------------------------------
+
+.ADDTORCHES
+{
  lda VisScrn
  jsr calcblue
 
  ldy #29
-:loop lda (BlueType),y
+.loop lda (BlueType),y
  and #idmask
  cmp #torch
- bne :c1
+ bne c1
  tya
  pha
  lda VisScrn
  jsr trigtorch
  pla
  tay
- bpl :cont
+ bpl cont
 
-:c1 cmp #flask
- bne :c2
+.c1 cmp #flask
+ bne c2
  tya
  pha
  lda VisScrn
  jsr trigflask
  pla
  tay
- bpl :cont
+ bpl cont
 
-:c2 cmp #sword
- bne :cont
+.c2 cmp #sword
+ bne cont
  tya
  pha
  lda VisScrn
  jsr trigsword
  pla
  tay
-:cont dey
- bpl :loop
+.cont dey
+ bpl loop
 
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*
@@ -250,89 +258,96 @@ LRCLSE
  beq ]rts
 
  jmp lrcls
+ENDIF
 
-*-------------------------------
-* Add all slicers on CharBlockY to trans list
-*-------------------------------
-slicetimer = 15 ;from mover
+\*-------------------------------
+\* Add all slicers on CharBlockY to trans list
+\*-------------------------------
+;slicetimer = 15 ;from mover
 slicersync = 3 ;# frames out of sync
 
-ADDSLICERS
+.ADDSLICERS
+{
  lda #slicetimer
- sta tempstate
+ sta subs_tempstate
 
  lda CharScrn
  jsr calcblue
 
  ldy CharBlockY
  cpy #3
- bcs ]rts
+ bcs return_57
 
  lda Mult10,y
  tay
  clc
  adc #10
- sta :sm+1
-:loop
+ sta sm+1
+.loop
  lda (BlueType),y
  and #idmask
  cmp #slicer
- bne :cont
+ bne cont
 
  lda (BlueSpec),y
  tax
  and #$7f
- beq :ok
+ beq ok
  cmp #slicerRet
- bcc :cont ;in mid-slice--leave it alone
-:ok txa
+ bcc cont ;in mid-slice--leave it alone
+.ok txa
  and #$80 ;get hibit
- ora tempstate
+ ora subs_tempstate
  jsr trigslicer ;trigger slicer
  jsr getnextstate
 
-:cont iny
-:sm cpy #0
- bcc :loop
+.cont iny
+.sm cpy #0
+ bcc loop
+}
+.return_57
+ rts
 
-]rts rts
-
-getnextstate
- lda tempstate
+.getnextstate
+{
+ lda subs_tempstate
  sec
  sbc #slicersync
  cmp #slicerRet
- bcs :ok
+ bcs ok
  clc
  adc #slicetimer+1-slicerRet
-:ok sta tempstate
-]rts rts
+.ok sta subs_tempstate
+ rts
+}
 
-*-------------------------------
-*
-*  Special animation lists for princess's room
-*
-*-------------------------------
-ptorchx db 13,25,-1
-ptorchoff db 0,6
-ptorchy db 113,113
-ptorchstate db 1,6
-ptorchcount ds 1
-psandcount ds 1
-pstarcount ds 4
+\*-------------------------------
+\*
+\*  Special animation lists for princess's room
+\*
+\*-------------------------------
+.ptorchx EQUB 13,26,LO(-1)      \\ BEEB supposed to be 25+6 - made 26+0
+.ptorchoff EQUB 0,0             \\ BEEB TODO offset supposed to be 6
+.ptorchy EQUB 113,113
+.ptorchstate EQUB 1,6
+.ptorchcount SKIP 1
+.psandcount SKIP 1
+.pstarcount SKIP 4
 
-*-------------------------------
-*
-*  Burn torches (Princess's room)
-*
-*-------------------------------
-pburn
+\*-------------------------------
+\*
+\*  Burn torches (Princess's room)
+\*
+\*-------------------------------
+
+.pburn
+{
  ldx ptorchcount ;last torch burned
  inx
  lda ptorchx,x
- bpl :ok
+ bpl ok
  ldx #0
-:ok stx ptorchcount
+.ok stx ptorchcount
  lda ptorchx,x
  sta XCO
  lda ptorchoff,x
@@ -344,48 +359,55 @@ pburn
  sta ptorchstate,x
  tax
  jsr psetupflame
- jmp lay  ;<---DIRECT HIRES CALL
+ LDA #BEEB_SWRAM_SLOT_CHTAB67
+ STA BANK       ; BEEB hideous hack
+ jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
+}
 
-*-------------------------------
-*
-* Flow sand
-*
-*-------------------------------
-pflow
+\*-------------------------------
+\*
+\* Flow sand
+\*
+\*-------------------------------
+.pflow
+{
  ldx psandcount
- bmi ]rts ;no hourglass yet
+ bmi return_57 ;no hourglass yet
  inx
  cpx #3
- bcc :ok
+ bcc ok
  ldx #0
-:ok stx psandcount
+.ok stx psandcount
  ldy GlassState
  jmp flow ;<---Contains direct hires call
+}
 
-*-------------------------------
-*
-* Twinkle stars
-*
-*-------------------------------
-pstars
+\*-------------------------------
+\*
+\* Twinkle stars
+\*
+\*-------------------------------
+
+.pstars
+{
  ldx #3
-:loop lda pstarcount,x
- beq :ok
+.loop lda pstarcount,x
+ beq ok
  dec pstarcount,x
- bne :ok
+ bne ok
  txa
  pha
  jsr twinkle ;turn it off
  pla
  tax
-:ok dex
- bpl :loop
+.ok dex
+ bpl loop
 
-* New twinkle?
+\* New twinkle?
 
  jsr rnd
  cmp #10
- bcs ]rts
+ bcs return
  jsr rnd
  and #3
  clc
@@ -398,7 +420,11 @@ pstars
  pla
  sta pstarcount,x
  jmp twinkle ;<---Contains direct hires call
+.return
+ RTS
+}
 
+IF _NOT_BEEB
 *-------------------------------
 *
 *  P A G E F L I P
@@ -426,22 +452,25 @@ PAGEFLIP
  sta PAGE
  lda $C055 ;show page 2
  jmp :3
+ENDIF
 
-*-------------------------------
-*
-*  Play pre-recorded "princess" scenes
-*
-*  In: A = scene #
-*
-*-------------------------------
-AddrL db #PlayCut0,#PlayCut1,#PlayCut2,#PlayCut3
- db #PlayCut4,#PlayCut5,#PlayCut6,#PlayCut7
- db #PlayCut8
-AddrH db #>PlayCut0,#>PlayCut1,#>PlayCut2,#>PlayCut3
- db #>PlayCut4,#>PlayCut5,#>PlayCut6,#>PlayCut7
- db #>PlayCut8
+\*-------------------------------
+\*
+\*  Play pre-recorded "princess" scenes
+\*
+\*  In: A = scene #
+\*
+\*-------------------------------
 
-PLAYCUT
+.AddrL EQUB LO(PlayCut0),LO(PlayCut1),LO(PlayCut2),LO(PlayCut3)
+ EQUB LO(PlayCut4),LO(PlayCut5),LO(PlayCut6),LO(PlayCut7)
+ EQUB LO(PlayCut8)
+.AddrH EQUB HI(PlayCut0),HI(PlayCut1),HI(PlayCut2),HI(PlayCut3)
+ EQUB HI(PlayCut4),HI(PlayCut5),HI(PlayCut6),HI(PlayCut7)
+ EQUB HI(PlayCut8)
+
+.PLAYCUT
+{
  pha
  jsr initit
  pla
@@ -452,26 +481,29 @@ PLAYCUT
  ENDIF
 
  lda AddrL,x
- sta :sm+1
+ sta sm+1
  lda AddrH,x
- sta :sm+2
-:sm jsr $FFFF ;self-mod
+ sta sm+2
+.sm jsr $FFFF ;self-mod     \\ BEEB CAUTION - direct jump from inside a DLL - should be OK as stays in same module but...
 
  lda #1
  sta SPEED
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
- IF DemoDisk
-PlayCut8
-PlayCut4
-PlayCut7
+\*-------------------------------
+IF DemoDisk
+.PlayCut8
+.PlayCut4
+.PlayCut7
  brk
- ELSE
-*-------------------------------
-* Cut #8: Princess sends out mouse
-*-------------------------------
-PlayCut8
+ELSE
+\*-------------------------------
+\* Cut #8: Princess sends out mouse
+\*-------------------------------
+.PlayCut8
+{
  jsr getglass
  jsr addglass
 
@@ -499,11 +531,13 @@ PlayCut8
  ldx #50
  lda #s_Heartbeat
  jmp PlaySongX
+}
 
-*-------------------------------
-* Cut #4: Mouse returns to princess
-*-------------------------------
-PlayCut4
+\*-------------------------------
+\* Cut #4: Mouse returns to princess
+\*-------------------------------
+.PlayCut4
+{
  jsr getglass
  jsr addglass
 
@@ -524,11 +558,13 @@ PlayCut4
 
  lda #58
  jmp play
+}
 
-*-------------------------------
-* Happy ending
-*-------------------------------
-PlayCut7
+\*-------------------------------
+\* Happy ending
+\*-------------------------------
+.PlayCut7
+{
  lda #8
  sta SPEED
 
@@ -576,13 +612,14 @@ PlayCut7
 
  lda #30
  jmp play
+}
+ENDIF
 
- ENDIF
-
-*-------------------------------
-* Tragic ending
-*-------------------------------
-PlayCut6
+\*-------------------------------
+\* Tragic ending
+\*-------------------------------
+.PlayCut6
+{
  lda #22
  sta SPEED
  ldx #8 ;empty hourglass
@@ -593,17 +630,19 @@ PlayCut6
  jsr PlaySong
  lda #100
  jmp play
+}
 
-*-------------------------------
-* Princess cut #5
-*-------------------------------
-PlayCut5
+\*-------------------------------
+\* Princess cut #5
+\*-------------------------------
+.PlayCut5
+{
  jsr getglass
  cpx #7
  bcs Ominous ;sand is almost out--go for it
  jmp PlayCut1
 
-Ominous
+.Ominous
  jsr getglass
  jsr addglass
 
@@ -625,11 +664,13 @@ Ominous
  ldx #20
  lda #s_Danger
  jmp PlaySongX
+}
 
-*-------------------------------
-* Princess cut #2 (lying down)
-*-------------------------------
-PlayCut2
+\*-------------------------------
+\* Princess cut #2 (lying down)
+\*-------------------------------
+.PlayCut2
+{
  jsr getglass
  jsr addglass
 
@@ -642,13 +683,16 @@ PlayCut2
  ldx #50
  lda #s_Heartbeat
  jsr PlaySongX
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-* Princess cut #1 (standing)
-*-------------------------------
-PlayCut1
-PlayCut3
+\*-------------------------------
+\* Princess cut #1 (standing)
+\*-------------------------------
+.PlayCut1
+.PlayCut3
+{
  jsr getglass
  jsr addglass
 
@@ -661,11 +705,13 @@ PlayCut3
  ldx #50
  lda #s_Timer
  jmp PlaySongX
+}
 
-*-------------------------------
-* Opening titles scene
-*-------------------------------
-PlayCut0
+\*-------------------------------
+\* Opening titles scene
+\*-------------------------------
+.PlayCut0
+{
  jsr startV0
  jsr SaveKid
  jsr startP0 ;put chars in starting posn
@@ -676,7 +722,7 @@ PlayCut0
 
  lda #s_Princess
  ldx #8
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #5
  jsr play
@@ -687,7 +733,7 @@ PlayCut0
  jsr play
  lda #s_Squeek
  ldx #0
- jsr PlaySongI ;door squeaks...
+ jsr subs_PlaySongI ;door squeaks...
 
  lda #7
  sta SPEED
@@ -704,7 +750,7 @@ PlayCut0
  jsr play ;vizier enters
  lda #s_Vizier
  ldx #12
- jsr PlaySongI
+ jsr subs_PlaySongI
  lda #4
  jsr play
 
@@ -718,7 +764,7 @@ PlayCut0
  jsr play ;stops in front of princess
  lda #s_Buildup
  ldx #25
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #Vraise ;raises arms
  jsr vjumpseq
@@ -743,7 +789,7 @@ PlayCut0
  sta psandcount ;sand starts flowing
  lda #s_Magic
  ldx #8
- jsr PlaySongI
+ jsr subs_PlaySongI
 
  lda #7
  sta SPEED
@@ -764,105 +810,130 @@ PlayCut0
  sta SPEED
  lda #s_StTimer
  ldx #20
- jmp PlaySongI
+ jmp subs_PlaySongI
+}
 
-*-------------------------------
-* Add hourglass to scene
-* In: X = state
-*-------------------------------
-addglass
+\*-------------------------------
+\* Add hourglass to scene
+\* In: X = state
+\*-------------------------------
+.addglass
  lda #0
  sta psandcount ;start sand flowing
-addglass1
+.addglass1
+{
  stx GlassState
  lda #2
  sta redrawglass
-]rts rts
+}
+.return_56
+ rts
 
-*-------------------------------
-* In: A = song #
-*     X = # cycles to play if sound is off
-*-------------------------------
-PlaySongX
+\*-------------------------------
+\* In: A = song #
+\*     X = # cycles to play if sound is off
+\*-------------------------------
+.PlaySongX
+{
  tay
  lda soundon
  and musicon
- bne :1
+ bne label_1
  txa
  jmp play
-:1 tya ;falls thru to PlaySong
+.label_1 tya ;falls thru to PlaySong
+}
 
-*-------------------------------
-*
-* Play Song (Princess's room)
-*
-* Button press ends song
-*
-* In: A = song #
-*
-*-------------------------------
-PlaySong
+\*-------------------------------
+\*
+\* Play Song (Princess's room)
+\*
+\* Button press ends song
+\*
+\* In: A = song #
+\*
+\*-------------------------------
+.PlaySong
+{
+\ BEEB TODO MUSIC
  jsr minit
  jsr swpage
-:loop lda #1
+.loop lda #1
  jsr strobe
- lda $c061
- ora $c062
+\ NOT BEEB
+\ lda $c061
+\ ora $c062
  ora keypress
- bmi :interrupt
+ bmi interrupt
  jsr pburn
  jsr pstars
  jsr pflow
  jsr mplay
  cmp #0
- bne :loop
-:interrupt
+ bne loop
+.interrupt
  jmp swpage
+}
 
-*-------------------------------
-*
-* Play Song (Princess's room--Interruptible)
-*
-* Key or button press starts a new game
-*
-* In: A = song #
-*     X = # cycles to play if sound is off
-*
-*-------------------------------
-PlaySongI
+\*-------------------------------
+\*
+\* Play Song (Princess's room--Interruptible)
+\*
+\* Key or button press starts a new game
+\*
+\* In: A = song #
+\*     X = # cycles to play if sound is off
+\*
+\*-------------------------------
+.subs_PlaySongI
+{
  tay
  lda soundon
  and musicon
- bne :1
+ bne label_1
  txa
- beq ]rts
+ beq return_56
  jmp play
-:1 tya
+.label_1 tya
 
  jsr minit
  jsr swpage
-:loop jsr musickeys
+.loop jsr musickeys
  cmp #$80
- bcs :interrupt
+ bcs interrupt
  jsr pburn
  jsr pstars
  jsr pflow
  jsr mplay
  cmp #0
- bne :loop
+ bne loop
  jmp swpage
-:interrupt
+.interrupt
  jmp dostartgame
+}
 
-*-------------------------------
-*  Switch hires pages for duration of song
+\*-------------------------------
+\*  Switch hires pages for duration of song
+\\ KC note - this means lay is just poking visible screen directly
+\\ whilst the rest of the system is "frozen" during music playback
 
-swpage
+.swpage
+{
  lda PAGE
  eor #$20
  sta PAGE
-]rts rts
 
+\\ BEEB equivalent here to invert RAM bit 2 only
+\\ BEEB TODO danger?
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
+ rts
+}
+
+IF _TODO
 *-------------------------------
 flashon
  lda lightning
@@ -875,17 +946,20 @@ flashoff
  beq ]rts
  dec lightning
  jmp doflashoff
+ENDIF
 
-*-------------------------------
-*
-*  Playback loop (simplified version of main loop in TOPCTRL)
-*
-*  In: A = sequence length (# of frames)
-*
-*-------------------------------
-play
+\*-------------------------------
+\*
+\*  Playback loop (simplified version of main loop in TOPCTRL)
+\*
+\*  In: A = sequence length (# of frames)
+\*
+\*-------------------------------
+
+.play
+{
  sta SceneCount
-playloop
+.playloop
  jsr rnd
 
  lda SPEED
@@ -894,120 +968,139 @@ playloop
  jsr strobe ;strobe kbd & jstk
 
  lda level
- bne :notdemo
+ bne notdemo
  jsr demokeys
- bpl :cont
+ bpl cont
  lda #1
  jmp dostartgame ;interrupted--start a new game
 
-:notdemo lda $c061
+.notdemo
+IF _NOT_BEEB            \\ BEEB TODO KEYPRESS
+ lda $c061
  ora $c062
  ora keypress
- bmi ]rts ;key or button to end scene
+ bmi return_56 ;key or button to end scene
+ENDIF
 
-:cont jsr NextFrame ;Determine what next frame should look like
+.cont jsr subs_NextFrame ;Determine what next frame should look like
 
  jsr flashon
 
- jsr FrameAdv ;Update hidden page to reflect new reality
+ jsr subs_FrameAdv ;Update hidden page to reflect new reality
 ;& show it
  jsr flashoff
 
  lda soundon
- beq :1
- jsr playback ;play back sound fx
+ beq label_1
+\ BEEB TEMP comment out TODO SOUND
+\ jsr playback ;play back sound fx
  jsr zerosound
-:1
+.label_1
 ; jsr songcues
 
  dec SceneCount
  bne playloop
  rts
+}
 
-*-------------------------------
-NextFrame
- jsr DoKid ;kid/vizier/mouse
+\*-------------------------------
 
- jsr DoShad ;always princess
+.subs_NextFrame
+{
+ jsr subs_DoKid ;kid/vizier/mouse
 
-]rts rts
+ jsr subs_DoShad ;always princess
 
-*-------------------------------
-FrameAdv
- jsr DoFast
+ rts
+}
+
+\*-------------------------------
+
+.subs_FrameAdv
+{
+ jsr subs_DoFast
 
  jsr vblank
 
  jmp PageFlip
+}
 
-*-------------------------------
-DoKid
+\*-------------------------------
+
+.subs_DoKid
+{
  jsr LoadKid
  lda CharPosn
- beq ]rts
+ beq return_58
 
  jsr ctrlkidchar
 
  jsr animchar ;Get next frame from sequence table
 
  jsr SaveKid ;Save all changes to char data
+}
+.return_58
+ rts
 
-]rts rts
+\*-------------------------------
 
-*-------------------------------
-DoShad
+.subs_DoShad
+{
  jsr LoadShadwOp
  lda CharPosn
- beq ]rts
+ beq return_58
 
  jsr ctrlshadchar
 
  jsr animchar
 
  jmp SaveShad
+}
 
-*-------------------------------
-ctrlkidchar
+\*-------------------------------
+
+.ctrlkidchar
  rts
 
-ctrlshadchar
+.ctrlshadchar
  rts
 
-*-------------------------------
-DoFast
+\*-------------------------------
 
-* Set up image lists
+.subs_DoFast
+{
+\* Set up image lists
 
  jsr zerolsts
 
  lda redrawglass
- beq :3
+ beq label_3
  dec redrawglass
  ldx GlassState
  jsr drawglass ;hourglass
-:3
+.label_3
  jsr LoadKid ;can be kid or vizier
  lda CharPosn
- beq :1
+ beq label_1
  jsr setupchar
  lda #30
  sta FCharIndex
  jsr addkidobj
-:1
+.label_1
  jsr LoadShad ;always princess
  lda CharPosn
- beq :2
+ beq label_2
  jsr setupchar
  lda #30
  sta FCharIndex
  jsr addkidobj
  jsr pmask ;kludge to mask face & hair
-:2
+.label_2
  jsr fast ;get char/objs into mid table
 
  jsr drawpost ;big white post
 
-* Draw to screen
+\* Draw to screen
 
  jsr pburn
  jsr pburn ;first put down 2 torch flames
@@ -1017,65 +1110,77 @@ DoFast
 
  jmp pflow ;& flow sand
 
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Jumpseq for princess & vizier
-*
-* In: A = sequence #
-*
-*-------------------------------
-pjumpseq
+\*-------------------------------
+\*
+\* Jumpseq for princess & vizier
+\*
+\* In: A = sequence #
+\*
+\*-------------------------------
+
+.pjumpseq
+{
  pha
  jsr LoadShad
  pla
  jsr jumpseq
  jmp SaveShad
+}
 
-kjumpseq
-mjumpseq
-vjumpseq
+.kjumpseq
+.mjumpseq
+.vjumpseq
+{
  pha
  jsr LoadKid
  pla
  jsr jumpseq
  jmp SaveKid
+}
 
-*-------------------------------
-*
-* Put characters in starting position for scene
-*
-*-------------------------------
+\*-------------------------------
+\*
+\* Put characters in starting position for scene
+\*
+\*-------------------------------
 floorY = 151
 
-* mouse runs to princess
+\* mouse runs to princess
 
-startM8
+.startM8
+{
  jsr startM4
  lda #144
  sta CharX
  lda #Mstop
  jsr jumpseq
  jmp animchar
+}
 
-startM4
+.startM4
+{
  lda #24
  sta CharID
  lda #199
  sta CharX
  lda #floorY+1
  sta CharY
- lda #-1
+ lda #LO(-1)
  sta CharFace
 
  lda #Mscurry
  jsr jumpseq
  jmp animchar
+}
 
-* princess w/mouse
+\* princess w/mouse
 
-startP8
+.startP8
+{
  jsr startP0
  lda #130
  sta CharX
@@ -1084,8 +1189,10 @@ startP8
  lda #Pstroke
  jsr jumpseq
  jmp animchar
+}
 
-startP4
+.startP4
+{
  jsr startP1
  lda #142
  sta CharX
@@ -1094,14 +1201,18 @@ startP4
  lda #Pstand
  jsr jumpseq
  jmp animchar
+}
 
-startP5
+.startP5
+{
  jsr startP0
  lda #160
  sta CharX
  rts
+}
 
-startP2
+.startP2
+{
  jsr startP0
  lda #89
  sta CharX
@@ -1111,14 +1222,18 @@ startP2
  lda #Plie
  jsr jumpseq
  jmp animchar
+}
 
-startP1
+.startP1
+{
  jsr startP0
  lda #0
  sta CharFace
  rts
+}
 
-startP7
+.startP7
+{
  jsr startP0
  lda #136
  sta CharX
@@ -1126,19 +1241,24 @@ startP7
  sta CharY
  lda #Pwaiting
  ldx #1
- cpx purpleflag
- beq :ok
- lda #120 ;crash (copy protect)
-:ok jsr jumpseq
+\ NOT BEEB COPY PROTECT
+\ cpx purpleflag
+\ beq ok
+\ lda #120 ;crash (copy protect)
+.ok jsr jumpseq
  jmp animchar
+}
 
-startM7
+.startM7
+{
  jsr startM4
  lda #floorY-2
  sta CharY
  rts
+}
 
-startP0
+.startP0
+{
  lda #5
  sta CharID
 
@@ -1147,14 +1267,16 @@ startP0
  lda #floorY
  sta CharY
 
- lda #-1
+ lda #LO(-1)
  sta CharFace
 
  lda #Pstand
  jsr jumpseq
  jmp animchar
+}
 
-startV0
+.startV0
+{
  lda #6
  sta CharID
 
@@ -1163,14 +1285,16 @@ startV0
  lda #floorY
  sta CharY
 
- lda #-1
+ lda #LO(-1)
  sta CharFace
 
  lda #Vstand
  jsr jumpseq
  jmp animchar
+}
 
-startK7
+.startK7
+{
  lda #0
  sta CharID
 
@@ -1179,80 +1303,24 @@ startK7
  lda #floorY-2
  sta CharY
 
- lda #-1
+ lda #LO(-1)
  sta CharFace
 
  lda #startrun
  jsr jumpseq
  jmp animchar
+}
 
-*-------------------------------
-* Demo commands
-*-------------------------------
-EndProg = -2
-EndDemo = -1
-Ctr = 0
-Fwd = 1
-Back = 2
-Up = 3
-Down = 4
-Upfwd = 5
-Press = 6
-Release = 7
+\*-------------------------------
+\*
+\* Init princess cut
+\*
+\*-------------------------------
 
-*-------------------------------
-DemoProg1 ;up to fight w/1st guard
- db 0,Ctr
- db 1,Fwd
- db 13,Ctr
- db 30,Fwd ;start running...
- db 37,Upfwd ;jump 1st pit
- db 47,Ctr
- db 48,Fwd ;& keep running
-d1 = 65
- db d1,Ctr ;stop
- db d1+8,Back ;look back...
- db d1+10,Ctr
- db d1+34,Back
- db d1+35,Ctr
-d2 = 115
- db d2,Upfwd ;jump 2nd pit
- db d2+13,Press ;& grab ledge
- db d2+21,Up
- db d2+42,Release
- db d2+43,Ctr
- db d2+44,Fwd
- db d2+58,Down
- db d2+62,Ctr
- db d2+63,Fwd
- db d2+73,Ctr
-d3 = 193
- db d3,Fwd
- db d3+12,Ctr
- db d3+40,EndDemo
-
-*-------------------------------
-*
-*  D  E  M  O
-*
-*  Controls kid's movements during self-running demo
-*
-*  (Called from PLAYERCTRL)
-*
-*-------------------------------
-DEMO
- lda #DemoProg1
- ldx #>DemoProg1
- jmp AutoPlayback
-
-*-------------------------------
-*
-* Init princess cut
-*
-*-------------------------------
-initit
- lda #" "
- sta scrncolor ;?
+.initit
+{
+ lda #' '
+ sta scrncolor ;?           \\ NOT BEEB
  lda #0
  sta vibes
  sta redrawglass
@@ -1260,11 +1328,11 @@ initit
  sta ShadPosn
  sta ptorchcount
  ldx #3
-:loop sta pstarcount,x
+.loop sta pstarcount,x
  dex
- bpl :loop
+ bpl loop
 
- lda #-1 ;no hourglass yet
+ lda #LO(-1) ;no hourglass yet
  sta psandcount
 
  lda #12
@@ -1273,109 +1341,120 @@ initit
  jsr zeropeels
  jsr zerored
  jsr zerosound
-]rts rts
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Get hourglass state (based on time left)
-*
-* In: FrameCount
-* Out: X = glass state
-*
-*-------------------------------
-getglass
+\*-------------------------------
+\*
+\* Get hourglass state (based on time left)
+\*
+\* In: FrameCount
+\* Out: X = glass state
+\*
+\*-------------------------------
+
+.getglass
+{
  jsr getminleft
  ldx #7
  lda MinLeft
  cmp #6
- bcc :got
+ bcc local_got
  dex
  cmp #$11
- bcc :got
+ bcc local_got
  dex
  cmp #$21
- bcc :got
+ bcc local_got
  dex
  cmp #$41
- bcc :got
+ bcc local_got
  dex
-:got
-]rts rts
+.local_got
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Show time if requested
-* (& constant time display during final minute)
-*
-* In: timerequest (0 = no, 1-2 = auto, 3 = from kbd,)
-*     4 = Vizier dead)
-*
-*-------------------------------
-SHOWTIME
+\*-------------------------------
+\*
+\* Show time if requested
+\* (& constant time display during final minute)
+\*
+\* In: timerequest (0 = no, 1-2 = auto, 3 = from kbd,)
+\*     4 = Vizier dead)
+\*
+\*-------------------------------
+
+.SHOWTIME
+{
  lda timerequest
- beq ]rts
+ beq return
  lda KidLife
- bpl ]rts
+ bpl return
 
  jsr getminleft
 
  lda MinLeft
  cmp #2
- bcs :normal
+ bcs normal
  lda SecLeft
- beq :timeup
+ beq timeup
 
-* Countdown during final minute
+\* Countdown during final minute
 
  lda level
  cmp #14
- bcs :normal
- bcc :showsec ;stop countdown when clock stops
+ bcs normal
+ bcc showsec ;stop countdown when clock stops
 
-:timeup
+.timeup
  lda timerequest
  cmp #3
- bcc ]rts ;Once t=0, show time only on kbd request
+ bcc return ;Once t=0, show time only on kbd request
 
-:normal
+.normal
  lda msgtimer
- bne ]rts ;wait till other msgs are gone
+ bne return ;wait till other msgs are gone
 
  lda #TimeMsg
  sta message
  lda #timemsgtimer
  ldx timerequest
  cpx #4
- bcc :norm
-:delay lda #timemsgtimer+5 ;delay 5 cycles
-:norm sta msgtimer
+ bcc norm
+.delay lda #timemsgtimer+5 ;delay 5 cycles
+.norm sta msgtimer
 
  lda #0
  sta timerequest
-]rts rts
+.return
+ rts
 
-:showsec
+.showsec
  lda SecLeft
  cmp #2
- bcc :nomsg
+ bcc nomsg
 
  lda message
  cmp #TimeMsg
- beq :2
+ beq label_2
  lda msgtimer
- bne ]rts
+ bne return
  lda #TimeMsg
  sta message
-:2 lda #1
+.label_2 lda #1
  sta timerequest
  lda #1
  sta msgtimer
  rts
-:nomsg lda #0
+.nomsg lda #0
  sta timerequest
  sta msgtimer
  rts
+}
 
+IF _TODO
 *-------------------------------
 * Add lowering-gate sound (only when gate is visible)
 * In: A = state
@@ -1414,15 +1493,18 @@ ADDLOWERSOUND
 
 :y lda #LoweringGate
  jmp addsound
+ENDIF
 
-*-------------------------------
-*
-* Remove object
-*
-* In: A = lastpotion
-*
-*-------------------------------
-REMOVEOBJ
+\*-------------------------------
+\*
+\* Remove object
+\*
+\* In: A = lastpotion
+\*
+\*-------------------------------
+
+.REMOVEOBJ
+{
  sta lastpotion
 
  ldx #1
@@ -1436,11 +1518,11 @@ REMOVEOBJ
  lda #35 ;TEMP
  sta height
 
- lda #2
+ lda #REDRAW_FRAMES
  clc
  jsr markwipe
  jmp markred
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1625,79 +1707,89 @@ ENDIF
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  G R A V I T Y
-*
-*-------------------------------
+\*-------------------------------
+\*
+\*  G R A V I T Y
+\*
+\*-------------------------------
 TermVelocity = 33
 AccelGravity = 3
 WtlessTermVel = 4
 WtlessGravity = 1
 
-GRAVITY
+.GRAVITY
+{
  lda CharAction
  cmp #4
- bne ]rts
+ bne return_29
 
  lda weightless
- bne :wtless
+ bne wtless
 
  lda CharYVel
  clc
  adc #AccelGravity
 
  cmp #TermVelocity
- bcc :ok
+ bcc GRAVITY_ok
  lda #TermVelocity
+}
+.GRAVITY_ok
+ sta CharYVel
+.return_29
+ rts
 
-:ok sta CharYVel
-]rts rts
-
-:wtless lda CharYVel
+.wtless
+{
+ lda CharYVel
  clc
  adc #WtlessGravity
 
  cmp #WtlessTermVel
- bcc :ok
+ bcc GRAVITY_ok
  lda #WtlessTermVel
- bcs :ok
+ bcs GRAVITY_ok
+}
 
-*-------------------------------
-*
-*  Add falling velocity
-*
-*-------------------------------
-ADDFALL
+\*-------------------------------
+\*
+\*  Add falling velocity
+\*
+\*-------------------------------
+
+.ADDFALL
+{
  lda CharYVel
  clc
  adc CharY
  sta CharY
 
-* X-vel
+\* X-vel
 
  lda CharAction
  cmp #4 ;freefall?
- bne ]rts
+ bne return_29
 
  lda CharXVel
  jsr addcharx
  sta CharX
 
  jmp rereadblocks
+}
 
-*-------------------------------
-*
-* Set initial guard posns for entire level (call once)
-*
-*-------------------------------
-INITIALGUARDS
+\*-------------------------------
+\*
+\* Set initial guard posns for entire level (call once)
+\*
+\*-------------------------------
+
+.INITIALGUARDS
+{
  ldy #24 ;screen #
-:loop
+.loop
  lda GdStartBlock-1,y
  cmp #30
- bcs :nogd
+ bcs nogd
  jsr unindex ;A = blockx
  jsr getblockej
  clc
@@ -1706,39 +1798,43 @@ INITIALGUARDS
  lda #0
  sta GdStartSeqH-1,y
 
-:nogd dey
- bne :loop
-]rts rts
+.nogd dey
+ bne loop
+.return
+ rts
+}
 
-*-------------------------------
-*
-* Newly dead enemy--play music (or whatever)
-*
-* In: Char vars
-*
-*-------------------------------
-DEADENEMY
+\*-------------------------------
+\*
+\* Newly dead enemy--play music (or whatever)
+\*
+\* In: Char vars
+\*
+\*-------------------------------
+
+.DEADENEMY
+{
  lda level
- beq :demo
+ beq local_demo
  cmp #13
- beq :wingame
+ beq wingame
 
  lda CharID
  cmp #1
- beq ]rts ;shadow
+ beq return ;shadow
  lda #s_Vict
  ldx #25
  jsr cuesong
-]rts rts
+.return rts
 
-:demo lda #1
+.local_demo lda #1
  sta milestone ;start demo, part 2
  lda #0
  sta PreRecPtr
  sta PlayCount
  rts
 
-:wingame lda #s_Upstairs
+.wingame lda #s_Upstairs
  ldx #25
  jsr cuesong
 
@@ -1757,18 +1853,21 @@ DEADENEMY
  ldy #0
  jsr rdblock
  jmp pushpp ;open exit
+}
 
-*-------------------------------
-*  Mirror appears (called by MOVER when exit opened)
-*-------------------------------
-MIRAPPEAR
+\*-------------------------------
+\*  Mirror appears (called by MOVER when exit opened)
+\*-------------------------------
+
+.MIRAPPEAR
+{
  IF DemoDisk
  rts
  ELSE
 
  lda level
  cmp #4
- bne ]rts
+ bne return
 
  lda #mirscrn
  ldx #mirx
@@ -1776,11 +1875,10 @@ MIRAPPEAR
  jsr rdblock
  lda #mirror
  sta (BlueType),y
+.return
  rts
-
  ENDIF
-
-ENDIF
+}
 
 \*-------------------------------
 \ lst

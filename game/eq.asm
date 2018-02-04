@@ -10,6 +10,10 @@
 \*-------------------------------
 
 .imlists
+
+\\ Moved to beeb-lang.asm to store in Language workspace area = &300 - &800
+
+IF 0
 .genCLS skip 1
 
 .bgX skip maxback
@@ -28,6 +32,7 @@
 .wipeW skip maxwipe
 .wipeCOL skip maxwipe
 
+\ BEEB GFX PERF - can make these *1 if single buffered
 .peelX skip maxpeel*2
 .peelY skip maxpeel*2
 .peelIMGL skip maxpeel*2
@@ -53,10 +58,17 @@
 .objFACE skip maxobj
 .objTYP skip maxobj
 .objCU skip maxobj
+ENDIF
+
+\\ Moved to beeb-lower.asm to store in lower (below PAGE) RAM = &900 - &D00
+
+IF 0
+IF 1
 .objCD skip maxobj
 .objCL skip maxobj
 .objCR skip maxobj
 .objTAB skip maxobj
+ENDIF
 
 .msgX skip maxmsg
 .msgOFF skip maxmsg
@@ -84,15 +96,15 @@ jthres1x ds 1
 jthres1y ds 1
 jthres2x ds 1
 jthres2y ds 1
-jvert ds 1
-jhoriz ds 1
-jbtns ds 1
-joyon ds 1
 ENDIF
+.jvert skip 1
+.jhoriz skip 1
+.jbtns skip 1
+.joyon skip 1
 .develment skip 1
 .keypress skip 1
+.keydown skip 1
 IF _TODO
-keydown ds 1
 IIGS ds 1
 ENDIF
 
@@ -114,42 +126,12 @@ ENDIF
 IF _TODO
 BBundID ds 1
 redherring2 ds 1
-pausetemp ds 1
 ENDIF
+.pausetemp skip 1
 .recheck0 skip 1
 
-\*-------------------------------
-\*
-\*  Blueprint info
-\*
-\*-------------------------------
-
-IF 0 \\ BEEB TEMP
-.blueprnt
-.BLUETYPE skip 24*30
-.BLUESPEC skip 24*30
-.LINKLOC skip 256
-.LINKMAP skip 256
-.MAP skip 24*4
-.INFO
- skip 64                ; not sure why this is skipped, unused?
-.KidStartScrn skip 1
-.KidStartBlock skip 1
-.KidStartFace skip 1
- skip 1
-.SwStartScrn skip 1
-.SwStartBlock skip 1
- skip 1
-.GdStartBlock skip 24
-.GdStartFace skip 24
-.GdStartX skip 24
-.GdStartSeqL skip 24
-.GdStartProg skip 24
-.GdStartSeqH skip 24
-ENDIF
-
 .redbufs
- skip 60 ;unused - why?
+ ;skip 60 ;unused - why?
 .halfbuf skip 30
 .redbuf skip 30
 .fredbuf skip 30
@@ -159,3 +141,23 @@ ENDIF
 .objbuf skip 30
 .whitebuf skip 30
 .topbuf skip 10
+
+IF _DEBUG
+.bgTOP      skip 1
+.fgTOP      skip 1
+.wipeTOP    skip 1
+.peelTOP    skip 1
+.midTOP     skip 1
+.objTOP     skip 1
+.msgTOP     skip 1 
+ENDIF
+
+ENDIF
+
+\*-------------------------------
+\*
+\*  Blueprint info
+\*
+\*-------------------------------
+
+\\ Moved to pop-beeb.asm as now stored in HAZEL
