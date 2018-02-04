@@ -141,10 +141,10 @@ unsigned char palette_selection[16][3] =
 
 	{ 4, 1, 6 },			// 8=blue, red, cyan
 	{ 4, 1, 2 },			// 9=blue, red, green
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 6, 7 },			// 10=red, cyan, white
+	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 1, 3, 5 },			// 12=red, yellow, magenta
 	{ 1, 3, 7 },			// red, yellow, white
 	{ 1, 3, 7 },			// red, yellow, white
 	{ 1, 3, 7 },			// red, yellow, white

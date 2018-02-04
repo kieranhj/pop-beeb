@@ -112,9 +112,7 @@ ENDMACRO
 
 \*-------------------------------
 \* Coordinates of default load-in level
-
-.demolevel EQUB 0       ; BEEB CAN LOAD THESE AS FILES
-.firstlevel EQUB 1      ; BEEB CAN LOAD THESE AS FILES
+\ NOT BEEB
 
 \*-------------------------------
 \* Hi bytes of crunch data
@@ -368,7 +366,11 @@ ENDIF
 \*-------------------------------
 .set1stlevel
 {
- ldx firstlevel
+IF _DEBUG
+ ldx #_START_LEVEL
+ELSE
+ ldx #1
+ENDIF
 \ ldx firstlevel+1
 }
 \\ Fall through!
@@ -382,7 +384,7 @@ ENDIF
 
 .setdemolevel
 {
- ldx demolevel
+ ldx #0
 \ ldx demolevel+1
  jmp SetLevel
 }
@@ -565,6 +567,21 @@ ENDIF
  LDA #9
  LDX #LO(fast_palette_lookup_9)
  LDY #HI(fast_palette_lookup_9)
+ JSR beeb_expand_palette_table
+
+ LDA #10
+ LDX #LO(fast_palette_lookup_10)
+ LDY #HI(fast_palette_lookup_10)
+ JSR beeb_expand_palette_table
+
+ LDA #11
+ LDX #LO(fast_palette_lookup_11)
+ LDY #HI(fast_palette_lookup_11)
+ JSR beeb_expand_palette_table
+
+ LDA #12
+ LDX #LO(fast_palette_lookup_12)
+ LDY #HI(fast_palette_lookup_12)
  JSR beeb_expand_palette_table
 
  RTS
@@ -1504,7 +1521,11 @@ ENDIF
 \* Start new game
 
 .newgame
+IF _DEBUG
+ LDA #_START_LEVEL
+ELSE
  lda #1
+ENDIF
  jmp start
 }
 
