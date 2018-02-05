@@ -20,22 +20,23 @@
 \*-------------------------------
 \ org org
 
- .firstboot jmp FIRSTBOOT
- .loadlevel jmp LOADLEVEL
- .reload BRK       ;jmp RELOAD                 EDITOR
- .loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
- 
- .attractmode jmp ATTRACTMODE
- .cutprincess jmp CUTPRINCESS
- .savegame BRK     ;jmp SAVEGAME               BEEB TODO SAVEGAME
- .loadgame BRK     ;jmp LOADGAME
- .dostartgame jmp DOSTARTGAME
+.firstboot jmp FIRSTBOOT
+.loadlevel jmp LOADLEVEL
+.reload BRK       ;jmp RELOAD                 EDITOR
+.loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
+.goattract
+.attractmode jmp ATTRACTMODE
+.cutprincess jmp CUTPRINCESS
+.savegame jmp SAVEGAME
+.loadgame jmp LOADGAME
+.dostartgame jmp DOSTARTGAME
 
- .epilog jmp EPILOG
- .loadaltset BRK   ;jmp LOADALTSET
+.epilog jmp EPILOG
+.loadaltset BRK   ;jmp LOADALTSET
 \_screendump
 
-.LoadLevelX jmp LOADLEVELX             ; moved from misc.asm
+.LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
+.DoSaveGame jmp DOSAVEGAME              ; moved from misc.asm
 
 MACRO MASTER_LOAD_HIRES filename
 {
@@ -171,7 +172,7 @@ kprincess = 'p'-$60 ;temp!
 kdemo = 'd'-$60 ;temp!
 krestart = 'r'-$60
 ENDIF
-kresume = 'l'-$60
+kresume = IKN_l OR $80
 
 \*-------------------------------
 \*
@@ -235,6 +236,16 @@ kresume = 'l'-$60
  sta soundon ;Sound on
 
  JSR beeb_set_mode2_no_clear
+
+    \\ Own error handler now we're fully initialised
+    IF _DEBUG=FALSE
+    SEI
+    LDX #LO(GOATTRACT)
+    LDY #HI(GOATTRACT)
+    STX BRKV
+    STY BRKV+1
+    CLI
+    ENDIF
 
 IF _BOOT_ATTRACT
  jmp AttractLoop
@@ -391,7 +402,7 @@ ENDIF
  jmp SetLevel
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Check track 22 to make sure it's the right disk
@@ -415,56 +426,109 @@ checkdisk
  bcc ]rts
  jsr error
  jmp :loop
+ENDIF
 
-*-------------------------------
-*
-* Save/load game
-*
-* Write/read 256 bytes of data: sector 0, track 23, side 2
-* We scorch an entire track, but on side 2 we can afford it
-*
-*-------------------------------
-SAVEGAME
- jsr checkdisk ;sets main
+\*-------------------------------
+\*
+\* Save/load game
+\*
+\* Write/read 256 bytes of data: sector 0, track 23, side 2
+\* We scorch an entire track, but on side 2 we can afford it
+\*
+\*-------------------------------
 
- sta RAMRDaux
- ldx #15
-:loop lda savedgame,x ;aux
- sta $200,x ;main
- dex
- bpl :loop
- sta RAMRDmain
+.savegame_filename
+EQUS "SAVE", 13
 
- lda #23
- sta track
- jsr rw18
- db WrtGrpErr
- hex 02,00,00,00,00,00,00,00,00
- hex 00,00,00,00,00,00,00,00,00
- bcc :ok
- jsr whoop
-:ok jmp driveoff
+.savegame_params
+EQUW savegame_filename
+; file load address
+EQUD savegame
+; file exec address
+EQUD 0
+; start address or length
+EQUD savedgame
+; end address of attributes
+EQUD savedgame_top
 
-*-------------------------------
-LOADGAME
- jsr checkdisk ;sets main
+.SAVEGAME
+{
+\ NOT BEEB
+\ jsr checkdisk ;sets main
+\
+\ sta RAMRDaux
+\ ldx #15
+\:loop lda savedgame,x ;aux
+\ sta $200,x ;main
+\ dex
+\ bpl :loop
+\ sta RAMRDmain
+\
+\ lda #23
+\ sta track
+\ jsr rw18
+\ db WrtGrpErr
+\ hex 02,00,00,00,00,00,00,00,00
+\ hex 00,00,00,00,00,00,00,00,00
+\ bcc :ok
+\ jsr whoop
+\:ok jmp driveoff
 
- lda #23
- sta track
- jsr rw18
- db RdGrp
- hex 02,00,00,00,00,00,00,00,00
- hex 00,00,00,00,00,00,00,00,00
+    LDA #LO(savedgame)
+    STA savegame_params+2
+    STA savegame_params+10
 
- sta RAMWRTaux
- ldx #15
-:loop lda $200,x ;main
- sta savedgame,x ;aux
- dex
- bpl :loop
+    LDA #HI(savedgame)
+    STA savegame_params+3
+    STA savegame_params+11
 
- jmp driveoff
+    LDA #LO(savedgame_top)
+    STA savegame_params+14
+    LDA #HI(savedgame_top)
+    STA savegame_params+15
 
+    LDX #LO(savegame_params)
+    LDY #HI(savegame_params)
+    LDA #0
+    JMP osfile
+}
+
+\*-------------------------------
+
+.LOADGAME
+{
+\ NOT BEEB
+\ jsr checkdisk ;sets main
+\
+\ lda #23
+\ sta track
+\ jsr rw18
+\ db RdGrp
+\ hex 02,00,00,00,00,00,00,00,00
+\ hex 00,00,00,00,00,00,00,00,00
+\
+\ sta RAMWRTaux
+\ ldx #15
+\:loop lda $200,x ;main
+\ sta savedgame,x ;aux
+\ dex
+\ bpl :loop
+\
+\ jmp driveoff
+
+    LDA #LO(savedgame)
+    STA savegame_params+2
+
+    LDA #HI(savedgame)
+    STA savegame_params+3
+
+	LDX #LO(savegame_params)
+	LDY #HI(savegame_params)
+	LDA #&FF
+    JMP osfile
+}
+
+IF _TODO
 *-------------------------------
 *
 * Load alt. character set (chtable4)
@@ -971,9 +1035,15 @@ EQUS "PRIN   $"
 \*  Self-running "attract mode"
 \*
 \*-------------------------------
+.GOATTRACT
 .ATTRACTMODE
 .AttractLoop
 {
+\ Reset stack as never return from here
+
+ LDX #&FF
+ TXS
+
 \ BEEB set drive 0 for attract
  LDA #0
  JSR disksys_set_drive
@@ -2079,4 +2149,50 @@ ENDIF
 \ pla
 
  jmp LOADLEVEL ;in MASTER
+}
+
+\*-------------------------------
+\* Save current game to disk
+\*
+\* In: SavLevel = level ($ff to erase saved game)
+\*-------------------------------
+
+\ Moved from gameeq.h.asm
+.savedgame
+
+.SavLevel skip 1
+.SavStrength skip 1
+.SavMaxed skip 1
+.SavTimer skip 2
+ skip 1
+.SavNextMsg skip 1
+
+.savedgame_top
+
+.DOSAVEGAME
+{
+\\ NOT BEEB
+\ lda level
+\ cmp #FirstSideB
+\ bcs :doit ;must have reached side B
+\ lda #Splat
+\ jmp addsound
+\:doit
+
+\* Put data into save-game data area
+
+ lda origstrength
+ sta SavStrength
+
+ lda FrameCount
+ sta SavTimer
+ lda FrameCount+1
+ sta SavTimer+1
+
+ lda NextTimeMsg
+ sta SavNextMsg
+
+\* Write to disk
+
+ jmp savegame
 }

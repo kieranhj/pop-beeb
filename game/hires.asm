@@ -2038,7 +2038,7 @@ SETFASTAUX
  bne ]setfast
 ENDIF
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  F A S T B L A C K

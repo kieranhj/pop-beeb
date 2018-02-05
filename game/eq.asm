@@ -104,7 +104,7 @@ ENDIF
 .develment skip 1
 .keypress skip 1
 .keydown skip 1
-IF _TODO
+IF _NOT_BEEB
 IIGS ds 1
 ENDIF
 
@@ -123,7 +123,7 @@ binfoTRK ds 1
 binfoREG ds 1
 ENDIF
 .level skip 1
-IF _TODO
+IF _NOT_BEEB
 BBundID ds 1
 redherring2 ds 1
 ENDIF

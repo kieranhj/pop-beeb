@@ -51,16 +51,8 @@ trobspace = $20
 mobspace = $10
 maxsfx = $20
 
-IF _TODO
- dum savedgame
-
-SavLevel ds 1
-SavStrength ds 1
-SavMaxed ds 1
-SavTimer ds 2
- ds 1
-SavNextMsg ds 1
-ENDIF
+\dum savedgame
+\ Array moved to master.asm
 
 \dum topctrl
 \ jump table moved to topctrl.asm

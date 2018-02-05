@@ -28,7 +28,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .MarkOppMeter jmp MARKOPPMETER
 .bonesrise jmp BONESRISE
 .decstr jmp DECSTR
-.DoSaveGame BRK     ; jmp DOSAVEGAME                    BEEB TODO SAVEGAME
+\.DoSaveGame jmp DOSAVEGAME         ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX         ; moved to master.asm
 .checkalert jmp CHECKALERT
@@ -786,38 +786,6 @@ skelprog = 2
 .return
  rts
 }
-
-IF _TODO
-*-------------------------------
-* Save current game to disk
-*
-* In: SavLevel = level ($ff to erase saved game)
-*-------------------------------
-DOSAVEGAME
- lda level
- cmp #FirstSideB
- bcs :doit ;must have reached side B
- lda #Splat
- jmp addsound
-:doit
-
-* Put data into save-game data area
-
- lda origstrength
- sta SavStrength
-
- lda FrameCount
- sta SavTimer
- lda FrameCount+1
- sta SavTimer+1
-
- lda NextTimeMsg
- sta SavNextMsg
-
-* Write to disk
-
- jmp savegame
-ENDIF
 
 \*-------------------------------
 \*

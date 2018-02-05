@@ -21,12 +21,12 @@
 
 .start jmp START
 .restart jmp RESTART
-.startresume BRK  ; jmp STARTRESUME
+.startresume jmp STARTRESUME
 .initsystem jmp INITSYSTEM
 \ jmp showpage                        DEBUG
 
 \.docrosscut BRK   ; jmp showpage     UNUSED
-.goattract jmp GOATTRACT
+\.goattract jmp GOATTRACT             in master.asm
 
 \*-------------------------------
 \ lst
@@ -109,18 +109,20 @@ miry = 0
  jmp RESTART
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Resume saved game
-*
-*-------------------------------
-STARTRESUME
- sta ALTZPon
+\*-------------------------------
+\*
+\*  Resume saved game
+\*
+\*-------------------------------
+
+.STARTRESUME
+{
+\ NOT BEEB
+\ sta ALTZPon
  lda #4 ;arbitrary value >1
  jsr StartGame
  jmp ResumeGame
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -188,40 +190,43 @@ ENDIF
  jmp initgame
 }
 
-IF _TODO
-*-------------------------------
-*
-*  Resume saved game
-*
-*-------------------------------
-ResumeGame
+\*-------------------------------
+\*
+\*  Resume saved game
+\*
+\*-------------------------------
+
+.ResumeGame
+{
  IF DemoDisk
  rts
  ELSE
 
- jsr flipdisk ;Ask player to flip disk
- lda #POPside2
- sta BBundID ;& expect side 2 from now on
+\ NOT BEEB
+\ jsr flipdisk ;Ask player to flip disk
+\ lda #POPside2
+\ sta BBundID ;& expect side 2 from now on
 
-:cont jsr loadgame ;Load saved-game info from disk
+.cont jsr loadgame ;Load saved-game info from disk
 
  lda SavLevel ;Has a game been saved?
- bpl :ok ;Yes
+ bpl ok ;Yes
 
-* No game saved--start new game instead
+\* No game saved--start new game instead
 
- jsr flipdisk
- lda #POPside1
- sta BBundID
+\ NOT BEEB
+\ jsr flipdisk
+\ lda #POPside1
+\ sta BBundID
 
  lda #1
  sta level
  sta NextLevel
  jmp RESTART
 
-* Restore strength & timer
+\* Restore strength & timer
 
-:ok lda SavStrength
+.ok lda SavStrength
  sta origstrength
 
  lda SavTimer+1
@@ -232,19 +237,22 @@ ResumeGame
  lda SavNextMsg
  sta NextTimeMsg
 
-* & resume from beginning of level
+\* & resume from beginning of level
 
  lda #1
  sta timerequest ;show time remaining
- lda #$80
- sta yellowflag ;pass copy prot. test
+
+\ NOT BEEB
+\ lda #$80
+\ sta yellowflag ;pass copy prot. test
+
  lda SavLevel
  sta level
  sta NextLevel
  jmp RESTART
 
  ENDIF
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1383,6 +1391,7 @@ ENDIF
 \* Go to attract mode
 \*
 \*-------------------------------
+IF 0    ; UNUSED
 .GOATTRACT
 {
 IF DemoDisk
@@ -1411,6 +1420,7 @@ ENDIF
 \:ok
  jmp attractmode
 }
+ENDIF
 
 \*-------------------------------
 \*
