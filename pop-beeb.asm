@@ -16,7 +16,7 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
+_BOOT_ATTRACT = TRUE       ; boot to attract mode not straight into game
 _START_LEVEL = 4            ; _DEBUG only start on a different level
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
@@ -186,6 +186,7 @@ INCLUDE "lib/print.asm"
 .high_filename  EQUS "High   $"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
+.load_filename  EQUS "BITS   $"
 
 .pop_beeb_entry
 {
@@ -209,17 +210,26 @@ INCLUDE "lib/print.asm"
     LDA #&82:STA &FE4E          ; enable vsync interupt
     CLI
 
-    \\ MODE 2 is the base mode
-    LDA #22
-    JSR oswrch
-    LDA #2
-    JSR oswrch
+    \\ MODE 7 during initialise
 
-    \\ Set smallest mode right away so we don't see any data loading
-    JSR beeb_set_game_screen
+    LDA #22:JSR oswrch
+    LDA #7:JSR oswrch
 
-    \\ Could put a loading screen here?
-    \\ Or just beeb_hide_screen
+    \\ Turn off cursor
+
+    LDA #8:STA &FE00
+    LDA #&D3:STA &FE01
+
+    \\ Clear larger frame buffer (MODE 2)
+
+    JSR beeb_CLS
+
+    \\ Loading screen
+
+    LDX #LO(load_filename)
+    LDY #HI(load_filename)
+    LDA #HI(&7C00)
+    JSR disksys_load_file
 
     \\ Load executable overlays
 
@@ -810,3 +820,5 @@ PUTFILE "Other/john.Presents.mode2.bin", "PRESENT", &3000, 0
 PUTFILE "Other/john.Byline.mode2.bin", "BYLINE", &3000, 0
 PUTFILE "Other/john.Prolog.mode2.bin", "PROLOG", &3000, 0
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
+
+PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0

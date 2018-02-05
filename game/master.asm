@@ -234,6 +234,8 @@ kresume = 'l'-$60
  lda #1
  sta soundon ;Sound on
 
+ JSR beeb_set_mode2_no_clear
+
 IF _BOOT_ATTRACT
  jmp AttractLoop
 ELSE
