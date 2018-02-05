@@ -518,71 +518,11 @@ ENDIF
 \ jmp driveoff
 
 \ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
-
- LDA #0
- LDX #LO(fast_palette_lookup_0)
- LDY #HI(fast_palette_lookup_0)
- JSR beeb_expand_palette_table
-
- LDA #1
- LDX #LO(fast_palette_lookup_1)
- LDY #HI(fast_palette_lookup_1)
- JSR beeb_expand_palette_table
-
- LDA #2
- LDX #LO(fast_palette_lookup_2)
- LDY #HI(fast_palette_lookup_2)
- JSR beeb_expand_palette_table
- 
- LDA #3
- LDX #LO(fast_palette_lookup_3)
- LDY #HI(fast_palette_lookup_3)
- JSR beeb_expand_palette_table
-
- LDA #4
- LDX #LO(fast_palette_lookup_4)
- LDY #HI(fast_palette_lookup_4)
- JSR beeb_expand_palette_table
-
- LDA #5
- LDX #LO(fast_palette_lookup_5)
- LDY #HI(fast_palette_lookup_5)
- JSR beeb_expand_palette_table
-
- LDA #6
- LDX #LO(fast_palette_lookup_6)
- LDY #HI(fast_palette_lookup_6)
- JSR beeb_expand_palette_table
-
- LDA #7
- LDX #LO(fast_palette_lookup_7)
- LDY #HI(fast_palette_lookup_7)
- JSR beeb_expand_palette_table
-
- LDA #8
- LDX #LO(fast_palette_lookup_8)
- LDY #HI(fast_palette_lookup_8)
- JSR beeb_expand_palette_table
-
- LDA #9
- LDX #LO(fast_palette_lookup_9)
- LDY #HI(fast_palette_lookup_9)
- JSR beeb_expand_palette_table
-
- LDA #10
- LDX #LO(fast_palette_lookup_10)
- LDY #HI(fast_palette_lookup_10)
- JSR beeb_expand_palette_table
-
- LDA #11
- LDX #LO(fast_palette_lookup_11)
- LDY #HI(fast_palette_lookup_11)
- JSR beeb_expand_palette_table
-
- LDA #12
- LDX #LO(fast_palette_lookup_12)
- LDY #HI(fast_palette_lookup_12)
- JSR beeb_expand_palette_table
+\ If want to map 4 byte palette table to an expanded &34 byte lookup
+\ LDA #0
+\ LDX #LO(fast_palette_lookup_0)
+\ LDY #HI(fast_palette_lookup_0)
+\ JSR beeb_expand_palette_table
 
  RTS
 }
