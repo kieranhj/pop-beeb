@@ -1,0 +1,61 @@
+{
+    "version": "0.1.0",
+    "command": "cmd",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "echoCommand": true,
+    "suppressTaskName": true,
+    "args": [
+        "/C"
+    ],
+    "tasks": [
+        {
+            "taskName": "pop-beeb.dsd",
+            "problemMatcher": {
+                "owner": "6502",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "args": [
+                "BeebAsm.exe -v -i pop-beeb.asm -do pop-beeb.ssd -boot Core && bin\\bbcim.exe -interss sd pop-beeb.ssd pop-beeb-side-b.ssd pop-beeb.dsd"
+            ],
+            "isBuildCommand": true
+        },
+        {
+            "taskName": "Run 'pop-beeb.dsd' in Emulator",
+            "isTestCommand": true,
+            "args": [
+                "B-Em.exe pop-beeb.dsd"
+            ]
+        },
+        {
+            "taskName": "test.ssd",
+            "problemMatcher": {
+                "owner": "6502",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "args": [
+                "BeebAsm.exe -v -i test.asm -do test.ssd -boot Main"
+            ]
+        }
+    ]
+}
