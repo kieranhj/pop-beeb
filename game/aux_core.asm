@@ -359,7 +359,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .MarkOppMeter JUMP_B MARKOPPMETER, MISC_BASE, 11
 .bonesrise JUMP_B BONESRISE, MISC_BASE, 12
 .decstr JUMP_B DECSTR, MISC_BASE, 13
-.DoSaveGame BRK     ; jmp DOSAVEGAME           BEEB TODO SAVEGAME
+\.DoSaveGame JUMP_B DOSAVEGAME, MISC_BASE, 14   ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 .checkalert JUMP_B CHECKALERT, MISC_BASE, 15
@@ -920,7 +920,7 @@ EQUB LO(MARKKIDMETER)
 EQUB LO(MARKOPPMETER)
 EQUB LO(BONESRISE)
 EQUB LO(DECSTR)
-EQUB 0      ; EQUB LO(DOSAVEGAME)         BEEB TODO SAVEGAME
+EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB LO(CHECKALERT)
@@ -1125,7 +1125,7 @@ EQUB HI(MARKKIDMETER)
 EQUB HI(MARKOPPMETER)
 EQUB HI(BONESRISE)
 EQUB HI(DECSTR)
-EQUB 0      ; EQUB LO(DOSAVEGAME)         BEEB TODO SAVEGAME
+EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB HI(CHECKALERT)

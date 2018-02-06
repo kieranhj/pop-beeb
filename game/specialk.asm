@@ -450,10 +450,9 @@ kerasegame = '*'
 
 .label_17 cmp #ksavegame
  bne label_18
-\ BEEB TEMP SAVE GAMEs
-\ lda level
-\ sta SavLevel
-\ jmp DoSaveGame
+ lda level
+ sta SavLevel
+ jmp DoSaveGame
 
 \* Show time left
 

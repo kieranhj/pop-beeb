@@ -16,7 +16,7 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = TRUE       ; boot to attract mode not straight into game
+_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
 _START_LEVEL = 4            ; _DEBUG only start on a different level
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
@@ -205,6 +205,7 @@ INCLUDE "lib/print.asm"
     \\ Early system init
 
     LDX #&FF:TXS                ; reset stack
+
     SEI
     LDA #&7F:STA &FE4E          ; disable all interupts
     LDA #&82:STA &FE4E          ; enable vsync interupt

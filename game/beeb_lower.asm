@@ -45,7 +45,7 @@ ENDIF
 .develment skip 1
 .keypress skip 1
 .keydown skip 1
-IF _TODO
+IF _NOT_BEEB
 IIGS ds 1
 ENDIF
 
