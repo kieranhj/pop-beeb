@@ -272,4 +272,8 @@ MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR        ; 
 .fast_palette_lookup_12
 MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR       ; 12=RYM
 
+PAGE_ALIGN
+.small_font
+INCBIN "Other/font2.bin"
+
 .beeb_core_data_end

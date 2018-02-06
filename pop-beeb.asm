@@ -420,6 +420,8 @@ INCLUDE "game/beeb-plot-peel.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 INCLUDE "game/beeb-plot-lay.asm"
 
+INCLUDE "game/beeb-plot-font.asm"
+
 .pop_beeb_main_end
 
 ; Save executable code for Main RAM

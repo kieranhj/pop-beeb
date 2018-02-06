@@ -1703,6 +1703,13 @@ ENDIF
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
+    \ Relocate the FONT file
+    LDA #LO(small_font+1)
+    STA beeb_readptr
+    LDA #HI(small_font+1)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
     .return
     rts
 }

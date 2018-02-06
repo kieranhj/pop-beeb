@@ -803,30 +803,27 @@ int main(int argc, char **argv)
 			int pixel_height = font_height;
 			int current_y = 1;
 
-			int mode5_width = (colour_width[i] + 3) / 4;
 			int current_x = pixel_size[i][0];
 
 			for (int y = 0; y < pixel_height; y += 1)
 			{
 				int actual_y = y;
 
-				for (int x8 = 0; x8 < mode5_width; x8++)
+				for (int x = 0; x < colour_width[i]; x++)
 				{
-					int c0 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2));
-					int c1 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2));
-					int c2 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2));
-					int c3 = find_nearest_nula_colour(bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2));
-
 				//	printf("%d %d %d %d\n", c0, c1, c2, c3);
 
-					colours[i][y * colour_width[i] + x8 * 4 + 0] = c0;
-					colours[i][y * colour_width[i] + x8 * 4 + 1] = c1;
-					colours[i][y * colour_width[i] + x8 * 4 + 2] = c2;
-					colours[i][y * colour_width[i] + x8 * 4 + 3] = c3;
+					int c = find_nearest_nula_colour(bitmap(current_x + x * 2, current_y + actual_y, 0), bitmap(current_x + x * 2, current_y + actual_y, 1), bitmap(current_x + x * 2, current_y + actual_y, 2));;
+
+					printf("%d ", c);
+
+					colours[i][y * colour_width[i] + x] = c;
 				}
+
+				printf("\n");
 			}
 
-			// printf("\n");
+			printf("\n");
 		}
 
 		if (outputname)
@@ -838,8 +835,8 @@ int main(int argc, char **argv)
 				unsigned char *beebdata = (unsigned char*)malloc(3 + num_glyphs * 5 + num_glyphs * (font_width/4) * font_height);
 				unsigned char *beebptr = beebdata;
 
-				*beebptr++ = num_glyphs;
 				*beebptr++ = font_height;
+				*beebptr++ = num_glyphs;
 
 				for (int i = 0; i < num_glyphs; i++)
 				{
@@ -856,8 +853,6 @@ int main(int argc, char **argv)
 					int pixel_height = font_height;
 					int current_y = 1;
 
-					int mode5_width = (colour_width[i] + 3) / 4;
-
 					pal = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
 
 					if (verbose)
@@ -872,7 +867,7 @@ int main(int argc, char **argv)
 
 					// Write bytes directly from bitmap
 
-					*beebptr++ = colour_width[i];
+					*beebptr++ = colour_width[i] / 2;			// this many MODE 2 bytes
 
 				// Don't write these for fonts
 				//	*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
@@ -880,12 +875,12 @@ int main(int argc, char **argv)
 
 					for (int y = 0; y < pixel_height; y += 1)
 					{
-						for (int x8 = 0; x8 < mode5_width; x8++)
+						for (int x = 0; x < colour_width[i]; x+=4)
 						{
-							int c0 = colours[i][y * colour_width[i] + x8 * 4 + 0];
-							int c1 = colours[i][y * colour_width[i] + x8 * 4 + 1];
-							int c2 = colours[i][y * colour_width[i] + x8 * 4 + 2];
-							int c3 = colours[i][y * colour_width[i] + x8 * 4 + 3];
+							int c0 = colours[i][y * colour_width[i] + x + 0];
+							int c1 = (x + 1) < colour_width[i] ? colours[i][y * colour_width[i] + x + 1] : 0;
+							int c2 = (x + 2) < colour_width[i] ? colours[i][y * colour_width[i] + x + 2] : 0;
+							int c3 = (x + 3) < colour_width[i] ? colours[i][y * colour_width[i] + x + 3] : 0;
 
 							//	printf("%d %d %d %d ", c0, c1, c2, c3);
 
