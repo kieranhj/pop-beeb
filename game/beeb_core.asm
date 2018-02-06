@@ -10,10 +10,12 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 ; Set custom CRTC mode for game
 \*-------------------------------
 
-.beeb_set_game_screen
+.beeb_set_mode2_no_clear
 {
-\\ Don't need all this currently
-IF _TODO
+    \\ Wait vsync
+    LDA #19
+    JSR osbyte
+
     \\ Set CRTC registers
     LDX #13
     .crtcloop
@@ -25,6 +27,7 @@ IF _TODO
 
     \\ Set ULA
     LDA #&F4            ; MODE 2
+    STA &248            ; Tell the OS or it will mess with ULA settings at vsync
     STA &FE20
 
     \\ Set Palette
@@ -38,9 +41,14 @@ IF _TODO
     AND #&F0
     ADC #&10
     BCC palloop
-ELSE
-\\ Just set CRTC registers we care about
 
+    RTS
+}
+
+\\ Just set CRTC registers we care about for game vs attract mode
+
+.beeb_set_game_screen
+{
 IF BEEB_SCREEN_CHARS<>80
     LDA #1:STA &FE00            ; R1 = horizontal displayed
     LDA #BEEB_SCREEN_CHARS
@@ -58,7 +66,6 @@ ENDIF
     LDA #13:STA &FE00               ; R13 = screen start address, low
     LDA #LO(beeb_screen_addr/8)
     STA &FE01
-ENDIF
 
     RTS
 }
@@ -100,7 +107,7 @@ ENDIF
 ; CRTC & ULA data required to configure out special MODE 2
 ; Following data could be dumped after boot!
 
-IF _TODO
+IF 1
 .beeb_crtcregs
 {
 	EQUB 127 			; R0  horizontal total
