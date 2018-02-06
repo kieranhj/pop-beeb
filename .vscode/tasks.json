@@ -27,13 +27,14 @@
             },
             "args": [
                 "BeebAsm.exe -v -i pop-beeb.asm -do pop-beeb.ssd -boot Core && bin\\bbcim.exe -interss sd pop-beeb.ssd pop-beeb-side-b.ssd pop-beeb.dsd"
-            ]
+            ],
+            "isBuildCommand": true
         },
         {
-            "taskName": "Run 'audio-test.ssd' in Emulator",
+            "taskName": "Run 'pop-beeb.dsd' in Emulator",
             "isTestCommand": true,
             "args": [
-                "B-Em.exe audio-test.ssd"
+                "B-Em.exe pop-beeb.dsd"
             ]
         },
         {
@@ -54,8 +55,7 @@
             },
             "args": [
                 "BeebAsm.exe -v -i audio/audio-test.asm -do audio-test.ssd -boot Main"
-            ],
-            "isBuildCommand": true
+            ]
         }
     ]
 }
