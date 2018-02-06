@@ -16,9 +16,9 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
-_START_LEVEL = 4            ; _DEBUG only start on a different level
-
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
+_START_LEVEL = 1            ; _DEBUG only start on a different level
+_AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
@@ -98,6 +98,10 @@ BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 INCLUDE "game/beeb-plot.h.asm"
+
+; Music Libraries
+INCLUDE "lib/exomiser.h.asm"
+INCLUDE "lib/vgmplayer.h.asm"
 
 PRINT "--------"
 PRINT "ZERO PAGE"
@@ -187,6 +191,22 @@ INCLUDE "lib/print.asm"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
+
+
+; SM: HACKED IN MUSIC/SFX 
+.pop_music_01
+.pop_music_02
+.pop_music_03
+.pop_music_04
+.pop_music_05
+.pop_music_06
+.pop_music_07
+.pop_music_08
+.pop_music_09
+INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
+.pop_landing_sfx
+INCBIN "audio/music/landing-sfx.raw.exo"
+
 
 .pop_beeb_entry
 {
@@ -309,6 +329,11 @@ INCLUDE "lib/print.asm"
     IF _IRQ_VSYNC
     JSR beeb_irq_init
     ENDIF
+
+IF _AUDIO
+    ; initialize the music system
+    jsr music_init
+ENDIF
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
@@ -485,6 +510,12 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
+
+
+; Music & Audio routines crammed in here
+INCLUDE "lib/exomiser.asm"
+INCLUDE "lib/vgmplayer.asm"
+INCLUDE "lib/beeb_audio.asm"
 
 .pop_beeb_aux_hazel_data_end
 

@@ -18,7 +18,10 @@
     jsr music_play_track	
 	rts	
 }
-
+.BEEB_ZEROSOUND
+{
+    rts
+}
 
 
 ; call this function once to initialise the music system
