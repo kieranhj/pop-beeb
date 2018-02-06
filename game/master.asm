@@ -112,9 +112,7 @@ ENDMACRO
 
 \*-------------------------------
 \* Coordinates of default load-in level
-
-.demolevel EQUB 0       ; BEEB CAN LOAD THESE AS FILES
-.firstlevel EQUB 1      ; BEEB CAN LOAD THESE AS FILES
+\ NOT BEEB
 
 \*-------------------------------
 \* Hi bytes of crunch data
@@ -368,7 +366,11 @@ ENDIF
 \*-------------------------------
 .set1stlevel
 {
- ldx firstlevel
+IF _DEBUG
+ ldx #_START_LEVEL
+ELSE
+ ldx #1
+ENDIF
 \ ldx firstlevel+1
 }
 \\ Fall through!
@@ -382,7 +384,7 @@ ENDIF
 
 .setdemolevel
 {
- ldx demolevel
+ ldx #0
 \ ldx demolevel+1
  jmp SetLevel
 }
@@ -516,56 +518,11 @@ ENDIF
 \ jmp driveoff
 
 \ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
-
- LDA #0
- LDX #LO(fast_palette_lookup_0)
- LDY #HI(fast_palette_lookup_0)
- JSR beeb_expand_palette_table
-
- LDA #1
- LDX #LO(fast_palette_lookup_1)
- LDY #HI(fast_palette_lookup_1)
- JSR beeb_expand_palette_table
-
- LDA #2
- LDX #LO(fast_palette_lookup_2)
- LDY #HI(fast_palette_lookup_2)
- JSR beeb_expand_palette_table
- 
- LDA #3
- LDX #LO(fast_palette_lookup_3)
- LDY #HI(fast_palette_lookup_3)
- JSR beeb_expand_palette_table
-
- LDA #4
- LDX #LO(fast_palette_lookup_4)
- LDY #HI(fast_palette_lookup_4)
- JSR beeb_expand_palette_table
-
- LDA #5
- LDX #LO(fast_palette_lookup_5)
- LDY #HI(fast_palette_lookup_5)
- JSR beeb_expand_palette_table
-
- LDA #6
- LDX #LO(fast_palette_lookup_6)
- LDY #HI(fast_palette_lookup_6)
- JSR beeb_expand_palette_table
-
- LDA #7
- LDX #LO(fast_palette_lookup_7)
- LDY #HI(fast_palette_lookup_7)
- JSR beeb_expand_palette_table
-
- LDA #8
- LDX #LO(fast_palette_lookup_8)
- LDY #HI(fast_palette_lookup_8)
- JSR beeb_expand_palette_table
-
- LDA #9
- LDX #LO(fast_palette_lookup_9)
- LDY #HI(fast_palette_lookup_9)
- JSR beeb_expand_palette_table
+\ If want to map 4 byte palette table to an expanded &34 byte lookup
+\ LDA #0
+\ LDX #LO(fast_palette_lookup_0)
+\ LDY #HI(fast_palette_lookup_0)
+\ JSR beeb_expand_palette_table
 
  RTS
 }
@@ -1504,7 +1461,11 @@ ENDIF
 \* Start new game
 
 .newgame
+IF _DEBUG
+ LDA #_START_LEVEL
+ELSE
  lda #1
+ENDIF
  jmp start
 }
 

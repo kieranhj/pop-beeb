@@ -499,6 +499,7 @@ ENDIF
 ; Expands 6 bytes left/right logical 0/1/2/3 pixels into all byte combinations
 \*-------------------------------
 
+IF 0    \\ Currently unused as tables are built as assemble time
 .beeb_expand_palette_table
 {
     STX beeb_writeptr
@@ -567,6 +568,7 @@ ENDIF
     .return
     RTS
 }
+ENDIF
 
 \*-------------------------------
 ; Test whether key is pressed (from Thrust!)
