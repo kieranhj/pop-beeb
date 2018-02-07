@@ -402,49 +402,6 @@ miry = 0
  jmp MainLoop
 }
 
-.string1
-EQUB 1,2,3,4,5,6,7,8,9,10,&FF
-.string2
-EQUB 11,12,13,14,15,16,17,18,19,20,&FF
-.string3
-EQUB 21,22,23,24,25,26,27,28,29,30,&FF
-.string4
-EQUB 31,32,33,34,35,36,37,38,39,40,&FF
-
-
-.test_font
-{
-  LDA #LO(string1):STA beeb_readptr
-  LDA #HI(string1):STA beeb_readptr+1;
-  LDX #0
-  LDY #0
-  LDA #0
-  JSR beeb_plot_font_string
-
-  LDA #LO(string2):STA beeb_readptr
-  LDA #HI(string2):STA beeb_readptr+1
-  LDX #0
-  LDY #2
-  LDA #14
-  JSR beeb_plot_font_string
-
-  LDA #LO(string3):STA beeb_readptr
-  LDA #HI(string3):STA beeb_readptr+1
-  LDX #0
-  LDY #4
-  LDA #4
-  JSR beeb_plot_font_string
-
-  LDA #LO(string4):STA beeb_readptr
-  LDA #HI(string4):STA beeb_readptr+1
-  LDX #0
-  LDY #6
-  LDA #10
-  JSR beeb_plot_font_string
- 
-  RTS
-}
-
 \*-------------------------------
 \*
 \*  Main loop
@@ -466,8 +423,6 @@ IF _DEBUG
  STY temp_last_count
 ENDIF
 
- JSR test_font
- 
  jsr rnd
 
  lda #0

@@ -34,6 +34,17 @@ IF _RASTERS
 ENDIF
 ENDMACRO
 
+MACRO SMALL_FONT_MAPCHAR
+    MAPCHAR '0','9',1
+    MAPCHAR 'A','Z',11
+    MAPCHAR 'a','z',11
+    MAPCHAR '!',37
+    MAPCHAR '?',38
+    MAPCHAR '.',39
+    MAPCHAR ',',40
+    MAPCHAR ' ',0
+ENDMACRO
+
 ; Original PoP global defines
 
 EditorDisk = 0 ;1 = dunj, 2 = palace

@@ -429,9 +429,21 @@ ENDIF
     LDY #0
     LDA (beeb_readptr), Y
     BMI done_loop
+    BNE not_space
 
+    CLC
+    LDA beeb_writeptr
+    ADC #16
+    STA beeb_writeptr
+    BCC no_carry
+    INC beeb_writeptr+1
+    .no_carry
+    BNE next_char
+
+    .not_space
     JSR beeb_plot_font_glyph
 
+    .next_char
     INC beeb_readptr
     BNE loop
     INC beeb_readptr+1
@@ -440,5 +452,51 @@ ENDIF
     .done_loop
     RTS
 }
+
+IF 0
+SMALL_FONT_MAPCHAR
+.string1
+EQUB "This is a call", &FF
+.string2
+EQUB "TO ALL MY PAST", &FF
+.string3
+EQUB "RESIGNATIONS!!", &FF
+.string4
+EQUB "..HELLO WORLD..", &FF
+ASCII_MAPCHAR
+
+.test_font
+{
+  LDA #LO(string1):STA beeb_readptr
+  LDA #HI(string1):STA beeb_readptr+1;
+  LDX #0
+  LDY #0
+  LDA #0
+  JSR beeb_plot_font_string
+
+  LDA #LO(string2):STA beeb_readptr
+  LDA #HI(string2):STA beeb_readptr+1
+  LDX #0
+  LDY #2
+  LDA #14
+  JSR beeb_plot_font_string
+
+  LDA #LO(string3):STA beeb_readptr
+  LDA #HI(string3):STA beeb_readptr+1
+  LDX #0
+  LDY #4
+  LDA #4
+  JSR beeb_plot_font_string
+
+  LDA #LO(string4):STA beeb_readptr
+  LDA #HI(string4):STA beeb_readptr+1
+  LDX #0
+  LDY #6
+  LDA #10
+  JSR beeb_plot_font_string
+ 
+  RTS
+}
+ENDIF
 
 .beeb_plot_font_end
