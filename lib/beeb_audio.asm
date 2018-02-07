@@ -14,8 +14,9 @@
 }
 .BEEB_ADDSOUND
 {
-    lda #9	; SM Hacked to play a sfx
-    jsr music_play_track	
+;        lda #9	; SM Hacked to play a sfx
+; A should contain sfx id 0-19
+    jsr music_play_sfx	
 	rts	
 }
 .BEEB_ZEROSOUND
@@ -93,8 +94,28 @@ IF TRUE
     EQUW pop_music_08, &80
     EQUW pop_music_09, &80		; #8
 ENDIF
+
 .pop_sound_fx
-	EQUW pop_landing_sfx, &80		; #9
+	EQUW pop_sfx_00, &80		; #9
+	EQUW pop_sfx_01, &80		; #9
+	EQUW pop_sfx_02, &80		; #9
+	EQUW pop_sfx_03, &80		; #9
+	EQUW pop_sfx_04, &80		; #9
+	EQUW pop_sfx_05, &80		; #9
+	EQUW pop_sfx_06, &80		; #9
+	EQUW pop_sfx_07, &80		; #9
+	EQUW pop_sfx_08, &80		; #9
+	EQUW pop_sfx_09, &80		; #9
+	EQUW pop_sfx_10, &80		; #9
+	EQUW pop_sfx_11, &80		; #9
+	EQUW pop_sfx_12, &80		; #9
+	EQUW pop_sfx_13, &80		; #9
+	EQUW pop_sfx_14, &80		; #9
+	EQUW pop_sfx_15, &80		; #9
+	EQUW pop_sfx_16, &80		; #9
+	EQUW pop_sfx_17, &80		; #9
+	EQUW pop_sfx_18, &80		; #9
+	EQUW pop_sfx_19, &80		; #9
 
 
 ; A contains music track - 0 to 8
@@ -116,6 +137,29 @@ ENDIF
     jsr music_play
     rts 
 }
+
+
+; A contains sound effect id - 0 to 19
+.music_play_sfx
+{
+    asl a
+    asl a
+    tax
+    ; get bank
+    lda pop_sound_fx+2,x
+    pha
+    ; get address
+    lda pop_sound_fx+1,x
+    tay
+    lda pop_sound_fx+0,x
+    tax
+    pla
+    ; play the track
+    jsr music_play
+    rts 
+}
+
+
 
 .fx_music_addr  SKIP 2
 .fx_music_on    EQUB 0
