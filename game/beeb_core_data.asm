@@ -276,4 +276,24 @@ PAGE_ALIGN
 .small_font
 INCBIN "Other/font2.bin"
 
+.Mult8_LO
+FOR n,0,79,1
+EQUB LO(n*8)
+NEXT
+
+.Mult8_HI
+FOR n,0,79,1
+EQUB HI(n*8)
+NEXT
+
+.Row_LO
+FOR n,0,BEEB_SCREEN_ROWS-1,1
+EQUB LO(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
+NEXT
+
+.Row_HI
+FOR n,0,BEEB_SCREEN_ROWS-1,1
+EQUB HI(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
+NEXT
+
 .beeb_core_data_end

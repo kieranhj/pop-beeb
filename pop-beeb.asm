@@ -17,7 +17,7 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 _BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
-_START_LEVEL = 4            ; _DEBUG only start on a different level
+_START_LEVEL = 1            ; _DEBUG only start on a different level
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
@@ -438,6 +438,7 @@ PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsav
 PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAY size = ", ~(beeb_plot_lay_end - beeb_plot_lay_start)
+PRINT "BEEB PLOT FONT size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
 PRINT "Main high watermark = ", ~P%

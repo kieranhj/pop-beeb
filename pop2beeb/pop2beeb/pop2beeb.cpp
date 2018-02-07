@@ -835,7 +835,7 @@ int main(int argc, char **argv)
 				unsigned char *beebdata = (unsigned char*)malloc(3 + num_glyphs * 5 + num_glyphs * (font_width/4) * font_height);
 				unsigned char *beebptr = beebdata;
 
-				*beebptr++ = font_height;
+				*beebptr++ = font_height;	// if we put this first then everything that follows looks like a regular sprite table
 				*beebptr++ = num_glyphs;
 
 				for (int i = 0; i < num_glyphs; i++)
@@ -870,7 +870,7 @@ int main(int argc, char **argv)
 					*beebptr++ = colour_width[i] / 2;			// this many MODE 2 bytes
 
 				// Don't write these for fonts
-				//	*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
+				//	*beebptr++ = pixel_height;	// write this once for all glyphs
 				//	*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
 
 					for (int y = 0; y < pixel_height; y += 1)

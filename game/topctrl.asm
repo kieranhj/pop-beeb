@@ -402,61 +402,47 @@ miry = 0
  jmp MainLoop
 }
 
+.string1
+EQUB 1,2,3,4,5,6,7,8,9,10,&FF
+.string2
+EQUB 11,12,13,14,15,16,17,18,19,20,&FF
+.string3
+EQUB 21,22,23,24,25,26,27,28,29,30,&FF
+.string4
+EQUB 31,32,33,34,35,36,37,38,39,40,&FF
+
+
 .test_font
 {
-   \\ BEEB TEMP TEMP TEMP
- LDA #LO(beeb_screen_addr)
- STA beeb_writeptr
- LDA #HI(beeb_screen_addr)
- STA beeb_writeptr+1
+  LDA #LO(string1):STA beeb_readptr
+  LDA #HI(string1):STA beeb_readptr+1;
+  LDX #0
+  LDY #0
+  LDA #0
+  JSR beeb_plot_font_string
 
- JSR beeb_plot_font_prep
+  LDA #LO(string2):STA beeb_readptr
+  LDA #HI(string2):STA beeb_readptr+1
+  LDX #0
+  LDY #2
+  LDA #14
+  JSR beeb_plot_font_string
 
- LDA #0:STA PALETTE
- LDA #1:JSR beeb_plot_font_glyph
- LDA #2:JSR beeb_plot_font_glyph
- LDA #3:JSR beeb_plot_font_glyph
- LDA #4:JSR beeb_plot_font_glyph
- LDA #5:JSR beeb_plot_font_glyph
- LDA #6:JSR beeb_plot_font_glyph
- LDA #7:JSR beeb_plot_font_glyph
- LDA #8:JSR beeb_plot_font_glyph
- LDA #9:JSR beeb_plot_font_glyph
- LDA #10:JSR beeb_plot_font_glyph
- LDA #14:STA PALETTE
- LDA #11:JSR beeb_plot_font_glyph
- LDA #12:JSR beeb_plot_font_glyph
- LDA #13:JSR beeb_plot_font_glyph
- LDA #14:JSR beeb_plot_font_glyph
- LDA #15:JSR beeb_plot_font_glyph
- LDA #16:JSR beeb_plot_font_glyph
- LDA #17:JSR beeb_plot_font_glyph
- LDA #18:JSR beeb_plot_font_glyph
- LDA #19:JSR beeb_plot_font_glyph
- LDA #20:JSR beeb_plot_font_glyph
- LDA #4:STA PALETTE
- LDA #21:JSR beeb_plot_font_glyph
- LDA #22:JSR beeb_plot_font_glyph
- LDA #23:JSR beeb_plot_font_glyph
- LDA #24:JSR beeb_plot_font_glyph
- LDA #25:JSR beeb_plot_font_glyph
- LDA #26:JSR beeb_plot_font_glyph
- LDA #27:JSR beeb_plot_font_glyph
- LDA #28:JSR beeb_plot_font_glyph
- LDA #29:JSR beeb_plot_font_glyph
- LDA #30:JSR beeb_plot_font_glyph
- LDA #10:STA PALETTE
- LDA #31:JSR beeb_plot_font_glyph
- LDA #32:JSR beeb_plot_font_glyph
- LDA #33:JSR beeb_plot_font_glyph
- LDA #34:JSR beeb_plot_font_glyph
- LDA #35:JSR beeb_plot_font_glyph
- LDA #36:JSR beeb_plot_font_glyph
- LDA #37:JSR beeb_plot_font_glyph
- LDA #38:JSR beeb_plot_font_glyph
- LDA #39:JSR beeb_plot_font_glyph
- LDA #40:JSR beeb_plot_font_glyph
- RTS
+  LDA #LO(string3):STA beeb_readptr
+  LDA #HI(string3):STA beeb_readptr+1
+  LDX #0
+  LDY #4
+  LDA #4
+  JSR beeb_plot_font_string
+
+  LDA #LO(string4):STA beeb_readptr
+  LDA #HI(string4):STA beeb_readptr+1
+  LDX #0
+  LDY #6
+  LDA #10
+  JSR beeb_plot_font_string
+ 
+  RTS
 }
 
 \*-------------------------------
