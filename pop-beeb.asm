@@ -16,7 +16,7 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
+_BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
 _AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
@@ -204,8 +204,38 @@ INCLUDE "lib/print.asm"
 .pop_music_08
 .pop_music_09
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
-.pop_landing_sfx
-INCBIN "audio/music/landing-sfx.raw.exo"
+
+.pop_sfx_00 
+.pop_sfx_01
+.pop_sfx_02
+.pop_sfx_03
+.pop_sfx_04
+.pop_sfx_05
+.pop_sfx_06
+.pop_sfx_07
+INCBIN "audio/sfx/07 platecrash.raw.exo"
+.pop_sfx_08
+.pop_sfx_09
+INCBIN "audio/sfx/09 footstep.raw.exo"
+.pop_sfx_10
+INCBIN "audio/sfx/10 exitrise.raw.exo"
+.pop_sfx_11
+INCBIN "audio/sfx/11 gaterise.raw.exo"
+.pop_sfx_12
+INCBIN "audio/sfx/12 gatelower.raw.exo"
+.pop_sfx_13
+INCBIN "audio/sfx/13 ungh.raw.exo"
+.pop_sfx_14
+.pop_sfx_15
+INCBIN "audio/sfx/15 gateslam.raw.exo"
+.pop_sfx_16
+.pop_sfx_17
+INCBIN "audio/sfx/17 swordparry.raw.exo"
+.pop_sfx_18
+.pop_sfx_19
+INCBIN "audio/sfx/19 jawsclash.raw.exo"
+
+ 
 
 
 .pop_beeb_entry
