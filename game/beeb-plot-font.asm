@@ -441,6 +441,14 @@ ENDIF
     BNE next_char
 
     .not_space
+
+IF _DEBUG
+    CMP small_font+1
+    BCC glyph_ok
+    BRK             ; glyph not found
+    .glyph_ok
+ENDIF
+
     JSR beeb_plot_font_glyph
 
     .next_char
