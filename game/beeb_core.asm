@@ -480,8 +480,6 @@ ENDIF
   rts
 }
 
-beeb_status_addr = beeb_screen_addr + 24*BEEB_SCREEN_ROW_BYTES
-
 .beeb_clear_status_line
 {
     LDX #HI(BEEB_SCREEN_ROW_BYTES + &FF)

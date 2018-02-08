@@ -298,7 +298,7 @@ ASCII_MAPCHAR
 
     LDA #0
     LDX #25
-    LDY #24
+    LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }
 
@@ -383,7 +383,7 @@ ASCII_MAPCHAR
 
     LDA #0
     LDX #32
-    LDY #24
+    LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }
 
@@ -430,7 +430,7 @@ ASCII_MAPCHAR
 
     LDA #0
     LDX #14
-    LDY #24
+    LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }
 
