@@ -24,14 +24,14 @@ IF _JMP_TABLE = FALSE
 .DrawShad jmp DRAWSHAD
 
 .setupflame jmp SETUPFLAME
-.continuemsg RTS    ; jmp CONTINUEMSG           BEEB TODO MESSAGES
+.continuemsg jmp CONTINUEMSG
 .addcharobj jmp ADDCHAROBJ
 .setobjindx jmp SETOBJINDX
-.printlevel RTS     ; jmp PRINTLEVEL            BEEB TODO MESSAGES
+.printlevel jmp PRINTLEVEL
 
 .DrawOppMeter jmp DRAWOPPMETER
 .flipdiskmsg BRK    ; jmp FLIPDISKMSG           NOT BEEB
-.timeleftmsg RTS    ; jmp TIMELEFTMSG           BEEB TODO MESSAGES
+.timeleftmsg jmp TIMELEFTMSG
 .DrawGuard jmp DRAWGUARD
 .DrawGuard2 jmp DRAWGUARD
 
@@ -169,7 +169,7 @@ startable = 0 ;chtable1
 
 .bubble EQUB $b2,$af,$b0,$b1,$b0,$af,$b1,$b0,$af
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 * Message data: YCO, XCO, OFFSET, IMAGE
 
@@ -198,165 +198,243 @@ digit2 hex 70,71,72,73,74,75,76,77,78,79
 * Print "XX Minutes Left"
 *-------------------------------
 ]rts rts
+ENDIF
 
-TIMELEFTMSG
- lda #timeleft
- ldx #>timeleft
- jsr setupimage
+SMALL_FONT_MAPCHAR
+.minutes_string
+EQUS "XX minutes left", &FF
+.seconds_string
+EQUS "XX seconds left", &FF
+ASCII_MAPCHAR
 
- lda MinLeft
- cmp #2
- bcs :ok
- lda KidAction
- cmp #3
- beq :ok
- cmp #4
- beq :ok ;falling
- lda KidBlockY
- cmp #1
- bne :ok
- lda #lowmy
- sta YCO ;keep msg box out of kid's way
-:ok jsr superim1
+.TIMELEFTMSG
+{
+\ NOT BEEB
+\ lda #timeleft
+\ ldx #>timeleft
+\ jsr setupimage
 
- lda YCO
- sec
- sbc #5
- sta YCO
+\ lda MinLeft
+\ cmp #2
+\ bcs ok
+\ lda KidAction
+\ cmp #3
+\ beq ok
+\ cmp #4
+\ beq ok ;falling
+\ lda KidBlockY
+\ cmp #1
+\ bne ok
+\ lda #lowmy
+\ sta YCO ;keep msg box out of kid's way
+\.ok
+\ jsr superim1
+\
+\ lda YCO
+\ sec
+\ sbc #5
+\ sta YCO
+\
+\ lda XCO
+\ clc
+\ adc #1
+\ sta XCO
+\ lda #0
+\ sta OPACITY
+\
+\ lda #ora
+\ sta OPACITY
 
- lda XCO
- clc
- adc #1
- sta XCO
- lda #0
- sta OPACITY
+    jsr getminleft
 
- lda #ora
- sta OPACITY
+    LDA #LO(minutes_string)
+    STA beeb_readptr
+    LDA #HI(minutes_string)
+    STA beeb_readptr+1
+    LDY #0
 
- jsr getminleft
+    \* Minutes or seconds?
 
- lda MinLeft ;BCD byte (e.g., $55 = 55 minutes)
- cmp #2
- bcs :1
- lda SecLeft
-:1 sta temp
- lsr
- lsr
- lsr
- lsr
- beq :skip1st
- tax
- lda digit2,x ;1st digit
- sta IMAGE
+    lda MinLeft ;BCD byte (e.g., $55 = 55 minutes)
+    cmp #2
+    bcs label_1
 
- jsr addmsg
+    LDA #LO(seconds_string)
+    STA beeb_readptr
+    LDA #HI(seconds_string)
+    STA beeb_readptr+1
 
-:skip1st lda XCO
- clc
- adc #1
- sta XCO
+    lda SecLeft
 
- lda temp
- and #$f
- tax
- lda digit2,x ;2nd digit
- sta IMAGE
+    .label_1
+    sta beeb_temp
+    lsr A
+    lsr A
+    lsr A
+    lsr A
+    TAX
+    bne two_digits
 
- jsr addmsg
+    \ Single digit
 
-* Minutes or seconds?
+    INC beeb_readptr
 
- lda MinLeft
- cmp #2
- bcs ]rts
+    .two_digits
+    TXA
+    BEQ skip1st
 
- lda YCO
- pha
- lda #seconds
- ldx #>seconds
- jsr setupimage
- pla
- sta YCO
- lda #enum_sta
- sta OPACITY
- jmp addmsg ;replace "minutes" with "seconds"
+    \ Beeb '0' = 1
 
-*-------------------------------
-* Print "Level XX"
-*-------------------------------
-]rts rts
+    INC A
+    STA (beeb_readptr), Y
+    INY
 
-PRINTLEVEL
- lda #msgbox
- ldx #>msgbox
- jsr superimage
+    .skip1st
 
- lda #levelmsg
- ldx #>levelmsg
- jsr setupimage
+    lda beeb_temp
+    and #$f
+    INC A
+    STA (beeb_readptr), Y
 
- jsr getlevelno
- cpx #10
- bcc :1
- lda #0
- sta OFFSET
-:1
- lda #ora
- sta OPACITY
- jsr addmsg
+    LDA #13
+    LDX #25
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
 
- lda XCO
- clc
- adc #6
- sta XCO
+\*-------------------------------
+\* Print "Level XX"
+\*-------------------------------
 
- jsr getlevelno ;X = level # (0-12)
- lda digit1,x ;1st digit
- beq :skip1st
- sta IMAGE
+SMALL_FONT_MAPCHAR
+.level_string
+EQUS "Level XX", &FF
+ASCII_MAPCHAR
 
- lda #ora
- sta OPACITY
- jsr addmsg
+.PRINTLEVEL
+{
+\ NOT BEEB
+\ lda #msgbox
+\ ldx #>msgbox
+\ jsr superimage
+\
+\ lda #levelmsg
+\ ldx #>levelmsg
+\ jsr setupimage
+\
+\ jsr getlevelno
+\ cpx #10
+\ bcc :1
+\ lda #0
+\ sta OFFSET
+\:1
+\ lda #ora
+\ sta OPACITY
+\ jsr addmsg
+\
+\ lda XCO
+\ clc
+\ adc #6
+\ sta XCO
+\
+\ jsr getlevelno ;X = level # (0-12)
+\ lda digit1,x ;1st digit
+\ beq :skip1st
+\ sta IMAGE
+\
+\ lda #ora
+\ sta OPACITY
+\ jsr addmsg
+\
+\ lda XCO
+\ clc
+\ adc #1
+\ sta XCO
+\
+\ jsr getlevelno
+\:skip1st lda digit2,x ;2nd digit
+\ sta IMAGE
+\
+\ lda #ora
+\ sta OPACITY
+\ jmp addmsg
 
- lda XCO
- clc
- adc #1
- sta XCO
+    LDY #6
 
- jsr getlevelno
-:skip1st lda digit2,x ;2nd digit
- sta IMAGE
+    JSR getlevelno
+    cpx #10
+    bcc one_digit
 
- lda #ora
- sta OPACITY
- jmp addmsg
+    LDA #2          ; MAPCHAR='1'
+    STA level_string, Y
+    INY
 
-*-------------------------------
-getlevelno
+    .one_digit
+    INX:TXA
+    STA level_string, Y
+    INY
+    LDA #&FF
+    STA level_string, Y
+
+    LDA #LO(level_string)
+    STA beeb_readptr
+    LDA #HI(level_string)
+    STA beeb_readptr+1
+
+    LDA #13
+    LDX #32
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+\*-------------------------------
+
+.getlevelno
+{
  ldx level
  cpx #13
- bcc :ok
+ bcc ok
  ldx #12
-:ok
-]rts rts
+.ok
+ rts
+}
 
-*-------------------------------
-* Superimpose "Press button to continue" message
-*-------------------------------
-CONTINUEMSG
- lda #contbox
- ldx #>contbox
- jsr setupimage
 
- lda KidBlockX
- and #1
- bne :1
- lda #lowconty
- sta YCO
-:1 jmp superim1
+\*-------------------------------
+\* Superimpose "Press button to continue" message
+\*-------------------------------
 
+SMALL_FONT_MAPCHAR
+.continue_string
+EQUS "Press a button to continue", &FF
+ASCII_MAPCHAR
+
+.CONTINUEMSG
+{
+\ NOT BEEB
+\ lda #contbox
+\ ldx #>contbox
+\ jsr setupimage
+\
+\ lda KidBlockX
+\ and #1
+\ bne :1
+\ lda #lowconty
+\ sta YCO
+\:1 jmp superim1
+
+    LDA #LO(continue_string)
+    STA beeb_readptr
+    LDA #HI(continue_string)
+    STA beeb_readptr+1
+
+    LDA #13
+    LDX #14
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+IF _NOT_BEEB
 *-------------------------------
 * Superimpose "Turn disk over" message
 *-------------------------------
@@ -399,6 +477,7 @@ setupimage
  sta IMAGE
 ]rts
 ENDIF
+
 .return_28
  rts
 
@@ -746,7 +825,7 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  bcc cont
 
 \ BEEB TEMP - comment out
-\ inc OFFSET ;mystery potion (blue)      ; BEEB TO DO - different palette
+\ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
 
 .local_tall lda YCO
  sec
@@ -1236,7 +1315,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Text routines
@@ -1289,7 +1368,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Print character

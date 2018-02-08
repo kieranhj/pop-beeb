@@ -983,6 +983,8 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
+ JSR beeb_clear_status_line
+
  MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
 \ lda #$40
@@ -1702,6 +1704,9 @@ ENDIF
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
+
+    \ Relocate font (in SWRAM)
+    JSR beeb_font_init
 
     .return
     rts
