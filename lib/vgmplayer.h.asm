@@ -3,6 +3,9 @@
 \\ Include file
 \\ Define ZP and constant vars only in here
 \\ Customized version for Prince Of Persia 
+\\       VGMs are exported as raw files, 50Hz packets, no header block
+\\       VGM music is compressed using exomizer raw -c -m 256 <file.raw> -o <file.exo>
+\\       VGM sfx are not compressed.
 
 
 \ ******************************************************************

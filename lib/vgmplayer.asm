@@ -10,22 +10,22 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 
 
 
-.tmp_var SKIP 1
-.tmp_msg_idx SKIP 1
+;.tmp_var SKIP 1
+;.tmp_msg_idx SKIP 1
 
 
-.num_to_bit				; look up bit N
-EQUB &01, &02, &04, &08, &10, &20, &40, &80
+;.num_to_bit				; look up bit N
+;EQUB &01, &02, &04, &08, &10, &20, &40, &80
 
 \ ******************************************************************
 \ *	VGM music player routines
-\ * Plays a RAW format VGM music stream from an Exomiser compressed data stream
+\ * Plays a RAW format VGM audio stream from an Exomiser compressed data stream
 \ ******************************************************************
 
 \ *	EXO VGM data file
 
 \ * This must be compressed using the following flags:
-\ * exomizer.exe raw -c -m 1024 <file.raw> -o <file.exo>
+\ * exomizer.exe raw -c -m 256 <file.raw> -o <file.exo>
 
 
 \\ Initialise the VGM player with an Exomizer compressed data stream
@@ -260,6 +260,7 @@ ENDIF
 	RTS
 }
 
+; SN76489 register update
 .psg_strobe
 
 .psg_strobe_sei
