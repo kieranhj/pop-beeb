@@ -366,8 +366,6 @@ audio_end=P%
 INCLUDE "game/hires.asm"
 hires_end=P%
 
-INCLUDE "game/beeb-plot-font.asm"
-
 ; Used to be in Main but unrolled code pushed it out
 
 ; PoP gameplay code moved from AUX memory
@@ -412,7 +410,6 @@ PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
-PRINT "BEEB PLOT FONT (moved from MAIN) size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -717,6 +714,7 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
+INCLUDE "game/beeb-plot-font.asm"
 
 .pop_beeb_aux_high_end
 
@@ -738,6 +736,7 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "BEEB PLOT FONT (moved from MAIN) size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%

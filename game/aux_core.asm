@@ -469,6 +469,16 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 
 \*-------------------------------
+\* beeb-plot-font.asm
+\*-------------------------------
+
+.beeb_font_init JUMP_B BEEB_FONT_INIT, FONT_BASE, 0
+.beeb_plot_font_prep JUMP_B BEEB_PLOT_FONT_PREP, FONT_BASE, 1
+.beeb_plot_font_glyph JUMP_B BEEB_PLOT_FONT_GLYPH, FONT_BASE, 2
+.beeb_plot_font_string JUMP_B BEEB_PLOT_FONT_STRING, FONT_BASE, 3
+
+
+\*-------------------------------
 \* FUNCTION addresses for AUX A
 \*-------------------------------
 
@@ -926,6 +936,15 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 EQUB LO(CHECKALERT)
 EQUB 0      ; EQUB LO(DISPVERSION)
 
+\*-------------------------------
+\* beeb-plot-font.asm
+\*-------------------------------
+FONT_BASE = P% - aux_core_fn_table_B_LO
+EQUB LO(BEEB_FONT_INIT)
+EQUB LO(BEEB_PLOT_FONT_PREP)
+EQUB LO(BEEB_PLOT_FONT_GLYPH)
+EQUB LO(BEEB_PLOT_FONT_STRING)
+
 
 .aux_core_fn_table_B_HI
 
@@ -1130,6 +1149,14 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB HI(CHECKALERT)
 EQUB 0      ; EQUB LO(DISPVERSION)
+
+\*-------------------------------
+\* beeb-plot-font.asm
+\*-------------------------------
+EQUB HI(BEEB_FONT_INIT)
+EQUB HI(BEEB_PLOT_FONT_PREP)
+EQUB HI(BEEB_PLOT_FONT_GLYPH)
+EQUB HI(BEEB_PLOT_FONT_STRING)
 
 ENDIF
 

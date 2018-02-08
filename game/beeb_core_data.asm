@@ -275,28 +275,4 @@ MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR       ; 
 .fast_palette_lookup_13
 MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 12=
 
-PAGE_ALIGN
-.small_font
-INCBIN "Other/small_font.bin"
-
-.Mult8_LO
-FOR n,0,79,1
-EQUB LO(n*8)
-NEXT
-
-.Mult8_HI
-FOR n,0,79,1
-EQUB HI(n*8)
-NEXT
-
-.Row_LO
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB LO(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
-
-.Row_HI
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB HI(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
-
 .beeb_core_data_end

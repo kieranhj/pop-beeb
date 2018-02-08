@@ -8,7 +8,17 @@ SMALL_FONT_HEIGHT = 7
 
 .beeb_plot_font_start
 
-.beeb_plot_font_prep
+.BEEB_FONT_INIT
+{
+    \ Relocate the FONT file
+    LDA #LO(small_font+1)
+    STA beeb_readptr
+    LDA #HI(small_font+1)
+    STA beeb_readptr+1
+    JMP beeb_plot_reloc_img
+}
+
+.BEEB_PLOT_FONT_PREP
 {
     LDA #LO(small_font+1)
     STA TABLE
@@ -35,7 +45,7 @@ ENDIF
 \\ Preload TABLE with font address
 \\ No clip, no handling of plotting across character rows
 IF _UNROLL_FONT = FALSE
-.beeb_plot_font_glyph
+.BEEB_PLOT_FONT_GLYPH
 {
     STA IMAGE
     JSR setimage        ; set IMAGE address of glyph data
@@ -153,7 +163,7 @@ IF _UNROLL_FONT = FALSE
     RTS
 }
 ELSE
-.beeb_plot_font_glyph
+.BEEB_PLOT_FONT_GLYPH
 {
     STA IMAGE
     JSR setimage        ; set IMAGE address of glyph data
@@ -420,7 +430,7 @@ ENDIF
 \ X,Y = column, row on screen
 \ beeb_readptr = string terminated with -1
 \ A=PALETTE
-.beeb_plot_font_string
+.BEEB_PLOT_FONT_STRING
 {
     STA PALETTE
 
@@ -517,5 +527,29 @@ ASCII_MAPCHAR
   RTS
 }
 ENDIF
+
+PAGE_ALIGN
+.small_font
+INCBIN "Other/small_font.bin"
+
+.Mult8_LO
+FOR n,0,79,1
+EQUB LO(n*8)
+NEXT
+
+.Mult8_HI
+FOR n,0,79,1
+EQUB HI(n*8)
+NEXT
+
+.Row_LO
+FOR n,0,BEEB_SCREEN_ROWS-1,1
+EQUB LO(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
+NEXT
+
+.Row_HI
+FOR n,0,BEEB_SCREEN_ROWS-1,1
+EQUB HI(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
+NEXT
 
 .beeb_plot_font_end
