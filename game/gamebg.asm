@@ -296,7 +296,7 @@ ASCII_MAPCHAR
     INC A
     STA (beeb_readptr), Y
 
-    LDA #0
+    LDA #13
     LDX #25
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -381,7 +381,7 @@ ASCII_MAPCHAR
     LDA #HI(level_string)
     STA beeb_readptr+1
 
-    LDA #0
+    LDA #13
     LDX #32
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -428,7 +428,7 @@ ASCII_MAPCHAR
     LDA #HI(continue_string)
     STA beeb_readptr+1
 
-    LDA #0
+    LDA #13
     LDX #14
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string

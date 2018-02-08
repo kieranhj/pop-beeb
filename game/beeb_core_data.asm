@@ -161,7 +161,7 @@ PAGE_ALIGN
     EQUB LO(fast_palette_lookup_10)
     EQUB LO(fast_palette_lookup_11)
     EQUB LO(fast_palette_lookup_12)
-    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_13)
     EQUB LO(fast_palette_lookup_0)
     EQUB LO(fast_palette_lookup_0)
 }
@@ -181,7 +181,7 @@ PAGE_ALIGN
     EQUB HI(fast_palette_lookup_10)
     EQUB HI(fast_palette_lookup_11)
     EQUB HI(fast_palette_lookup_12)
-    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_13)
     EQUB HI(fast_palette_lookup_0)
     EQUB HI(fast_palette_lookup_0)
 }
@@ -272,9 +272,12 @@ MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR        ; 
 .fast_palette_lookup_12
 MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR       ; 12=RYM
 
+.fast_palette_lookup_13
+MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 12=
+
 PAGE_ALIGN
 .small_font
-INCBIN "Other/font2.bin"
+INCBIN "Other/small_font.bin"
 
 .Mult8_LO
 FOR n,0,79,1
