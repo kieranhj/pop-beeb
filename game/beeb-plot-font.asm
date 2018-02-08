@@ -2,7 +2,7 @@
 ; BBC Micro plot functions
 ; Font data only
 
-_UNROLL_FONT = TRUE         ; unroll 1x 2x 3x byte versions of font plot
+_UNROLL_FONT = FALSE         ; unroll 1x 2x 3x byte versions of font plot
 
 SMALL_FONT_HEIGHT = 7
 
