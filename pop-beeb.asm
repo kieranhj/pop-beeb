@@ -205,6 +205,7 @@ INCLUDE "lib/print.asm"
 .pop_music_09
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 
+.pop_sfx_start
 .pop_sfx_00 ; PlateDown
 INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_01 ; PlateUp
@@ -245,7 +246,9 @@ INCBIN "audio/sfx/17 swordparry.raw.exo"
 INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_19 ; JawsClash
 INCBIN "audio/sfx/19 jawsclash.raw.exo"
+.pop_sfx_end
 
+PRINT "SFX size = ", (pop_sfx_end - pop_sfx_start), " bytes"
  
 
 
