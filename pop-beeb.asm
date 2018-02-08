@@ -205,34 +205,45 @@ INCLUDE "lib/print.asm"
 .pop_music_09
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 
-.pop_sfx_00 
-.pop_sfx_01
-.pop_sfx_02
-.pop_sfx_03
-.pop_sfx_04
-.pop_sfx_05
-.pop_sfx_06
-.pop_sfx_07
+.pop_sfx_00 ; PlateDown
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_01 ; PlateUp
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_02 ; GateDown
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_03 ; SpecialKey1
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_04 ; SpecialKey2
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_05 ; Splat
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_06 ; MirrorCrack
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_07 ; LooseCrash
 INCBIN "audio/sfx/07 platecrash.raw.exo"
-.pop_sfx_08
-.pop_sfx_09
+.pop_sfx_08 ; GotKey
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_09 ; Footstep
 INCBIN "audio/sfx/09 footstep.raw.exo"
-.pop_sfx_10
+.pop_sfx_10 ; RaisingExit
 INCBIN "audio/sfx/10 exitrise.raw.exo"
-.pop_sfx_11
+.pop_sfx_11 ; RaisingGate
 INCBIN "audio/sfx/11 gaterise.raw.exo"
-.pop_sfx_12
+.pop_sfx_12 ; LoweringGate
 INCBIN "audio/sfx/12 gatelower.raw.exo"
-.pop_sfx_13
+.pop_sfx_13 ; SmackWall
 INCBIN "audio/sfx/13 ungh.raw.exo"
-.pop_sfx_14
-.pop_sfx_15
+.pop_sfx_14 ; Impaled
+INCBIN "audio/sfx/14 impale.raw.exo"
+.pop_sfx_15 ; GateSlam
 INCBIN "audio/sfx/15 gateslam.raw.exo"
-.pop_sfx_16
-.pop_sfx_17
+.pop_sfx_16 ; FlashMsg
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_17 ; SwordClash1
 INCBIN "audio/sfx/17 swordparry.raw.exo"
-.pop_sfx_18
-.pop_sfx_19
+.pop_sfx_18 ; SwordClash2
+INCBIN "audio/sfx/annoyshort.raw.exo"
+.pop_sfx_19 ; JawsClash
 INCBIN "audio/sfx/19 jawsclash.raw.exo"
 
  
