@@ -207,9 +207,9 @@ INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 
 .pop_sfx_start
 .pop_sfx_00 ; PlateDown
-INCBIN "audio/sfx/annoyshort.raw.exo"
+INCBIN "audio/sfx/00 platedown.raw.exo"
 .pop_sfx_01 ; PlateUp
-INCBIN "audio/sfx/annoyshort.raw.exo"
+INCBIN "audio/sfx/01 plateup.raw.exo"
 .pop_sfx_02 ; GateDown
 INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_03 ; SpecialKey1
@@ -217,7 +217,7 @@ INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_04 ; SpecialKey2
 INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_05 ; Splat
-INCBIN "audio/sfx/annoyshort.raw.exo"
+INCBIN "audio/sfx/05 splat.raw.exo"
 .pop_sfx_06 ; MirrorCrack
 INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_07 ; LooseCrash
@@ -243,7 +243,7 @@ INCBIN "audio/sfx/annoyshort.raw.exo"
 .pop_sfx_17 ; SwordClash1
 INCBIN "audio/sfx/17 swordparry.raw.exo"
 .pop_sfx_18 ; SwordClash2
-INCBIN "audio/sfx/annoyshort.raw.exo"
+INCBIN "audio/sfx/18 swordhit.raw.exo"
 .pop_sfx_19 ; JawsClash
 INCBIN "audio/sfx/19 jawsclash.raw.exo"
 .pop_sfx_end
