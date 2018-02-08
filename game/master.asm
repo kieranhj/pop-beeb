@@ -983,6 +983,8 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
+ JSR beeb_clear_status_line
+
  MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
 \ lda #$40

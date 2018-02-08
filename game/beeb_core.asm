@@ -480,6 +480,35 @@ ENDIF
   rts
 }
 
+beeb_status_addr = beeb_screen_addr + 24*BEEB_SCREEN_ROW_BYTES
+
+.beeb_clear_status_line
+{
+    LDX #HI(BEEB_SCREEN_ROW_BYTES + &FF)
+    lda #HI(beeb_status_addr)
+
+    sta loop+2
+    lda #0
+    ldy #0
+    .loop
+    sta &3000,Y
+    iny
+    bne loop
+    inc loop+2
+    dex
+    bne loop
+
+\    LDX #0
+\    LDA #0
+\    .loop1
+\    STA beeb_status_addr, X
+\    INX
+\    CPX #&100-LO(beeb_status_addr)
+\    BCC loop1
+
+    RTS
+}
+
 \*-------------------------------
 ; Additional PREP before sprite plotting for Beeb
 \*-------------------------------

@@ -297,8 +297,8 @@ ASCII_MAPCHAR
     STA (beeb_readptr), Y
 
     LDA #0
-    LDX #30
-    LDY #23
+    LDX #25
+    LDY #24
     JMP beeb_plot_font_string
 }
 
@@ -382,8 +382,8 @@ ASCII_MAPCHAR
     STA beeb_readptr+1
 
     LDA #0
-    LDX #20
-    LDY #23
+    LDX #32
+    LDY #24
     JMP beeb_plot_font_string
 }
 
@@ -429,8 +429,8 @@ ASCII_MAPCHAR
     STA beeb_readptr+1
 
     LDA #0
-    LDX #10
-    LDY #23
+    LDX #14
+    LDY #24
     JMP beeb_plot_font_string
 }
 

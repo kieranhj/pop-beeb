@@ -227,7 +227,10 @@ ELSE
 \ Next line
 
     INC beeb_writeptr
-    \\ Within character block so can't carry
+    BNE in_page
+    INC beeb_writeptr+1
+    .in_page
+    \\ Within character block so can't carry - NOT TRUE!
 
 \ Increment sprite index
 
@@ -286,7 +289,10 @@ ELSE
 \ Next line
 
     INC beeb_writeptr
-    \\ Within character block so can't carry
+    BNE in_page
+    INC beeb_writeptr+1
+    .in_page
+    \\ Within character block so can't carry - NOT TRUE!
 
 \ Increment sprite index
 
@@ -385,7 +391,10 @@ ELSE
 \ Next line
 
     INC beeb_writeptr
-    \\ Within character block so can't carry
+    BNE in_page
+    INC beeb_writeptr+1
+    .in_page
+    \\ Within character block so can't carry - NOT TRUE!
 
 \ Increment sprite index
 
@@ -422,6 +431,8 @@ ENDIF
     LDA Mult8_HI,X
     ADC Row_HI,Y
     STA beeb_writeptr+1
+
+    INC beeb_writeptr       ; only as font is 7 scanlines (can't overflow)
 
     JSR beeb_plot_font_prep
 
@@ -484,22 +495,22 @@ ASCII_MAPCHAR
 
   LDA #LO(string2):STA beeb_readptr
   LDA #HI(string2):STA beeb_readptr+1
-  LDX #0
+  LDX #10
   LDY #2
   LDA #14
   JSR beeb_plot_font_string
 
   LDA #LO(string3):STA beeb_readptr
   LDA #HI(string3):STA beeb_readptr+1
-  LDX #0
+  LDX #40
   LDY #4
   LDA #4
   JSR beeb_plot_font_string
 
   LDA #LO(string4):STA beeb_readptr
   LDA #HI(string4):STA beeb_readptr+1
-  LDX #0
-  LDY #6
+  LDX #15
+  LDY #24
   LDA #10
   JSR beeb_plot_font_string
  

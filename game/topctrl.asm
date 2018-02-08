@@ -335,6 +335,7 @@ miry = 0
  sta ChgKidStr
  sta OppStrength ;no opponent
  sta msgtimer
+ sta msgdrawn
  sta PreRecPtr
  sta PlayCount
 
@@ -443,7 +444,6 @@ ENDIF
  jsr flashon
 
  jsr FrameAdv ;Draw next frame & show it
-
 
 \ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds
@@ -1672,13 +1672,15 @@ ENDIF
 .dispmsg
 {
  lda msgtimer
- beq return_62
+ beq no_message_to_display
  dec msgtimer
 
  lda KidLife
  bmi local_alive
 
 \* Kid is dead -- message is "Press button to continue"
+
+ JSR beeb_clear_status_line
 
  lda msgtimer
  cmp #contoff
@@ -1696,25 +1698,44 @@ ENDIF
  lda soundon
  bne label_2
  jsr gtone ;if sound off
-.label_2 lda #FlashMsg
+.label_2
+ lda #FlashMsg
  jsr addsound
 
-.local_steady jmp continuemsg ;Kid is dead--superimpose continue msg
+.local_steady
+\\ Always draw continue message
+ jmp continuemsg ;Kid is dead--superimpose continue msg
 
 \* Kid is alive -- message is "Level #" or "# Minutes"
 
-.local_alive lda msgtimer
+.local_alive
+ lda msgtimer
  cmp #leveltimer-2
  bcs return_62
 
  lda message
  cmp #LevelMsg
  bne label_1
+  LDA msgdrawn
+  CMP #REDRAW_FRAMES
+  BCS return_62
+  INC msgdrawn
  jmp printlevel
 
-.label_1 cmp #TimeMsg
+.label_1
+ cmp #TimeMsg
  bne return_62
+  LDA msgdrawn
+  CMP #REDRAW_FRAMES
+  BCS return_62
+  INC msgdrawn
  jmp timeleftmsg
+
+.no_message_to_display
+  LDA msgdrawn
+  BEQ return_62
+  DEC msgdrawn
+  JMP beeb_clear_status_line
 }
 
 IF _NOT_BEEB
