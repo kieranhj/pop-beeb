@@ -10,22 +10,20 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 
 
 
-;.tmp_var SKIP 1
-;.tmp_msg_idx SKIP 1
-
-
-;.num_to_bit				; look up bit N
-;EQUB &01, &02, &04, &08, &10, &20, &40, &80
-
 \ ******************************************************************
-\ *	VGM music player routines
-\ * Plays a RAW format VGM audio stream from an Exomiser compressed data stream
+\ * Optimized VGM music player routines
+\ * Plays a RAW format VGM audio stream from an Exomiser compressed or uncompressed data stream
 \ ******************************************************************
 
 \ *	EXO VGM data file
 
 \ * This must be compressed using the following flags:
 \ * exomizer.exe raw -c -m 256 <file.raw> -o <file.exo>
+
+
+;----------------------------------------------------------------------------------
+; Music playback routines
+;----------------------------------------------------------------------------------
 
 
 \\ Initialise the VGM player with an Exomizer compressed data stream
@@ -65,6 +63,8 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 \\ <eof section>
 \\  [0xff] - eof
 
+; VGM "Music" player - fetches data from a compressed EXO stream
+; We use EXO since music tracks benefit around 50% less RAM by using compression
 .vgm_poll_player
 {
 	\\ Assume this is called every 20ms..
@@ -110,11 +110,24 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	RTS
 }
 
+
+
+;----------------------------------------------------------------------------------
+; Sound effect playback routines
+;----------------------------------------------------------------------------------
+
+
+
+
+; Stop any currently playing SFX
 .vgm_sfx_stop
 {
 	ldy #0
 	; FALLS THROUGH to vgm_sfx_play with Y=0 means address is invalid.
 }
+; Play a sound effect from memory
+; SFX are stored as uncompressed RAW VGM
+; Currently only one SFX can be played at once
 ; X/Y contain address of SFX to be played
 .vgm_sfx_play
 {
@@ -123,7 +136,9 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	rts
 }
 
-
+; fetch a byte from the currently selected SFX RAW data buffer
+; returns byte in A, Y is trashed, X is preserved
+; data buffer address is auto-incremented.
 .vgm_sfx_get_byte
 {
 	ldy #0
@@ -138,7 +153,8 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	rts
 }
 
-\\ Call every 50Hz to update any currently playing sfx
+; SFX update routine - checks if a SFX is queued and feeds one update's worth of data to the sound chip.
+; Call this routine every 50Hz 
 ; Carry set if SFX finished
 .vgm_sfx_update
 {
