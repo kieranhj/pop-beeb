@@ -16,9 +16,9 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
+_BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
-
+_AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
@@ -116,6 +116,10 @@ BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 INCLUDE "game/beeb-plot.h.asm"
 
+; Music Libraries
+INCLUDE "lib/exomiser.h.asm"
+INCLUDE "lib/vgmplayer.h.asm"
+
 PRINT "--------"
 PRINT "ZERO PAGE"
 PRINT "--------"
@@ -204,6 +208,66 @@ INCLUDE "lib/print.asm"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
+
+
+; SM: HACKED IN MUSIC/SFX 
+.pop_music_01
+.pop_music_02
+.pop_music_03
+.pop_music_04
+.pop_music_05
+.pop_music_06
+.pop_music_07
+.pop_music_08
+.pop_music_09
+INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
+
+.pop_sfx_start
+.pop_sfx_00 ; PlateDown
+INCBIN "audio/sfx/00 platedown.raw"
+.pop_sfx_01 ; PlateUp
+INCBIN "audio/sfx/01 plateup.raw"
+.pop_sfx_02 ; GateDown
+INCBIN "audio/sfx/annoyshort.raw"
+.pop_sfx_03 ; SpecialKey1
+INCBIN "audio/sfx/annoyshort.raw"
+.pop_sfx_04 ; SpecialKey2
+INCBIN "audio/sfx/annoyshort.raw"
+.pop_sfx_05 ; Splat
+INCBIN "audio/sfx/05 splat.raw"
+.pop_sfx_06 ; MirrorCrack
+INCBIN "audio/sfx/06 mirrorcrack.raw"
+.pop_sfx_07 ; LooseCrash
+INCBIN "audio/sfx/07 platecrash.raw"
+.pop_sfx_08 ; GotKey
+INCBIN "audio/sfx/annoyshort.raw"
+.pop_sfx_09 ; Footstep
+INCBIN "audio/sfx/09 footstep.raw"
+.pop_sfx_10 ; RaisingExit
+INCBIN "audio/sfx/10 exitrise.raw"
+.pop_sfx_11 ; RaisingGate
+INCBIN "audio/sfx/11 gaterise.raw"
+.pop_sfx_12 ; LoweringGate
+INCBIN "audio/sfx/12 gatelower.raw"
+.pop_sfx_13 ; SmackWall
+INCBIN "audio/sfx/13 ungh.raw"
+.pop_sfx_14 ; Impaled
+INCBIN "audio/sfx/14 impale.raw"
+.pop_sfx_15 ; GateSlam
+INCBIN "audio/sfx/15 gateslam.raw"
+.pop_sfx_16 ; FlashMsg
+INCBIN "audio/sfx/16 message.raw"
+.pop_sfx_17 ; SwordClash1
+INCBIN "audio/sfx/17 swordparry.raw"
+.pop_sfx_18 ; SwordClash2
+INCBIN "audio/sfx/18 swordhit.raw"
+.pop_sfx_19 ; JawsClash
+INCBIN "audio/sfx/19 jawsclash.raw"
+.pop_sfx_end
+
+PRINT "SFX size = ", (pop_sfx_end - pop_sfx_start), " bytes"
+ 
+
 
 .pop_beeb_entry
 {
@@ -326,6 +390,17 @@ INCLUDE "lib/print.asm"
     IF _IRQ_VSYNC
     JSR beeb_irq_init
     ENDIF
+
+IF _AUDIO
+    ; initialize the music system
+    jsr audio_init
+ENDIF
+
+
+    ; initialise the vsync irq
+    jsr vsync_init
+    
+
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
@@ -504,6 +579,14 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
+
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
+
+; Music & Audio routines crammed in here
+INCLUDE "lib/exomiser.asm"
+INCLUDE "lib/vgmplayer.asm"
+INCLUDE "lib/beeb_audio.asm"
 
 .pop_beeb_aux_hazel_data_end
 
