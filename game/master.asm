@@ -1104,6 +1104,13 @@ EQUS "PRESENT$"
 
 .PubCredit
 {
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+
+
+
 \* Unpack splash screen into DHires page 1
 
  jsr unpacksplash
@@ -1116,6 +1123,9 @@ EQUS "PRESENT$"
 
  jsr copy1to2
 
+    lda #0
+    jsr BEEB_CUESONG
+
  lda #44
  jsr tpause
 
@@ -1126,9 +1136,13 @@ EQUS "PRESENT$"
 
  MASTER_LOAD_DHIRES presents_filename, 12
 
+    lda #8
+    jsr BEEB_CUESONG
+
 \ ldx #80
 \ lda #s_Presents
 \ jsr master_PlaySongI
+
 
  jmp CleanScreen
 }
@@ -1270,6 +1284,13 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
+
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+    lda #1
+    jsr BEEB_CUESONG
+
  jsr blackout
 
 \ BEEB TODO check mem usage by titles
