@@ -326,9 +326,9 @@ slicersync = 3 ;# frames out of sync
 \*  Special animation lists for princess's room
 \*
 \*-------------------------------
-.ptorchx EQUB 13,26,LO(-1)      \\ BEEB supposed to be 25+6 - made 26+0
-.ptorchoff EQUB 0,0             \\ BEEB TODO offset supposed to be 6
-.ptorchy EQUB 113,113
+.ptorchx EQUB 11,27,LO(-1)      \\ APPLE II was 13,25
+.ptorchoff EQUB 0,0             \\ APPLE II was 0,6
+.ptorchy EQUB 112,112
 .ptorchstate EQUB 1,6
 .ptorchcount SKIP 1
 .psandcount SKIP 1
