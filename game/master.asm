@@ -1130,9 +1130,6 @@ EQUS "PRESENT$"
 \ lda #s_Presents
 \ jsr master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
-
  jmp CleanScreen
 }
 
@@ -1186,9 +1183,6 @@ EQUS "BYLINE $"
 \ lda #s_Byline
 \ jsr master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
-
 \* Credit line disappears
 
  jmp CleanScreen
@@ -1239,9 +1233,6 @@ EQUS "TITLE  $"
 \ lda #s_Title
 \ jsr master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
-
 \* Credit line disappears
 
  jmp CleanScreen
@@ -1268,8 +1259,6 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
  RTS
 }
 
@@ -1316,8 +1305,6 @@ EQUS "SUMUP  $"
 \ lda #s_Sumup
 \ jmp master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
  RTS
 }
 
