@@ -46,6 +46,10 @@ MACRO SMALL_FONT_MAPCHAR
     MAPCHAR ' ',0
 ENDMACRO
 
+HEART_GLYPH=41
+EMPTY_GLYPH=42
+BLANK_GLYPH=43
+
 ; Original PoP global defines
 
 EditorDisk = 0 ;1 = dunj, 2 = palace
@@ -917,7 +921,7 @@ PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
 \ Cutscene files
-PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
+PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 
 \ Attract files
 PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0

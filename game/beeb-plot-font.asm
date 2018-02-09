@@ -465,6 +465,7 @@ ENDIF
 
 IF _DEBUG
     CMP small_font+1
+    BEQ glyph_ok
     BCC glyph_ok
     BRK             ; glyph not found
     .glyph_ok
@@ -531,16 +532,6 @@ ENDIF
 PAGE_ALIGN
 .small_font
 INCBIN "Other/small_font.bin"
-
-.Mult8_LO
-FOR n,0,79,1
-EQUB LO(n*8)
-NEXT
-
-.Mult8_HI
-FOR n,0,79,1
-EQUB HI(n*8)
-NEXT
 
 .Row_LO
 FOR n,0,BEEB_SCREEN_ROWS-1,1
