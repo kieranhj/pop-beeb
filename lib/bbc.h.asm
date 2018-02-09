@@ -162,7 +162,7 @@ SHEILA_System_VIA_Register_A_NH   = $FE4F
 \\ Macro to reset any mapped characters
 \\ since BeebASM doesn't have any feature for this
 \\ Actually it does :)
-MACRO RESET_MAPCHAR
+MACRO ASCII_MAPCHAR
 
 	MAPCHAR 'A', 'Z', 'A' 
 	MAPCHAR 'a', 'z', 'z'

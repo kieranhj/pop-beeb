@@ -200,6 +200,7 @@ ENDIF
 .Fsword skip 1
 ;.purpleflag skip 1 ;$da
 .msgtimer skip 1
+.msgdrawn skip 1
 .MaxOppStr skip 1
 .guardprog skip 1
 .ManCtrl skip 1

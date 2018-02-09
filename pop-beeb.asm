@@ -34,6 +34,17 @@ IF _RASTERS
 ENDIF
 ENDMACRO
 
+MACRO SMALL_FONT_MAPCHAR
+    MAPCHAR '0','9',1
+    MAPCHAR 'A','Z',11
+    MAPCHAR 'a','z',11
+    MAPCHAR '!',37
+    MAPCHAR '?',38
+    MAPCHAR '.',39
+    MAPCHAR ',',40
+    MAPCHAR ' ',0
+ENDMACRO
+
 ; Original PoP global defines
 
 EditorDisk = 0 ;1 = dunj, 2 = palace
@@ -75,18 +86,24 @@ INCLUDE "game/seqdata.h.asm"
 BEEB_SCREEN_MODE = 2
 BEEB_SCREEN_WIDTH = 160
 BEEB_PIXELS_PER_BIT = 2
-BEEB_SCREEN_HEIGHT = 192
+BEEB_SCREEN_HEIGHT = 200
 BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
-BEEB_SCREEN_SIZE = (BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8)
+BEEB_SCREEN_SIZE = HI((BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8) + &FF) * &100
 BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
+
+BEEB_STATUS_ROW = 24
+
+beeb_status_addr = beeb_screen_addr + BEEB_STATUS_ROW * BEEB_SCREEN_ROW_BYTES
 
 BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
 BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
 
 beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
+
+BEEB_PEEL_BUFFER_SIZE = &900
 
 BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
 BEEB_SWRAM_SLOT_BGTAB1_A = 0
@@ -419,6 +436,11 @@ hires_core_end=P%
 INCLUDE "game/audio.asm"
 audio_end=P%
 
+; Code moved back into Core from Main
+
+INCLUDE "game/hires.asm"
+hires_end=P%
+
 ; Used to be in Main but unrolled code pushed it out
 
 ; PoP gameplay code moved from AUX memory
@@ -462,6 +484,7 @@ PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
+PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -485,9 +508,6 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
-INCLUDE "game/hires.asm"
-hires_end=P%
-
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
@@ -504,7 +524,6 @@ SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
 PRINT "--------"
 PRINT "MAIN Modules"
 PRINT "--------"
-PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
@@ -517,11 +536,11 @@ PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
 
-SKIP (MAIN_TOP - P%) - &A00
+SKIP (MAIN_TOP - P%) - BEEB_PEEL_BUFFER_SIZE
 
 .peelbuf1
 .peelbuf2
-SKIP &A00       ; was &800
+SKIP BEEB_PEEL_BUFFER_SIZE       ; was &800
 .peelbuf_top
 
 ; (screen buffers)
@@ -529,7 +548,7 @@ SKIP &A00       ; was &800
 ; Main RAM stats
 PRINT "Screen buffer address = ", ~beeb_screen_addr
 PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
-PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - &A00)
+PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - BEEB_PEEL_BUFFER_SIZE)
 PRINT "--------"
 
 \*-------------------------------
@@ -778,6 +797,7 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
+INCLUDE "game/beeb-plot-font.asm"
 
 .pop_beeb_aux_high_end
 
@@ -799,6 +819,7 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "BEEB PLOT FONT (moved from MAIN) size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%

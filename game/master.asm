@@ -983,6 +983,8 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
+ JSR beeb_clear_status_line
+
  MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
 \ lda #$40
@@ -1703,6 +1705,9 @@ ENDIF
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
+    \ Relocate font (in SWRAM)
+    JSR beeb_font_init
+
     .return
     rts
 }
@@ -1882,14 +1887,22 @@ EQUS "CHTAB6X$"
 
 .LoadStage2
 {
+    \\ Invalidate catalog cache
     LDA #0
     JSR disksys_set_drive
 
-    \\ Need to switch sCHTAB6 A/B according to Apple II disc layout
+    \\ Need to switch CHTAB6 A/B according to Apple II disc layout
 
-    LDA #0
-    CLC
-    ADC #'A'
+    LDA #'A'
+    LDX level
+    CPX #3
+    BCC side_A
+
+    LDA #2
+    JSR disksys_set_drive
+    LDA #'B'      ; side B
+
+    .side_A
     STA chtab6_to_name+6
 
     lda #BEEB_SWRAM_SLOT_CHTAB67
@@ -1922,6 +1935,10 @@ EQUS "CHTAB7 $"
 
 .loadch7
 {
+    LDX level
+    CPX #3
+    BCS return
+
     lda #BEEB_SWRAM_SLOT_CHTAB67
     jsr swr_select_slot
 
