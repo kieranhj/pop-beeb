@@ -400,8 +400,8 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 .keys JUMP_B KEYS, SPECIALK_BASE, 0
 .clrjstk JUMP_B CLRJSTK, SPECIALK_BASE, 1
-.zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
-.addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.zerosound jmp BEEB_ZEROSOUND ;RTS ;jmp ZEROSOUND          BEEB TODO SOUND
+.addsound jmp BEEB_ADDSOUND ; RTS  ;jmp ADDSOUND           BEEB TODO SOUND
 .facejstk JUMP_B FACEJSTK, SPECIALK_BASE, 4
 
 .SaveSelect JUMP_B SAVESELECT, SPECIALK_BASE, 5
@@ -417,7 +417,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .keeptime JUMP_B KEEPTIME, SPECIALK_BASE, 14
 
 .shortentime BRK ;jmp SHORTENTIME
-.cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
+.cuesong jmp BEEB_CUESONG ;RTS     ;jmp CUESONG          BEEB TODO MUSIC
 \jmp DoSaveGame
 \jmp LoadLevelX
 \jmp decstr
