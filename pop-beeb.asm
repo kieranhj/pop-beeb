@@ -219,7 +219,7 @@ INCBIN "audio/sfx/annoyshort.raw"
 .pop_sfx_05 ; Splat
 INCBIN "audio/sfx/05 splat.raw"
 .pop_sfx_06 ; MirrorCrack
-INCBIN "audio/sfx/annoyshort.raw"
+INCBIN "audio/sfx/06 mirrorcrack.raw"
 .pop_sfx_07 ; LooseCrash
 INCBIN "audio/sfx/07 platecrash.raw"
 .pop_sfx_08 ; GotKey
@@ -239,7 +239,7 @@ INCBIN "audio/sfx/14 impale.raw"
 .pop_sfx_15 ; GateSlam
 INCBIN "audio/sfx/15 gateslam.raw"
 .pop_sfx_16 ; FlashMsg
-INCBIN "audio/sfx/annoyshort.raw"
+INCBIN "audio/sfx/16 message.raw"
 .pop_sfx_17 ; SwordClash1
 INCBIN "audio/sfx/17 swordparry.raw"
 .pop_sfx_18 ; SwordClash2
