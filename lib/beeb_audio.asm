@@ -1,17 +1,48 @@
 ; POP - BBC MICRO - AUDIO ROUTINES
 ; Very much a WIP atm
 
+; all filenames are 8 characters in length
+.audio0_filename EQUS "Audio0 $"    ; title music
+.audio1_filename EQUS "Audio1 $"    ; intro music
+.audio2_filename EQUS "Audio2 $"    ; grand vizier music
+
 
 ; POP BBC PORT - Music player hook
 ; See aux_core.asm for the jump tables
 ; See soundnames.h.asm for the various effects & music enums
+
+; Start playing a music track
+; A contains song to play (0-8), and assumes correct audio bank has been loaded.
+; Note that our song IDs dont match the Apple ones since we nicked them from the Master system version.
 .BEEB_CUESONG
 {
-    lda #0
+;    lda #0
     jsr music_play_track
 	rts
 }
 
+; A is audio bank number (0-2)
+; Does not currently save SWR bank selection - this might need looking at.
+.BEEB_LOAD_AUDIO_BANK
+{
+    asl a:asl a:asl a   ; *8
+    clc
+    adc #LO(audio0_filename)
+    tax
+    lda #HI(audio0_filename)
+    adc #0
+    tay
+
+    lda #&80                ; select ANDY
+    jsr swr_select_bank
+
+    \\ Load title music into ANDY
+;    ldx #LO(music1_filename)
+;    ldy #HI(music1_filename)
+    lda #HI(ANDY_START)
+    jsr disksys_load_file
+    rts
+}
 
 IF _AUDIO_DEBUG
 
@@ -135,15 +166,15 @@ ENDIF ; _AUDIO_DEBUG
 ; format is: address, bank
 .pop_music_tracks
 IF TRUE
-    EQUW pop_music_01, &80
-    EQUW pop_music_02, &80
-    EQUW pop_music_03, &80
-    EQUW pop_music_04, &80
-    EQUW pop_music_05, &80
-    EQUW pop_music_06, &80
-    EQUW pop_music_07, &80
-    EQUW pop_music_08, &80
-    EQUW pop_music_09, &80		; #8
+    EQUW pop_music_01, &8080
+    EQUW pop_music_02, &8080
+    EQUW pop_music_03, &8080
+    EQUW pop_music_04, &8080
+    EQUW pop_music_05, &8080
+    EQUW pop_music_06, &8080
+    EQUW pop_music_07, &8080
+    EQUW pop_music_08, &8080
+    EQUW pop_music_09, &8080		; #8
 ENDIF
 
 .pop_sound_fx

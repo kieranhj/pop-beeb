@@ -16,11 +16,11 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
 _AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
-_AUDIO_DEBUG = TRUE         ; enable audio debug text
+_AUDIO_DEBUG = FALSE         ; enable audio debug text
 
 ; Helpful MACROs
 
@@ -215,16 +215,21 @@ INCLUDE "lib/print.asm"
 .load_filename  EQUS "BITS   $"
 
 
+
+
+
 ; SM: HACKED IN MUSIC/SFX 
-.pop_music_01
-.pop_music_02
+;.pop_music_02
+;INCBIN "audio/music/Prince of Persia - 02 - Intro.raw.exo"
 .pop_music_03
+;INCBIN "audio/music/Prince of Persia - 03 - Hourglass.raw.exo"
+
 .pop_music_04
+
 .pop_music_05
 .pop_music_06
 .pop_music_07
-.pop_music_08
-.pop_music_09
+;INCBIN "audio/music/Prince of Persia - 01 - Title Screen.raw.exo"
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 
 .pop_sfx_start
@@ -625,12 +630,19 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 
+; ANDY is used primarily to store banked Audio data.
+
 PRINT "--------"
 PRINT "ANDY Modules"
 PRINT "--------"
 PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
 PRINT "--------"
+
+; Create the music banks and save them to disk
+INCLUDE "lib/beeb_audio_banks.asm"
+
+
 
 \*-------------------------------
 ; Construct ROMS
