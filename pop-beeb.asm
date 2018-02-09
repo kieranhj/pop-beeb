@@ -45,6 +45,10 @@ MACRO SMALL_FONT_MAPCHAR
     MAPCHAR ' ',0
 ENDMACRO
 
+HEART_GLYPH=41
+EMPTY_GLYPH=42
+BLANK_GLYPH=43
+
 ; Original PoP global defines
 
 EditorDisk = 0 ;1 = dunj, 2 = palace
