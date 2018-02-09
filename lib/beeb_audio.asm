@@ -25,22 +25,17 @@
 }
 
 
-; call this function once to initialise the music system
-.music_init
+; call this function once to initialise the audio system
+.audio_init
 {
 	jsr music_off
 
-    \\ Start our event driven fx
-    ldx #LO(music_event_handler)
-    ldy #HI(music_event_handler)
-    jsr start_eventv
 	rts
 }
 
-.music_quit
+.audio_quit
 {
-    \\ Kill our event driven fx
-    jsr stop_eventv
+    jsr music_off
     rts
 }
 
@@ -187,7 +182,7 @@ ENDIF
 }
 
 ; called by vsync handler
-.music_update
+.audio_update
 {
 ;    bra music_update_exit ; test code
     lda fx_music_on
@@ -216,102 +211,3 @@ ENDIF
     rts    
 }
 
-
-
-.music_event_handler
-{
-	php
-	cmp #4
-	bne not_vsync
-
-	\\ Preserve registers
-	pha:txa:pha:tya:pha
-
-	; prevent re-entry
-	lda re_entrant
-	bne skip_update
-	inc re_entrant
-
-    ; call our music interrupt handler
-	jsr music_update
-	
-;	lda  count
-;	sta &7c00
-;	inc count
-
-	dec re_entrant
-.skip_update
-
-	\\ Restore registers
-	pla:tay:pla:tax:pla
-
-	\\ Return
-    .not_vsync
-	plp
-	jmp (old_eventv)
-	rts
-.re_entrant EQUB 0
-;.count EQUB 0
-}
-
-
-
-
-
-
-
-\ ******************************************************************
-\ *	Event Vector Routines
-\ ******************************************************************
-
-\\ System vars
-.old_eventv				SKIP 2
-
-.start_eventv				; new event handler in X,Y
-{
-	\\ Remove interrupt instructions
-	lda #NOP_OP
-	sta PSG_STROBE_SEI_INSN
-	sta PSG_STROBE_CLI_INSN
-	
-	\\ Set new Event handler
-	sei
-	lda EVENTV
-	sta old_eventv
-	lda EVENTV+1
-	sta old_eventv+1
-
-	stx EVENTV
-	sty EVENTV+1
-	cli
-	
-	\\ Enable VSYNC event.
-	lda #14
-	ldx #4
-	jsr osbyte
-	rts
-}
-IF TRUE
-.stop_eventv
-{
-	\\ Disable VSYNC event.
-	lda #13
-	ldx #4
-	jsr osbyte
-
-	\\ Reset old Event handler
-	sei
-	lda old_eventv
-	sta EVENTV
-	lda old_eventv+1
-	sta EVENTV+1
-	cli 
-
-	\\ Insert interrupt instructions back
-	lda #SEI_OP
-	sta PSG_STROBE_SEI_INSN
-	lda #CLI_OP
-	sta PSG_STROBE_CLI_INSN
-	rts
-}        
-ENDIF

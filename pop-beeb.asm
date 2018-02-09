@@ -376,8 +376,14 @@ PRINT "SFX size = ", (pop_sfx_end - pop_sfx_start), " bytes"
 
 IF _AUDIO
     ; initialize the music system
-    jsr music_init
+    jsr audio_init
 ENDIF
+
+
+    ; initialise the vsync irq
+    jsr vsync_init
+    
+
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
@@ -555,6 +561,8 @@ hrtables_end=P%
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
 
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
 
 ; Music & Audio routines crammed in here
 INCLUDE "lib/exomiser.asm"
