@@ -628,7 +628,7 @@ ENDIF
 
 .meter_string
 EQUB HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH
-EQUB HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH
+EQUB EMPTY_GLYPH,EMPTY_GLYPH,EMPTY_GLYPH,EMPTY_GLYPH,EMPTY_GLYPH
 EQUB &FF
 
 .DRAWKIDMETER
@@ -636,20 +636,33 @@ EQUB &FF
  lda inbuilder          ; BEEB TODO - remove ED ONLY
  bne return_53
 
+    DEC redkidmeter
+
+    LDA #HEART_GLYPH
+
+    LDX KidStrength
+    CPX #2
+    BCS steady
+
+    LDX PAGE
+    BEQ steady
+
+    LDA #BLANK_GLYPH
+
+    .steady
     LDX #0
     .full_loop
     CPX KidStrength
     BCS done_full
-    LDA #HEART_GLYPH
     STA meter_string,X
     INX
     BNE full_loop
     .done_full
 
+    LDA #EMPTY_GLYPH
     .empty_loop
     CPX MaxKidStr
     BCS done_empty
-    LDA #EMPTY_GLYPH
     STA meter_string,X
     INX
     BNE empty_loop
@@ -661,7 +674,7 @@ EQUB &FF
     LDA #LO(meter_string):STA beeb_readptr
     LDA #HI(meter_string):STA beeb_readptr+1
 
-    LDA #0
+    LDA #5
     LDX #0
     LDY #BEEB_STATUS_ROW
     JSR beeb_plot_font_string
@@ -755,9 +768,16 @@ EQUB &FF
  lda inbuilder
  bne return_53
 
- lda OppStrength
- beq return_53
+ DEC redoppmeter
 
+ lda OppStrength
+ bne has_energy
+
+\\ No energy
+
+ JMP beeb_clear_opp_energy
+
+.has_energy
  lda ShadID
  cmp #24 ;mouse
  beq return_53
@@ -768,70 +788,111 @@ EQUB &FF
  lda level
  cmp #12
  bne return_53 ;shad strength shows only on level 12
+
 .label_1
- lda #191
- sta YCO
- lda #enum_sta OR $80 ;mirror
- sta OPACITY
 
- ldx #0
- stx xsave ;# of bullets drawn so far
+    JSR beeb_clear_opp_energy
 
-.loop lda OppStrength
- sec
- sbc xsave ;# of bullets left to draw
- beq darkpart
- cmp #4
- bcs draw3
- cmp #3
- bcs draw2
- cmp #2
- bcc drawlast
+    LDA #HEART_GLYPH
+
+    LDX OppStrength
+    CPX #2
+    BCS steady
+
+    LDX PAGE
+    BEQ steady
+
+    LDA #BLANK_GLYPH
+
+    .steady
+    LDX #0
+    .full_loop
+    CPX OppStrength
+    BCS done_full
+    STA meter_string,X
+    INX
+    BNE full_loop
+    .done_full
+
+    LDA #&FF
+    STA meter_string,X
+
+    LDA #LO(meter_string):STA beeb_readptr
+    LDA #HI(meter_string):STA beeb_readptr+1
+
+    SEC
+    LDA #80
+    SBC OppStrength
+    SBC OppStrength
+    TAX
+
+    LDA #5
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+
+\ lda #191
+\ sta YCO
+\ lda #enum_sta OR $80 ;mirror
+\ sta OPACITY
+
+\ ldx #0
+\ stx xsave ;# of bullets drawn so far
+
+\.loop lda OppStrength
+\ sec
+\ sbc xsave ;# of bullets left to draw
+\ beq darkpart
+\ cmp #4
+\ bcs draw3
+\ cmp #3
+\ bcs draw2
+\ cmp #2
+\ bcc drawlast
 ;Draw 1 bullet
-.draw1 ldy #1
- bne drline
+\.draw1 ldy #1
+\ bne drline
  ;Draw 2 bullets
-.draw2 ldy #2
- bne drline
+\.draw2 ldy #2
+\ bne drline
 ;Draw 3 bullets
-.draw3 ldy #3
- bne drline
+\.draw3 ldy #3
+\ bne drline
 
-.drawlast lda OppStrength
- cmp #2
- bcs steady
- lda PAGE
- beq darkpart ;flashes when down to 1
-.steady lda #bullet
- ldy #1
- jmp draw
+\.drawlast lda OppStrength
+\ cmp #2
+\ bcs steady
+\ lda PAGE
+\ beq darkpart ;flashes when down to 1
+\.steady lda #bullet
+\ ldy #1
+\ jmp draw
 
 \* Draw line of 1-3 bullets
 
-.drline lda bline-1,y ;image #
- jsr draw
- jmp loop
+\.drline lda bline-1,y ;image #
+\ jsr draw
+\ jmp loop
 
-.draw sta IMAGE
- ldx xsave
- tya
- clc
- adc xsave
- sta xsave
+\.draw sta IMAGE
+\ ldx xsave
+\ tya
+\ clc
+\ adc xsave
+\ sta xsave
 
-.drawimg lda OppStrX,x
- sta XCO
- lda OppStrOFF,x
- sta OFFSET
- jmp addmsg
+\.drawimg lda OppStrX,x
+\ sta XCO
+\ lda OppStrOFF,x
+\ sta OFFSET
+\ jmp addmsg
 
-.darkpart
- lda #enum_and OR $80
- sta OPACITY
- lda #blank
- sta IMAGE
- ldx xsave
- jmp drawimg
+\.darkpart
+\ lda #enum_and OR $80
+\ sta OPACITY
+\ lda #blank
+\ sta IMAGE
+\ ldx xsave
+\ jmp drawimg
 }
 
 \*-------------------------------

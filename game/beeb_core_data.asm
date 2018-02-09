@@ -6,8 +6,8 @@
 
 \*-------------------------------
 ; Very lazy table for turning MODE 2 black pixels into MASK
-; Could / should be in MAIN
 ; Used by LAYMASK and MLAYMASK (characters)
+\*-------------------------------
 
 PAGE_ALIGN
 .mask_table
@@ -122,8 +122,8 @@ ENDMACRO
 
 \*-------------------------------
 ; Compressed (Exile) palette table going from 2bpp data to MODE 2 bytes
-; Could / should be in MAIN
 ; Used by full pixel plot fns (LAY, LAYMASK) i.e. characters
+\*-------------------------------
 
 PAGE_ALIGN
 .map_2bpp_to_mode2_pixel            ; background
@@ -212,7 +212,7 @@ PAGE_ALIGN
 
 \*-------------------------------
 ; Expanded palette table going from 2bpp data directly to MODE 2 bytes
-; Could / should be in MAIN
+\*-------------------------------
 
 .fast_palette_lookup_0
 MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; 0=BRW
@@ -235,7 +235,7 @@ MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; 
 
 \*-------------------------------
 ; Multipliction table squeezed in from PAGE_ALIGN
-; Could / should be in MAIN
+\*-------------------------------
 .Mult16_HI          ; or shift...
 FOR n,0,39,1
 EQUB HI(n*16)
@@ -256,7 +256,7 @@ MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_GREEN_PAIR           ; 
 
 \*-------------------------------
 ; Multipliction table squeezed in from PAGE_ALIGN
-; Could / should be in MAIN
+\*-------------------------------
 .Mult16_LO
 FOR n,0,39,1
 EQUB LO(n*16)
@@ -274,5 +274,18 @@ MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR       ; 
 
 .fast_palette_lookup_13
 MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 12=
+
+\*-------------------------------
+; Hmm, these multiplication tables include all Mult16 entries.. combine?
+\*-------------------------------
+.Mult8_LO
+FOR n,0,79,1
+EQUB LO(n*8)
+NEXT
+
+.Mult8_HI
+FOR n,0,79,1
+EQUB HI(n*8)
+NEXT
 
 .beeb_core_data_end

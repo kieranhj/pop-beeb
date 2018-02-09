@@ -1680,7 +1680,7 @@ ENDIF
 
 \* Kid is dead -- message is "Press button to continue"
 
- JSR beeb_clear_status_line
+ JSR beeb_clear_text_area
 
  lda msgtimer
  cmp #contoff
@@ -1735,7 +1735,7 @@ ENDIF
   LDA msgdrawn
   BEQ return_62
   DEC msgdrawn
-  JMP beeb_clear_status_line
+  JMP beeb_clear_text_area
 }
 
 IF _NOT_BEEB

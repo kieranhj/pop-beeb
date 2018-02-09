@@ -47,6 +47,7 @@ ENDMACRO
 
 HEART_GLYPH=41
 EMPTY_GLYPH=42
+BLANK_GLYPH=43
 
 ; Original PoP global defines
 

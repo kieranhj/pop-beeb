@@ -240,6 +240,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF 0
 .Mark3 jsr Mark1 ;mark 3 blocks
  iny
 .Mark2 jsr Mark1 ;mark 2 blocks
@@ -253,6 +254,7 @@ ENDIF
  jsr markwipe
  jmp markred
 }
+ENDIF
 
 .MARKMETERS
 {
@@ -262,15 +264,22 @@ ENDIF
 
 .MARKKIDMETER
 {
- ldy #20
- bne Mark3
+\ ldy #20
+\ bne Mark3
+ LDA #REDRAW_FRAMES
+ STA redkidmeter
+ RTS
 }
 
 .MARKOPPMETER
 {
- ldy #28
- bne Mark2
- rts
+\ ldy #28
+\ bne Mark2
+\ rts
+
+ LDA #REDRAW_FRAMES
+ STA redoppmeter
+ RTS
 }
 
 \*-------------------------------

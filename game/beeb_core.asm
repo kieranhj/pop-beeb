@@ -480,33 +480,79 @@ ENDIF
   rts
 }
 
+; Clear status line characters
+; Y=start character [0-79]
+; X=number of characters to clear
+.beeb_clear_status_X
+{
+    CLC
+    LDA Mult8_LO,Y
+    ADC #LO(beeb_status_addr)
+    STA beeb_writeptr
+    LDA Mult8_HI,Y
+    ADC #HI(beeb_status_addr)
+    STA beeb_writeptr+1
+
+    .loop
+    LDA #0
+
+    LDY #1
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+
+    DEX
+    BEQ done_loop
+
+    CLC
+    LDA beeb_writeptr
+    ADC #8
+    STA beeb_writeptr
+    BCC no_carry
+    INC beeb_writeptr+1
+    .no_carry
+    BNE loop
+
+    .done_loop
+    RTS
+}
+
 .beeb_clear_status_line
 {
-    RTS
+    LDY #0
+    LDX #80
+    JMP beeb_clear_status_X
+}
 
-    LDX #HI(BEEB_SCREEN_ROW_BYTES + &FF)
-    lda #HI(beeb_status_addr)
+.beeb_clear_text_area
+{
+    LDY #20
+    LDX #40
+    JMP beeb_clear_status_X
+}
 
-    sta loop+2
-    lda #0
-    ldy #0
-    .loop
-    sta &3000,Y
-    iny
-    bne loop
-    inc loop+2
-    dex
-    bne loop
+.beeb_clear_player_energy
+{
+    LDY #0
+    LDX #20
+    JMP beeb_clear_status_X
+}
 
-\    LDX #0
-\    LDA #0
-\    .loop1
-\    STA beeb_status_addr, X
-\    INX
-\    CPX #&100-LO(beeb_status_addr)
-\    BCC loop1
-
-    RTS
+.beeb_clear_opp_energy
+{
+    LDY #68
+    LDX #12
+    JMP beeb_clear_status_X
 }
 
 \*-------------------------------
