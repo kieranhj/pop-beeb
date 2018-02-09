@@ -36,151 +36,13 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	\\ Initialise exomizer - must have some data ready to decrunch
 	JSR exo_init_decruncher
 
-	\\ Initialise music player - parses header
-	JSR	vgm_init_player
-
-	RTS
-}
-
-
-.vgm_init_player				; return non-zero if error
-{
-IF VGM_HEADER
-\\ <header section>
-\\  [byte] - header size - indicates number of bytes in header section
-
-	jsr exo_get_decrunched_byte
-	STA tmp_var
-	CMP #5
-	BCS parse_header			; we need at least 5 bytes to parse!
-	JMP error
-
-	.parse_header
-
-\\  [byte] - indicates the required playback rate in Hz eg. 50/60/100
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	CMP #VGM_PLAYER_sample_rate		; we only support 50Hz files
-	BEQ is_50HZ					; return non-zero to indicate error
-	JMP error
-	.is_50HZ
-	DEC tmp_var
-
-\\  [byte] - packet count lsb
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	DEC tmp_var
-
-\\  [byte] - packet count msb
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	DEC tmp_var
-
-\\  [byte] - duration minutes
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	DEC tmp_var
-
-\\  [byte] - duration seconds
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-
-	.header_loop
-	DEC tmp_var
-	BEQ done_header
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	\\ don't know what this byte is so ignore it
-	JMP header_loop
-
-	.done_header
-
-\\ <title section>
-\\  [byte] - title string size
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	STA tmp_var
-
-\\  [dd] ... - ZT title string
-
-	LDX #0
-	.title_loop
-	STX tmp_msg_idx
-	LDA tmp_var
-	BEQ done_title				; make sure we consume all the title string
-	DEC tmp_var
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	LDX tmp_msg_idx
-	CPX #VGM_PLAYER_string_max
-	BCS title_loop				; don't write if buffer full
-	INX
-	JMP title_loop
-
-	\\ Where title string is smaller than our buffer
-	.done_title
-
-	.title_pad_loop
-	CPX #VGM_PLAYER_string_max
-	BCS done_title_padding
-	INX
-	JMP title_pad_loop
-	.done_title_padding
-
-\\ <author section>
-\\  [byte] - author string size
-
-
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	STA tmp_var
-
-
-
-\\  [dd] ... - ZT author string
-
-	LDX #0
-	.author_loop
-	STX tmp_msg_idx
-	LDA tmp_var
-	BEQ done_author				; make sure we consume all the author string
-	DEC tmp_var
-
-	jsr exo_get_decrunched_byte		; should really check carry status for EOF
-	LDX tmp_msg_idx
-	CPX #VGM_PLAYER_string_max
-	BCS author_loop
-	INX
-	JMP author_loop
-
-	\\ Where author string is smaller than our buffer
-	.done_author
-	.author_pad_loop
-	CPX #VGM_PLAYER_string_max
-	BCS done_author_padding
-	INX
-	JMP author_pad_loop
-	.done_author_padding
-
-	\\ Initialise vars
-	;LDA #&FF
-	;STA vgm_player_counter
-	;STA vgm_player_counter+1
-
-ENDIF
-
+	\\ Initialise music player
 	LDA #0
 	STA vgm_player_ended
-;	STA vgm_player_last_reg
-;	STA vgm_player_reg_bits
 
-	\\ Return zero 
-	RTS
-
-	\\ Return error
-	.error
-	LDA #&FF
 	RTS
 }
+
 
 .vgm_deinit_player
 {
@@ -189,20 +51,11 @@ ENDIF
 	LDA #&BF: JSR psg_strobe
 	LDA #&DF: JSR psg_strobe
 	LDA #&FF: JSR psg_strobe
-	
 	.return
 	RTS
 }
 
-.vgm_poll_player
-{
-	\\ Assume this is called every 20ms..
-;	LDA #0
-;	STA vgm_player_reg_bits
-
-	LDA vgm_player_ended
-	BNE _sample_end
-
+\\ "RAW" VGM data is just packets of chip register data, terminated with 255
 \\ <packets section>
 \\  [byte] - indicating number of data writes within the current packet (max 11)
 \\  [dd] ... - data
@@ -211,6 +64,12 @@ ENDIF
 \\  ...`
 \\ <eof section>
 \\  [0xff] - eof
+
+.vgm_poll_player
+{
+	\\ Assume this is called every 20ms..
+	LDA vgm_player_ended
+	BNE _sample_end
 
 	\\ Get next byte from the stream
 	jsr exo_get_decrunched_byte
@@ -237,11 +96,6 @@ ENDIF
 	JMP sound_data_loop
 	
 	.wait_20_ms
-	;INC vgm_player_counter				; indicate we have completed another frame of audio
-	;BNE no_carry
-	;INC vgm_player_counter+1
-	;.no_carry
-
 	CLC
 	RTS
 
@@ -251,16 +105,89 @@ ENDIF
 	\\ Silence sound chip
 	JSR vgm_deinit_player
 
-;	INC vgm_player_counter				; indicate we have completed one last frame of audio
-;	BNE _sample_end
-;	INC vgm_player_counter+1
-
 	._sample_end
 	SEC
 	RTS
 }
 
+.vgm_sfx_stop
+{
+	ldy #0
+	; FALLS THROUGH to vgm_sfx_play with Y=0 means address is invalid.
+}
+; X/Y contain address of SFX to be played
+.vgm_sfx_play
+{
+	stx vgm_sfx_addr+0
+	sty vgm_sfx_addr+1
+	rts
+}
+
+
+.vgm_sfx_get_byte
+{
+	ldy #0
+	lda (vgm_sfx_addr),y
+	tay
+	; advance ptr
+	inc vgm_sfx_addr+0
+	bne no_skip
+	inc vgm_sfx_addr+1
+.no_skip	
+	tya	; so that flags are set
+	rts
+}
+
+\\ Call every 50Hz to update any currently playing sfx
+; Carry set if SFX finished
+.vgm_sfx_update
+{
+	lda vgm_sfx_addr+1
+	beq finished
+
+	\\ Get packet size
+	\\ Byte is #data bytes to send to sound chip:
+
+	jsr vgm_sfx_get_byte
+	beq packet_end
+
+	; end of stream?
+	cmp #&ff
+	bne update
+
+	; invalidate address
+	lda #0
+	sta vgm_sfx_addr+1
+
+	\\ Silence sound chip
+	JSR vgm_deinit_player
+.finished
+	sec
+	rts
+
+.update
+	tax
+
+.sound_data_loop
+
+	; fetch packet byte
+	jsr vgm_sfx_get_byte
+
+	; send to sound chip
+	jsr psg_strobe
+
+	; for all bytes in packet
+	dex
+	bne sound_data_loop
+.packet_end
+	clc
+	rts
+}
+
+
 ; SN76489 register update
+; A contains register data to write
+; Trashes Y
 .psg_strobe
 
 .psg_strobe_sei

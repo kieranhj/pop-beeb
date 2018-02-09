@@ -155,7 +155,7 @@ ENDIF
     tax
     pla
     ; play the track
-    jsr music_play
+    jsr vgm_sfx_play ;music_play
     rts 
 }
 
@@ -204,6 +204,9 @@ ENDIF
 
 	\\ Poll the music player
 	jsr vgm_poll_player
+
+    \\ Poll the SFX player
+    jsr vgm_sfx_update
     
     ; restore previously paged ROM bank
     pla

@@ -31,4 +31,7 @@ VGM_PLAYER_sample_rate = 50			; locked to 50Hz
 ;.vgm_player_reg_bits		SKIP 1		; bits 0 - 7 set if SN register 0 - 7 updated this frame, cleared at start of player poll
 ;.vgm_player_counter			SKIP 2		; increments by 1 every poll (20ms) - used as our tracker line no. & to sync fx with audio update
 
+
+.vgm_sfx_addr               SKIP 2      ; currently playing sfx memory address
+
 .vgm_player_counter_tmp     SKIP 1
