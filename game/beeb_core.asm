@@ -482,6 +482,8 @@ ENDIF
 
 .beeb_clear_status_line
 {
+    RTS
+
     LDX #HI(BEEB_SCREEN_ROW_BYTES + &FF)
     lda #HI(beeb_status_addr)
 

@@ -626,83 +626,120 @@ ENDIF
 \*
 \*-------------------------------
 
+.meter_string
+EQUB HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH
+EQUB HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH,HEART_GLYPH
+EQUB &FF
+
 .DRAWKIDMETER
 {
- lda inbuilder
+ lda inbuilder          ; BEEB TODO - remove ED ONLY
  bne return_53
 
- lda #191
- sta YCO
- lda #enum_sta
- sta OPACITY
+    LDX #0
+    .full_loop
+    CPX KidStrength
+    BCS done_full
+    LDA #HEART_GLYPH
+    STA meter_string,X
+    INX
+    BNE full_loop
+    .done_full
 
- ldx #0
- stx xsave ;# of bullets drawn so far
+    .empty_loop
+    CPX MaxKidStr
+    BCS done_empty
+    LDA #EMPTY_GLYPH
+    STA meter_string,X
+    INX
+    BNE empty_loop
+    .done_empty
 
-.loop lda KidStrength
- sec
- sbc xsave ;# of bullets left to draw
- beq darkpart
- cmp #4
- bcs draw3
- cmp #3
- bcs draw2
- cmp #2
- bcc drawlast
+    LDA #&FF
+    STA meter_string,X
+
+    LDA #LO(meter_string):STA beeb_readptr
+    LDA #HI(meter_string):STA beeb_readptr+1
+
+    LDA #0
+    LDX #0
+    LDY #BEEB_STATUS_ROW
+    JSR beeb_plot_font_string
+
+    rts
+
+\ lda #191
+\ sta YCO
+\ lda #enum_sta
+\ sta OPACITY
+\
+\ ldx #0
+\ stx xsave ;# of bullets drawn so far
+
+\.loop lda KidStrength
+\ sec
+\ sbc xsave ;# of bullets left to draw
+\ beq darkpart
+\ cmp #4
+\ bcs draw3
+\ cmp #3
+\ bcs draw2
+\ cmp #2
+\ bcc drawlast
 ;Draw 1 bullet
-.draw1 ldy #1
- bne drline
+\.draw1 ldy #1
+\ bne drline
  ;Draw 2 bullets
-.draw2 ldy #2
- bne drline
+\.draw2 ldy #2
+\ bne drline
 ;Draw 3 bullets
-.draw3 ldy #3
- bne drline
+\.draw3 ldy #3
+\ bne drline
 
-.drawlast lda KidStrength
- cmp #2
- bcs steady
- lda PAGE
- beq skip ;flashes when down to 1
-.steady lda #bullet
- ldy #1
- jsr draw
-.skip jmp darkpart
+\.drawlast lda KidStrength
+\ cmp #2
+\ bcs steady
+\ lda PAGE
+\ beq skip ;flashes when down to 1
+\.steady lda #bullet
+\ ldy #1
+\ jsr draw
+\.skip jmp darkpart
 
 \* Draw line of 1-3 bullets
 
-.drline lda bline-1,y ;image #
- jsr draw
- jmp loop
+\.drline lda bline-1,y ;image #
+\ jsr draw
+\ jmp loop
 
-.draw sta IMAGE
- ldx xsave
- tya
- clc
- adc xsave
- sta xsave
+\.draw sta IMAGE
+\ ldx xsave
+\ tya
+\ clc
+\ adc xsave
+\ sta xsave
 
 \* In: IMAGE; x = unit # (0 = leftmost)
 
-.drawimg lda KidStrX,x
- sta XCO
- lda KidStrOFF,x
- sta OFFSET
- jmp addmsg
+\.drawimg lda KidStrX,x
+\ sta XCO
+\ lda KidStrOFF,x
+\ sta OFFSET
+\ jmp addmsg
 
 \* Draw blanks to limit of MaxKidStr
 
-.darkpart
- lda #enum_and
- sta OPACITY
- lda #blank
- sta IMAGE
-.dloop ldx xsave
- cpx MaxKidStr
- bcs return_53
- jsr drawimg
- inc xsave
- bne dloop
+\.darkpart
+\ lda #enum_and
+\ sta OPACITY
+\ lda #blank
+\ sta IMAGE
+\.dloop ldx xsave
+\ cpx MaxKidStr
+\ bcs return_53
+\ jsr drawimg
+\ inc xsave
+\ bne dloop
 }
 .return_53
  rts
