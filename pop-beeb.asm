@@ -20,6 +20,7 @@ _BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
 _AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
+_AUDIO_DEBUG = TRUE         ; enable audio debug text
 
 ; Helpful MACROs
 

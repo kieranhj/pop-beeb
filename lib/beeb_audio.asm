@@ -2,7 +2,6 @@
 ; Very much a WIP atm
 
 
-
 ; POP BBC PORT - Music player hook
 ; See aux_core.asm for the jump tables
 ; See soundnames.h.asm for the various effects & music enums
@@ -12,11 +11,68 @@
     jsr music_play_track
 	rts
 }
+
+
+IF _AUDIO_DEBUG
+
+SMALL_FONT_MAPCHAR
+.sfx_string ; starts at offset 4
+EQUS "SFX ............ ", &FF
+.sfx_string_end
+ASCII_MAPCHAR
+
+; debugging function to render the last few sfx that were played
+.BEEB_DEBUG_DRAW_SFX
+{
+
+    LDA #LO(sfx_string)
+    STA beeb_readptr
+    LDA #HI(sfx_string)
+    STA beeb_readptr+1
+
+    LDA #13
+    LDX #0
+    LDY #BEEB_STATUS_ROW
+    JSR beeb_plot_font_string
+    
+    rts
+}
+ENDIF ; _AUDIO_DEBUG
+
+; A should contain sfx id 0-19
 .BEEB_ADDSOUND
 {
-;        lda #9	; SM Hacked to play a sfx
-; A should contain sfx id 0-19
+IF _AUDIO_DEBUG
+    pha
+ENDIF
+
     jsr music_play_sfx	
+
+IF _AUDIO_DEBUG
+    ldy #2
+.copy2
+    ldx #0
+.copy
+    lda sfx_string+5,x
+    sta sfx_string+4,x
+    inx
+    cpx #12
+    bne copy
+    dey
+    bne copy2
+
+
+
+    pla
+
+
+    tax
+    and #&f0:lsr a:lsr a:lsr a:lsr a:clc:adc#1:sta sfx_string_end-4
+    txa
+    and #&0f:clc:adc#1:sta sfx_string_end-3
+ENDIF ; _AUDIO_DEBUG
+
+
 	rts	
 }
 .BEEB_ZEROSOUND
