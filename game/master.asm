@@ -1335,6 +1335,10 @@ EQUS "EPILOG $"
 
  MASTER_LOAD_DHIRES epilog_filename, 0
 
+\ BEEB set drive 0 - going to attract after this anyway
+ LDA #0
+ JSR disksys_set_drive
+
  lda #s_Epilog
  jsr PlaySongNI
  lda #15

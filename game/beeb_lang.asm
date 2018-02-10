@@ -40,12 +40,13 @@ IF 1
 .midIMG skip maxmid
 .midOP skip maxmid
 .midTYP skip maxmid
+ENDIF
+IF 0
 .midCU skip maxmid
 .midCD skip maxmid
 .midCL skip maxmid
 .midCR skip maxmid
 .midTAB skip maxmid
-
 .objINDX skip maxobj
 .objX skip maxobj
 .objOFF skip maxobj
@@ -54,8 +55,6 @@ IF 1
 .objFACE skip maxobj
 .objTYP skip maxobj
 .objCU skip maxobj
-ENDIF
-IF 0
 .objCD skip maxobj
 .objCL skip maxobj
 .objCR skip maxobj

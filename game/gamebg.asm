@@ -369,6 +369,8 @@ ASCII_MAPCHAR
     STA level_string, Y
     INY
 
+    TXA:SEC:SBC #10:TAX
+
     .one_digit
     INX:TXA
     STA level_string, Y
