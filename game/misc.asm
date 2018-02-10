@@ -306,7 +306,7 @@ vibetimer = 3
  lda #s_Sword
  ldx #25
  jsr cuesong
- lda #$ff
+ lda #PAL_white
  sta lightcolor
  lda #3
  sta lightning ;3 white flashes
@@ -321,7 +321,7 @@ vibetimer = 3
  cmp MaxKidStr
  beq return ;already at full strength
 
- lda #$99
+ lda #PAL_red
  sta lightcolor
  lda #2
  sta lightning ;2 orange flashes
@@ -336,7 +336,7 @@ vibetimer = 3
 
 .label_2 cpx #2
  bne label_3
- lda #$99
+ lda #PAL_yellow
  sta lightcolor
  lda #5
  sta lightning ;5 orange flashes
@@ -509,7 +509,7 @@ vibetimer = 3
  lda OpLife
  bmi return_54
 ;live char, dead opponent
- lda #$ff
+ lda #PAL_white
  sta lightcolor
  lda #5
  sta lightning

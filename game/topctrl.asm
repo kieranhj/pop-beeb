@@ -1130,7 +1130,7 @@ ENDIF
  bne label_2
 .label_1 lda ChgKidStr
  bpl return_12
- lda #$11 ;Flash red if kid's been hurt
+ lda #PAL_red ;Flash red if kid's been hurt
 .label_2 jmp doflashon
 }
 
