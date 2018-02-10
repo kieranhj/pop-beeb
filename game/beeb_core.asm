@@ -733,4 +733,56 @@ ENDIF
     RTS
 }
 
+
+\*-------------------------------
+\*
+\* Palette functions
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_setpalette
+{
+    ASL A:ASL A
+    TAX
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
+    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
+    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
+
+    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
+    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
+
+    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
+    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
+}
+
 .beeb_core_end

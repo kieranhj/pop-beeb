@@ -129,13 +129,13 @@ ENDIF
 \ BEEB - HALVED SIZE OF IMAGE LISTS TO SAVE RAM
 \ HAVE ADDED RUN-TIME BRK IN _DEBUG IF OVERFLOW OCCURS
 \ IDEALLY TRACK THE MAX VALUES OF THESE AND SET ACCORDINGLY
-maxback = 128   ;200    ;x4     - observed max = 108 on level 2
+maxback = 150   ;200    ;x4
 maxfore = 50    ;100    ;x4
 maxwipe = 10    ;20     ;x5
-maxpeel = 23    ;46     ;x4
-maxmid = 23     ;46     ;x11
+maxpeel = 20    ;46     ;x4
+maxmid = 40     ;46     ;x11
 maxobj = 10     ;20     ;x12
-maxmsg = 16     ;32     ;x5
+maxmsg = 0     ;32     ;x5
 
 \dum imlists
 \ imlists moved to eq.asm
