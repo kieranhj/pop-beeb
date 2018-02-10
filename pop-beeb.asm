@@ -306,6 +306,8 @@ PRINT "SFX size = ", (pop_sfx_end - pop_sfx_start), " bytes"
     LDA #8:STA &FE00
     LDA #&D3:STA &FE01
 
+    LDA #4:LDX #1:JSR osbyte
+
     \\ Clear larger frame buffer (MODE 2)
 
     JSR beeb_CLS

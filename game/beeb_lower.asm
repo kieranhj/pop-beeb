@@ -331,6 +331,10 @@ keybuflen = 10
 .trobcount skip 1
 ENDIF
 
+IF _DEBUG
+.DebugForceCut skip 1
+ENDIF
+
 \*-------------------------------
 \*
 \*  Page 2-3 - AUX MEM

@@ -281,6 +281,10 @@ miry = 0
  sta MinLeft
  sta SecLeft
 
+IF _DEBUG
+ STA DebugForceCut
+ENDIF
+
  lda #1 ;no delay
  sta SPEED
  rts

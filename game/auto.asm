@@ -26,6 +26,9 @@ IF _JMP_TABLE=FALSE
 .addguard jmp ADDGUARD
 .cut jmp CUT
 .demo jmp DEMO
+IF _DEBUG
+.DebugCut jmp auto_cut
+ENDIF
 ENDIF
 
 \*-------------------------------
@@ -1607,6 +1610,13 @@ Release = 7
 
 .cutchar
 {
+IF _DEBUG
+ LDA DebugForceCut
+ BMI no_forced_cut
+ PHA:LDA #&FF:STA DebugForceCut:PLA
+ JMP auto_cut
+ .no_forced_cut
+ENDIF
  lda CharY
 
  ldx CharAction
@@ -1634,22 +1644,22 @@ Release = 7
  cpx #135
  bcc nocu
  cpx #150
- bcc nocut ;don't cut L/R on climbup
+ bcc auto_nocut ;don't cut L/R on climbup
 .nocu cpx #110
  bcc nosu
  cpx #120
- bcc nocut ;or on standup
+ bcc auto_nocut ;or on standup
 .nosu cpx #150
  bcc nost
  cpx #163
- bcc nocut
+ bcc auto_nocut
  cpx #166
  bcc nost
  cpx #169
- bcc nocut ;or on strike/block
+ bcc auto_nocut ;or on strike/block
 .nost lda CharAction
  cmp #7
- beq nocut ;or on turning
+ beq auto_nocut ;or on turning
 
  ldx CharFace ;-1=left, 0=right
  beq faceR
@@ -1661,7 +1671,7 @@ Release = 7
 
  cmp #ScrnRight+1
  bcs CUTRIGHT
- bcc nocut
+ bcc auto_nocut
 
 .faceR
  lda CharScrn
@@ -1682,28 +1692,41 @@ Release = 7
  cmp #ScrnLeft-1
  bcc CUTLEFT
  beq CUTLEFT
-
-.nocut lda #LO(-1)
+}
+\\ fall through!
+.auto_nocut
+{
+ lda #LO(-1)
  rts
-
+}
 \ BEEB TEMP comment out SOUND
-.CUTLEFT ;jsr mirrmusic
+.CUTLEFT
+{
+ ;jsr mirrmusic
  jsr milestone3
  lda #0
- bpl local_cut
+ bpl auto_cut
+}
 
-.CUTRIGHT jsr stealsword
+.CUTRIGHT
+{
+ jsr stealsword
 \ BEEB TEMP comment out SOUND
 ; jsr jaffmusic
  lda #1
- bpl local_cut
+ bpl auto_cut
+}
 
-.CUTUP lda #2
- bpl local_cut
+.CUTUP
+{
+ lda #2
+ bpl auto_cut
+}
 
 \* Level 6 ("Plunge"): Kid falls off screen 1 into next level
 
 .CUTDOWN
+{
  jsr infinity
 
  lda level
@@ -1711,10 +1734,14 @@ Release = 7
  bne no6
  lda CharScrn
  cmp #1
- beq nocut
+ beq auto_nocut
 .no6
  lda #3
-.local_cut pha
+}
+\\ fall through!
+.auto_cut
+{
+ pha
  jsr cut
  pla
 .return

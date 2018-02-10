@@ -468,7 +468,32 @@ kerasegame = '*'
  bne label_sk1
 
 .label_20
+IF _DEBUG
+ cmp #IKN_leftcurs OR &80 \\ BEEB TEMP
+ bne label_21
+ LDA #0:STA DebugForceCut
+ RTS
 
+.label_21
+ cmp #IKN_rightcurs OR &80 \\ BEEB TEMP
+ bne label_22
+ LDA #1:STA DebugForceCut
+ RTS
+
+.label_22
+ cmp #IKN_upcurs OR &80 \\ BEEB TEMP
+ bne label_23
+ LDA #2:STA DebugForceCut
+ RTS
+
+.label_23
+ cmp #IKN_downcurs OR &80 \\ BEEB TEMP
+ bne label_24
+ LDA #3:STA DebugForceCut
+ RTS
+ENDIF
+
+.label_24
 .return
  rts
 }

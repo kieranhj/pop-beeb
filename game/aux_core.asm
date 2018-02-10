@@ -140,7 +140,9 @@ IF _JMP_TABLE
 .addguard JUMP_A ADDGUARD, AUTO_BASE, 6
 .cut JUMP_A CUT, AUTO_BASE, 7
 .demo JUMP_A DEMO, AUTO_BASE, 8             \\ moved from subs.asm
-
+IF _DEBUG
+.DebugCut JUMP_A auto_cut, AUTO_BASE, 9
+ENDIF
 
 \*-------------------------------
 \* coll.asm
@@ -498,6 +500,9 @@ EQUB LO(CUTGUARD)
 EQUB LO(ADDGUARD)
 EQUB LO(CUT)
 EQUB LO(DEMO)
+IF _DEBUG
+EQUB LO(auto_cut)
+ENDIF
 
 \*-------------------------------
 \* coll.asm
@@ -617,6 +622,9 @@ EQUB HI(CUTGUARD)
 EQUB HI(ADDGUARD)
 EQUB HI(CUT)
 EQUB HI(DEMO)
+IF _DEBUG
+EQUB HI(auto_cut)
+ENDIF
 
 \*-------------------------------
 \* coll.asm

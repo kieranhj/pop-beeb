@@ -56,6 +56,11 @@ IKN_i = 37
 IKN_u = 53
 IKN_o = 54
 IKN_caps = 64
+IKN_tab = 86
+IKN_upcurs = 57
+IKN_downcurs = 41
+IKN_leftcurs = 25
+IKN_rightcurs = 121
 
 \\ Opcodes
 SEI_OP = $78
