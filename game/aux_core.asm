@@ -449,13 +449,13 @@ ENDIF
 \*-------------------------------
 
 .addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
-.doflashon RTS          ; JUMP_B DOFLASHON             BEEB TODO FLASH
+.doflashon JUMP_B DOFLASHON, SUBS_BASE, 1
 .PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
 .subs_demo BRK          ; JUMP_B DEMO, SUBS_BASE, 3   \\ moved to auto.asm
 .showtime JUMP_B SHOWTIME, SUBS_BASE, 4
 
-.doflashoff RTS         ; JUMP_B DOFLASHOFF            BEEB TODO FLASH
-.lrclse BRK             ; JUMP_B LRCLSE                BEEB TODO FLASH
+.doflashoff JUMP_B DOFLASHOFF, SUBS_BASE, 5
+.lrclse BRK             ; JUMP_B LRCLSE                 NOT BEEB
 \ JUMP_B potioneffect
 \ JUMP_B checkalert
 \ JUMP_B reflection
@@ -892,12 +892,12 @@ EQUB LO(MUSICKEYS)
 \*-------------------------------
 SUBS_BASE = P% - aux_core_fn_table_B_LO
 EQUB LO(ADDTORCHES)
-EQUB 0    ; EQUB LO(DOFLASHON)             BEEB TODO FLASH
+EQUB LO(DOFLASHON)
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
 EQUB 0    ; LO(DEMO)    // moved to auto.asm
 EQUB LO(SHOWTIME)
 
-EQUB 0    ; EQUB LO(DOFLASHOFF)            BEEB TODO FLASH
+EQUB LO(DOFLASHOFF)
 EQUB 0    ; EQUB LO(LRCLSE)                BEEB TODO FLASH
 \ JUMP_TO potioneffect  ; in misc.asm
 \ JUMP_TO checkalert    ; in misc.asm
@@ -1107,12 +1107,12 @@ EQUB HI(MUSICKEYS)
 \* subs.asm
 \*-------------------------------
 EQUB HI(ADDTORCHES)
-EQUB 0    ; EQUB HI(DOFLASHON)             BEEB TODO FLASH
+EQUB HI(DOFLASHON)
 EQUB 0    ; EQUB HI(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
 EQUB 0    ; HI(DEMO)    // moved to auto.asm
 EQUB HI(SHOWTIME)
 
-EQUB 0    ; EQUB HI(DOFLASHOFF)            BEEB TODO FLASH
+EQUB HI(DOFLASHOFF)
 EQUB 0    ; EQUB HI(LRCLSE)                BEEB TODO FLASH
 \ JUMP_TO potioneffect  ; in misc.asm
 \ JUMP_TO checkalert    ; in misc.asm

@@ -29,7 +29,10 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     LDA #&F4            ; MODE 2
     STA &248            ; Tell the OS or it will mess with ULA settings at vsync
     STA &FE20
-
+}
+\\ Fall through!
+.beeb_set_default_palette
+{
     \\ Set Palette
     CLC
     LDX #0
@@ -42,6 +45,23 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     ADC #&10
     BCC palloop
 
+    RTS
+}
+
+.beeb_set_palette_all
+{
+    STA palloop+1
+    CLC
+    LDX #0
+    LDA #0
+    .palloop
+    ORA #0
+    INX
+    STA &FE21
+    AND #&F0
+    ADC #&10
+    BCC palloop
+    
     RTS
 }
 
