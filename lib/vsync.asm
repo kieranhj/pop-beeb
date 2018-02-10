@@ -72,7 +72,7 @@
 	rts
 }        
 
-
+.vsync_palette_override EQUB &FF
 
 .event_handler
 {
@@ -95,9 +95,24 @@
     ; call our audio interrupt handler
 	jsr audio_update
 	
+	; hack in screen flash
+	{
+		LDA vsync_palette_override
+		BMI default
 
+		JSR beeb_set_palette_all
+		JMP skip_palette
 
+		.default
+		CMP #&FF
+		BEQ skip_palette
 
+		JSR beeb_set_default_palette
+
+		LDA #&FF
+		STA vsync_palette_override
+		.skip_palette
+	}
 
     ;-------------------------------------------------
 
