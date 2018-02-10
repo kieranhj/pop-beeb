@@ -235,6 +235,11 @@ kresume = IKN_l OR $80
  lda #1
  sta soundon ;Sound on
 
+ lda #$ff   ; no level sprites cached
+ sta CHset
+ sta BGset1
+ sta BGset2
+
  JSR beeb_set_mode2_no_clear
 
     \\ Own error handler now we're fully initialised
@@ -669,9 +674,8 @@ EQUS "PAL1X  $"
 .rdbg1
 {
     ldx newBGset1
-\ BEEB TEMP
-\    cpx BGset1
-\    beq return
+    cpx BGset1
+    beq return
     stx BGset1
 
     \ index into table for filename
@@ -754,9 +758,8 @@ EQUS "PAL2   $"
 .rdbg2
 {
     ldx newBGset2
-\ BEEB TEMP
-\    cpx BGset2
-\    beq return
+    cpx BGset2
+    beq return
     stx BGset2
 
     \ Need to define slot numbers for different data block
@@ -839,9 +842,8 @@ EQUS "VIZ    $"
 .rdch4
 {
     ldx newCHset
-\ BEEB TEMP
-\    cpx CHset
-\    beq return
+    cpx CHset
+    beq return
     stx CHset
 
     \ Need to define slot numbers for different data block
@@ -1874,9 +1876,19 @@ EQUS "CHTAB6X$"
 
 .LoadStage2
 {
+    TAX
+
     \\ Invalidate catalog cache
     LDA #0
     JSR disksys_set_drive
+
+    \\ This is cutscene so force chtab7 and side A regardless of level#
+    TXA
+    BNE no_chtab7
+    JSR loadch7
+    LDA #'A'
+    BNE side_A
+    .no_chtab7
 
     \\ Need to switch CHTAB6 A/B according to Apple II disc layout
 
@@ -1908,13 +1920,11 @@ EQUS "CHTAB6X$"
     JSR beeb_plot_reloc_img
 
     LDA #&ff
+    sta CHset
     sta BGset1
     sta BGset2
 
-    JSR loadch7
-
-    .return
-    rts    
+    RTS
 }
 
 .chtab7_file_name
@@ -1922,9 +1932,9 @@ EQUS "CHTAB7 $"
 
 .loadch7
 {
-    LDX level
-    CPX #3
-    BCS return
+\    LDX level
+\    CPX #3
+\    BCS return
 
     lda #BEEB_SWRAM_SLOT_CHTAB67
     jsr swr_select_slot
@@ -1940,9 +1950,6 @@ EQUS "CHTAB7 $"
     LDA #HI(chtable7)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-
-    LDA #&ff
-    STA CHset
 
     .return
     rts
