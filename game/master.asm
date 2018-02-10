@@ -1212,11 +1212,16 @@ EQUS "TITLE  $"
 
 .SilentTitle
 {
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+
  jsr unpacksplash
 
  jsr copy1to2
 
- lda #20
+ lda #20/4
  jsr tpause
 
 \ lda #delTitle
@@ -1224,7 +1229,10 @@ EQUS "TITLE  $"
  
  MASTER_LOAD_DHIRES title_filename, 12
 
- lda #160
+    lda #s_Title
+    jsr BEEB_INTROSONG
+
+ lda #160/4
  jmp tpause
 }
 
@@ -1249,6 +1257,10 @@ EQUS "TITLE  $"
 \ ldx #140
 \ lda #s_Title
 \ jsr master_PlaySongI
+
+; SM: added this to give music chance to play out
+ lda #120/4
+ jmp tpause
 
 \* Credit line disappears
 
@@ -1288,19 +1300,23 @@ EQUS "PROLOG $"
 .PrincessScene
 {
 
-    ; SM: added intro music load & play trigger here
-;    lda #1
-;    jsr BEEB_LOAD_AUDIO_BANK
-;    lda #s_Princess
-;    jsr BEEB_INTROSONG
 
  jsr blackout
+
+
+
 
 \ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
+
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+    lda #s_Princess
+    jsr BEEB_INTROSONG
 
  lda #0 ;cut #0 (intro)
  jmp playcut ;Apple II was xplaycut aux l.c. via grafix
@@ -1431,9 +1447,6 @@ ENDIF
 {
  jsr blackout
 
-    ; SM: hacked in game audio bank load here
-    lda #3
-    jsr BEEB_LOAD_AUDIO_BANK
 
 \ NOT BEEB
 \ jsr LoadStage3
@@ -1447,6 +1460,11 @@ ENDIF
 \ jsr driveoff
 
 \* Go to TOPCTRL
+
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+
 
  lda #0
  jmp start

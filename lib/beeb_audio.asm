@@ -207,7 +207,7 @@ ENDIF ; _AUDIO_DEBUG
 
 ; format is: address, bank, indexed by POP source sound id as per soundnames.h.asm
 .pop_game_music
-    EQUW 0, &8080
+    EQUW 0 ;, &8080
     EQUW pop_music_death;, &8080 ; s_Accid = 1
     EQUW pop_music_start;, &8080 ; s_Heroic = 2
     EQUW pop_music_start;, &8080 ; s_Danger = 3
@@ -233,6 +233,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_mirror;, &8080 ; s_Title = 3
     EQUW pop_music_intro;, &8080 ; s_Prolog = 4
     EQUW 0;, &8080 ; s_Sumup = 5
+    EQUW 0; there is no 6
     EQUW pop_music_intro;, &8080 ; s_Princess = 7
     EQUW 0;, &8080 ; s_Squeek = 8
     EQUW 0;, &8080 ; s_Vizier = 9
