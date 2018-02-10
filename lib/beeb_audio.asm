@@ -5,6 +5,7 @@
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
 .audio2_filename EQUS "Audio2 $"    ; grand vizier music
+.audio3_filename EQUS "Audio3 $"    ; game audio - sfx & music jingles
 
 
 ; POP BBC PORT - Music player hook
@@ -25,6 +26,10 @@
 ; Does not currently save SWR bank selection - this might need looking at.
 .BEEB_LOAD_AUDIO_BANK
 {
+    pha
+    jsr music_stop
+    pla
+
     asl a:asl a:asl a   ; *8
     clc
     adc #LO(audio0_filename)
@@ -36,9 +41,8 @@
     lda #&80                ; select ANDY
     jsr swr_select_bank
 
-    \\ Load title music into ANDY
-;    ldx #LO(music1_filename)
-;    ldy #HI(music1_filename)
+
+    \\ Load audio bank into ANDY
     lda #HI(ANDY_START)
     jsr disksys_load_file
     rts
@@ -178,26 +182,26 @@ IF TRUE
 ENDIF
 
 .pop_sound_fx
-	EQUW pop_sfx_00, &80		; #9
-	EQUW pop_sfx_01, &80		; #9
-	EQUW pop_sfx_02, &80		; #9
-	EQUW pop_sfx_03, &80		; #9
-	EQUW pop_sfx_04, &80		; #9
-	EQUW pop_sfx_05, &80		; #9
-	EQUW pop_sfx_06, &80		; #9
-	EQUW pop_sfx_07, &80		; #9
-	EQUW pop_sfx_08, &80		; #9
-	EQUW pop_sfx_09, &80		; #9
-	EQUW pop_sfx_10, &80		; #9
-	EQUW pop_sfx_11, &80		; #9
-	EQUW pop_sfx_12, &80		; #9
-	EQUW pop_sfx_13, &80		; #9
-	EQUW pop_sfx_14, &80		; #9
-	EQUW pop_sfx_15, &80		; #9
-	EQUW pop_sfx_16, &80		; #9
-	EQUW pop_sfx_17, &80		; #9
-	EQUW pop_sfx_18, &80		; #9
-	EQUW pop_sfx_19, &80		; #9
+	EQUW pop_sfx_00, &8080		; #9
+	EQUW pop_sfx_01, &8080		; #9
+	EQUW pop_sfx_02, &8080		; #9
+	EQUW pop_sfx_03, &8080		; #9
+	EQUW pop_sfx_04, &8080		; #9
+	EQUW pop_sfx_05, &8080		; #9
+	EQUW pop_sfx_06, &8080		; #9
+	EQUW pop_sfx_07, &8080		; #9
+	EQUW pop_sfx_08, &8080		; #9
+	EQUW pop_sfx_09, &8080		; #9
+	EQUW pop_sfx_10, &8080		; #9
+	EQUW pop_sfx_11, &8080		; #9
+	EQUW pop_sfx_12, &8080		; #9
+	EQUW pop_sfx_13, &8080		; #9
+	EQUW pop_sfx_14, &8080		; #9
+	EQUW pop_sfx_15, &8080		; #9
+	EQUW pop_sfx_16, &8080		; #9
+	EQUW pop_sfx_17, &8080		; #9
+	EQUW pop_sfx_18, &8080		; #9
+	EQUW pop_sfx_19, &8080		; #9
 
 
 ; A contains music track - 0 to 8

@@ -1502,6 +1502,11 @@ ENDIF
 {
  jsr blackout
 
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+
+
 \* Turn on drive & load Stage 3 routines
 
 \ NOT BEEB
