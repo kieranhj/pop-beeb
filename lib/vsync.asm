@@ -92,9 +92,10 @@
     ; Add vsync IRQ service routines here 
     ;-------------------------------------------------
 
+IF _AUDIO
     ; call our audio interrupt handler
 	jsr audio_update
-	
+ENDIF
 
 
 

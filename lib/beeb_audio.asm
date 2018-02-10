@@ -1,6 +1,8 @@
 ; POP - BBC MICRO - AUDIO ROUTINES
 ; Very much a WIP atm
 
+IF _AUDIO
+
 ; all filenames are 8 characters in length
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
@@ -370,3 +372,4 @@ ENDIF
     rts    
 }
 
+ENDIF
