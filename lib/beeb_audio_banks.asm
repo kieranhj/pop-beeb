@@ -9,9 +9,9 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank0_start
-.pop_music_01
+.pop_music_title
 INCBIN "audio/music/Prince of Persia - 01 - Title Screen.raw.exo" ; 2030 bytes
-.pop_music_08
+.pop_music_mirror
 INCBIN "audio/music/Prince of Persia - 08 - Mirror Prince.raw.exo" ; 701 bytes
 
 .pop_audio_bank0_end
@@ -28,7 +28,7 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank1_start
-.pop_music_02
+.pop_music_intro
 INCBIN "audio/music/Prince of Persia - 02 - Intro.raw.exo" ; 3497 bytes
 .pop_audio_bank1_end
 SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
@@ -61,13 +61,13 @@ ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank3_start
 
-.pop_music_04
+.pop_music_start
 INCBIN "audio/music/Prince of Persia - 04 - Level Start.raw.exo"
-.pop_music_05
+.pop_music_sword
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
-.pop_music_06
+.pop_music_potion
 INCBIN "audio/music/Prince of Persia - 06 - Potion.raw.exo"
-.pop_music_07
+.pop_music_death
 INCBIN "audio/music/Prince of Persia - 07 - Death.raw.exo"
 
 .pop_sfx_start

@@ -1123,10 +1123,10 @@ EQUS "PRESENT$"
 
  jsr copy1to2
 
-    lda #0
-    jsr BEEB_CUESONG
+    lda #s_Presents
+    jsr BEEB_INTROSONG
 
- lda #44
+ lda #44/4
  jsr tpause
 
 \* Unpack "Broderbund Presents" onto page 1
@@ -1136,8 +1136,7 @@ EQUS "PRESENT$"
 
  MASTER_LOAD_DHIRES presents_filename, 12
 
-    lda #8
-    jsr BEEB_CUESONG
+
 
 \ ldx #80
 \ lda #s_Presents
@@ -1183,7 +1182,7 @@ EQUS "BYLINE $"
 
 .AuthorCredit
 {
- lda #42
+ lda #42/4
  jsr tpause
 
 \* Unpack byline onto page 1
@@ -1233,7 +1232,7 @@ EQUS "TITLE  $"
 
 .TitleScreen
 {
- lda #38
+ lda #38/4
  jsr tpause
 
 \* Unpack title onto page 1
@@ -1242,6 +1241,10 @@ EQUS "TITLE  $"
 \ jsr DeltaExpPop
 
  MASTER_LOAD_DHIRES title_filename, 12
+
+
+    lda #s_Title
+    jsr BEEB_INTROSONG
 
 \ ldx #140
 \ lda #s_Title
@@ -1286,10 +1289,10 @@ EQUS "PROLOG $"
 {
 
     ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
-    lda #1
-    jsr BEEB_CUESONG
+;    lda #1
+;    jsr BEEB_LOAD_AUDIO_BANK
+;    lda #s_Princess
+;    jsr BEEB_INTROSONG
 
  jsr blackout
 
@@ -1427,6 +1430,10 @@ ENDIF
 .Demo
 {
  jsr blackout
+
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
 
 \ NOT BEEB
 \ jsr LoadStage3

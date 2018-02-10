@@ -258,6 +258,9 @@ INCLUDE "lib/print.asm"
     LDA #8:STA &FE00
     LDA #&D3:STA &FE01
 
+    \\ Hard reset on break
+    LDA #200:LDX #3:JSR &FFF4
+
     \\ Clear larger frame buffer (MODE 2)
 
     JSR beeb_CLS
