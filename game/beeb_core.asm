@@ -29,7 +29,10 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     LDA #&F4            ; MODE 2
     STA &248            ; Tell the OS or it will mess with ULA settings at vsync
     STA &FE20
-
+}
+\\ Fall through!
+.beeb_set_default_palette
+{
     \\ Set Palette
     CLC
     LDX #0
@@ -42,6 +45,23 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     ADC #&10
     BCC palloop
 
+    RTS
+}
+
+.beeb_set_palette_all
+{
+    STA palloop+1
+    CLC
+    LDX #0
+    LDA #0
+    .palloop
+    ORA #0
+    INX
+    STA &FE21
+    AND #&F0
+    ADC #&10
+    BCC palloop
+    
     RTS
 }
 
@@ -252,6 +272,12 @@ ENDIF
 ; in double buffer mode, both display & main memory swap, but point to the opposite memory 
 .shadow_swap_buffers
 {
+
+IF _AUDIO_DEBUG
+    ; SM: some hacky code to help identify sound fx triggers
+    jsr BEEB_DEBUG_DRAW_SFX
+ENDIF
+
     ; I think it was a mistake to wait for vsync here!
 
     LDA PAGE
@@ -480,6 +506,81 @@ ENDIF
   rts
 }
 
+; Clear status line characters
+; Y=start character [0-79]
+; X=number of characters to clear
+.beeb_clear_status_X
+{
+    CLC
+    LDA Mult8_LO,Y
+    ADC #LO(beeb_status_addr)
+    STA beeb_writeptr
+    LDA Mult8_HI,Y
+    ADC #HI(beeb_status_addr)
+    STA beeb_writeptr+1
+
+    .loop
+    LDA #0
+
+    LDY #1
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+
+    DEX
+    BEQ done_loop
+
+    CLC
+    LDA beeb_writeptr
+    ADC #8
+    STA beeb_writeptr
+    BCC no_carry
+    INC beeb_writeptr+1
+    .no_carry
+    BNE loop
+
+    .done_loop
+    RTS
+}
+
+.beeb_clear_status_line
+{
+    LDY #0
+    LDX #80
+    JMP beeb_clear_status_X
+}
+
+.beeb_clear_text_area
+{
+    LDY #20
+    LDX #40
+    JMP beeb_clear_status_X
+}
+
+.beeb_clear_player_energy
+{
+    LDY #0
+    LDX #20
+    JMP beeb_clear_status_X
+}
+
+.beeb_clear_opp_energy
+{
+    LDY #68
+    LDX #12
+    JMP beeb_clear_status_X
+}
+
 \*-------------------------------
 ; Additional PREP before sprite plotting for Beeb
 \*-------------------------------
@@ -650,6 +751,58 @@ ENDIF
     BPL next_page
 
     RTS
+}
+
+
+\*-------------------------------
+\*
+\* Palette functions
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_setpalette
+{
+    ASL A:ASL A
+    TAX
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
+    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
+    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
+
+    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
+    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
+
+    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
+    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
 }
 
 .beeb_core_end

@@ -18,13 +18,13 @@ CheckTimer = 0
 
 IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
-.doflashon RTS          ; jmp DOFLASHON             BEEB TODO FLASH
+.doflashon jmp DOFLASHON
 .PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
 \\.demo jmp DEMO        \\ moved to auto.asm
 .showtime jmp SHOWTIME
 
-.doflashoff RTS         ; jmp DOFLASHOFF            BEEB TODO FLASH
-.lrclse RTS             ; jmp LRCLSE                BEEB TODO FLASH
+.doflashoff jmp DOFLASHOFF
+.lrclse BRK             ; jmp LRCLSE                BEEB TODO FLASH
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
@@ -216,36 +216,45 @@ ENDIF ;actual frame rate approx. 11 fps)
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-*  F L A S H
-*
-*  Has a traumatic incident occured this frame?
-*  If so, do lightning flash
-*
-*-------------------------------
-DOFLASHON
- jsr lrclse
+\*-------------------------------
+\*
+\*  F L A S H
+\*
+\*  Has a traumatic incident occured this frame?
+\*  If so, do lightning flash
+\*
+\*-------------------------------
 
- jsr vblank
-
- lda $c054
- lda $c056 ;show lores
+.DOFLASHON
+{
+\ jsr lrclse
+\
+\ jsr vblank
+\
+\ lda $c054
+\ lda $c056 ;show lores
+ STA vsync_palette_override
  rts
+}
 
-*-------------------------------
-DOFLASHOFF
- jsr vblank
+\*-------------------------------
 
- lda PAGE
- bne :1
+.DOFLASHOFF
+{
+\ jsr vblank
+\
+\ lda PAGE
+\ bne :1
+\
+\ lda $c055
+\:1 lda $c057 ;show hires
 
- lda $c055
-:1 lda $c057 ;show hires
-
+ LDA #&80
+ STA vsync_palette_override
  rts
+}
 
+IF _NOT_BEEB
 *-------------------------------
 *
 * Clear lo-res screen only if we need to
@@ -326,9 +335,9 @@ slicersync = 3 ;# frames out of sync
 \*  Special animation lists for princess's room
 \*
 \*-------------------------------
-.ptorchx EQUB 13,26,LO(-1)      \\ BEEB supposed to be 25+6 - made 26+0
-.ptorchoff EQUB 0,0             \\ BEEB TODO offset supposed to be 6
-.ptorchy EQUB 113,113
+.ptorchx EQUB 11,27,LO(-1)      \\ APPLE II was 13,25
+.ptorchoff EQUB 0,0             \\ APPLE II was 0,6
+.ptorchy EQUB 112,112
 .ptorchstate EQUB 1,6
 .ptorchcount SKIP 1
 .psandcount SKIP 1
@@ -778,7 +787,7 @@ ENDIF
  jsr addglass1 ;hourglass appears
  lda #5
  sta lightning
- lda #$ff
+ lda #PAL_white
  sta lightcolor
 
  lda #12
@@ -929,24 +938,27 @@ ENDIF
  lda &fe34
  eor #4	; invert bits 0 (CRTC) & 2 (RAM)
  sta &fe34
-
- rts
 }
+.return_63
+ rts
 
-IF _TODO
-*-------------------------------
-flashon
+\*-------------------------------
+
+.subs_flashon
+{
  lda lightning
- beq ]rts
+ beq return_63
  lda lightcolor
  jmp doflashon
+}
 
-flashoff
+.subs_flashoff
+{
  lda lightning
- beq ]rts
+ beq return_63
  dec lightning
  jmp doflashoff
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -984,7 +996,7 @@ ENDIF
 
 .cont jsr subs_NextFrame ;Determine what next frame should look like
 
- jsr flashon
+ jsr subs_flashon
 
  jsr subs_FrameAdv ;Update hidden page to reflect new reality
 ;& show it
@@ -1838,7 +1850,7 @@ WtlessGravity = 1
  ldx #25
  jsr cuesong
 
- lda #$ff ;white
+ lda #PAL_white
  sta lightcolor
  lda #10
  sta lightning

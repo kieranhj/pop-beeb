@@ -5,6 +5,20 @@
 IF 1
 
 IF 1
+.midCU skip maxmid
+.midCD skip maxmid
+.midCL skip maxmid
+.midCR skip maxmid
+.midTAB skip maxmid
+
+.objINDX skip maxobj
+.objX skip maxobj
+.objOFF skip maxobj
+.objY skip maxobj
+.objIMG skip maxobj
+.objFACE skip maxobj
+.objTYP skip maxobj
+.objCU skip maxobj
 .objCD skip maxobj
 .objCL skip maxobj
 .objCR skip maxobj
@@ -200,6 +214,7 @@ ENDIF
 .Fsword skip 1
 ;.purpleflag skip 1 ;$da
 .msgtimer skip 1
+.msgdrawn skip 1
 .MaxOppStr skip 1
 .guardprog skip 1
 .ManCtrl skip 1
@@ -314,6 +329,7 @@ keybuflen = 10
 ;.soundtable ds maxsfx
 
 .trobcount skip 1
+ENDIF
 
 \*-------------------------------
 \*
@@ -321,6 +337,7 @@ keybuflen = 10
 \*
 \*-------------------------------
 
+IF 0
 \dum $320
 ;PAGE_ALIGN
 ALIGN &80  ; doesn't need to be page aligned but must be contained within same paage

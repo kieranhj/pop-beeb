@@ -184,15 +184,15 @@ ENDIF
  lda SCRNUM
  jsr calcblue
 
- lda #0
- ldy #20
- jsr metbufs3 ;If strength meter is in danger of
- sta redkidmeter ;being overwritten, mark it for redraw
+\ lda #0
+\ ldy #20
+\ jsr metbufs3 ;If strength meter is in danger of
+\ sta redkidmeter ;being overwritten, mark it for redraw
 
- lda #0
- ldy #28
- jsr metbufs2
- sta redoppmeter ;opponent meter too
+\ lda #0
+\ ldy #28
+\ jsr metbufs2
+\ sta redoppmeter ;opponent meter too
 
  lda #30
  sta yindex

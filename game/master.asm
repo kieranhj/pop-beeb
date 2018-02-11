@@ -235,6 +235,11 @@ kresume = IKN_l OR $80
  lda #1
  sta soundon ;Sound on
 
+ lda #$ff   ; no level sprites cached
+ sta CHset
+ sta BGset1
+ sta BGset2
+
  JSR beeb_set_mode2_no_clear
 
     \\ Own error handler now we're fully initialised
@@ -669,9 +674,8 @@ EQUS "PAL1X  $"
 .rdbg1
 {
     ldx newBGset1
-\ BEEB TEMP
-\    cpx BGset1
-\    beq return
+    cpx BGset1
+    beq return
     stx BGset1
 
     \ index into table for filename
@@ -754,9 +758,8 @@ EQUS "PAL2   $"
 .rdbg2
 {
     ldx newBGset2
-\ BEEB TEMP
-\    cpx BGset2
-\    beq return
+    cpx BGset2
+    beq return
     stx BGset2
 
     \ Need to define slot numbers for different data block
@@ -839,9 +842,8 @@ EQUS "VIZ    $"
 .rdch4
 {
     ldx newCHset
-\ BEEB TEMP
-\    cpx CHset
-\    beq return
+    cpx CHset
+    beq return
     stx CHset
 
     \ Need to define slot numbers for different data block
@@ -983,6 +985,8 @@ EQUS "PRIN   $"
 \ lda #pacProom
 \ jsr SngExpand
 
+ JSR beeb_clear_status_line
+
  MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
 
 \ lda #$40
@@ -1102,6 +1106,14 @@ EQUS "PRESENT$"
 
 .PubCredit
 {
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
+
 \* Unpack splash screen into DHires page 1
 
  jsr unpacksplash
@@ -1114,7 +1126,12 @@ EQUS "PRESENT$"
 
  jsr copy1to2
 
- lda #44
+IF _AUDIO
+    lda #s_Presents
+    jsr BEEB_INTROSONG
+ENDIF
+
+ lda #44/4
  jsr tpause
 
 \* Unpack "Broderbund Presents" onto page 1
@@ -1124,12 +1141,12 @@ EQUS "PRESENT$"
 
  MASTER_LOAD_DHIRES presents_filename, 12
 
+
+
 \ ldx #80
 \ lda #s_Presents
 \ jsr master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
 
  jmp CleanScreen
 }
@@ -1170,7 +1187,7 @@ EQUS "BYLINE $"
 
 .AuthorCredit
 {
- lda #42
+ lda #42/4
  jsr tpause
 
 \* Unpack byline onto page 1
@@ -1183,9 +1200,6 @@ EQUS "BYLINE $"
 \ ldx #80
 \ lda #s_Byline
 \ jsr master_PlaySongI
-
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
 
 \* Credit line disappears
 
@@ -1203,11 +1217,18 @@ EQUS "TITLE  $"
 
 .SilentTitle
 {
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  jsr unpacksplash
 
  jsr copy1to2
 
- lda #20
+ lda #20/4
  jsr tpause
 
 \ lda #delTitle
@@ -1215,7 +1236,12 @@ EQUS "TITLE  $"
  
  MASTER_LOAD_DHIRES title_filename, 12
 
- lda #160
+IF _AUDIO
+    lda #s_Title
+    jsr BEEB_INTROSONG
+ENDIF
+
+ lda #160/4
  jmp tpause
 }
 
@@ -1223,7 +1249,7 @@ EQUS "TITLE  $"
 
 .TitleScreen
 {
- lda #38
+ lda #38/4
  jsr tpause
 
 \* Unpack title onto page 1
@@ -1233,12 +1259,18 @@ EQUS "TITLE  $"
 
  MASTER_LOAD_DHIRES title_filename, 12
 
+IF _AUDIO
+    lda #s_Title
+    jsr BEEB_INTROSONG
+ENDIF
+
 \ ldx #140
 \ lda #s_Title
 \ jsr master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
+; SM: added this to give music chance to play out
+ lda #120/4
+ jmp tpause
 
 \* Credit line disappears
 
@@ -1266,8 +1298,6 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
  RTS
 }
 
@@ -1279,13 +1309,26 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
+
+
  jsr blackout
+
+
+
 
 \ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
+
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+    lda #s_Princess
+    jsr BEEB_INTROSONG
+ENDIF
 
  lda #0 ;cut #0 (intro)
  jmp playcut ;Apple II was xplaycut aux l.c. via grafix
@@ -1314,8 +1357,6 @@ EQUS "SUMUP  $"
 \ lda #s_Sumup
 \ jmp master_PlaySongI
 
- LDA #10
- JSR tpause     \ BEEB TEMP pause not music
  RTS
 }
 
@@ -1343,6 +1384,10 @@ EQUS "EPILOG $"
  jsr SetupDHires
 
  MASTER_LOAD_DHIRES epilog_filename, 0
+
+\ BEEB set drive 0 - going to attract after this anyway
+ LDA #0
+ JSR disksys_set_drive
 
  lda #s_Epilog
  jsr PlaySongNI
@@ -1418,6 +1463,7 @@ ENDIF
 {
  jsr blackout
 
+
 \ NOT BEEB
 \ jsr LoadStage3
 
@@ -1430,6 +1476,12 @@ ENDIF
 \ jsr driveoff
 
 \* Go to TOPCTRL
+
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
  lda #0
  jmp start
@@ -1491,6 +1543,12 @@ ENDIF
 .DOSTARTGAME
 {
  jsr blackout
+
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
 \* Turn on drive & load Stage 3 routines
 
@@ -1703,6 +1761,9 @@ ENDIF
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
+    \ Relocate font (in SWRAM)
+    JSR beeb_font_init
+
     .return
     rts
 }
@@ -1882,14 +1943,32 @@ EQUS "CHTAB6X$"
 
 .LoadStage2
 {
+    TAX
+
+    \\ Invalidate catalog cache
     LDA #0
     JSR disksys_set_drive
 
-    \\ Need to switch sCHTAB6 A/B according to Apple II disc layout
+    \\ This is cutscene so force chtab7 and side A regardless of level#
+    TXA
+    BNE no_chtab7
+    JSR loadch7
+    LDA #'A'
+    BNE side_A
+    .no_chtab7
 
-    LDA #0
-    CLC
-    ADC #'A'
+    \\ Need to switch CHTAB6 A/B according to Apple II disc layout
+
+    LDA #'A'
+    LDX level
+    CPX #3
+    BCC side_A
+
+    LDA #2
+    JSR disksys_set_drive
+    LDA #'B'      ; side B
+
+    .side_A
     STA chtab6_to_name+6
 
     lda #BEEB_SWRAM_SLOT_CHTAB67
@@ -1908,13 +1987,11 @@ EQUS "CHTAB6X$"
     JSR beeb_plot_reloc_img
 
     LDA #&ff
+    sta CHset
     sta BGset1
     sta BGset2
 
-    JSR loadch7
-
-    .return
-    rts    
+    RTS
 }
 
 .chtab7_file_name
@@ -1922,6 +1999,10 @@ EQUS "CHTAB7 $"
 
 .loadch7
 {
+\    LDX level
+\    CPX #3
+\    BCS return
+
     lda #BEEB_SWRAM_SLOT_CHTAB67
     jsr swr_select_slot
 
@@ -1936,9 +2017,6 @@ EQUS "CHTAB7 $"
     LDA #HI(chtable7)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-
-    LDA #&ff
-    STA CHset
 
     .return
     rts

@@ -16,10 +16,11 @@ _ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = FALSE       ; boot to attract mode not straight into game
-_START_LEVEL = 4            ; _DEBUG only start on a different level
-
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
+_START_LEVEL = 1            ; _DEBUG only start on a different level
+_AUDIO = TRUE               ; enable Beeb audio code
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
+_AUDIO_DEBUG = FALSE         ; enable audio debug text
 
 ; Helpful MACROs
 
@@ -33,6 +34,21 @@ IF _RASTERS
     LDA #&00+col:STA &FE21
 ENDIF
 ENDMACRO
+
+MACRO SMALL_FONT_MAPCHAR
+    MAPCHAR '0','9',1
+    MAPCHAR 'A','Z',11
+    MAPCHAR 'a','z',11
+    MAPCHAR '!',37
+    MAPCHAR '?',38
+    MAPCHAR '.',39
+    MAPCHAR ',',40
+    MAPCHAR ' ',0
+ENDMACRO
+
+HEART_GLYPH=41
+EMPTY_GLYPH=42
+BLANK_GLYPH=43
 
 ; Original PoP global defines
 
@@ -75,18 +91,24 @@ INCLUDE "game/seqdata.h.asm"
 BEEB_SCREEN_MODE = 2
 BEEB_SCREEN_WIDTH = 160
 BEEB_PIXELS_PER_BIT = 2
-BEEB_SCREEN_HEIGHT = 192
+BEEB_SCREEN_HEIGHT = 200
 BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
-BEEB_SCREEN_SIZE = (BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8)
+BEEB_SCREEN_SIZE = HI((BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8) + &FF) * &100
 BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
+
+BEEB_STATUS_ROW = 24
+
+beeb_status_addr = beeb_screen_addr + BEEB_STATUS_ROW * BEEB_SCREEN_ROW_BYTES
 
 BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
 BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
 
 beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
+
+BEEB_PEEL_BUFFER_SIZE = &A00
 
 BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
 BEEB_SWRAM_SLOT_BGTAB1_A = 0
@@ -98,6 +120,10 @@ BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 INCLUDE "game/beeb-plot.h.asm"
+
+; Music Libraries
+INCLUDE "lib/exomiser.h.asm"
+INCLUDE "lib/vgmplayer.h.asm"
 
 PRINT "--------"
 PRINT "ZERO PAGE"
@@ -188,6 +214,17 @@ INCLUDE "lib/print.asm"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
 
+
+
+
+
+
+
+
+
+ 
+
+
 .pop_beeb_entry
 {
     \\ Should be MASTER test and exit with nice message
@@ -220,6 +257,9 @@ INCLUDE "lib/print.asm"
 
     LDA #8:STA &FE00
     LDA #&D3:STA &FE01
+
+    \\ Hard reset on break
+    LDA #200:LDX #3:JSR &FFF4
 
     \\ Clear larger frame buffer (MODE 2)
 
@@ -310,6 +350,17 @@ INCLUDE "lib/print.asm"
     JSR beeb_irq_init
     ENDIF
 
+IF _AUDIO
+    ; initialize the music system
+    jsr audio_init
+ENDIF
+
+
+    ; initialise the vsync irq
+    jsr vsync_init
+    
+
+
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
 \    JMP beeb_test_sprite_plot
@@ -343,6 +394,11 @@ INCLUDE "game/hires_core.asm"
 hires_core_end=P%
 INCLUDE "game/audio.asm"
 audio_end=P%
+
+; Code moved back into Core from Main
+
+INCLUDE "game/hires.asm"
+hires_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
@@ -387,6 +443,7 @@ PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
+PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -410,9 +467,6 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
-INCLUDE "game/hires.asm"
-hires_end=P%
-
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
@@ -429,7 +483,6 @@ SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
 PRINT "--------"
 PRINT "MAIN Modules"
 PRINT "--------"
-PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
@@ -442,11 +495,11 @@ PRINT "Main high watermark = ", ~P%
 
 ; BSS in MAIN RAM
 
-SKIP (MAIN_TOP - P%) - &A00
+SKIP (MAIN_TOP - P%) - BEEB_PEEL_BUFFER_SIZE
 
 .peelbuf1
 .peelbuf2
-SKIP &A00       ; was &800
+SKIP BEEB_PEEL_BUFFER_SIZE       ; was &800
 .peelbuf_top
 
 ; (screen buffers)
@@ -454,7 +507,7 @@ SKIP &A00       ; was &800
 ; Main RAM stats
 PRINT "Screen buffer address = ", ~beeb_screen_addr
 PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
-PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - &A00)
+PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - BEEB_PEEL_BUFFER_SIZE)
 PRINT "--------"
 
 \*-------------------------------
@@ -485,6 +538,14 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
+
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
+
+; Music & Audio routines crammed in here
+INCLUDE "lib/exomiser.asm"
+INCLUDE "lib/vgmplayer.asm"
+INCLUDE "lib/beeb_audio.asm"
 
 .pop_beeb_aux_hazel_data_end
 
@@ -518,12 +579,19 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 
+; ANDY is used primarily to store banked Audio data.
+
 PRINT "--------"
 PRINT "ANDY Modules"
 PRINT "--------"
 PRINT "ANDY high watermark = ", ~P%
 PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
 PRINT "--------"
+
+; Create the music banks and save them to disk
+INCLUDE "lib/beeb_audio_banks.asm"
+
+
 
 \*-------------------------------
 ; Construct ROMS
@@ -695,6 +763,7 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
+INCLUDE "game/beeb-plot-font.asm"
 
 .pop_beeb_aux_high_end
 
@@ -716,6 +785,7 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "BEEB PLOT FONT (moved from MAIN) size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
@@ -812,7 +882,7 @@ PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
 
 \ Cutscene files
-PUTFILE "Other/BEEB.PRINCESS.mode2.bin", "PRIN", &3000, 0
+PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 
 \ Attract files
 PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0

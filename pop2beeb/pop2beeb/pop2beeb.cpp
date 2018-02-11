@@ -127,7 +127,9 @@ unsigned char nula_colours[16][3] =
 	{ 255, 255, 255, },		// white
 };
 
-unsigned char palette_selection[16][3] = 
+#define MAX_PALETTES 24
+
+unsigned char palette_selection[MAX_PALETTES][3] =
 {
 	{ 4, 1, 7 },			// 0=blue, red, white = closest to Apple II default colours (blue, orange, white)
 	{ 4, 6, 3 },			// 1=blue, cyan, yellow
@@ -145,9 +147,11 @@ unsigned char palette_selection[16][3] =
 	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
 	{ 1, 3, 5 },			// 12=red, yellow, magenta
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
-	{ 1, 3, 7 },			// red, yellow, white
+	{ 3, 5, 7 },			// 13=yellow, magenta, white (player)
+	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
+	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
+
+	{ 2, 6, 7 },			// 16=green, cyan, white (font)
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
@@ -648,11 +652,11 @@ int get_beeb_byte_for_colours_in_palette_selection(int index, int c0, int c1, in
 
 int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height)
 {
-	int counts[16];
+	int counts[MAX_PALETTES];
 	int num_colours = 0;
-	int palette[16];
+	int palette[MAX_PALETTES];
 
-	for (int c = 0; c < 16; c++) counts[c] = 0;
+	for (int c = 0; c < MAX_PALETTES; c++) counts[c] = 0;
 
 	for (int y = 0; y < pixel_height; y++)
 	{
@@ -662,7 +666,7 @@ int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width
 		}
 	}
 
-	for (int c = 1; c < 16; c++)
+	for (int c = 1; c < MAX_PALETTES; c++)
 	{
 		if (counts[c] > 0)
 			palette[num_colours++] = c;
@@ -671,7 +675,7 @@ int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width
 	if( num_colours > 3 )
 		printf("WARNING: Found %d colours in sprite!\n", num_colours);
 
-	for (int p = 0; p < 16; p++)
+	for (int p = 0; p < MAX_PALETTES; p++)
 	{
 		int m;
 
@@ -711,9 +715,210 @@ int main(int argc, char **argv)
 	const bool dhr = cimg_option("-dhr", false, "Double hi-res pac file input not sprite table");
 	int start_image = cimg_option("-s", 1, "Start image #");
 	int end_image = cimg_option("-e", 127, "End image #");
-
+	const char *const fontgeom = cimg_option("-font", (char*)0, "Font geometry wxh");
+	int font_width = 0, font_height = 0;
 
 	if (cimg_option("-h", false, 0)) std::exit(0);
+
+	if (fontgeom)
+	{
+		std::sscanf(fontgeom, "%d%*c%d", &font_width, &font_height);
+
+		if (font_width <= 0 || font_height <= 0)
+		{
+			printf("Bad font geometry: %d x %d\n", font_width, font_height);
+			std::exit(0);
+		}
+
+		if (bitmapname == NULL)
+		{
+			printf("Need bitmap for font. Use -b option.\n");
+			std::exit(0);
+		}
+
+		printf("Reading bitmap data from '%s'...\n", bitmapname);
+
+		CImg<unsigned char> bitmap(bitmapname);
+
+		int total_width = bitmap.width();
+
+//		int num_glyphs = total_width / (font_width * 2 + 8);
+//		printf("Num glyphs = %d\n", num_glyphs);
+
+		int current_x = 0;
+
+		while (current_x < total_width)
+		{
+			if (bitmap(current_x, 1, 0) == 127 && bitmap(current_x, 1, 1) == 127 && bitmap(current_x, 1, 2) == 127)
+			{
+				break;
+			}
+
+			current_x++;
+		}
+
+		current_x++;
+
+		int max_height = font_height + 2;
+		int num_glyphs = 0;
+
+		while (current_x < total_width)
+		{
+			int x = 0;
+
+			while (current_x + x < total_width)
+			{
+				if (bitmap(current_x + x, 1, 0) == 127 && bitmap(current_x + x, 1, 1) == 127 && bitmap(current_x + x, 1, 2) == 127)
+				{
+					break;
+				}
+				x++;
+			}
+
+			printf("Glyph %d has %d pixels starting at x=%d\n", num_glyphs, x, current_x);
+
+			pixel_size[num_glyphs][0] = current_x;
+			colour_width[num_glyphs] = x / 2;
+			num_glyphs++;
+
+			current_x += x + 1;
+
+			while (current_x < total_width)
+			{
+				if (bitmap(current_x, 1, 0) == 127 && bitmap(current_x, 1, 1) == 127 && bitmap(current_x, 1, 2) == 127)
+				{
+					break;
+				}
+
+				current_x++;
+			}
+
+			current_x++;
+		}
+
+		printf("Found %d glyphs total\n", num_glyphs);
+
+		for (int i = 0; i < num_glyphs; i++)
+		{
+			int pixel_height = font_height;
+			int current_y = 1;
+
+			int current_x = pixel_size[i][0];
+
+			for (int y = 0; y < pixel_height; y += 1)
+			{
+				int actual_y = y;
+
+				for (int x = 0; x < colour_width[i]; x++)
+				{
+				//	printf("%d %d %d %d\n", c0, c1, c2, c3);
+
+					int c = find_nearest_nula_colour(bitmap(current_x + x * 2, current_y + actual_y, 0), bitmap(current_x + x * 2, current_y + actual_y, 1), bitmap(current_x + x * 2, current_y + actual_y, 2));;
+
+					printf("%d ", c);
+
+					colours[i][y * colour_width[i] + x] = c;
+				}
+
+				printf("\n");
+			}
+
+			printf("\n");
+		}
+
+		if (outputname)
+		{
+			FILE *output = fopen(outputname, "wb");
+
+			if (output)
+			{
+				unsigned char *beebdata = (unsigned char*)malloc(3 + num_glyphs * 5 + num_glyphs * (font_width/4) * font_height);
+				unsigned char *beebptr = beebdata;
+
+				*beebptr++ = font_height;	// if we put this first then everything that follows looks like a regular sprite table
+				*beebptr++ = num_glyphs;
+
+				for (int i = 0; i < num_glyphs; i++)
+				{
+					*beebptr++ = 0xff;
+					*beebptr++ = 0xff;		// don't know pointers yet
+				}
+				*beebptr++ = 0xff;
+				*beebptr++ = 0xff;			// don't know free yet
+
+											// Write Beeb data
+
+				for (int i = 0; i < num_glyphs; i++)
+				{
+					int pixel_height = font_height;
+					int current_y = 1;
+
+					pal = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+
+					if (verbose)
+					{
+						printf("Glyph %d matched palette %d\n", i + 1, pal);
+					}
+
+					// Now we know our address
+
+					beebdata[2 + i * 2] = LO(beebptr - beebdata);
+					beebdata[3 + i * 2] = HI(beebptr - beebdata);
+
+					// Write bytes directly from bitmap
+
+					*beebptr++ = colour_width[i] / 2;			// this many MODE 2 bytes
+
+				// Don't write these for fonts
+				//	*beebptr++ = pixel_height;	// write this once for all glyphs
+				//	*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
+
+					for (int y = 0; y < pixel_height; y += 1)
+					{
+						for (int x = 0; x < colour_width[i]; x+=4)
+						{
+							int c0 = colours[i][y * colour_width[i] + x + 0];
+							int c1 = (x + 1) < colour_width[i] ? colours[i][y * colour_width[i] + x + 1] : 0;
+							int c2 = (x + 2) < colour_width[i] ? colours[i][y * colour_width[i] + x + 2] : 0;
+							int c3 = (x + 3) < colour_width[i] ? colours[i][y * colour_width[i] + x + 3] : 0;
+
+							//	printf("%d %d %d %d ", c0, c1, c2, c3);
+
+							unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(pal, c0, c1, c2, c3);
+
+							//	unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
+							//	unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
+							//	unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
+							//	unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
+
+							//	unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
+
+							*beebptr++ = beebbyte;
+						}
+
+						//	printf("\n");
+					}
+				}
+
+				// Write free address
+
+				beebdata[2 + num_glyphs * 2] = LO(beebptr - beebdata);
+				beebdata[3 + num_glyphs * 2] = HI(beebptr - beebdata);
+
+				// Write file
+
+				fwrite(beebdata, 1, beebptr - beebdata, output);
+				fclose(output);
+				output = NULL;
+
+				printf("Output bytes written = %d\n", beebptr - beebdata);
+				printf("Average %d bytes per glyph\n", (beebptr - beebdata) / num_glyphs);
+			}
+		}
+
+		std::exit(0);
+	}
+
 	if (inputname == NULL)  std::exit(0);
 
 	FILE *input = fopen(inputname, "rb");
@@ -769,7 +974,7 @@ int main(int argc, char **argv)
 		sprintf(testname, "%s.png", inputname);
 		img.save(testname);
 
-		exit(0);
+		std::exit(0);
 	}
 
 	int num_images = imagetab[0];

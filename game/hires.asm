@@ -166,11 +166,16 @@ ENDIF
 {
 \\ Bounds check that image# is not out of range of the table
 IF _DEBUG
+ LDA IMAGE
+ BNE not_zero
+ BRK
+ .not_zero
+
  LDA (TABLE)
  CMP IMAGE
  BCS image_ok
  BRK
-.image_ok
+ .image_ok
 ENDIF
 
  lda IMAGE

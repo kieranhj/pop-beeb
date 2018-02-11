@@ -335,6 +335,7 @@ miry = 0
  sta ChgKidStr
  sta OppStrength ;no opponent
  sta msgtimer
+ sta msgdrawn
  sta PreRecPtr
  sta PlayCount
 
@@ -443,7 +444,6 @@ ENDIF
  jsr flashon
 
  jsr FrameAdv ;Draw next frame & show it
-
 
 \ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds
@@ -1130,7 +1130,7 @@ ENDIF
  bne label_2
 .label_1 lda ChgKidStr
  bpl return_12
- lda #$11 ;Flash red if kid's been hurt
+ lda #PAL_red ;Flash red if kid's been hurt
 .label_2 jmp doflashon
 }
 
@@ -1260,7 +1260,7 @@ ENDIF
  lda CharLife
  bne label_inc
 \ BEEB TEMP comment out SOUND
-\ jsr deathsong ;cue death music
+ jsr deathsong ;cue death music
 
 .label_inc lda CharLife
  cmp #deadenough
@@ -1340,27 +1340,29 @@ IF _DEBUG
 ENDIF
 }
 
-IF _TODO
-*-------------------------------
-*
-* Play death song
-*
-*-------------------------------
-deathsong
+
+;*-------------------------------
+;*
+;* Play death song
+;*
+;*-------------------------------
+.deathsong
+{
  lda ShadID
  cmp #1
- beq :shad ;if opponent was shadowman
+ beq shad ;if opponent was shadowman
  lda heroic ;was kid engaged in battle at time of death?
- bne :1 ;yes--"heroic death" music
+ bne label1 ;yes--"heroic death" music
  lda #s_Accid ;no--"accidental death" music
- bne :2
-:shad lda #s_Shadow
- bne :2
-:1 lda #s_Heroic
-:2 ldx #255
+ bne label2
+.shad lda #s_Shadow
+ bne label2
+.label1 lda #s_Heroic
+.label2 ldx #255
  jmp cuesong
-]rts rts
-ENDIF
+;]rts rts
+}
+
 
 \*-------------------------------
 \*
@@ -1672,13 +1674,15 @@ ENDIF
 .dispmsg
 {
  lda msgtimer
- beq return_62
+ beq no_message_to_display
  dec msgtimer
 
  lda KidLife
  bmi local_alive
 
 \* Kid is dead -- message is "Press button to continue"
+
+ JSR beeb_clear_text_area
 
  lda msgtimer
  cmp #contoff
@@ -1696,25 +1700,44 @@ ENDIF
  lda soundon
  bne label_2
  jsr gtone ;if sound off
-.label_2 lda #FlashMsg
+.label_2
+ lda #FlashMsg
  jsr addsound
 
-.local_steady jmp continuemsg ;Kid is dead--superimpose continue msg
+.local_steady
+\\ Always draw continue message
+ jmp continuemsg ;Kid is dead--superimpose continue msg
 
 \* Kid is alive -- message is "Level #" or "# Minutes"
 
-.local_alive lda msgtimer
+.local_alive
+ lda msgtimer
  cmp #leveltimer-2
  bcs return_62
 
  lda message
  cmp #LevelMsg
  bne label_1
+  LDA msgdrawn
+  CMP #REDRAW_FRAMES
+  BCS return_62
+  INC msgdrawn
  jmp printlevel
 
-.label_1 cmp #TimeMsg
+.label_1
+ cmp #TimeMsg
  bne return_62
+  LDA msgdrawn
+  CMP #REDRAW_FRAMES
+  BCS return_62
+  INC msgdrawn
  jmp timeleftmsg
+
+.no_message_to_display
+  LDA msgdrawn
+  BEQ return_62
+  DEC msgdrawn
+  JMP beeb_clear_text_area
 }
 
 IF _NOT_BEEB

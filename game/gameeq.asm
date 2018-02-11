@@ -209,7 +209,9 @@ keybuflen = 10
 ;.soundtable ds maxsfx
 
 .trobcount skip 1
+ENDIF
 
+IF 1
 \*-------------------------------
 \*
 \*  Page 2-3 - AUX MEM
