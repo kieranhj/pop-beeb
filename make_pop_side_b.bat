@@ -37,4 +37,4 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.B.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB7.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.PRINCESS.SCENE.mode2.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Other/missing.Epilog.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Epilog.mode2.bin"
