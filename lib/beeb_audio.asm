@@ -354,12 +354,15 @@ ENDIF ; _AUDIO_DEBUG
     jsr swr_select_bank
 
 
-	\\ Poll the music player
-	jsr vgm_poll_player
 
     \\ Poll the SFX player
     jsr vgm_sfx_update
-    
+
+    \\ Doing the music last gives it priority over SFX
+	\\ Poll the music player
+	jsr vgm_poll_player
+
+
     ; restore previously paged ROM bank
     pla
     jsr swr_select_bank
