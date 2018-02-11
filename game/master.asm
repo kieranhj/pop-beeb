@@ -1106,6 +1106,14 @@ EQUS "PRESENT$"
 
 .PubCredit
 {
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
+
 \* Unpack splash screen into DHires page 1
 
  jsr unpacksplash
@@ -1118,7 +1126,12 @@ EQUS "PRESENT$"
 
  jsr copy1to2
 
- lda #44
+IF _AUDIO
+    lda #s_Presents
+    jsr BEEB_INTROSONG
+ENDIF
+
+ lda #44/4
  jsr tpause
 
 \* Unpack "Broderbund Presents" onto page 1
@@ -1128,9 +1141,12 @@ EQUS "PRESENT$"
 
  MASTER_LOAD_DHIRES presents_filename, 12
 
+
+
 \ ldx #80
 \ lda #s_Presents
 \ jsr master_PlaySongI
+
 
  jmp CleanScreen
 }
@@ -1171,7 +1187,7 @@ EQUS "BYLINE $"
 
 .AuthorCredit
 {
- lda #42
+ lda #42/4
  jsr tpause
 
 \* Unpack byline onto page 1
@@ -1201,11 +1217,18 @@ EQUS "TITLE  $"
 
 .SilentTitle
 {
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  jsr unpacksplash
 
  jsr copy1to2
 
- lda #20
+ lda #20/4
  jsr tpause
 
 \ lda #delTitle
@@ -1213,7 +1236,12 @@ EQUS "TITLE  $"
  
  MASTER_LOAD_DHIRES title_filename, 12
 
- lda #160
+IF _AUDIO
+    lda #s_Title
+    jsr BEEB_INTROSONG
+ENDIF
+
+ lda #160/4
  jmp tpause
 }
 
@@ -1221,7 +1249,7 @@ EQUS "TITLE  $"
 
 .TitleScreen
 {
- lda #38
+ lda #38/4
  jsr tpause
 
 \* Unpack title onto page 1
@@ -1231,9 +1259,18 @@ EQUS "TITLE  $"
 
  MASTER_LOAD_DHIRES title_filename, 12
 
+IF _AUDIO
+    lda #s_Title
+    jsr BEEB_INTROSONG
+ENDIF
+
 \ ldx #140
 \ lda #s_Title
 \ jsr master_PlaySongI
+
+; SM: added this to give music chance to play out
+ lda #120/4
+ jmp tpause
 
 \* Credit line disappears
 
@@ -1272,13 +1309,26 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
+
+
  jsr blackout
+
+
+
 
 \ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
+
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+    lda #s_Princess
+    jsr BEEB_INTROSONG
+ENDIF
 
  lda #0 ;cut #0 (intro)
  jmp playcut ;Apple II was xplaycut aux l.c. via grafix
@@ -1413,6 +1463,7 @@ ENDIF
 {
  jsr blackout
 
+
 \ NOT BEEB
 \ jsr LoadStage3
 
@@ -1425,6 +1476,12 @@ ENDIF
 \ jsr driveoff
 
 \* Go to TOPCTRL
+
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
  lda #0
  jmp start
@@ -1486,6 +1543,12 @@ ENDIF
 .DOSTARTGAME
 {
  jsr blackout
+
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
 \* Turn on drive & load Stage 3 routines
 

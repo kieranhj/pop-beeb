@@ -272,6 +272,12 @@ ENDIF
 ; in double buffer mode, both display & main memory swap, but point to the opposite memory 
 .shadow_swap_buffers
 {
+
+IF _AUDIO_DEBUG
+    ; SM: some hacky code to help identify sound fx triggers
+    jsr BEEB_DEBUG_DRAW_SFX
+ENDIF
+
     ; I think it was a mistake to wait for vsync here!
 
     LDA PAGE
