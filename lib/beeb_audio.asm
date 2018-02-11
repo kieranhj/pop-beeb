@@ -1,5 +1,5 @@
 ; POP - BBC MICRO - AUDIO ROUTINES
-; Very much a WIP atm
+; Various handlers and hooks for the game code to playback SFX and MUSIC
 
 IF _AUDIO
 
@@ -134,7 +134,7 @@ IF _AUDIO_DEBUG
     pha
 ENDIF
 
-    jsr music_play_sfx	
+    jsr audio_play_sfx	
 
 IF _AUDIO_DEBUG
     ldy #2
@@ -190,19 +190,19 @@ ENDIF ; _AUDIO_DEBUG
 {
     sei
 
-    sta fx_music_bank
-    stx fx_music_addr+0
-    sty fx_music_addr+1
+    sta audio_bank
+    stx audio_sfx_addr+0
+    sty audio_sfx_addr+1
 
     lda &f4
     pha
 
     ; page in the music bank - ANDY
-    lda fx_music_bank
+    lda audio_bank
     jsr swr_select_bank
 
-    ldx fx_music_addr+0
-    ldy fx_music_addr+1
+    ldx audio_sfx_addr+0
+    ldy audio_sfx_addr+1
 	jsr	vgm_init_stream
 
   
@@ -234,7 +234,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
     EQUW pop_music_start;, &8080 ; s_Jaffar = 10
     EQUW pop_music_potion;, &8080 ; s_Potion = 11
-    EQUW pop_music_start;, &8080 ; s_ShortPot = 12
+    EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
     EQUW pop_music_start;, &8080 ; s_Timer = 13
     EQUW pop_music_death;, &8080 ; s_Tragic = 14
     EQUW pop_music_start;, &8080 ; s_Embrace = 15
@@ -279,27 +279,6 @@ ENDIF ; _AUDIO_DEBUG
 	EQUW pop_sfx_18;, &8080		; SwordClash2
 	EQUW pop_sfx_19;, &8080		; JawsClash
 
-IF FALSE
-; A contains music track - 0 to 8
-.music_play_track
-{
-;    asl a
-    asl a
-    tax
-    ; get bank
-    lda #&80 ;lda pop_music_tracks+2,x
-    pha
-    ; get address
-    lda pop_music_tracks+1,x
-    tay
-    lda pop_music_tracks+0,x
-    tax
-    pla
-    ; play the track
-    jsr music_play
-    rts 
-}
-ENDIF
 
 .audio_sfx_stop
 {
@@ -310,7 +289,7 @@ ENDIF
 }
 
 ; A contains sound effect id - 0 to 19
-.music_play_sfx
+.audio_play_sfx
 {
  ;   asl a
     asl a
@@ -331,15 +310,15 @@ ENDIF
 
 
 
-.fx_music_addr  SKIP 2
-.fx_music_on    EQUB 0
-.fx_music_bank  EQUB 0
+.audio_sfx_addr         SKIP 2      ; address of any currently playing SFX data, high byte is 0 if no SFX are playing
+.audio_music_enabled    EQUB 0      ; flag for enabling music playback updates
+.audio_bank             EQUB 0      ; SWR bank containing audio, will always be &80 now - ANDY RAM
 
 ; Enable music updates
 .music_on
 {
     lda #1
-    sta fx_music_on
+    sta audio_music_enabled
     rts
 }
 
@@ -347,7 +326,7 @@ ENDIF
 .music_off
 {
     lda #0
-    sta fx_music_on
+    sta audio_music_enabled
 	rts
 }
 
@@ -367,15 +346,15 @@ ENDIF
 .audio_update
 {
 ;    bra music_update_exit ; test code
-    lda fx_music_on
-    beq music_update_exit
+    lda audio_music_enabled
+    beq update_exit
 
 
     lda &f4
     pha
 
     ; page in the music bank
-    lda fx_music_bank
+    lda audio_bank
     jsr swr_select_bank
 
 
@@ -389,8 +368,8 @@ ENDIF
     pla
     jsr swr_select_bank
 
-.music_update_exit
+.update_exit
     rts    
 }
 
-ENDIF
+ENDIF ;_AUDIO
