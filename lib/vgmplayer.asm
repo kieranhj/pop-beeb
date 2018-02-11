@@ -158,7 +158,11 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 ; Carry set if SFX finished
 .vgm_sfx_update
 {
+	; only play something if sfx addr hi byte is valid
 	lda vgm_sfx_addr+1
+	beq finished
+
+	lda vgm_player_ended
 	beq finished
 
 	\\ Get packet size
