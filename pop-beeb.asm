@@ -198,6 +198,9 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .pop_beeb_start
 
+.pop_beeb_version
+INCBIN "version.txt"        ; probably worth keeping for bug reports after release
+
 .pop_beeb_core_start
 
 INCLUDE "lib/disksys.asm"

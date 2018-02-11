@@ -411,6 +411,43 @@ miry = 0
 IF _DEBUG
 .temp_last_count EQUB 0
 .temp_vsync_diff EQUB 0
+
+.showversion
+  {
+      LDA pop_beeb_version
+      CMP #'0'
+      BCC already_mapped
+
+  \\ MAPCHAR to small font
+
+      LDX #0
+      .loop
+      LDA pop_beeb_version, X
+      CMP #&D
+      BEQ done
+      CMP #'_'
+      BNE is_number
+      LDA #39
+      BNE not_number
+      .is_number
+      SEC
+      SBC #'0'-1
+      .not_number
+      STA pop_beeb_version, X
+      INX
+      BNE loop
+      .done
+      LDA #&FF
+      STA pop_beeb_version, X
+
+      .already_mapped
+      LDA #LO(pop_beeb_version):STA beeb_readptr
+      LDA #HI(pop_beeb_version):STA beeb_readptr+1
+      LDA #5
+      LDX #0
+      LDY #0
+      JSR beeb_plot_font_string
+  }
 ENDIF
 
 .MainLoop
@@ -444,6 +481,10 @@ ENDIF
  jsr flashon
 
  jsr FrameAdv ;Draw next frame & show it
+
+ IF _DEBUG
+ JSR showversion
+ ENDIF
 
 \ BEEB TEMP comment out SOUND
 \ jsr playback ;Play sounds
