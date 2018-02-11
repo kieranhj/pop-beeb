@@ -1260,7 +1260,7 @@ ENDIF
  lda CharLife
  bne label_inc
 \ BEEB TEMP comment out SOUND
-\ jsr deathsong ;cue death music
+ jsr deathsong ;cue death music
 
 .label_inc lda CharLife
  cmp #deadenough
@@ -1340,27 +1340,29 @@ IF _DEBUG
 ENDIF
 }
 
-IF _TODO
-*-------------------------------
-*
-* Play death song
-*
-*-------------------------------
-deathsong
+
+;*-------------------------------
+;*
+;* Play death song
+;*
+;*-------------------------------
+.deathsong
+{
  lda ShadID
  cmp #1
- beq :shad ;if opponent was shadowman
+ beq shad ;if opponent was shadowman
  lda heroic ;was kid engaged in battle at time of death?
- bne :1 ;yes--"heroic death" music
+ bne label1 ;yes--"heroic death" music
  lda #s_Accid ;no--"accidental death" music
- bne :2
-:shad lda #s_Shadow
- bne :2
-:1 lda #s_Heroic
-:2 ldx #255
+ bne label2
+.shad lda #s_Shadow
+ bne label2
+.label1 lda #s_Heroic
+.label2 ldx #255
  jmp cuesong
-]rts rts
-ENDIF
+;]rts rts
+}
+
 
 \*-------------------------------
 \*
