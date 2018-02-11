@@ -191,18 +191,15 @@ ENDIF ; _AUDIO_DEBUG
     sei
 
     sta audio_bank
-    stx audio_sfx_addr+0
-    sty audio_sfx_addr+1
 
     lda &f4
     pha
 
     ; page in the music bank - ANDY
     lda audio_bank
-    jsr swr_select_bank
+    jsr swr_select_bank ; preserves X/Y
 
-    ldx audio_sfx_addr+0
-    ldy audio_sfx_addr+1
+    ; X/Y contains address of vgm stream
 	jsr	vgm_init_stream
 
   
@@ -310,7 +307,6 @@ ENDIF ; _AUDIO_DEBUG
 
 
 
-.audio_sfx_addr         SKIP 2      ; address of any currently playing SFX data, high byte is 0 if no SFX are playing
 .audio_music_enabled    EQUB 0      ; flag for enabling music playback updates
 .audio_bank             EQUB 0      ; SWR bank containing audio, will always be &80 now - ANDY RAM
 
