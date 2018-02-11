@@ -68,7 +68,16 @@ IF _AUDIO
 {
     pha
     jsr music_stop
+    jsr audio_sfx_stop
+
     pla
+    tax
+
+    ; preserve current SWR banksel
+    lda &f4
+    pha
+
+    txa
 
     asl a:asl a:asl a   ; *8
     clc
@@ -85,6 +94,10 @@ IF _AUDIO
     \\ Load audio bank into ANDY
     lda #HI(ANDY_START)
     jsr disksys_load_file
+
+    ; restore SWR bank
+    pla
+    jsr swr_select_bank
     rts
 }
 
@@ -287,6 +300,14 @@ IF FALSE
     rts 
 }
 ENDIF
+
+.audio_sfx_stop
+{
+    lda #0
+    sta pop_sound_fx+0
+    sta pop_sound_fx+1
+    rts
+}
 
 ; A contains sound effect id - 0 to 19
 .music_play_sfx
