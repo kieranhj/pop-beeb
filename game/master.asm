@@ -1555,6 +1555,8 @@ ENDIF
 \ NOT BEEB
 \:1 jsr LoadStage3
 
+ JSR loadbank1
+
 \ BEEB set game screen mode (hires)
  JSR beeb_set_game_screen
 
@@ -1562,7 +1564,8 @@ ENDIF
 
  jsr set1stlevel
 
- jsr rdbluep
+\ This gets loaded anyway at level load?
+\ jsr rdbluep
 
 \* Turn off drive & set aux
 
@@ -1677,28 +1680,24 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-\ BEEB - Not sure what this loads on Apple II but for Beeb we'll load:
-\ CHTAB IMG files for Kid
-\ Probably the gameplay code into SHADOW RAM eventually
+IF 1
+.bank1_filename
+EQUS "BANK1  $"
+ELSE
 .perm_file_names
 EQUS "CHTAB1 $"
 EQUS "CHTAB3 $"
 EQUS "CHTAB2 $"
 EQUS "CHTAB5 $"
+ENDIF
 
-.bank1_filename
-EQUS "BANK1  $"
-
-.loadperm
+.loadbank1
 {
-    LDA #0
-    JSR disksys_set_drive
-
     \ Start with CHTAB1 + 3
     lda #BEEB_SWRAM_SLOT_CHTAB13
     jsr swr_select_slot
 
-IF BEEB_SWRAM_SLOT_CHTAB13=BEEB_SWRAM_SLOT_CHTAB25
+IF 1
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
     LDA #HI(SWRAM_START)
@@ -1760,6 +1759,15 @@ ENDIF
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
+
+    .return
+    RTS
+}
+
+.loadperm
+{
+    LDA #0
+    JSR disksys_set_drive
 
     \ Relocate font (in SWRAM)
     JSR beeb_font_init
