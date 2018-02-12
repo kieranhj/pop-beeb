@@ -17,3 +17,8 @@ REM ..\pop2beeb\pop2beeb -i IMG.CHTAB1.bin -halfv -o BEEB.IMG.CHTAB1.HALF.bin -b
 REM ..\pop2beeb\pop2beeb -i IMG.CHTAB2.bin -halfv -o BEEB.IMG.CHTAB2.HALF.bin -b IMG.CHTAB2.bin.mode5.half.png -pal 0
 REM ..\pop2beeb\pop2beeb -i IMG.CHTAB3.bin -halfv -o BEEB.IMG.CHTAB3.HALF.bin -b IMG.CHTAB3.bin.mode5.half.png -pal 0
 REM ..\pop2beeb\pop2beeb -i IMG.CHTAB5.bin -halfv -o BEEB.IMG.CHTAB5.HALF.bin -b IMG.CHTAB5.bin.mode5.half.png -pal 0
+
+..\pop2beeb\pop2beeb -i IMG.CHTAB7.bin -o BEEB.IMG.CHTAB7.mode2.bin -b IMG.CHTAB7.bin.mode2.png -mode 2
+..\pop2beeb\pop2beeb -i IMG.CHTAB6.A.bin -s 1 -e 24 -o BEEB.IMG.CHTAB6.AA.mode2.bin -b IMG.CHTAB6.A.bin.mode2.png -mode 2
+..\pop2beeb\pop2beeb -i IMG.CHTAB6.A.bin -s 25 -e 103 -o BEEB.IMG.CHTAB6.AB.mode2.bin -b IMG.CHTAB6.A.bin.mode2.png -mode 2
+..\pop2beeb\pop2beeb -i IMG.CHTAB6.B.bin -o BEEB.IMG.CHTAB6.B.mode2.bin -b IMG.CHTAB6.B.bin.mode2.png -mode 2

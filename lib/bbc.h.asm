@@ -70,6 +70,8 @@ OPCODE_LDAzp = &A5
 OPCODE_LDXimm = &A2
 OPCODE_LDXzp = &A6
 OPCODE_JMP = &4C
+OPCODE_LSRA = &4A
+OPCODE_ASLA = &0A
 
 \\ SN Register Values
 SN_REG_MASK = &70

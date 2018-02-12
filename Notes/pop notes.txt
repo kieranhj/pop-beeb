@@ -2207,3 +2207,22 @@ If parity then use LSR/ASL to swap bytes over
 Poke these out as NOPs if even parity
 ASL A to x2 before storing smSpriteBytes 
 Just push two pixels onto stack with optional parity swizzle
+
+By default CHTAB6 & 7 load into bank 0 so displace BGTAB1A. BGTAB2, CHTAB4
+
+CHTAB7 only needed for intro cutscene 2283 bytes
+CHTAB6A is for intro cutscene and level 1-2 interstitial
+CHTAB6B is for all cutscenes beyond level 3 including epilog
+
+Beyond level 3:
+CHTAB6B comes out to 15882 bytes in MODE 2 - can fit into BANK 0
+
+For levels 1 & 2 interstitial only need first 24 sprites of CHTAB6A (CHTAB6AA) - just load into BANK 0 as per
+
+For attract mode
+CHTAB6AB comes to 15534 bytes so can fit into BANK 0
+
+CHTAB6AA & CHTAB7 would have to trample player sprites
+2559 + 2283 bytes ~= &1300
+
+Need to reload these at game start but then once in game would be OK

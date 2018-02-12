@@ -687,7 +687,7 @@ IF _UNROLL_LAYMASK = FALSE
     LDX #0
     LDA OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET              ; BEEB TO TEST: need LSR A
     BEQ no_partial_left
     INX
     DEC OFFLEFT
@@ -1175,7 +1175,7 @@ IF _UNROLL_LAYMASK = FALSE
     LDX #0
     LDA OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET              ; BEEB TO TEST: need LSR A
     BEQ no_partial_left
     INX
     DEC OFFLEFT

@@ -297,6 +297,7 @@ INCLUDE "lib/print.asm"
 \ Setup SHADOW buffers
 
     JSR shadow_init_buffers
+;    LDA &FE34:AND #&FB:STA &FE34
 
     \\ Load Aux
     \\ BEEB TODO tidy up swram slots vs banks

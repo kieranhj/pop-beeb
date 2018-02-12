@@ -412,11 +412,22 @@ IF _DEBUG
 {
     JSR loadperm
 
-    LDX #1
-    STX level
-    JSR LoadLevelX
+\\    LDX #1
+\\    STX level
+\\    JSR LoadLevelX
+
+    LDA #0
+    JSR LoadStage2
 
 \\    JSR beeb_shadow_select_main
+
+    JSR vblank
+
+    JSR beeb_set_mode2_no_clear
+    JSR beeb_set_game_screen
+    JSR beeb_show_screen
+
+    JSR vblank
 
     LDA #1
     STA beeb_sprite_no
@@ -435,8 +446,10 @@ IF _DEBUG
 
     .sprite_loop
     LDA beeb_sprite_no
-    AND #&1F
-    LDA #41
+;    ASL A:ASL A
+;    AND #&1F
+
+    LDA #LO(-2)
     STA XCO
 
     LDA #127
@@ -445,19 +458,19 @@ IF _DEBUG
     LDA beeb_sprite_no
     STA IMAGE
 
-    LDA #LO(chtable1)
+    LDA #LO(chtable7)
     STA TABLE
 
-    LDA #HI(chtable1)
+    LDA #HI(chtable7)
     STA TABLE+1
 
-    LDA #BEEB_SWRAM_SLOT_CHTAB13
+    LDA #BEEB_SWRAM_SLOT_CHTAB67
     STA BANK
 
-    LDA #enum_mask OR &80
+    LDA #enum_mask; OR &80
     STA OPACITY
 
-    JSR beeb_plot_sprite_MLayMask
+    JSR beeb_plot_sprite_LAY
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
 

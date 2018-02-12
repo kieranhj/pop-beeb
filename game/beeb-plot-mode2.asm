@@ -7,13 +7,18 @@
 
 .beeb_plot_sprite_LayMode2
 {
+    LDA #NOP_OP
+    STA smParity1
+    STA smParity2
+
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
     \ Returns parity in Carry
     BCC no_swap
 
-    \\ TODO - self-mod to shift pixel pairs or not
+    LDA #OPCODE_LSRA:STA smParity1
+    LDA #OPCODE_ASLA:STA smParity2
 
     .no_swap
 
@@ -21,7 +26,7 @@
     LDX #0
     LDA OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET:LSR A
     BEQ no_partial_left
     INX
     DEC OFFLEFT
@@ -43,8 +48,8 @@
     .something_to_do
 
     \ Self-mod code to save a cycle per line
-    DEC A
     ASL A                   ; twice as many sprite bytes in full fat MODE 2
+    DEC A
     STA smSpriteBytes+1
 
     \ Calculate number of pixels visible on screen
@@ -171,22 +176,36 @@ RASTER_COL PAL_cyan
 
     .line_loop
 
+\\ This is 4bpp data
+
     .sprite_addr
     LDA &FFFF, Y
     TAX
 
-    AND #&AA
+\\ Take right hand pixel first
 
-    .smParity1
-    ; swap for parity here LSR A or NOP
+    AND #&55
+
+\\ Swap it to left if parity
+
+    .smParity2
+    NOP ; swap for parity here LSR A or NOP
+
+\\ Push onto stack
 
     PHA                                 ; [3c]
 
-    TXA
-    AND #&55
+\\ Take left hand pixel next
 
-    .smParity2
-    ; swap for parity here ASL A or NOP
+    TXA
+    AND #&AA
+
+\\ Swap it to right if parity
+
+    .smParity1
+    NOP ; swap for parity here ASL A or NOP
+
+\\ Push onto stack
 
     PHA
 
@@ -315,6 +334,10 @@ RASTER_COL PAL_yellow
 
 .beeb_plot_sprite_MLayMode2
 {
+    LDA #NOP_OP
+    STA smParity1
+    STA smParity2
+
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr
@@ -322,9 +345,8 @@ RASTER_COL PAL_yellow
     \ Returns parity in Carry
     BCS no_swap     ; mirror reverses parity
 
-\ L&R pixels need to be swapped over
-
-    \\ TODO - self-mod to shift pixel pairs or not
+    LDA #OPCODE_LSRA:STA smParity1
+    LDA #OPCODE_ASLA:STA smParity2
 
     .no_swap
 
@@ -332,7 +354,7 @@ RASTER_COL PAL_yellow
     LDX #0
     LDA OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET:LSR A
     BEQ no_partial_left
     INX
     DEC OFFLEFT
@@ -471,6 +493,8 @@ RASTER_COL PAL_cyan
 
     .line_loop
 
+\\ This is 4bpp data
+
     .sprite_addr
     LDA &FFFF, Y
 \ For mirror sprites we decode pixels left to right and push them onto the stack
@@ -478,11 +502,31 @@ RASTER_COL PAL_cyan
 
     TAX
 
-    AND #&55
+\\ Take left hand pixel fist
+
+    AND #&AA
+
+\\ Swap it to right if parity
+
+    .smParity1
+    NOP
+
+\\ Push onto stack
+
     PHA
 
+\\ Take right hand pixel next
+
     TXA
-    AND #&AA
+    AND #&55
+
+\\ Swap it to left if parity
+
+    .smParity2
+    NOP
+
+\\ Push onto stack
+
     PHA
 
     .done_sprite_data_byte
