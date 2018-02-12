@@ -402,6 +402,8 @@ hires_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
+INCLUDE "game/beeb-plot-mode2.asm"
+
 ; PoP gameplay code moved from AUX memory
 
 .pop_beeb_core_end
@@ -809,7 +811,7 @@ INCBIN "Images/BEEB.IMG.CHTAB6.A.bin"           ; largest CHTAB6.X
 
 ALIGN &100
 .chtable7
-INCBIN "Images/BEEB.IMG.CHTAB7.bin"
+INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
 
 .overlay_end
 
@@ -879,7 +881,7 @@ ENDIF
 PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 \ 6.B used on SIDE B
 ;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
 
 \ Cutscene files
 PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0

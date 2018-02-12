@@ -762,6 +762,7 @@ ENDIF
 
 .beeb_plot_sprite_setpalette
 {
+    BMI return
     ASL A:ASL A
     TAX
 
@@ -786,6 +787,7 @@ ENDIF
     ASL A
     STA map_2bpp_to_mode2_pixel+$22                     ; left 3
 
+    .return
     RTS
 }
 

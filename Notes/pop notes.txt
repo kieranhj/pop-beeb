@@ -2193,7 +2193,17 @@ Can reduce larger &CD table to &34 size by shifting down during first lookup
 
 1/ Smaller expanded palettes - done
 2/ Move palette info to sprite banks - done
-3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven?
+3/ Expand palettes based on Dungeon / Palace - need to update pop2beeb or make data driven? - done
 
 Automated palette matching Process - yay!
 Wait and see how many additional palettes are required for Palace sprites - might just keep them all in memory for RGB version (NULA prob different)
+
+12/2/2018
+~~~
+Full 4bpp sprites in cutscenes?
+Store as before but with PALETTE entry of &FF
+Keep all code the same for plot except:
+If parity then use LSR/ASL to swap bytes over
+Poke these out as NOPs if even parity
+ASL A to x2 before storing smSpriteBytes 
+Just push two pixels onto stack with optional parity swizzle

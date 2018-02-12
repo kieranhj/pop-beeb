@@ -293,6 +293,7 @@ ENDIF
 
 \\ Bounds check
 IF _DEBUG
+ BMI pal_ok
  CMP #16
  BCC pal_ok
  BRK

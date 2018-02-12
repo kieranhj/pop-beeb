@@ -666,6 +666,11 @@ IF _UNROLL_LAYMASK = FALSE
     jmp DONE
     .cont
 
+    LDA PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_LayMode2
+    .not_full_fat
+
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
@@ -1147,6 +1152,11 @@ IF _UNROLL_LAYMASK = FALSE
     .nothing_to_do
     jmp DONE
     .cont
+
+    LDA PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_MLayMode2
+    .not_full_fat
 
     \ Beeb screen address
 
