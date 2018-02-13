@@ -47,49 +47,6 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
 
-\*-------------------------------
-\* IN: XCO, YCO
-\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
-\*-------------------------------
-
-.beeb_plot_calc_screen_addr
-{
-    \ XCO & YCO are screen coordinates
-    \ XCO (0-39) and YCO (0-191)
-    \ OFFSET (0-3) - maybe 0,1 or 8,9?
-
-    \ Mask off Y offset to get character row
-
-    LDA YCO
-    AND #&F8
-    TAY    
-
-    LDX XCO
-    CLC
-    LDA Mult16_LO,X
-    ADC YLO,Y
-    STA beeb_writeptr
-    LDA Mult16_HI,X
-    ADC YHI,Y
-    STA beeb_writeptr+1
-
-    LDA YCO
-    AND #&7
-    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
-
-    \ Handle OFFSET
-
-    LDA OFFSET
-    LSR A
-    STA beeb_mode2_offset       ; not needed by every caller
-
-    AND #&1
-    STA beeb_parity             ; this is parity
-
-    ROR A                       ; return parity in C
-    RTS
-}
-
 
 \*-------------------------------
 \*
@@ -1520,7 +1477,7 @@ ENDIF
     \\ Maybe also placement on Beeb
     \\ For now just plot it without mirror
 
-    JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
 }
 
 \*-------------------------------
@@ -1535,7 +1492,7 @@ ENDIF
     \\ Maybe also placement on Beeb
     \\ For now just plot it without mirror
 
-    JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
 }
 
 
@@ -1577,6 +1534,11 @@ ENDIF
 
     \ BEEB PALETTE
     LDX PALETTE
+    BPL not_full_fat
+
+    JMP beeb_plot_sprite_FastMaskMode2
+    .not_full_fat
+
     LDA palette_addr_LO, X
     STA smPAL1+1
     STA smPAL2+1
@@ -1588,7 +1550,7 @@ ENDIF
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -1774,7 +1736,7 @@ ENDIF
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -1929,8 +1891,12 @@ IF _UNROLL_FASTLAY = FALSE
 }
 .beeb_plot_sprite_FASTLAYSTA_PP
 {
-    \ BEEB PALETTE
     LDX PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_FastLaySTAMode2
+    .not_full_fat
+
+    \ BEEB PALETTE
     LDA palette_addr_LO, X
     STA smPAL1+1
     STA smPAL2+1
@@ -1942,7 +1908,7 @@ IF _UNROLL_FASTLAY = FALSE
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 

@@ -820,4 +820,47 @@ ENDIF
     RTS    
 }
 
+\*-------------------------------
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+\*-------------------------------
+
+.beeb_plot_calc_screen_addr
+{
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
+
+    \ Mask off Y offset to get character row
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    LDX XCO
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
+
+    \ Handle OFFSET
+
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
+
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
+}
+
 .beeb_core_end

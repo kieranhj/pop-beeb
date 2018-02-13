@@ -448,6 +448,7 @@ PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
+PRINT "BEEB PLOT MODE2 size = ", ~(beeb_plot_mode2_end - beeb_plot_mode2_start)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
