@@ -2244,3 +2244,5 @@ Could also remap the IMAGE numbers as well...
 
 Actually can only remap Vizier frames from attract cutscene into a new table
 as the Princess frames are shared with the cutscenes in the main game
+
+Could load custom plot routines into bottom of BANK 2 & blat BGTAB1.B
