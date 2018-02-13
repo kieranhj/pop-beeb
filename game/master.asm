@@ -903,10 +903,9 @@ EQUS "VIZ    $"
 
 .rdbluep
 {
-    TXA
-    BEQ set_drive
+\\ Now all levels on SIDE B
+
     LDA #2
-    .set_drive
     JSR disksys_set_drive
 
     cpx #10
@@ -1467,11 +1466,15 @@ ENDIF
 \ NOT BEEB
 \ jsr LoadStage3
 
+ JSR loadbank1
+
 \ BEEB set game screen mode (hires)
  JSR beeb_set_game_screen
 
  jsr setdemolevel
- jsr rdbluep
+
+\ This gets loaded anyway at level load?
+\ jsr rdbluep
 
 \ jsr driveoff
 
@@ -1946,73 +1949,35 @@ ENDIF
 \ lda #24
 \ bne ]ls2
 
-.chtab6_to_name
-EQUS "CHTAB6X$"
+.chtab8_file_name
+EQUS "CHTAB8 $"
 
-.LoadStage2
+.chtab9_file_name
+EQUS "CHTAB9 $"
+
+.LoadStage2_Attract
 {
-    TAX
-
-    \\ Invalidate catalog cache
-    LDA #0
-    JSR disksys_set_drive
-
-    \\ This is cutscene so force chtab7 and side A regardless of level#
-    TXA
-    BNE no_chtab7
-    JSR loadch7
-    LDA #'A'
-    BNE side_A
-    .no_chtab7
-
-    \\ Need to switch CHTAB6 A/B according to Apple II disc layout
-
-    LDA #'A'
-    LDX level
-    CPX #3
-    BCC side_A
-
-    LDA #2
-    JSR disksys_set_drive
-    LDA #'B'      ; side B
-
-    .side_A
-    STA chtab6_to_name+6
-
-    lda #BEEB_SWRAM_SLOT_CHTAB67
+    lda #BEEB_SWRAM_SLOT_CHTAB9
     jsr swr_select_slot
 
-    lda #HI(chtable6)
-    ldx #LO(chtab6_to_name)
-    ldy #HI(chtab6_to_name)
+    \ CHTAB9 (aka CHTAB6.A.B)
+
+    lda #HI(chtable9)
+    ldx #LO(chtab9_file_name)
+    ldy #HI(chtab9_file_name)
     jsr disksys_load_file
 
     \ Relocate the IMG file
-    LDA #LO(chtable6)
+    LDA #LO(chtable9)
     STA beeb_readptr
-    LDA #HI(chtable6)
+    LDA #HI(chtable9)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
-    LDA #&ff
-    sta CHset
-    sta BGset1
-    sta BGset2
-
-    RTS
-}
-
-.chtab7_file_name
-EQUS "CHTAB7 $"
-
-.loadch7
-{
-\    LDX level
-\    CPX #3
-\    BCS return
-
-    lda #BEEB_SWRAM_SLOT_CHTAB67
+    lda #BEEB_SWRAM_SLOT_CHTAB678
     jsr swr_select_slot
+
+    \ CHTAB7
 
     lda #HI(chtable7)
     ldx #LO(chtab7_file_name)
@@ -2025,10 +1990,83 @@ EQUS "CHTAB7 $"
     LDA #HI(chtable7)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-
-    .return
-    rts
 }
+\\ Fall through!
+.loadch8
+{
+    \ CHTAB8 (aka CHTAB6.A.A)
+
+    lda #HI(chtable8)
+    ldx #LO(chtab8_file_name)
+    ldy #HI(chtab8_file_name)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable8)
+    STA beeb_readptr
+    LDA #HI(chtable8)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    RTS
+}
+
+.LoadStage2
+{
+    TAX
+
+    \\ Invalidate catalog cache
+    LDA #0
+    JSR disksys_set_drive
+
+    \\ Invalidate bg cache
+    LDA #&ff
+    sta CHset
+    sta BGset1
+    sta BGset2
+
+    \\ This is cutscene so we know what to load
+    CPX #0
+    BNE in_game
+
+    JMP LoadStage2_Attract
+
+    .in_game
+    LDA #2
+    JSR disksys_set_drive
+
+    \\ Need to switch CHTAB6 or CHTAB8 depending on level
+
+    lda #BEEB_SWRAM_SLOT_CHTAB678
+    jsr swr_select_slot
+
+    LDX level
+    CPX #3
+    BCS later_cutscenes
+
+    JMP loadch8     ; just the level 1-2 interstitial
+
+    .later_cutscenes
+    lda #HI(chtable6)
+    ldx #LO(chtab6_file_name)
+    ldy #HI(chtab6_file_name)
+    jsr disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable6)
+    STA beeb_readptr
+    LDA #HI(chtable6)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    RTS
+}
+
+.chtab6_file_name
+EQUS "CHTAB6 $"
+
+.chtab7_file_name
+EQUS "CHTAB7 $"
 
 IF _TODO
 *-------------------------------

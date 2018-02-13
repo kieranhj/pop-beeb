@@ -2226,3 +2226,21 @@ CHTAB6AA & CHTAB7 would have to trample player sprites
 2559 + 2283 bytes ~= &1300
 
 Need to reload these at game start but then once in game would be OK
+Actually swap banks around - CHTAB6AA and CHTAB7 should be in BANK 0
+as this is the same as in game
+Load CHTAB6AB into BANK 1 as this only used in attract sequence
+
+OK, this is getting confusing so let's rename
+
+CHTAB6B = CHTAB6 - used in majority of the game - BANK0 @ &8000
+CHTAB7 = CHTAB7 - used only in attract cutscene - BANK0 @ &A000
+CHTAB6A.A = CHTAB8 - used in attract cutscene & level 1-2 interstitial - BANK0 @ &800
+CHTAB6A.B = CHTAB9 - used only in attract cutscene - BANK1 @ &8000
+
+Can't distinguish between CHTAB6 & CHTAB8 in game
+Proper way to do this would be to remap the frame definitions so that
+Those used in 6A.B are mapped to TABLE 7 - not that many
+Could also remap the IMAGE numbers as well...
+
+Actually can only remap Vizier frames from attract cutscene into a new table
+as the Princess frames are shared with the cutscenes in the main game

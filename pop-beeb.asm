@@ -116,7 +116,8 @@ BEEB_SWRAM_SLOT_BGTAB2 = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 1
 BEEB_SWRAM_SLOT_CHTAB4 = 0
-BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
+BEEB_SWRAM_SLOT_CHTAB678 = 0     ; blat BGTAB1
+BEEB_SWRAM_SLOT_CHTAB9 = 1     ; blat CHTAB1325 (player)
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 INCLUDE "game/beeb-plot.h.asm"
@@ -808,11 +809,15 @@ GUARD SWRAM_TOP
 
 .overlay_start
 .chtable6
-INCBIN "Images/BEEB.IMG.CHTAB6.A.bin"           ; largest CHTAB6.X
+.chtable8
+.chtable9
+INCBIN "Images/BEEB.IMG.CHTAB8.mode2.bin"
 
 ALIGN &100
 .chtable7
 INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
+
+; Actually CHTAB6 and CHTAB9 goes over all of this!
 
 .overlay_end
 
@@ -854,17 +859,17 @@ PAGE_ALIGN
 ; Put files on SIDE A of the disk
 \*-------------------------------
 
-PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+;PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 
 \ All game levels now on SIDE B
 
 \ BG split into A&B only need DUN for Demo on SIDA A
-PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
 
 \ Only need regular Guard for Demo on SIDE A
-PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
 
 IF _HALF_PLAYER
 ; All saved into single file for BANK1
@@ -879,10 +884,10 @@ PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ENDIF
 
-PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
-\ 6.B used on SIDE B
-;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
 
 \ Cutscene files
 PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0

@@ -464,7 +464,7 @@ IF _DEBUG
     LDA #HI(chtable7)
     STA TABLE+1
 
-    LDA #BEEB_SWRAM_SLOT_CHTAB67
+    LDA #BEEB_SWRAM_SLOT_CHTAB678
     STA BANK
 
     LDA #enum_mask; OR &80

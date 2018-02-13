@@ -368,7 +368,7 @@ slicersync = 3 ;# frames out of sync
  sta ptorchstate,x
  tax
  jsr psetupflame
- LDA #BEEB_SWRAM_SLOT_CHTAB67
+ LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
  jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
 }
