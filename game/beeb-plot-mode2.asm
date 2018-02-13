@@ -674,10 +674,8 @@ RASTER_COL PAL_yellow
 
     LDA IMAGE
     STA sprite_addr1+1
-    STA sprite_addr2+1
     LDA IMAGE+1
     STA sprite_addr1+2
-    STA sprite_addr2+2
 
 \ Simple Y clip
 
@@ -716,23 +714,6 @@ RASTER_COL PAL_yellow
 
     INX
 
-\ Load 2 pixels of sprite data
-
-    .sprite_addr2
-    LDA &FFFF, X
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Next screen byte across
-
-    TYA:ADC #8:TAY
-
-\ Increment sprite index
-
-    INX
-
     .smXMAX
     CPX #0
     BCC line_loop
@@ -753,10 +734,8 @@ RASTER_COL PAL_yellow
     .smWIDTH
     ADC #0                  ; WIDTH
     STA sprite_addr1+1
-    STA sprite_addr2+1
     BCC no_carry
     INC sprite_addr1+2
-    INC sprite_addr2+2
     .no_carry
 
 \ Next scanline
@@ -805,10 +784,8 @@ RASTER_COL PAL_yellow
 
     LDA IMAGE
     STA sprite_addr1+1
-    STA sprite_addr2+1
     LDA IMAGE+1
     STA sprite_addr1+2
-    STA sprite_addr2+2
 
 \ Simple Y clip
 
@@ -833,54 +810,25 @@ RASTER_COL PAL_yellow
 \ Load 2 pixels of sprite data
 
     .sprite_addr1
-    LDA &FFFF, X
+    LDA &FFFF, X            ; 4c
 
-    STA smMask1+1
+    STA smMask1+1           ; 4c
     .smMask1
-    LDA map_2bpp_to_mask
+    LDA map_2bpp_to_mask    ; 4c
 
 \ AND mask with screen
 
-    AND (beeb_writeptr), Y
+    AND (beeb_writeptr), Y  ; 5c
 
 \ OR in sprite byte
 
-    ORA smMask1+1    
+    ORA smMask1+1           ; 4c
 
 \ Write to screen
 
-    STA (beeb_writeptr), Y
+    STA (beeb_writeptr), Y  ; 6c
 
 \ Increment write pointer
-
-    TYA:ADC #8:TAY
-
-\ Increment sprite index
-
-    INX
-
-\ Load 2 pixels of sprite data
-
-    .sprite_addr2
-    LDA &FFFF, X
-
-    STA smMask2+1
-    .smMask2
-    LDA map_2bpp_to_mask
-
-\ AND mask with screen
-
-    AND (beeb_writeptr), Y
-
-\ OR in sprite byte
-
-    ORA smMask2+1    
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Next screen byte across
 
     TYA:ADC #8:TAY
 
@@ -908,10 +856,8 @@ RASTER_COL PAL_yellow
     .smWIDTH
     ADC #0                  ; WIDTH
     STA sprite_addr1+1
-    STA sprite_addr2+1
     BCC no_carry
     INC sprite_addr1+2
-    INC sprite_addr2+2
     .no_carry
 
 \ Next scanline
