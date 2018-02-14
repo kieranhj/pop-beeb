@@ -446,10 +446,10 @@ IF _DEBUG
 
     .sprite_loop
     LDA beeb_sprite_no
-;    ASL A:ASL A
-;    AND #&1F
+    ASL A:ASL A
+    AND #&1F
 
-    LDA #LO(-2)
+    LDA #LO(1)
     STA XCO
 
     LDA #127
@@ -467,7 +467,7 @@ IF _DEBUG
     LDA #BEEB_SWRAM_SLOT_CHTAB678
     STA BANK
 
-    LDA #enum_mask; OR &80
+    LDA #enum_mask OR &80
     STA OPACITY
 
     JSR beeb_plot_sprite_LAY

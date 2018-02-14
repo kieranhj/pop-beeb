@@ -5,8 +5,18 @@
 
 .beeb_plot_mode2_start
 
+\ MLAY beeb_mirror = 1
+.beeb_plot_sprite_MLayMode2
+{
+    LDA #1
+    EQUB &2C        ; BIT = skip next two bytes
+}
+\\ Fall through
 .beeb_plot_sprite_LayMode2
 {
+    LDA #0
+    STA beeb_mirror
+
     LDA #NOP_OP
     STA smParity1
     STA smParity2
@@ -14,8 +24,10 @@
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
-    \ Returns parity in Carry
-    BCC no_swap
+    \ Mirror
+    LDA beeb_parity
+    EOR beeb_mirror
+    BEQ no_swap
 
     LDA #OPCODE_LSRA:STA smParity1
     LDA #OPCODE_ASLA:STA smParity2
@@ -92,6 +104,27 @@
 
         \ If clipping left start a number of bytes into the stack
 
+        LDA beeb_mirror
+        BEQ regular_clip
+
+        \ MIRROR clip
+        \ If mode2_offset then can see upto 3 more pixels
+        \ offset=1 -> 3 pixels clipped=-3(7) stack_depth+1-4+offset
+        \ offset=2 -> 2 pixels clipped=-2 (8)
+        \ offset=3 -> 1 pixel clipped=-1 (9)
+        \ offset=0 -> 0 pixels clipped = stack_depth+1 (10=9+1)
+
+        SEC
+        LDA beeb_stack_depth
+        SBC #3
+        CLC
+        ADC beeb_mode2_offset
+        STA smStackStart+1
+        BNE same_char_column
+
+        .regular_clip
+
+        \ Regular plot start [2-5] depending on mode2_offset
         SEC
         LDA #5
         SBC beeb_mode2_offset
@@ -103,11 +136,26 @@
 
         \ If not clipping left then stack start is based on parity
 
+        LDA beeb_mirror
+        BEQ regular_plot
+
+        \ MIRROR plot
+        \ MIRROR = beeb_stack_depth+2 for parity or beeb_stack_depth+1 if even
+
+        CLC
+        LDA beeb_parity
+        INC A
+        ADC beeb_stack_depth
+        STA smStackStart+1
+        BNE check_offset
+
+        .regular_plot
         LDA beeb_parity
         EOR #1
         \ Self-mod code to save a cycle per line
         STA smStackStart+1
 
+        .check_offset
         \ If we're on the next character column, move our write pointer
 
         LDA beeb_mode2_offset
@@ -124,19 +172,47 @@
     }
 
     \ Set sprite data address skipping any bytes clipped off left
+    {
+        LDA beeb_mirror
+        BEQ regular_plot
 
-    CLC
-    LDA IMAGE
-    ADC OFFLEFT
-    STA sprite_addr+1
-    LDA IMAGE+1
-    ADC #0
-    STA sprite_addr+2
+        \ Add RMOST to IMAGE for MIRROR case
+
+        LDA RMOST
+        ASL A           ; don't forget this is in 2bpp bytes
+        CLC
+        ADC IMAGE
+        STA sprite_addr+1
+        LDA IMAGE+1
+        ADC #0
+        STA sprite_addr+2
+
+        LDA #OPCODE_DEX
+        STA smDIR1
+        STA smDIR2
+        BNE done_check
+
+        .regular_plot        
+        LDA OFFLEFT
+        ASL A           ; don't forget this is in 2bpp bytes
+        CLC
+        ADC IMAGE
+        STA sprite_addr+1
+        LDA IMAGE+1
+        ADC #0
+        STA sprite_addr+2
+
+        LDA #OPCODE_INX
+        STA smDIR1
+        STA smDIR2
+
+        .done_check
+    }
 
     \ Save a cycle per line - player typically min 24 lines
 
     LDA WIDTH
-    ASL A                   ; twice as many sprite bytes in full fat MODE 2
+    ASL A               ; twice as many sprite bytes in full fat MODE 2
     STA smWIDTH+1
 
     LDA TOPEDGE
@@ -235,10 +311,14 @@ RASTER_COL PAL_yellow
 
 .plot_screen_loop
 
+\ MIRROR = DEX
+.smDIR1
     INX
 .smSTACK1
     LDA &100,X
 
+\ MIRROR = DEX
+.smDIR2
     INX
 .smSTACK2
     ORA &100,X
@@ -332,6 +412,7 @@ RASTER_COL PAL_yellow
     JMP DONE
 }
 
+IF 0
 .beeb_plot_sprite_MLayMode2
 {
     LDA #NOP_OP
@@ -654,6 +735,7 @@ RASTER_COL PAL_yellow
 ;RASTER_COL PAL_black
     JMP DONE
 }
+ENDIF
 
 .beeb_plot_sprite_FastLaySTAMode2
 .beeb_plot_sprite_FastMaskMode2

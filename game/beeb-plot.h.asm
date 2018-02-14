@@ -8,12 +8,12 @@
 .beeb_numimages  SKIP 1
 .beeb_sprite_no  SKIP 1
 
-.beeb_width      SKIP 1
 .beeb_height     SKIP 1
 
 .beeb_yoffset    SKIP 1
 .beeb_stack_ptr  SKIP 1
 
+.beeb_mirror     SKIP 1
 .beeb_parity     SKIP 1
 .beeb_data       SKIP 1
 .beeb_temp       SKIP 1
