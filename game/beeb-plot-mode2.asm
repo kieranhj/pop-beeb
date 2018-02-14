@@ -35,12 +35,10 @@
     .no_swap
 
     \ Do we have a partial clip on left side?
-    LDX #0
-    LDA OFFLEFT
+    LDX OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET:LSR A
+    LDA OFFSET:LSR A:TAX
     BEQ no_partial_left
-    INX
     DEC OFFLEFT
     .no_partial_left
 
@@ -52,17 +50,26 @@
         INC A                   ; need extra byte of sprite data for left clip
         .no_partial_left
     }
-    STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
+    ; A = bytes_per_line_in_sprite
     CMP #0                      ; zero flag already set from CPX
-    BNE something_to_do        ; nothing to plot
+    BNE something_to_do         ; nothing to plot
 
     JMP DONE
     .something_to_do
 
     \ Self-mod code to save a cycle per line
-    ASL A                   ; twice as many sprite bytes in full fat MODE 2
+    ASL A                       ; twice as many sprite bytes in full fat MODE 2
+    TAY
     DEC A
     STA smSpriteBytes+1
+
+    \ Calculate how deep our stack will be
+
+    TYA
+    ; A = bytes_per_line_in_sprite * 2
+    ASL A                       ; we have W*4 pixels to unroll
+    INC A
+    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     \ Calculate number of pixels visible on screen
 
@@ -78,25 +85,18 @@
         SBC beeb_mode2_offset
         .no_partial_right
     }
-    ; A contains number of visible pixels
+    ; A = number of visible pixels
 
     \ Calculate how many bytes we'll need to write to the screen
 
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
-    ; A contains beeb_bytes_per_line_on_screen
+    ; A = bytes_per_line_on_screen
 
     \ Self-mod code to save a cycle per line
     ASL A: ASL A: ASL A         ; x8
     STA smYMAX+1
-
-    \ Calculate how deep our stack will be
-
-    LDA beeb_bytes_per_line_in_sprite
-    ASL A: ASL A                  ; we have W*4 pixels to unroll
-    INC A
-    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     \ Calculate where to start reading data from stack
     {
@@ -109,10 +109,8 @@
 
         \ MIRROR clip
         \ If mode2_offset then can see upto 3 more pixels
-        \ offset=1 -> 3 pixels clipped=-3(7) stack_depth+1-4+offset
-        \ offset=2 -> 2 pixels clipped=-2 (8)
-        \ offset=3 -> 1 pixel clipped=-1 (9)
-        \ offset=0 -> 0 pixels clipped = stack_depth+1 (10=9+1)
+        \ pixels clipped = 4 - offset
+        \ stack start = stack_depth + 1 - pixels clipped
 
         SEC
         LDA beeb_stack_depth
