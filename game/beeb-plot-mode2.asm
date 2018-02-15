@@ -24,7 +24,7 @@
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
-    \ Mirror
+    \ Parity inverted by Mirror
     LDA beeb_parity
     EOR beeb_mirror
     BEQ no_swap
