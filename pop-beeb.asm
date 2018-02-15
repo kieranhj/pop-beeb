@@ -408,7 +408,13 @@ hires_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
+_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
+_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
+_UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
+
 INCLUDE "game/beeb-plot-mode2.asm"
+INCLUDE "game/beeb-plot-fastlay.asm"
 
 ; PoP gameplay code moved from AUX memory
 
@@ -453,6 +459,7 @@ PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT MODE2 size = ", ~(beeb_plot_mode2_end - beeb_plot_mode2_start)
+PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -480,7 +487,6 @@ INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
 INCLUDE "game/beeb-plot-peel.asm"
-INCLUDE "game/beeb-plot-fastlay.asm"
 INCLUDE "game/beeb-plot-lay.asm"
 
 .pop_beeb_main_end
@@ -496,7 +502,6 @@ PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
 PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
-PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAY size = ", ~(beeb_plot_lay_end - beeb_plot_lay_start)
 PRINT "--------"
 PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
