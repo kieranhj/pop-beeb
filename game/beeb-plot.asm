@@ -641,7 +641,7 @@ IF _UNROLL_LAYMASK = FALSE
 
     LDA PALETTE
     BPL not_full_fat
-    JMP beeb_plot_sprite_LayMode2
+    JMP beeb_plot_sprite_LayMode2BM     ; beeb_mirror already set
     .not_full_fat
 
     \ Beeb screen address
