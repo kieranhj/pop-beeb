@@ -42,7 +42,7 @@ _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 
 _UNROLL_FASTLAY = FALSE      ; unrolled versions of FASTLAY(STA) function
 _UNROLL_LAYRSAVE = FALSE     ; unrolled versions of layrsave & peel function
-_UNROLL_WIPE = FALSE         ; unrolled versions of wipe function
+_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
 _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
 .beeb_plot_start
