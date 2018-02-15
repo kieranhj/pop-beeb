@@ -75,6 +75,7 @@ OPCODE_ASLA = &0A
 OPCODE_BRA = &80
 OPCODE_STAabs = &8D
 OPCODE_STA_indirect_Y = &91
+OPCODE_LDA_indirect_Y = &B1
 
 \\ SN Register Values
 SN_REG_MASK = &70
