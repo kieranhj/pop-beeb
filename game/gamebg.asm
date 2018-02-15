@@ -1209,7 +1209,7 @@ ENDIF
  lda #enum_sta
  sta OPACITY
  jsr gamebg_setch6
- LDA #BEEB_SWRAM_SLOT_CHTAB67
+ LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
  jmp lay ;<---DIRECT HIRES CALL
 }

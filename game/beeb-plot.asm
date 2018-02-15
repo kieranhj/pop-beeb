@@ -40,55 +40,7 @@
 
 _USE_FASTLAY = TRUE         ; divert LayAND + LaySTA to FASTLAY versions
 
-_UNROLL_FASTLAY = FALSE      ; unrolled versions of FASTLAY(STA) function
-_UNROLL_LAYRSAVE = FALSE     ; unrolled versions of layrsave & peel function
-_UNROLL_WIPE = FALSE         ; unrolled versions of wipe function
-_UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
-
 .beeb_plot_start
-
-\*-------------------------------
-\* IN: XCO, YCO
-\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
-\*-------------------------------
-
-.beeb_plot_calc_screen_addr
-{
-    \ XCO & YCO are screen coordinates
-    \ XCO (0-39) and YCO (0-191)
-    \ OFFSET (0-3) - maybe 0,1 or 8,9?
-
-    \ Mask off Y offset to get character row
-
-    LDA YCO
-    AND #&F8
-    TAY    
-
-    LDX XCO
-    CLC
-    LDA Mult16_LO,X
-    ADC YLO,Y
-    STA beeb_writeptr
-    LDA Mult16_HI,X
-    ADC YHI,Y
-    STA beeb_writeptr+1
-
-    LDA YCO
-    AND #&7
-    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
-
-    \ Handle OFFSET
-
-    LDA OFFSET
-    LSR A
-    STA beeb_mode2_offset       ; not needed by every caller
-
-    AND #&1
-    STA beeb_parity             ; this is parity
-
-    ROR A                       ; return parity in C
-    RTS
-}
 
 
 \*-------------------------------
@@ -641,10 +593,7 @@ ENDIF
  jmp beeb_plot_sprite_LaySTA
 
 .label_3
-IF _UNROLL_LAYMASK
  JMP beeb_plot_sprite_LayMask
-ENDIF
-\\ DROP THROUGH TO MASK for ORA, EOR & MASK
 }
 
 \*-------------------------------
@@ -652,11 +601,30 @@ ENDIF
 \*-------------------------------
 
 IF _UNROLL_LAYMASK = FALSE
+.beeb_plot_sprite_MLayMask
+{
+    LDA #1
+    EQUB &2C        ; BIT = skip next two bytes
+}
+\\ Fall through
 .beeb_plot_sprite_LayMask
 {
+    LDA #0
+    STA beeb_mirror
+
     \ Get sprite data address 
 
     JSR beeb_PREPREP
+
+    \  Check we're in the right function :)
+
+    LDA beeb_mirror
+    BEQ not_mirror
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+    .not_mirror
 
     \ CLIP here
 
@@ -666,11 +634,18 @@ IF _UNROLL_LAYMASK = FALSE
     jmp DONE
     .cont
 
+    LDA PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_LayMode2BM     ; beeb_mirror already set
+    .not_full_fat
+
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
-    \ Returns parity in Carry
-    BCC no_swap
+    \ Parity inverted by Mirror
+    LDA beeb_parity
+    EOR beeb_mirror
+    BEQ no_swap
 
 \ L&R pixels need to be swapped over
 
@@ -679,12 +654,10 @@ IF _UNROLL_LAYMASK = FALSE
     .no_swap
 
     \ Do we have a partial clip on left side?
-    LDX #0
-    LDA OFFLEFT
+    LDX OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET:LSR A:TAX
     BEQ no_partial_left
-    INX
     DEC OFFLEFT
     .no_partial_left
 
@@ -696,13 +669,20 @@ IF _UNROLL_LAYMASK = FALSE
         INC A                   ; need extra byte of sprite data for left clip
         .no_partial_left
     }
-    STA beeb_bytes_per_line_in_sprite       ; unroll all bytes
+    ; A = bytes_per_line_in_sprite
     CMP #0                      ; zero flag already set from CPX
-    BEQ nothing_to_do        ; nothing to plot
+    BEQ nothing_to_do           ; nothing to plot
+
+    \ Calculate how deep our stack will be
+    TAY
+    ASL A: ASL A                ; we have W*4 pixels to unroll
+    INC A
+    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     \ Self-mod code to save a cycle per line
-    DEC A
-    STA smSpriteBytes+1
+    ; Y = bytes_per_line_in_sprite
+    DEY
+    STY smSpriteBytes+1
 
     \ Calculate number of pixels visible on screen
 
@@ -718,25 +698,18 @@ IF _UNROLL_LAYMASK = FALSE
         SBC beeb_mode2_offset
         .no_partial_right
     }
-    ; A contains number of visible pixels
+    ; A = number of visible pixels
 
     \ Calculate how many bytes we'll need to write to the screen
 
     LSR A
     CLC
     ADC beeb_parity             ; vispixels/2 + parity
-    ; A contains beeb_bytes_per_line_on_screen
+    ; A = bytes_per_line_on_screen
 
     \ Self-mod code to save a cycle per line
     ASL A: ASL A: ASL A         ; x8
     STA smYMAX+1
-
-    \ Calculate how deep our stack will be
-
-    LDA beeb_bytes_per_line_in_sprite
-    ASL A: ASL A                  ; we have W*4 pixels to unroll
-    INC A
-    STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     \ Calculate where to start reading data from stack
     {
@@ -744,6 +717,25 @@ IF _UNROLL_LAYMASK = FALSE
 
         \ If clipping left start a number of bytes into the stack
 
+        LDA beeb_mirror
+        BEQ regular_clip
+
+        \ MIRROR clip
+        \ If mode2_offset then can see upto 3 more pixels
+        \ pixels clipped = 4 - offset
+        \ stack start = stack_depth + 1 - pixels clipped
+
+        SEC
+        LDA beeb_stack_depth
+        SBC #3
+        CLC
+        ADC beeb_mode2_offset
+        STA smStackStart+1
+        BNE same_char_column
+
+        .regular_clip
+
+        \ Regular plot start [2-5] depending on mode2_offset
         SEC
         LDA #5
         SBC beeb_mode2_offset
@@ -753,13 +745,28 @@ IF _UNROLL_LAYMASK = FALSE
 
         .no_partial_left
 
+        LDA beeb_mirror
+        BEQ regular_plot
+
+        \ MIRROR plot
+        \ MIRROR = beeb_stack_depth+2 for parity or beeb_stack_depth+1 if even
+
+        CLC
+        LDA beeb_parity
+        INC A
+        ADC beeb_stack_depth
+        STA smStackStart+1
+        BNE check_offset
+
         \ If not clipping left then stack start is based on parity
 
+        .regular_plot
         LDA beeb_parity
         EOR #1
         \ Self-mod code to save a cycle per line
         STA smStackStart+1
 
+        .check_offset
         \ If we're on the next character column, move our write pointer
 
         LDA beeb_mode2_offset
@@ -776,14 +783,43 @@ IF _UNROLL_LAYMASK = FALSE
     }
 
     \ Set sprite data address skipping any bytes clipped off left
+    {
+        LDA beeb_mirror
+        BEQ regular_plot
 
-    CLC
-    LDA IMAGE
-    ADC OFFLEFT
-    STA sprite_addr+1
-    LDA IMAGE+1
-    ADC #0
-    STA sprite_addr+2
+        \ Add RMOST to IMAGE for MIRROR case
+
+        CLC
+        LDA IMAGE
+        ADC RMOST
+        STA sprite_addr+1
+        LDA IMAGE+1
+        ADC #0
+        STA sprite_addr+2
+
+        \ MIRROR read down the stack
+
+        LDA #OPCODE_DEX
+        STA smDIR1
+        STA smDIR2
+        BNE done_check
+
+        .regular_plot        
+        CLC
+        LDA IMAGE
+        ADC OFFLEFT
+        STA sprite_addr+1
+        LDA IMAGE+1
+        ADC #0
+        STA sprite_addr+2
+
+        \ REGULAR read up the stack
+
+        LDA #OPCODE_INX
+        STA smDIR1
+        STA smDIR2
+        .done_check
+    }
 
     \ Save a cycle per line - player typically min 24 lines
 
@@ -830,6 +866,8 @@ ENDIF
     STA smSTACK1+1
     STA smSTACK2+1
 
+    \\ Could probably just alter Stack Start and read from &100?
+
 .plot_lines_loop
 
 RASTER_COL PAL_cyan
@@ -855,38 +893,62 @@ RASTER_COL PAL_cyan
     PHA:PHA:PHA:PHA
     BEQ done_sprite_data_byte
 
+\ Store sprite data in X
+
     .sprite_byte_has_pixels
-    STA beeb_data
+    TAX
+
+\ Mask pixel D
 
     AND #&11
-    TAX
+    STA smPIXELD+1
+
+\ Look up pixel map from ZP
+
 .smPIXELD
-    LDA map_2bpp_to_mode2_pixel,X       ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+    LDA &FF
     PHA                                 ; [3c]
 
-    LDA beeb_data
+\ Mask sprite data for pixel C
+
+    TXA
     AND #&22
-    TAX
+    STA smPIXELC+1
+
+\ Look up pixel map from ZP
+
 .smPIXELC
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
-    LDA beeb_data                       ; +1c
+\ Shift sprite data down to get pixels A & B
+
+    TXA
     LSR A
     LSR A
-    STA beeb_data                       ; +1c
+    TAX
+
+\ Mask pixel B
 
     AND #&11
-    TAX
+    STA smPIXELB+1
+
+\ Look up pixel map from ZP
+
 .smPIXELB
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
-    LDA beeb_data
+\ Mask pixel A
+
+    TXA
     AND #&22
-    TAX
+    STA smPIXELA+1
+
+\ Look up pixel map from ZP
+
 .smPIXELA
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
 \ Stop when we reach the left edge of the sprite data
@@ -915,10 +977,12 @@ RASTER_COL PAL_yellow
 
 .plot_screen_loop
 
+.smDIR1
     INX
 .smSTACK1
     LDA &100,X
 
+.smDIR2
     INX
 .smSTACK2
     ORA &100,X
@@ -1120,13 +1184,11 @@ ENDIF
  jmp beeb_plot_sprite_MLaySTA
 
 .label_3
-IF _UNROLL_LAYMASK
  JMP beeb_plot_sprite_MLayMask
-ENDIF
-\\ DROP THROUGH TO MASK for ORA, EOR & MASK
 }
 
 IF _UNROLL_LAYMASK = FALSE
+IF 0
 .beeb_plot_sprite_MLayMask
 {
     \ Get sprite data address 
@@ -1148,6 +1210,11 @@ IF _UNROLL_LAYMASK = FALSE
     jmp DONE
     .cont
 
+    LDA PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_MLayMode2
+    .not_full_fat
+
     \ Beeb screen address
 
     JSR beeb_plot_calc_screen_addr
@@ -1165,7 +1232,7 @@ IF _UNROLL_LAYMASK = FALSE
     LDX #0
     LDA OFFLEFT
     BEQ no_partial_left
-    LDA OFFSET
+    LDA OFFSET              ; BEEB TO TEST: need LSR A
     BEQ no_partial_left
     INX
     DEC OFFLEFT
@@ -1497,6 +1564,7 @@ ENDIF
     JMP DONE
 }
 ENDIF
+ENDIF
 
 \*-------------------------------
 \* MIRROR AND
@@ -1510,7 +1578,7 @@ ENDIF
     \\ Maybe also placement on Beeb
     \\ For now just plot it without mirror
 
-    JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
 }
 
 \*-------------------------------
@@ -1525,7 +1593,7 @@ ENDIF
     \\ Maybe also placement on Beeb
     \\ For now just plot it without mirror
 
-    JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
 }
 
 
@@ -1567,6 +1635,11 @@ ENDIF
 
     \ BEEB PALETTE
     LDX PALETTE
+    BPL not_full_fat
+
+    JMP beeb_plot_sprite_FastMaskMode2
+    .not_full_fat
+
     LDA palette_addr_LO, X
     STA smPAL1+1
     STA smPAL2+1
@@ -1578,7 +1651,7 @@ ENDIF
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -1764,7 +1837,7 @@ ENDIF
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 
@@ -1919,8 +1992,12 @@ IF _UNROLL_FASTLAY = FALSE
 }
 .beeb_plot_sprite_FASTLAYSTA_PP
 {
-    \ BEEB PALETTE
     LDX PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_FastLaySTAMode2
+    .not_full_fat
+
+    \ BEEB PALETTE
     LDA palette_addr_LO, X
     STA smPAL1+1
     STA smPAL2+1
@@ -1932,7 +2009,7 @@ IF _UNROLL_FASTLAY = FALSE
 
     JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
 
-    \ Don't carry about Carry
+    \ Don't care about Carry
 
     \ Calculate how many bytes of sprite data to unroll
 
