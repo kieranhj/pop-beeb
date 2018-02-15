@@ -293,7 +293,8 @@ ENDIF
 
 \\ Bounds check
 IF _DEBUG
- CMP #16
+ CMP #BEEB_PALETTE_MAX
+ BEQ pal_ok
  BCC pal_ok
  BRK
  .pal_ok

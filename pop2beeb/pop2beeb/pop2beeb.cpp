@@ -151,7 +151,8 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
 
-	{ 2, 6, 7 },			// 16=green, cyan, white (font)
+	{ 1, 5, 6 },			// 16=red, magenta, cyan (cutscene)
+//	{ 2, 6, 7 },			// 16=green, cyan, white (font)
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
@@ -775,7 +776,8 @@ int main(int argc, char **argv)
 				x++;
 			}
 
-			printf("Glyph %d has %d pixels starting at x=%d\n", num_glyphs, x, current_x);
+			if (verbose)
+				printf("Glyph %d has %d pixels starting at x=%d\n", num_glyphs, x, current_x);
 
 			pixel_size[num_glyphs][0] = current_x;
 			colour_width[num_glyphs] = x / 2;
@@ -815,15 +817,15 @@ int main(int argc, char **argv)
 
 					int c = find_nearest_nula_colour(bitmap(current_x + x * 2, current_y + actual_y, 0), bitmap(current_x + x * 2, current_y + actual_y, 1), bitmap(current_x + x * 2, current_y + actual_y, 2));;
 
-					printf("%d ", c);
+				//	printf("%d ", c);
 
 					colours[i][y * colour_width[i] + x] = c;
 				}
 
-				printf("\n");
+			//	printf("\n");
 			}
 
-			printf("\n");
+		//	printf("\n");
 		}
 
 		if (outputname)
