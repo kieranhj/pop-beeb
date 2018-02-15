@@ -779,6 +779,8 @@ ENDIF
     ASL A:ASL A
     TAX
 
+    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
+
     INX
     LDA palette_table, X
     AND #MODE2_RIGHT_MASK

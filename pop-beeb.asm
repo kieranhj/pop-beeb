@@ -73,6 +73,10 @@ zp_top = &a0
 ORG &0
 GUARD locals
 
+map_2bpp_to_mode2_pixel=&0
+.RESERVE_00 skip 1
+.RESERVE_01 skip 1
+.RESERVE_02 skip 1
 .DLL_REG_A skip 1
 .DLL_REG_X skip 1
 

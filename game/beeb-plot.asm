@@ -685,10 +685,9 @@ IF _UNROLL_LAYMASK = FALSE
     STA beeb_stack_depth        ; stack will end up this many bytes lower than now
 
     \ Self-mod code to save a cycle per line
-    TYA
-    ; A = bytes_per_line_in_sprite
-    DEC A
-    STA smSpriteBytes+1
+    ; Y = bytes_per_line_in_sprite
+    DEY
+    STY smSpriteBytes+1
 
     \ Calculate number of pixels visible on screen
 
@@ -872,6 +871,8 @@ ENDIF
     STA smSTACK1+1
     STA smSTACK2+1
 
+    \\ Could probably just alter Stack Start and read from &100?
+
 .plot_lines_loop
 
 RASTER_COL PAL_cyan
@@ -897,38 +898,62 @@ RASTER_COL PAL_cyan
     PHA:PHA:PHA:PHA
     BEQ done_sprite_data_byte
 
+\ Store sprite data in X
+
     .sprite_byte_has_pixels
-    STA beeb_data
+    TAX
+
+\ Mask pixel D
 
     AND #&11
-    TAX
+    STA smPIXELD+1
+
+\ Look up pixel map from ZP
+
 .smPIXELD
-    LDA map_2bpp_to_mode2_pixel,X       ; could be in ZP ala Exile to save 2cx4=8c per sprite byte
+    LDA &FF
     PHA                                 ; [3c]
 
-    LDA beeb_data
+\ Mask sprite data for pixel C
+
+    TXA
     AND #&22
-    TAX
+    STA smPIXELC+1
+
+\ Look up pixel map from ZP
+
 .smPIXELC
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
-    LDA beeb_data                       ; +1c
+\ Shift sprite data down to get pixels A & B
+
+    TXA
     LSR A
     LSR A
-    STA beeb_data                       ; +1c
+    TAX
+
+\ Mask pixel B
 
     AND #&11
-    TAX
+    STA smPIXELB+1
+
+\ Look up pixel map from ZP
+
 .smPIXELB
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
-    LDA beeb_data
+\ Mask pixel A
+
+    TXA
     AND #&22
-    TAX
+    STA smPIXELA+1
+
+\ Look up pixel map from ZP
+
 .smPIXELA
-    LDA map_2bpp_to_mode2_pixel,X
+    LDA &FF
     PHA
 
 \ Stop when we reach the left edge of the sprite data

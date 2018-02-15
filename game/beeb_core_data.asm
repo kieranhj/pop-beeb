@@ -126,6 +126,7 @@ ENDMACRO
 \*-------------------------------
 
 PAGE_ALIGN
+IF 0
 .map_2bpp_to_mode2_pixel            ; background
 {
     EQUB &00                        ; +$00 00000000 either pixel logical 0
@@ -144,7 +145,7 @@ PAGE_ALIGN
     EQUB &A0                        ; +$22 00B000b0 left pixel logical 3
 }
 \\ Flip entries in this table when parity changes
-
+ENDIF
 
 .palette_addr_LO
 {
