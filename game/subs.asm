@@ -368,7 +368,7 @@ slicersync = 3 ;# frames out of sync
  sta ptorchstate,x
  tax
  jsr psetupflame
- LDA #BEEB_SWRAM_SLOT_CHTAB67
+ LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
  jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
 }
@@ -949,7 +949,8 @@ ENDIF
  lda lightning
  beq return_63
  lda lightcolor
- jmp doflashon
+ jsr doflashon
+ JMP vblank
 }
 
 .subs_flashoff
@@ -957,7 +958,8 @@ ENDIF
  lda lightning
  beq return_63
  dec lightning
- jmp doflashoff
+ jsr doflashoff
+ JMP vblank
 }
 
 \*-------------------------------
@@ -1000,7 +1002,8 @@ ENDIF
 
  jsr subs_FrameAdv ;Update hidden page to reflect new reality
 ;& show it
- jsr flashoff
+
+ jsr subs_flashoff
 
  lda soundon
  beq label_1

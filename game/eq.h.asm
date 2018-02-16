@@ -158,6 +158,8 @@ maxmsg = 0     ;32     ;x5
 .OPACITY skip 1
 .TABLE skip 2
 .PEELBUF skip 2
+.RESERVE_10 skip 1
+.RESERVE_11 skip 1
 .PEELIMG skip 2
 .PEELXCO skip 1
 .PEELYCO skip 1
@@ -179,12 +181,14 @@ width = IMAGE+1
 .JSTKX skip 1
 .JSTKY skip 1
 .BTN0 skip 1
+.RESERVE_20 skip 1
 .BTN1 skip 1
 ;.BUTT0 skip 1
 ;.BUTT1 skip 1
 ;.JSTKUP skip 1
 ;.b0down skip 1
 ;.b1down skip 1
+.RESERVE_22 skip 1
 .SINGSTEP skip 1
 .blackflag skip 1               \ BEEB TO DO - remove me
 .SCRNUM skip 1 

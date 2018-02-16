@@ -126,6 +126,7 @@ ENDMACRO
 \*-------------------------------
 
 PAGE_ALIGN
+IF 0
 .map_2bpp_to_mode2_pixel            ; background
 {
     EQUB &00                        ; +$00 00000000 either pixel logical 0
@@ -144,7 +145,7 @@ PAGE_ALIGN
     EQUB &A0                        ; +$22 00B000b0 left pixel logical 3
 }
 \\ Flip entries in this table when parity changes
-
+ENDIF
 
 .palette_addr_LO
 {
@@ -205,10 +206,14 @@ PAGE_ALIGN
     EQUB 0, MODE2_YELLOW_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR        ; 11=YCW
 
     EQUB 0, MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR       ; 12=RYM
-    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; player
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; guard blue
-    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; guard green
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 13=YMW (player)
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 14=BMW (guard blue)
+    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; 15=GMW (guard green)
+
+    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_CYAN_PAIR         ; 16=RMC (cutscene)
 }
+
+BEEB_PALETTE_MAX=16
 
 \*-------------------------------
 ; Expanded palette table going from 2bpp data directly to MODE 2 bytes

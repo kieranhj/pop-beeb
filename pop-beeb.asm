@@ -73,6 +73,10 @@ zp_top = &a0
 ORG &0
 GUARD locals
 
+map_2bpp_to_mode2_pixel=&0
+.RESERVE_00 skip 1
+.RESERVE_01 skip 1
+.RESERVE_02 skip 1
 .DLL_REG_A skip 1
 .DLL_REG_X skip 1
 
@@ -116,7 +120,8 @@ BEEB_SWRAM_SLOT_BGTAB2 = 0
 BEEB_SWRAM_SLOT_CHTAB13 = 1
 BEEB_SWRAM_SLOT_CHTAB25 = 1
 BEEB_SWRAM_SLOT_CHTAB4 = 0
-BEEB_SWRAM_SLOT_CHTAB67 = 0     ; blat BGTAB1
+BEEB_SWRAM_SLOT_CHTAB678 = 0     ; blat BGTAB1
+BEEB_SWRAM_SLOT_CHTAB9 = 1     ; blat CHTAB1325 (player)
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
 
 INCLUDE "game/beeb-plot.h.asm"
@@ -297,6 +302,7 @@ INCLUDE "lib/print.asm"
 \ Setup SHADOW buffers
 
     JSR shadow_init_buffers
+;    LDA &FE34:AND #&FB:STA &FE34
 
     \\ Load Aux
     \\ BEEB TODO tidy up swram slots vs banks
@@ -402,6 +408,14 @@ hires_end=P%
 
 ; Used to be in Main but unrolled code pushed it out
 
+_UNROLL_FASTLAY = TRUE      ; unrolled versions of FASTLAY(STA) function
+_UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
+_UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
+_UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
+
+INCLUDE "game/beeb-plot-mode2.asm"
+INCLUDE "game/beeb-plot-fastlay.asm"
+
 ; PoP gameplay code moved from AUX memory
 
 .pop_beeb_core_end
@@ -444,6 +458,8 @@ PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
+PRINT "BEEB PLOT MODE2 size = ", ~(beeb_plot_mode2_end - beeb_plot_mode2_start)
+PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -471,7 +487,6 @@ INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
 INCLUDE "game/beeb-plot-peel.asm"
-INCLUDE "game/beeb-plot-fastlay.asm"
 INCLUDE "game/beeb-plot-lay.asm"
 
 .pop_beeb_main_end
@@ -487,7 +502,6 @@ PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
 PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
-PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAY size = ", ~(beeb_plot_lay_end - beeb_plot_lay_start)
 PRINT "--------"
 PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
@@ -805,11 +819,15 @@ GUARD SWRAM_TOP
 
 .overlay_start
 .chtable6
-INCBIN "Images/BEEB.IMG.CHTAB6.A.bin"           ; largest CHTAB6.X
+.chtable8
+.chtable9
+INCBIN "Images/BEEB.IMG.CHTAB8.mode2.bin"
 
 ALIGN &100
 .chtable7
-INCBIN "Images/BEEB.IMG.CHTAB7.bin"
+INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
+
+; Actually CHTAB6 and CHTAB9 goes over all of this!
 
 .overlay_end
 
@@ -851,17 +869,17 @@ PAGE_ALIGN
 ; Put files on SIDE A of the disk
 \*-------------------------------
 
-PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
+;PUTFILE "Levels/LEVEL0", "LEVEL0", 0, 0
 
 \ All game levels now on SIDE B
 
 \ BG split into A&B only need DUN for Demo on SIDA A
-PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
-PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB1.DUNA.bin", "DUN1A", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB1.DUNB.bin", "DUN1B", 0, 0
+;PUTFILE "Images/BEEB.IMG.BGTAB2.DUN.bin", "DUN2", 0, 0
 
 \ Only need regular Guard for Demo on SIDE A
-PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB4.GD.bin", "GD", 0, 0
 
 IF _HALF_PLAYER
 ; All saved into single file for BANK1
@@ -876,10 +894,10 @@ PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ENDIF
 
-PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
-\ 6.B used on SIDE B
-;PUTFILE "Images/BEEB.IMG.CHTAB6.B.bin", "CHTAB6B", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB7.bin", "CHTAB7", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB6.A.bin", "CHTAB6A", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
 
 \ Cutscene files
 PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0

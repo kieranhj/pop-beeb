@@ -412,11 +412,22 @@ IF _DEBUG
 {
     JSR loadperm
 
-    LDX #1
-    STX level
-    JSR LoadLevelX
+\\    LDX #1
+\\    STX level
+\\    JSR LoadLevelX
+
+    LDA #0
+    JSR LoadStage2
 
 \\    JSR beeb_shadow_select_main
+
+    JSR vblank
+
+    JSR beeb_set_mode2_no_clear
+    JSR beeb_set_game_screen
+    JSR beeb_show_screen
+
+    JSR vblank
 
     LDA #1
     STA beeb_sprite_no
@@ -435,8 +446,10 @@ IF _DEBUG
 
     .sprite_loop
     LDA beeb_sprite_no
+    ASL A:ASL A
     AND #&1F
-    LDA #41
+
+    LDA #LO(1)
     STA XCO
 
     LDA #127
@@ -445,19 +458,19 @@ IF _DEBUG
     LDA beeb_sprite_no
     STA IMAGE
 
-    LDA #LO(chtable1)
+    LDA #LO(chtable7)
     STA TABLE
 
-    LDA #HI(chtable1)
+    LDA #HI(chtable7)
     STA TABLE+1
 
-    LDA #BEEB_SWRAM_SLOT_CHTAB13
+    LDA #BEEB_SWRAM_SLOT_CHTAB678
     STA BANK
 
     LDA #enum_mask OR &80
     STA OPACITY
 
-    JSR beeb_plot_sprite_MLayMask
+    JSR beeb_plot_sprite_LAY
 
     ldx#100:ldy#0:lda#&81:jsr osbyte	
 
@@ -762,8 +775,11 @@ ENDIF
 
 .beeb_plot_sprite_setpalette
 {
+    BMI return
     ASL A:ASL A
     TAX
+
+    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
 
     INX
     LDA palette_table, X
@@ -786,6 +802,7 @@ ENDIF
     ASL A
     STA map_2bpp_to_mode2_pixel+$22                     ; left 3
 
+    .return
     RTS
 }
 
@@ -803,6 +820,49 @@ ENDIF
     STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
 
     RTS    
+}
+
+\*-------------------------------
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+\*-------------------------------
+
+.beeb_plot_calc_screen_addr
+{
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
+
+    \ Mask off Y offset to get character row
+
+    LDA YCO
+    AND #&F8
+    TAY    
+
+    LDX XCO
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    LDA YCO
+    AND #&7
+    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
+
+    \ Handle OFFSET
+
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
+
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
 }
 
 .beeb_core_end
