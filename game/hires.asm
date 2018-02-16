@@ -293,6 +293,7 @@ ENDIF
 
 \\ Bounds check
 IF _DEBUG
+ BMI pal_ok
  CMP #BEEB_PALETTE_MAX
  BEQ pal_ok
  BCC pal_ok

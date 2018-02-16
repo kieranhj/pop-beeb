@@ -258,12 +258,12 @@ ENDIF ; _AUDIO_DEBUG
 	EQUW pop_sfx_00;, &8080		; PlateDown
 	EQUW pop_sfx_01;, &8080		; PlateUp
 	EQUW pop_sfx_02;, &8080		; GateDown
-	EQUW pop_sfx_03;, &8080		; SpecialKey1
-	EQUW pop_sfx_04;, &8080		; SpecialKey2
+	EQUW pop_sfx_03;, &8080		; SpecialKey1 - dont think this is used
+	EQUW pop_sfx_04;, &8080		; SpecialKey2 - dont think this is used
 	EQUW pop_sfx_05;, &8080		; Splat
 	EQUW pop_sfx_06;, &8080		; MirrorCrack
 	EQUW pop_sfx_07;, &8080		; LooseCrash
-	EQUW pop_sfx_08;, &8080		; GotKey
+	EQUW pop_sfx_08;, &8080		; GotKey - dont think this is used
 	EQUW pop_sfx_09;, &8080		; Footstep
 	EQUW pop_sfx_10;, &8080		; RaisingExit
 	EQUW pop_sfx_11;, &8080		; RaisingGate

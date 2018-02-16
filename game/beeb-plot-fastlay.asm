@@ -7,21 +7,12 @@
 IF _UNROLL_FASTLAY
 BEEB_MAX_FASTLAY_WIDTH=6
 
-.fastlaysta_table_LO
-EQUB LO(beeb_plot_fastlaysta_1byte)
-EQUB LO(beeb_plot_fastlaysta_2bytes)
-EQUB LO(beeb_plot_fastlaysta_3bytes)
-EQUB LO(beeb_plot_fastlaysta_4bytes)
-EQUB LO(beeb_plot_fastlaysta_5bytes)
-EQUB LO(beeb_plot_fastlaysta_6bytes)
+.fastlaysta_branch_location
+EQUB 28, 54, 80, 106, 132, 0
 
-.fastlaysta_table_HI
-EQUB HI(beeb_plot_fastlaysta_1byte)
-EQUB HI(beeb_plot_fastlaysta_2bytes)
-EQUB HI(beeb_plot_fastlaysta_3bytes)
-EQUB HI(beeb_plot_fastlaysta_4bytes)
-EQUB HI(beeb_plot_fastlaysta_5bytes)
-EQUB HI(beeb_plot_fastlaysta_6bytes)
+.fastlaysta_branch_offset
+EQUB 126, 100, 74, 48, 22, 0
+
 
 .beeb_plot_sprite_FASTLAYSTA
 {
@@ -31,6 +22,18 @@ EQUB HI(beeb_plot_fastlaysta_6bytes)
 }
 .beeb_plot_sprite_FASTLAYSTA_PP
 {
+    \ PALETTE
+
+    LDX PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_FastLaySTAMode2
+    .not_full_fat
+
+    LDA palette_addr_LO, X
+    STA beeb_readptr
+    LDA palette_addr_HI, X
+    STA beeb_readptr+1
+
     \ Calc screen address
 
     LDY YCO
@@ -54,7 +57,11 @@ EQUB HI(beeb_plot_fastlaysta_6bytes)
     .no_yclip
     STA beeb_height
 
+    \\ Poke in stride values according to width
+
     LDX WIDTH
+    STX smStride+1
+
     DEX
 IF _DEBUG
     CPX #BEEB_MAX_FASTLAY_WIDTH
@@ -63,356 +70,106 @@ IF _DEBUG
     .width_ok
 ENDIF
 
-    LDA fastlaysta_table_LO,X
-    STA jmp_addr+1
-    LDA fastlaysta_table_HI,X
-    STA jmp_addr+2
+    \\ Self-mod a branch after correct number of bytes
 
-    .jmp_addr
-    JMP &FFFF
-}
+    LDY fastlaysta_branch_location, X
+    STY remove_branch+1
+    BEQ no_branch
 
-.beeb_plot_fastlaysta_1byte
-{
+    LDA #OPCODE_BRA
+    STA branch_origin, Y
+
+    LDA fastlaysta_branch_offset, X
+    STA branch_origin+1, Y
+    .no_branch
+
+    \\ Unrolled fastlay STA
+
     .y_loop
+    .branch_origin
 
-\ Load 4 pixels of sprite data
+\ Byte 0
 
-    LDY #0
-    LDA (IMAGE), Y
+    LDY #0:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
 
-    STA beeb_data
+    LDA (beeb_readptr), Y
+    LDY #0:STA (beeb_writeptr), Y
 
-\ Lookup pixels D & C
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #8:STA (beeb_writeptr), Y
 
-    AND #&CC
-    TAX
-    LDA map_2bpp_to_mode2_palN, X
+\ Byte 1
 
-\ Write to screen
+    LDY #1:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
 
-    STA (beeb_writeptr), Y
+    LDA (beeb_readptr), Y
+    LDY #16:STA (beeb_writeptr), Y
 
-\ Lookup pixels B & A
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #24:STA (beeb_writeptr), Y
 
-    LDA beeb_data
-    AND #&33
-    TAX
-    LDA map_2bpp_to_mode2_palN, X
+\ Byte 2
 
-\ Write to screen
+    LDY #2:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
 
-    LDY #8
-    STA (beeb_writeptr), Y
+    LDA (beeb_readptr), Y
+    LDY #32:STA (beeb_writeptr), Y
+
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #40:STA (beeb_writeptr), Y
+
+\ Byte 3
+
+    LDY #3:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
+
+    LDA (beeb_readptr), Y
+    LDY #48:STA (beeb_writeptr), Y
+
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #56:STA (beeb_writeptr), Y
+
+\ Byte 4
+
+    LDY #4:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
+
+    LDA (beeb_readptr), Y
+    LDY #64:STA (beeb_writeptr), Y
+
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #72:STA (beeb_writeptr), Y
+
+\ Byte 5
+
+    LDY #5:LDA (IMAGE), Y
+    TAX:AND #&CC:LSR A: LSR A:TAY
+
+    LDA (beeb_readptr), Y
+    LDY #80:STA (beeb_writeptr), Y
+
+    TXA:AND #&33:TAY
+    LDA (beeb_readptr), Y
+    LDY #88:STA (beeb_writeptr), Y
 
 \ Next sprite row
 
-    {
-        INC IMAGE
-        BNE no_carry
-        INC IMAGE+1
-        .no_carry
-    }
-
-\ Have we completed all rows?
-
-    LDY YCO
-    DEY
-    CPY beeb_height                ; TOPEDGE
-    STY YCO
-    BEQ done_y
-
-\ Next scanline row
-
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC beeb_writeptr
-    BRA y_loop
-
-\ Next character row
-
-    .one_row_up
-    SEC
-    LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    BRA y_loop
-
-    .done_y
-    JMP DONE
-}
-
-.beeb_plot_fastlaysta_2bytes
-{
-    .y_loop
-
-\ Load 4 pixels of sprite data
-
-    LDY #0
-    LDA (IMAGE), Y
-
-\ Lookup pixels D & C
-
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Lookup pixels B & A
-
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    LDY #8
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #1
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #16
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #24
-    STA (beeb_writeptr), Y
-
-\ Next sprite row
-
-    {
-        CLC
-        LDA IMAGE
-        ADC #2
-        STA IMAGE
-        BCC no_carry
-        INC IMAGE+1
-        .no_carry
-    }
-
-\ Have we completed all rows?
-
-    LDY YCO
-    DEY
-    CPY beeb_height                ; TOPEDGE
-    STY YCO
-    BEQ done_y
-
-\ Next scanline row
-
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC beeb_writeptr
-    BRA y_loop
-
-\ Next character row
-
-    .one_row_up
-    SEC
-    LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    BRA y_loop
-
-    .done_y
-    JMP DONE
-}
-
-.beeb_plot_fastlaysta_3bytes
-{
-    .y_loop
-
-\ Load 4 pixels of sprite data
-
-    LDY #0
-    LDA (IMAGE), Y
-
-\ Lookup pixels D & C
-
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Lookup pixels B & A
-
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    LDY #8
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #1
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #16
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #24
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #2
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #32
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #40
-    STA (beeb_writeptr), Y
-
-\ Next sprite row
-
-    {
-        CLC
-        LDA IMAGE
-        ADC #3
-        STA IMAGE
-        BCC no_carry
-        INC IMAGE+1
-        .no_carry
-    }
-
-\ Have we completed all rows?
-
-    LDY YCO
-    DEY
-    CPY beeb_height                ; TOPEDGE
-    STY YCO
-    BEQ done_y
-
-\ Next scanline row
-
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC beeb_writeptr
-    BRA y_loop
-
-\ Next character row
-
-    .one_row_up
-    SEC
-    LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    BRA y_loop
-
-    .done_y
-    JMP DONE
-}
-
-.beeb_plot_fastlaysta_4bytes
-{
-    .y_loop
-
-\ Load 4 pixels of sprite data
-
-    LDY #0
-    LDA (IMAGE), Y
-
-\ Lookup pixels D & C
-
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Lookup pixels B & A
-
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    LDY #8
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #1
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #16
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #24
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #2
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #32
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #40
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #3
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #48
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #56
-    STA (beeb_writeptr), Y
-
-\ Next sprite row
-
-    {
-        CLC
-        LDA IMAGE
-        ADC #4
-        STA IMAGE
-        BCC no_carry
-        INC IMAGE+1
-        .no_carry
-    }
+    CLC
+    LDA IMAGE
+    .smStride
+    ADC #6
+    STA IMAGE
+    BCC no_carry
+    INC IMAGE+1
+    .no_carry
 
 \ Have we completed all rows?
 
@@ -445,271 +202,20 @@ ENDIF
     JMP y_loop
 
     .done_y
-    JMP DONE
-}
 
-.beeb_plot_fastlaysta_5bytes
-{
-    .y_loop
+    \\ Remove the self-mod branch code
 
-\ Load 4 pixels of sprite data
-
+    .remove_branch
     LDY #0
-    LDA (IMAGE), Y
+    BEQ return
 
-\ Lookup pixels D & C
+    LDA #OPCODE_LDA_indirect_Y
+    STA branch_origin, Y
 
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
+    LDA #LO(IMAGE)
+    STA branch_origin+1, Y
 
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Lookup pixels B & A
-
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    LDY #8
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #1
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #16
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #24
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #2
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #32
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #40
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #3
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #48
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #56
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #4
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #64
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #72
-    STA (beeb_writeptr), Y
-
-\ Next sprite row
-
-    {
-        CLC
-        LDA IMAGE
-        ADC #5
-        STA IMAGE
-        BCC no_carry
-        INC IMAGE+1
-        .no_carry
-    }
-
-\ Have we completed all rows?
-
-    LDY YCO
-    DEY
-    CPY beeb_height                ; TOPEDGE
-    STY YCO
-    BEQ done_y
-
-\ Next scanline row
-
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC beeb_writeptr
-    JMP y_loop
-
-\ Next character row
-
-    .one_row_up
-    SEC
-    LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    JMP y_loop
-
-    .done_y
-    JMP DONE
-}
-
-.beeb_plot_fastlaysta_6bytes
-{
-    .y_loop
-
-\ Load 4 pixels of sprite data
-
-    LDY #0
-    LDA (IMAGE), Y
-
-\ Lookup pixels D & C
-
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    STA (beeb_writeptr), Y
-
-\ Lookup pixels B & A
-
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-
-\ Write to screen
-
-    LDY #8
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #1
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #16
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #24
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #2
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #32
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #40
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #3
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #48
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #56
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #4
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #64
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #72
-    STA (beeb_writeptr), Y
-
-\ Next 4 pixels
-
-    LDY #6
-    LDA (IMAGE), Y
-    STA beeb_data:AND #&CC:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #80
-    STA (beeb_writeptr), Y
-    LDA beeb_data:AND #&33:TAX
-    LDA map_2bpp_to_mode2_palN, X
-    LDY #88
-    STA (beeb_writeptr), Y
-
-\ Next sprite row
-
-    {
-        CLC
-        LDA IMAGE
-        ADC #6
-        STA IMAGE
-        BCC no_carry
-        INC IMAGE+1
-        .no_carry
-    }
-
-\ Have we completed all rows?
-
-    LDY YCO
-    DEY
-    CPY beeb_height                ; TOPEDGE
-    STY YCO
-    BEQ done_y
-
-\ Next scanline row
-
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
-
-    DEC beeb_writeptr
-    JMP y_loop
-
-\ Next character row
-
-    .one_row_up
-    SEC
-    LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    JMP y_loop
-
-    .done_y
+    .return
     JMP DONE
 }
 ENDIF
