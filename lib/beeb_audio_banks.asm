@@ -76,19 +76,15 @@ INCBIN "audio/sfx/00 platedown.raw"
 .pop_sfx_01 ; PlateUp
 INCBIN "audio/sfx/01 plateup.raw"
 .pop_sfx_02 ; GateDown
-INCBIN "audio/sfx/annoyshort.raw"
-.pop_sfx_03 ; SpecialKey1
-INCBIN "audio/sfx/annoyshort.raw"
-.pop_sfx_04 ; SpecialKey2
-INCBIN "audio/sfx/annoyshort.raw"
+INCBIN "audio/sfx/02 gatedown.raw"
+
 .pop_sfx_05 ; Splat
 INCBIN "audio/sfx/05 splat.raw"
 .pop_sfx_06 ; MirrorCrack
 INCBIN "audio/sfx/06 mirrorcrack.raw"
 .pop_sfx_07 ; LooseCrash
 INCBIN "audio/sfx/07 platecrash.raw"
-.pop_sfx_08 ; GotKey
-INCBIN "audio/sfx/annoyshort.raw"
+
 .pop_sfx_09 ; Footstep
 INCBIN "audio/sfx/09 footstep.raw"
 .pop_sfx_10 ; RaisingExit
@@ -111,6 +107,14 @@ INCBIN "audio/sfx/17 swordparry.raw"
 INCBIN "audio/sfx/18 swordhit.raw"
 .pop_sfx_19 ; JawsClash
 INCBIN "audio/sfx/19 jawsclash.raw"
+
+.pop_sfx_03 ; SpecialKey1
+.pop_sfx_04 ; SpecialKey2
+.pop_sfx_08 ; GotKey
+INCBIN "audio/sfx/annoyshort.raw"
+
+
+
 .pop_sfx_end
 
 PRINT "SFX size = ", (pop_sfx_end - pop_sfx_start), " bytes"

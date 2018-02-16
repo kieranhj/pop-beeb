@@ -16,7 +16,9 @@
 {
     LDA #0
     STA beeb_mirror
-
+}
+.beeb_plot_sprite_LayMode2BM
+{
     LDA #NOP_OP
     STA smParity1
     STA smParity2
