@@ -32,22 +32,23 @@ JawsClash = 19
 \* game music
 \* Music song #s
 
-s_Accid = 1
-s_Heroic = 2
-s_Danger = 3
-s_Sword = 4
-s_Rejoin = 5
-s_Shadow = 6
-s_Vict = 7
-s_Stairs = 8
-s_Upstairs = 9
-s_Jaffar = 10
-s_Potion = 11
-s_ShortPot = 12
-s_Timer = 13
-s_Tragic = 14
-s_Embrace = 15
-s_Heartbeat = 16
+s_Accid = 1         ; accidental death
+s_Heroic = 2        ; 'heroic' death
+s_Danger = 3        ; danger theme for mirror (level 4)
+s_Sword = 4         ; got sword
+s_Rejoin = 5        ; Kid & shadow reunite
+s_Shadow = 6        ; death if opponent was shadowman
+s_Vict = 7          ; killed an enemy
+s_Stairs = 8        ; stairs have appeared
+s_Upstairs = 9      ; player has won level
+s_Jaffar = 10       ; Play Jaffar's Theme (Level 13)
+s_Potion = 11       ; Drunk potion
+s_ShortPot = 12     ; Small potion used
+
+s_Timer = 13        ; Cut scene timer music
+s_Tragic = 14       ; Tragic ending cut scene (out of time I think)
+s_Embrace = 15      ; Happy ending cut scene
+s_Heartbeat = 16    ; Princess cut scene 2/5/8
 
 \* title music
 \* Set 1 (title)
