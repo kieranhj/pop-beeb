@@ -416,6 +416,9 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
+
 ; PoP gameplay code moved from AUX memory
 
 .pop_beeb_core_end
@@ -552,9 +555,6 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
-
-; Vsync handler code
-INCLUDE "lib/vsync.asm"
 
 ; Music & Audio routines crammed in here
 INCLUDE "lib/exomiser.asm"
