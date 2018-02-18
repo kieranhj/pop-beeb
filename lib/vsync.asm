@@ -74,7 +74,7 @@
 
 .vsync_palette_override EQUB &FF
 
-.vsync_request_flip	EQUB 0
+.vsync_swap_buffers	EQUB 0
 
 .event_handler
 {
@@ -97,11 +97,11 @@
 	\\ Increment vsync counter
 	INC beeb_vsync_count
 
-	LDA vsync_request_flip
-	BEQ no_flip
-	JSR PageFlip
-	DEC vsync_request_flip
-	.no_flip
+	LDA vsync_swap_buffers
+	BEQ no_swap
+	JSR shadow_swap_buffers
+	DEC vsync_swap_buffers
+	.no_swap
 
 IF _AUDIO
     ; call our audio interrupt handler

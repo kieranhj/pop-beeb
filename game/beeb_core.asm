@@ -278,12 +278,6 @@ IF _AUDIO_DEBUG
     jsr BEEB_DEBUG_DRAW_SFX
 ENDIF
 
-    ; I think it was a mistake to wait for vsync here!
-
-    LDA PAGE
-    EOR #&20
-    STA PAGE
-
     lda &fe34
     eor #1+4	; invert bits 0 (CRTC) & 2 (RAM)
     sta &fe34

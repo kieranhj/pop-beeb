@@ -710,7 +710,7 @@ ENDIF
 .FrameAdv
 {
   .wait_vsync
-  LDA vsync_request_flip
+  LDA vsync_swap_buffers
   BNE wait_vsync
 
  lda cutplan ;set by PrepCut
@@ -724,7 +724,11 @@ ENDIF
  ; so wait for 2 vblanks or swap immediately (ala Banjo)
  ; jmp PageFlip ;Update current screen...
   
-  INC vsync_request_flip
+  LDA PAGE
+  EOR #&20
+  STA PAGE
+
+  INC vsync_swap_buffers
   RTS
 
 .local_cut jmp DoCleanCut ;or draw new screen from scratch
