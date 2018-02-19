@@ -1441,24 +1441,24 @@ ENDIF
 \*-------------------------------
 .timetable
 .timetable_0
- EQUW game_time_limit-60*game_time_min
- EQUW game_time_limit-55*game_time_min
- EQUW game_time_limit-50*game_time_min
- EQUW game_time_limit-45*game_time_min
- EQUW game_time_limit-40*game_time_min
- EQUW game_time_limit-35*game_time_min
- EQUW game_time_limit-30*game_time_min
- EQUW game_time_limit-25*game_time_min
- EQUW game_time_limit-20*game_time_min
- EQUW game_time_limit-15*game_time_min
+ EQUW (game_time_limit-60)*game_time_min
+ EQUW (game_time_limit-55)*game_time_min
+ EQUW (game_time_limit-50)*game_time_min
+ EQUW (game_time_limit-45)*game_time_min
+ EQUW (game_time_limit-40)*game_time_min
+ EQUW (game_time_limit-35)*game_time_min
+ EQUW (game_time_limit-30)*game_time_min
+ EQUW (game_time_limit-25)*game_time_min
+ EQUW (game_time_limit-20)*game_time_min
+ EQUW (game_time_limit-15)*game_time_min
 .timetable_20
- EQUW game_time_limit-10*game_time_min
- EQUW game_time_limit-5*game_time_min
- EQUW game_time_limit-4*game_time_min
- EQUW game_time_limit-3*game_time_min
- EQUW game_time_limit-2*game_time_min
- EQUW game_time_limit-1*game_time_min+1
- EQUW game_time_limit*game_time_min+5 ;5 frames after t=0: game over
+ EQUW (game_time_limit-10)*game_time_min
+ EQUW (game_time_limit-5)*game_time_min
+ EQUW (game_time_limit-4)*game_time_min
+ EQUW (game_time_limit-3)*game_time_min
+ EQUW (game_time_limit-2)*game_time_min
+ EQUW (game_time_limit-1)*game_time_min+1
+ EQUW (game_time_limit*game_time_min)+5 ;5 frames after t=0: game over
  EQUW 65535
 
 nummsg = P%-timetable

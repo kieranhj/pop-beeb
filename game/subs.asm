@@ -1402,6 +1402,8 @@ floorY = 151
  lda msgtimer
  bne return ;wait till other msgs are gone
 
+ STA msgdrawn       ; force this message to draw
+
  lda #TimeMsg
  sta message
  lda #timemsgtimer

@@ -1717,7 +1717,10 @@ ENDIF
 
 \* Kid is dead -- message is "Press button to continue"
 
- JSR beeb_clear_text_area
+  \ Always blank the area under the continue message
+    LDY #13
+    LDX #54
+    JSR beeb_clear_status_X
 
  lda msgtimer
  cmp #contoff
