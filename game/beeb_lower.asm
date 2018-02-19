@@ -62,6 +62,7 @@ ENDIF
 IF _NOT_BEEB
 IIGS ds 1
 ENDIF
+.beeb_keypress_ctrl skip 1
 
 \dum $3c0
 

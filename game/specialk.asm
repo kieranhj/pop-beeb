@@ -91,19 +91,13 @@ game_time_limit = 60 ;game time limit
 
 \*  Player control keys
 
-kleft = IKN_z OR &80
-kdown = IKN_slash OR &80
-kright = IKN_x OR &80
-kupleft = IKN_semi OR &80
-kup = IKN_colon OR &80
-kupright = IKN_rsb OR &80
-
-kleft_apple = IKN_j OR &80
-kdown_apple = IKN_k OR &80
-kright_apple = IKN_l OR &80
-kupleft_apple = IKN_u OR &80
-kup_apple = IKN_i OR &80
-kupright_apple = IKN_o OR &80
+kleft = IKN_j
+kdown = IKN_k
+kright = IKN_l
+kupleft = IKN_u
+kup = IKN_i
+kupright = IKN_o
+kbutton = IKN_shift
 
 \*  Special keys (legit) - all require CTRL
 
@@ -147,6 +141,30 @@ ktimeback = '<'
 ktimefwd = '>'
 ktimeup = 'M'
 kerasegame = '*'
+
+\*-------------------------------
+; BEEB allow keys to be redefined
+\*-------------------------------
+
+.beeb_keydef_left EQUB kleft EOR &80
+.beeb_keydef_right EQUB kright EOR &80
+.beeb_keydef_up EQUB kup EOR &80
+.beeb_keydef_down EQUB kdown EOR &80
+.beeb_keydef_jumpleft EQUB kupleft EOR &80
+.beeb_keydef_jumpright EQUB kupright EOR &80
+.beeb_keydef_action EQUB kbutton EOR &80
+
+\*-------------------------------
+; BEEB support for multiple keypresses
+\*-------------------------------
+
+.beeb_keypress_left EQUB 0
+.beeb_keypress_right EQUB 0
+.beeb_keypress_up EQUB 0
+.beeb_keypress_down EQUB 0
+.beeb_keypress_jumpleft EQUB 0
+.beeb_keypress_jumpright EQUB 0
+
 
 \*-------------------------------
 \*
@@ -200,8 +218,6 @@ kerasegame = '*'
 .return_35
  rts
 
-.beeb_ctrl_key EQUB 0
-
 .KEYS1
 {
 \ NOT BEEB
@@ -215,19 +231,43 @@ kerasegame = '*'
 
  TXA
  AND #&80
- STA beeb_ctrl_key
+ STA beeb_keypress_ctrl
 
-\ Scan keys beyond Return
+\ Scan all main control keys
+
  LDA #&79
- LDX #IKN_return+1
+ LDX beeb_keydef_left
  JSR osbyte
+ STX beeb_keypress_left
 
- CPX #&FF
- BNE key_pressed 
-
-\ No key pressed above return - try lower keys
  LDA #&79
- LDX #&2
+ LDX beeb_keydef_right
+ JSR osbyte
+ STX beeb_keypress_right
+  
+ LDA #&79
+ LDX beeb_keydef_up
+ JSR osbyte
+ STX beeb_keypress_up
+
+ LDA #&79
+ LDX beeb_keydef_down
+ JSR osbyte
+ STX beeb_keypress_down
+
+ LDA #&79
+ LDX beeb_keydef_jumpleft
+ JSR osbyte
+ STX beeb_keypress_jumpleft
+
+ LDA #&79
+ LDX beeb_keydef_jumpright
+ JSR osbyte
+ STX beeb_keypress_jumpright
+
+\ Scan all keys
+ LDA #&79
+ LDX #0
  JSR osbyte
 
  CPX #&FF
@@ -364,7 +404,7 @@ kerasegame = '*'
 .LegitKeys
 {
 \ BEEB must hold down CTRL
- LDA beeb_ctrl_key
+ LDA beeb_keypress_ctrl
  BEQ return_51
 
  lda keypress
@@ -861,60 +901,49 @@ ENDIF
  ldx keydown
  bpl return ;No fresh press & no key down
 
- ora #$80 ;stale press, key still down
 .cont
- cmp #kleft
- beq local_left
- cmp #kleft_apple
- bne label_1
+ LDA beeb_keypress_left
+ BPL label_1
 
 .local_left lda #LO(-1)
 .local_setx sta kbdX
- rts
+; also check up
+ bne label_2
+; rts
 
 .label_1
- cmp #kright
- beq local_right
- cmp #kright_apple
- bne label_2
+ LDA beeb_keypress_right
+ BPL label_2
 
 .local_right lda #1
  bne local_setx
 
 .label_2
- cmp #kup
- beq local_up
- cmp #kup_apple
- bne label_3
+ LDA beeb_keypress_up
+ BPL label_3
 
 .local_up lda #LO(-1)
 .local_sety sta kbdY
  rts
 
 .label_3
- cmp #kdown
- beq local_down
- cmp #kdown_apple
- bne label_4
+ LDA beeb_keypress_down
+ BPL label_4
 
 .local_down lda #1
  bne local_sety
 
 .label_4
- cmp #kupleft
- beq local_ul
- cmp #kupleft_apple
- bne label_5
+ LDA beeb_keypress_jumpleft
+ BPL label_5
 
 .local_ul lda #LO(-1)
  sta kbdX
  bne local_sety
 
 .label_5
- cmp #kupright
- beq local_ur
- cmp #kupright_apple
- bne label_6
+ LDA beeb_keypress_jumpright
+ BPL label_6
 
 .local_ur lda #1
  sta kbdX
@@ -1669,31 +1698,30 @@ ENDIF
 
 .BREAD
 {
- lda jbtns
- bne label_1 ;buttons switched
+\ lda jbtns
+\ bne label_1 ;buttons switched
 
 \ lda $c061
 \ ldx $c062
 
  LDA #&79
- LDX #IKN_return EOR &80
+ LDX beeb_keydef_action
  JSR osbyte
- TXA
 
-.label_2 sta BTN0
+.label_2 stx BTN0
  stx BTN1
  rts
 
-.label_1
+\.label_1
 \ ldx $c062
 \ lda $c061
-
- LDA #&79
- LDX #IKN_return EOR &80
- JSR osbyte
- TXA
-
- jmp label_2
+\
+\ LDA #&79
+\ LDX #IKN_return EOR &80
+\ JSR osbyte
+\ TXA
+\
+\ jmp label_2
 }
 
 \*-------------------------------
@@ -1856,7 +1884,7 @@ ENDIF
 
  TXA
  AND #&80
- STA beeb_ctrl_key
+ STA beeb_keypress_ctrl
 
 \ lda $c000
 \ sta keypress
