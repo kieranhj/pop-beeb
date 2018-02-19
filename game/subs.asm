@@ -888,6 +888,7 @@ ENDIF
  bne loop
  jmp swpage
 .interrupt
+ jsr swpage
  jmp dostartgame
 }
 
@@ -903,7 +904,8 @@ ENDIF
  sta PAGE
 
 \\ BEEB equivalent here to invert RAM bit 2 only
-\\ BEEB TODO danger?
+\\ BEEB effectively become single buffered here!
+\\ BEEB use with caution and make sure you set it back...
 
  lda &fe34
  eor #4	; invert bits 0 (CRTC) & 2 (RAM)
