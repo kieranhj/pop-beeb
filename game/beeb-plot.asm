@@ -579,12 +579,7 @@ ENDIF
  sta OPACITY
  jmp beeb_plot_sprite_MLAY
 
-.notmirr
- cmp #enum_eor
- bne label_1
- INC PALETTE        ; BEEB eor = increment palette index
-
-.label_1 cmp #enum_and
+.notmirr cmp #enum_and
  bne label_2
  jmp beeb_plot_sprite_LayAND
 
@@ -1171,11 +1166,7 @@ ENDIF
 
 .beeb_plot_sprite_MLAY ;A = OPACITY
 {
- cmp #enum_eor
- bne label_1
- INC PALETTE        ; BEEB eor = increment palette index
-
-.label_1 cmp #enum_and
+ cmp #enum_and
  bne label_2
  jmp beeb_plot_sprite_MLayAND
 
