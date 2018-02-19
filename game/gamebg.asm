@@ -245,6 +245,8 @@ ASCII_MAPCHAR
 \ lda #ora
 \ sta OPACITY
 
+    JSR beeb_clear_text_area
+
     jsr getminleft
 
     LDA #LO(minutes_string)
@@ -358,6 +360,8 @@ ASCII_MAPCHAR
 \ lda #ora
 \ sta OPACITY
 \ jmp addmsg
+
+    JSR beeb_clear_text_area
 
     LDY #6
 
