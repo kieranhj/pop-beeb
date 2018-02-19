@@ -4,7 +4,7 @@
 
 .specialk
 \EditorDisk = 0
-NoCheatKeys = 0 ;removes all cheat keys
+NoCheatKeys = 1 ;removes all cheat keys
 DebugKeys = 0
 \ tr on
 \ lst off
@@ -104,43 +104,44 @@ kbutton = IKN_shift
 kfreeze = IKN_p OR &80
 krestart = IKN_r OR &80
 kabort = IKN_a OR &80
-\ksound = IKN_s OR &80
+\ksound = IKN_s OR &80    ; already defined
 \kmusic = IKN_m OR &80
 ksetkbd = IKN_k OR &80
-ksetjstk = IKN_j OR &80
 ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_space OR &80
-kflipx = IKN_x OR &80
-kflipy = IKN_y OR &80
 
-knext = IKN_n OR &80
+\\ NOT BEEB supported
+;ksetjstk = IKN_j OR &80
+;kflipx = IKN_x OR &80
+;kflipy = IKN_y OR &80
 
 \*  Special keys (development)
+\* BEEB all required CTRL
 
-knextlevel = ')'
-kclean = 'm'-CTRL
-kscreendump = '@'
-kreload = 'c'-CTRL
-kreboot = 'z'-CTRL
-kforceredraw = 'f'-CTRL
-kblackout = 'B'
-kspeedup = ']'
-kslowdown = '['
-kantimatter = 'q'-CTRL
-kupone = 'e'-CTRL
-kautoman = 'A'
-kincstr = 'S'
-kdecstr = 'D'
-kincmax = 'F'
-kzapgard = 'Z'
-kplayback = 'p'-CTRL
-kskip5 = '+'
-ktimeback = '<'
-ktimefwd = '>'
-ktimeup = 'M'
-kerasegame = '*'
+knextlevel = IKN_n OR &80
+;kclean = 'm'-CTRL
+;kscreendump = '@'
+;kreload = 'c'-CTRL
+;kreboot = 'z'-CTRL
+kforceredraw = IKN_f OR &80
+kblackout = IKN_b OR &80
+;kspeedup = ']'
+;kslowdown = '['
+kantimatter = IKN_q OR &80
+kupone = IKN_e OR &80
+;kautoman = 'A'
+kincstr = IKN_s OR &80
+kdecstr = IKN_d OR &80
+kincmax = IKN_w OR &80
+kzapgard = IKN_z OR &80
+;kplayback = 'p'-CTRL
+kskip5 = IKN_5 OR &80
+ktimeback = IKN_1 OR &80
+ktimefwd = IKN_2 OR &80
+ktimeup = IKN_0 OR &80
+kerasegame = IKN_9 OR &80
 
 \*-------------------------------
 ; BEEB allow keys to be redefined
@@ -349,8 +350,9 @@ kerasegame = '*'
 
 \* Normal key handling
 
-.nogo lda keypress
- jsr addkey ;Add key to kbd buffer
+\ BEEB doesn't suport keybuf codes
+\.nogo lda keypress
+\ jsr addkey ;Add key to kbd buffer
 
  IF NoCheatKeys
  ELSE
@@ -365,7 +367,6 @@ kerasegame = '*'
  sta develment
  jmp gtone
 .label_1
- ENDIF
 
 \* Skip to next level?
 
@@ -383,14 +384,18 @@ kerasegame = '*'
 
  jsr shortentime
 .label_2
+ ENDIF
 
 \* Special keys
 
  jsr LegitKeys
 
- jsr DevelKeys
+\ NOT BEEB
+\ jsr DevelKeys
 
+IF _DEBUG
  jsr TempDevel
+ENDIF
 }
 .return_51
  rts
@@ -403,6 +408,17 @@ kerasegame = '*'
 
 .LegitKeys
 {
+\* Show time left
+
+ lda keypress
+ cmp #kshowtime
+ bne ctrl_keys
+ lda #3
+ sta timerequest
+ rts
+
+.ctrl_keys
+
 \ BEEB must hold down CTRL
  LDA beeb_keypress_ctrl
  BEQ return_51
@@ -430,19 +446,13 @@ kerasegame = '*'
 \* Keyboard/joystick
 
 .label_2 cmp #ksetkbd
- bne label_30
+ bne label_3
  lda #0
  sta joyon
 
-\\ BEEB TEMP
-;zap guard down to 0
- lda #0
- sec
- sbc OppStrength
- sta ChgOppStr
-
 .label_sk1 jmp gtone
 
+IF _NOT_BEEB
 .label_30 cmp #ksetjstk
  bne label_31
  jsr setcenter
@@ -461,6 +471,7 @@ kerasegame = '*'
  eor #1
  sta jvert
  bpl label_sk1
+ENDIF
 
 \* Sound on/off
 
@@ -496,16 +507,19 @@ kerasegame = '*'
 
 \* Show time left
 
-.label_18 cmp #kshowtime
- bne label_19
- lda #3
- sta timerequest
- rts
+.label_18
+\ BEEB no CTRL so moved up
+\ cmp #kshowtime
+\ bne label_19
+\ lda #3
+\ sta timerequest
+\ rts
 
-.label_19 cmp #knext \\ BEEB TEMP
- bne label_20
- inc NextLevel
- bne label_sk1
+.label_19
+\ cmp #knext \\ BEEB TEMP
+\ bne label_20
+\ inc NextLevel
+\ bne label_sk1
 
 .label_20
 
@@ -519,6 +533,7 @@ kerasegame = '*'
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .DevelKeys
 {
  lda develment ;development flag
@@ -536,65 +551,68 @@ kerasegame = '*'
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 \* Temp development keys
 \* (remove for final version)
 \*-------------------------------
 
+IF _DEBUG
 .TempDevel
 {
- IF DebugKeys
-
- lda develment ;development flag
- beq ]rts
+\ BEEB must hold down CTRL
+ LDA beeb_keypress_ctrl
+ BEQ return
 
  lda keypress
  cmp #kforceredraw
- bne :10
+ bne label_10
  lda #2
  sta redrawflg
  lda #0
  sta blackflag
+.return
  rts
 
-:10 cmp #kblackout
- bne :9
+.label_10 cmp #kblackout
+ bne label_9
  lda blackflag
  eor #$ff
  sta blackflag
-]rts rts
+ rts
 
-:9 cmp #kantimatter
- bne :17
+.label_9 cmp #kantimatter
+ bne label_17
  lda #initAMtimer
  sta AMtimer
  rts
 
-:17 cmp #kincstr
- bne :20
+.label_17 cmp #kincstr
+ bne label_20
  inc ChgKidStr
  inc ChgOppStr
  rts
 
-:20 cmp #kincmax
- bne :36
+.label_20 cmp #kincmax
+ bne label_36
  jmp boostmeter
 
-:36 cmp #knextlevel
- bne :28
+.label_36 cmp #knextlevel
+ bne label_28
  inc NextLevel
  rts
 
-:28 cmp #kskip5
- bne :30
+.label_28 cmp #kskip5
+ bne label_30
  lda level
  clc
  adc #5
  sta NextLevel
  rts
-:30
+.label_30
 
+IF _NOT_BEEB
 * keys 0-9
 
  lda keypress
@@ -647,9 +665,10 @@ kerasegame = '*'
  bne :15
  lda PAGE
  jmp screendump
+ENDIF
 
-:15 cmp #kupone
- bne :19
+.label_15 cmp #kupone
+ bne label_19
  lda KidY
  sec
  sbc #63 ;BlockHeight
@@ -657,11 +676,12 @@ kerasegame = '*'
  dec KidBlockY
  rts
 
-:19 cmp #kdecstr
- bne :21
+.label_19 cmp #kdecstr
+ bne label_24
  dec ChgKidStr
-]rts rts
+ rts
 
+IF _NOT_BEEB
 :21 cmp #kautoman
  bne :23
  lda ManCtrl
@@ -679,37 +699,45 @@ kerasegame = '*'
  lda #2
  sta NextLevel
  rts
+ENDIF
 
-:24 cmp #ktimeback
- bne :31
- lda #-2
-:chgtime clc
+.label_24 cmp #ktimeback
+ bne label_31
+ lda #LO(-2)
+.chgtime clc
  adc FrameCount+1
  sta FrameCount+1
  rts
 
-:31 cmp #ktimefwd
- bne :32
+.label_31 cmp #ktimefwd
+ bne label_32
  lda #2
- bne :chgtime
+ bne chgtime
 
-:32 cmp #kerasegame
- bne :33
+.label_32 cmp #kerasegame
+ bne label_33
  lda #$ff
  sta SavLevel
  jmp DoSaveGame
 
-:33 cmp #ktimeup
- bne :34
+.label_33 cmp #ktimeup
+ bne label_34
  lda #$ff
  sta FrameCount+1
  rts
 
-:34
- ENDIF
-.return
+.label_34 cmp #kzapgard
+ bne label_35
+;zap guard down to 0
+ lda #0
+ sec
+ sbc OppStrength
+ sta ChgOppStr
+
+.label_35
  rts
 }
+ENDIF
 
 IF _NOT_BEEB
 *-------------------------------
@@ -726,7 +754,6 @@ preload
  lda #POPside1
  sta BBundID
  rts
-ENDIF
 
 \*-------------------------------
 \*
@@ -749,6 +776,7 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -757,12 +785,10 @@ ENDIF
 \*  Only work in devel mode
 \*
 \*-------------------------------
+
+ IF NoCheatKeys=FALSE
 .checkcodes
 {
- IF NoCheatKeys
- rts
- ELSE
-
  lda #LO(C_boost)
  ldx #HI(C_boost)
  jsr checkcode
@@ -811,8 +837,8 @@ ENDIF
 .label_5
 .return
  rts
- ENDIF
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -823,6 +849,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .checkcode
 {
  sta smod+1
@@ -876,6 +903,7 @@ ENDIF
 .C_tina EQUS "TINA", 0
 
  ENDIF
+ENDIF
 
 \*-------------------------------
 \*
