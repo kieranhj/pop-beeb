@@ -109,7 +109,7 @@ kabort = IKN_a OR &80
 ksetkbd = IKN_k OR &80
 ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
-kreturn = IKN_e  OR &80;editor disk only
+;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_space OR &80
 
 \\ NOT BEEB supported
