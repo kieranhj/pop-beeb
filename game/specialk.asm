@@ -89,15 +89,15 @@ game_time_limit = 60 ;game time limit
 \DELETE = $7f
 \SHIFT = $20
 
-\*  Player control keys
+\*  Player control keys (default)
 
-kleft = IKN_j
-kdown = IKN_k
-kright = IKN_l
-kupleft = IKN_u
-kup = IKN_i
-kupright = IKN_o
-kbutton = IKN_shift
+kleft = IKN_z
+kdown = IKN_slash
+kright = IKN_x
+kupleft = IKN_semi
+kup = IKN_colon
+kupright = IKN_rsb
+kbutton = IKN_return
 
 \*  Special keys (legit) - all require CTRL
 
@@ -196,7 +196,6 @@ kerasegame = IKN_9 OR &80
  LDA #&79
  LDX #0
  JSR osbyte
- TXA
  CPX #&FF
  BEQ wait_for_key
  TXA
@@ -449,6 +448,8 @@ ENDIF
  bne label_3
  lda #0
  sta joyon
+
+ JSR redefine_keys
 
 .label_sk1 jmp gtone
 
@@ -1990,4 +1991,135 @@ ENDIF
 
 .return
  rts
+}
+
+SMALL_FONT_MAPCHAR
+.redefine_string EQUS "REDEFINE~KEYS~PRESS", &FF
+.redefine_left EQUS "LEFT", &FF
+.redefine_right EQUS "RIGHT", &FF
+.redefine_up EQUS "UP~JUMP", &FF
+.redefine_down EQUS "DOWN~CROUCH", &FF
+.redefine_jumpleft EQUS "JUMP~LEFT", &FF
+.redefine_jumproght EQUS "JUMP~RIGHT", &FF
+.redefine_action EQUS "ACTION", &FF
+ASCII_MAPCHAR
+
+.redefine_index EQUB 0
+
+.redefine_keys
+{
+  \ Wait until next vsync frame swap so we know where we are
+  .wait_vsync
+  LDA vsync_swap_buffers
+  BNE wait_vsync
+
+  \ Put ourselves into single buffer mode
+  JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
+  JSR beeb_clear_status_line
+
+  \ Write initial string
+  LDA #LO(redefine_string):STA beeb_readptr
+  LDA #HI(redefine_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #13 ;PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Wait until no keys are being pressed
+  {
+    .wait_for_no_keys
+    LDA #&79
+    LDX #0
+    JSR osbyte
+
+    CPX #&FF
+    BNE wait_for_no_keys
+  }
+
+  \ Loop round all seven required keys
+  LDX #0
+  .loop  
+  STX redefine_index
+  
+  \ Fortunately beeb_readptr increments after a string plot
+  INC beeb_readptr
+  BNE no_carry
+  INC beeb_readptr+1
+  .no_carry
+
+  \ Clear the line
+  LDY #49
+  LDX #24
+  JSR beeb_clear_status_X
+
+  \ Write next key
+  LDX #49
+  LDY #BEEB_STATUS_ROW
+  LDA #13 ;PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Wait for a keypress
+  .wait_for_key
+  LDA #&79
+  LDX #IKN_shift EOR &80
+  JSR osbyte
+  TXA
+  BMI found_key
+
+  .not_shift
+  LDA #&79
+  LDX #0
+  JSR osbyte
+  CPX #&FF
+  BEQ wait_for_key
+
+  \ Escape will terminate process
+  CPX #IKN_esc
+  BEQ done
+
+  \ Store the key
+  TXA
+  EOR #&80
+  .found_key
+
+  \ See if we already have this one
+  LDX #0
+  .check
+  CPX redefine_index
+  BCS done_check
+
+  \ If so try again
+  CMP beeb_keydef_left, X
+  BEQ wait_for_key
+
+  INX
+  BNE check
+
+  \ If not then store
+  .done_check
+  STA beeb_keydef_left, X
+
+  \ Wait for no keys pressed
+  .wait_for_no_keys
+  LDA #&79
+  LDX #0
+  JSR osbyte
+
+  CPX #&FF
+  BNE wait_for_no_keys
+
+  \ Next key in the list
+  LDX redefine_index
+  INX
+  CPX #7
+  BNE loop
+
+  .done
+  \ Clear the status line and reset to double buffering
+
+  JSR beeb_clear_status_line
+  JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
+
+  \ Mark energy meters to be redrawn
+  JMP markmeters
 }
