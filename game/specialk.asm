@@ -2022,7 +2022,7 @@ ASCII_MAPCHAR
   LDA #HI(redefine_string):STA beeb_readptr+1
   LDX #10
   LDY #BEEB_STATUS_ROW
-  LDA #13 ;PAL_FONT
+  LDA #PAL_FONT
   JSR beeb_plot_font_string
 
   \ Wait until no keys are being pressed
@@ -2055,7 +2055,7 @@ ASCII_MAPCHAR
   \ Write next key
   LDX #49
   LDY #BEEB_STATUS_ROW
-  LDA #13 ;PAL_FONT
+  LDA #PAL_FONT
   JSR beeb_plot_font_string
 
   \ Wait for a keypress

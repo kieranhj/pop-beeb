@@ -574,6 +574,30 @@ ENDIF
  sta newBGset2
  sty newCHset
 
+    \ Switch Guard palettes
+    {
+        CMP #1
+        BEQ is_palace
+
+        \ Is Dungeon
+        LDA #MODE2_YELLOW_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+        
+        LDA #MODE2_RED_PAIR
+        STA palette_table+4*4+1     ; ick!
+        BNE is_done
+
+        .is_palace
+        LDA #MODE2_WHITE_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+
+        LDA #MODE2_GREEN_PAIR
+        STA palette_table+4*4+1     ; ick!
+        .is_done
+    }
+
 \ NOT BEEB
 \ jsr driveon
 
@@ -587,13 +611,6 @@ ENDIF
 
 \ NOT BEEB
 \ jmp driveoff
-
-\ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
-\ If want to map 4 byte palette table to an expanded &34 byte lookup
-\ LDA #0
-\ LDX #LO(fast_palette_lookup_0)
-\ LDY #HI(fast_palette_lookup_0)
-\ JSR beeb_expand_palette_table
 
  RTS
 }

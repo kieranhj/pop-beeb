@@ -158,7 +158,7 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 4, 6, 7 },			// 2=blue, cyan, white
 	{ 4, 5, 3 },			// 3=blue, magenta, yellow
 
-	{ 1, 3, 7 },			// 4=red, yellow, white
+	{ 1, 5, 3 },			// 4=red, magenta, yellow
 	{ 4, 1, 3 },			// 5=blue, red, yellow
 	{ 6, 1, 3 },			// 6=cyan, red, yellow
 	{ 4, 2, 3 },			// 7=blue, green, yellow
@@ -168,7 +168,7 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 1, 6, 7 },			// 10=red, cyan, white
 	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
-	{ 1, 3, 5 },			// 12=red, yellow, magenta
+	{ 1, 3, 7 },			// 12=red, yellow, white
 	{ 3, 5, 7 },			// 13=yellow, magenta, white (player)
 	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)

@@ -501,28 +501,28 @@ ASCII_MAPCHAR
   LDA #HI(string1):STA beeb_readptr+1;
   LDX #0
   LDY #0
-  LDA #0
+  LDA #PAL_BRW
   JSR beeb_plot_font_string
 
   LDA #LO(string2):STA beeb_readptr
   LDA #HI(string2):STA beeb_readptr+1
   LDX #10
   LDY #2
-  LDA #14
+  LDA #PAL_BMW
   JSR beeb_plot_font_string
 
   LDA #LO(string3):STA beeb_readptr
   LDA #HI(string3):STA beeb_readptr+1
   LDX #40
   LDY #4
-  LDA #4
+  LDA #PAL_RYW
   JSR beeb_plot_font_string
 
   LDA #LO(string4):STA beeb_readptr
   LDA #HI(string4):STA beeb_readptr+1
   LDX #15
   LDY #24
-  LDA #10
+  LDA #PAL_RCW
   JSR beeb_plot_font_string
  
   RTS
