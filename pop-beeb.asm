@@ -35,6 +35,10 @@ IF _RASTERS
 ENDIF
 ENDMACRO
 
+HEART_GLYPH=41
+EMPTY_GLYPH=42
+BLANK_GLYPH=43
+
 MACRO SMALL_FONT_MAPCHAR
     MAPCHAR '0','9',1
     MAPCHAR 'A','Z',11
@@ -44,11 +48,8 @@ MACRO SMALL_FONT_MAPCHAR
     MAPCHAR '.',39
     MAPCHAR ',',40
     MAPCHAR ' ',0
+    MAPCHAR '~',BLANK_GLYPH
 ENDMACRO
-
-HEART_GLYPH=41
-EMPTY_GLYPH=42
-BLANK_GLYPH=43
 
 ; Original PoP global defines
 
@@ -416,6 +417,9 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
+
 ; PoP gameplay code moved from AUX memory
 
 .pop_beeb_core_end
@@ -552,9 +556,6 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
-
-; Vsync handler code
-INCLUDE "lib/vsync.asm"
 
 ; Music & Audio routines crammed in here
 INCLUDE "lib/exomiser.asm"

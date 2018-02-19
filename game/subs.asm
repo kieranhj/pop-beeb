@@ -19,12 +19,12 @@ CheckTimer = 0
 IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
 .doflashon jmp DOFLASHON
-.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
-\\.demo jmp DEMO        \\ moved to auto.asm
+\\.PageFlip jmp PAGEFLIP        \\ moved to hires_core.asm
+\\.demo jmp DEMO                \\ moved to auto.asm
 .showtime jmp SHOWTIME
 
 .doflashoff jmp DOFLASHOFF
-.lrclse BRK             ; jmp LRCLSE                BEEB TODO FLASH
+.lrclse BRK             ; jmp LRCLSE
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
@@ -432,36 +432,6 @@ slicersync = 3 ;# frames out of sync
 .return
  RTS
 }
-
-IF _NOT_BEEB
-*-------------------------------
-*
-*  P A G E F L I P
-*
-*-------------------------------
-PAGEFLIP
- jsr normspeed ;IIGS
- lda PAGE
- bne :1
-
- lda #$20
- sta PAGE
- lda $C054 ;show page 1
-
-:3 lda $C057 ;hires on
- lda $C050 ;text off
- lda vibes
- beq :rts
- lda $c05e
-]rts rts
-:rts lda $c05f
- rts
-
-:1 lda #0
- sta PAGE
- lda $C055 ;show page 2
- jmp :3
-ENDIF
 
 \*-------------------------------
 \*
@@ -918,6 +888,7 @@ ENDIF
  bne loop
  jmp swpage
 .interrupt
+ jsr swpage
  jmp dostartgame
 }
 
@@ -933,7 +904,8 @@ ENDIF
  sta PAGE
 
 \\ BEEB equivalent here to invert RAM bit 2 only
-\\ BEEB TODO danger?
+\\ BEEB effectively become single buffered here!
+\\ BEEB use with caution and make sure you set it back...
 
  lda &fe34
  eor #4	; invert bits 0 (CRTC) & 2 (RAM)

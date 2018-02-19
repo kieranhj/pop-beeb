@@ -450,7 +450,7 @@ ENDIF
 
 .addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
 .doflashon JUMP_B DOFLASHON, SUBS_BASE, 1
-.PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
+\.PageFlip \\ moved to hires_core.asm
 .subs_demo BRK          ; JUMP_B DEMO, SUBS_BASE, 3   \\ moved to auto.asm
 .showtime JUMP_B SHOWTIME, SUBS_BASE, 4
 

@@ -4,7 +4,7 @@
 
 .specialk
 \EditorDisk = 0
-NoCheatKeys = 0 ;removes all cheat keys
+NoCheatKeys = 1 ;removes all cheat keys
 DebugKeys = 0
 \ tr on
 \ lst off
@@ -89,64 +89,83 @@ game_time_limit = 60 ;game time limit
 \DELETE = $7f
 \SHIFT = $20
 
-\*  Player control keys
+\*  Player control keys (default)
 
-kleft = IKN_z OR &80
-kdown = IKN_slash OR &80
-kright = IKN_x OR &80
-kupleft = IKN_semi OR &80
-kup = IKN_colon OR &80
-kupright = IKN_rsb OR &80
-
-kleft_apple = IKN_j OR &80
-kdown_apple = IKN_k OR &80
-kright_apple = IKN_l OR &80
-kupleft_apple = IKN_u OR &80
-kup_apple = IKN_i OR &80
-kupright_apple = IKN_o OR &80
+kleft = IKN_z
+kdown = IKN_slash
+kright = IKN_x
+kupleft = IKN_semi
+kup = IKN_colon
+kupright = IKN_rsb
+kbutton = IKN_return
 
 \*  Special keys (legit) - all require CTRL
 
 kfreeze = IKN_p OR &80
 krestart = IKN_r OR &80
 kabort = IKN_a OR &80
-\ksound = IKN_s OR &80
+\ksound = IKN_s OR &80    ; already defined
 \kmusic = IKN_m OR &80
 ksetkbd = IKN_k OR &80
-ksetjstk = IKN_j OR &80
 ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_space OR &80
-kflipx = IKN_x OR &80
-kflipy = IKN_y OR &80
 
-knext = IKN_n OR &80
+\\ NOT BEEB supported
+;ksetjstk = IKN_j OR &80
+;kflipx = IKN_x OR &80
+;kflipy = IKN_y OR &80
 
 \*  Special keys (development)
+\* BEEB all required CTRL
 
-knextlevel = ')'
-kclean = 'm'-CTRL
-kscreendump = '@'
-kreload = 'c'-CTRL
-kreboot = 'z'-CTRL
-kforceredraw = 'f'-CTRL
-kblackout = 'B'
-kspeedup = ']'
-kslowdown = '['
-kantimatter = 'q'-CTRL
-kupone = 'e'-CTRL
-kautoman = 'A'
-kincstr = 'S'
-kdecstr = 'D'
-kincmax = 'F'
-kzapgard = 'Z'
-kplayback = 'p'-CTRL
-kskip5 = '+'
-ktimeback = '<'
-ktimefwd = '>'
-ktimeup = 'M'
-kerasegame = '*'
+knextlevel = IKN_n OR &80
+;kclean = 'm'-CTRL
+;kscreendump = '@'
+;kreload = 'c'-CTRL
+;kreboot = 'z'-CTRL
+kforceredraw = IKN_f OR &80
+kblackout = IKN_b OR &80
+;kspeedup = ']'
+;kslowdown = '['
+kantimatter = IKN_q OR &80
+kupone = IKN_e OR &80
+;kautoman = 'A'
+kincstr = IKN_s OR &80
+kdecstr = IKN_d OR &80
+kincmax = IKN_w OR &80
+kzapgard = IKN_z OR &80
+;kplayback = 'p'-CTRL
+kskip5 = IKN_5 OR &80
+ktimeback = IKN_1 OR &80
+ktimefwd = IKN_2 OR &80
+ktimeup = IKN_0 OR &80
+kerasegame = IKN_9 OR &80
+
+\*-------------------------------
+; BEEB allow keys to be redefined
+\*-------------------------------
+
+.beeb_keydef_left EQUB kleft EOR &80
+.beeb_keydef_right EQUB kright EOR &80
+.beeb_keydef_up EQUB kup EOR &80
+.beeb_keydef_down EQUB kdown EOR &80
+.beeb_keydef_jumpleft EQUB kupleft EOR &80
+.beeb_keydef_jumpright EQUB kupright EOR &80
+.beeb_keydef_action EQUB kbutton EOR &80
+
+\*-------------------------------
+; BEEB support for multiple keypresses
+\*-------------------------------
+
+.beeb_keypress_left EQUB 0
+.beeb_keypress_right EQUB 0
+.beeb_keypress_up EQUB 0
+.beeb_keypress_down EQUB 0
+.beeb_keypress_jumpleft EQUB 0
+.beeb_keypress_jumpright EQUB 0
+
 
 \*-------------------------------
 \*
@@ -177,7 +196,6 @@ kerasegame = '*'
  LDA #&79
  LDX #0
  JSR osbyte
- TXA
  CPX #&FF
  BEQ wait_for_key
  TXA
@@ -200,8 +218,6 @@ kerasegame = '*'
 .return_35
  rts
 
-.beeb_ctrl_key EQUB 0
-
 .KEYS1
 {
 \ NOT BEEB
@@ -215,19 +231,43 @@ kerasegame = '*'
 
  TXA
  AND #&80
- STA beeb_ctrl_key
+ STA beeb_keypress_ctrl
 
-\ Scan keys beyond Return
+\ Scan all main control keys
+
  LDA #&79
- LDX #IKN_return+1
+ LDX beeb_keydef_left
  JSR osbyte
+ STX beeb_keypress_left
 
- CPX #&FF
- BNE key_pressed 
-
-\ No key pressed above return - try lower keys
  LDA #&79
- LDX #&2
+ LDX beeb_keydef_right
+ JSR osbyte
+ STX beeb_keypress_right
+  
+ LDA #&79
+ LDX beeb_keydef_up
+ JSR osbyte
+ STX beeb_keypress_up
+
+ LDA #&79
+ LDX beeb_keydef_down
+ JSR osbyte
+ STX beeb_keypress_down
+
+ LDA #&79
+ LDX beeb_keydef_jumpleft
+ JSR osbyte
+ STX beeb_keypress_jumpleft
+
+ LDA #&79
+ LDX beeb_keydef_jumpright
+ JSR osbyte
+ STX beeb_keypress_jumpright
+
+\ Scan all keys
+ LDA #&79
+ LDX #0
  JSR osbyte
 
  CPX #&FF
@@ -309,8 +349,9 @@ kerasegame = '*'
 
 \* Normal key handling
 
-.nogo lda keypress
- jsr addkey ;Add key to kbd buffer
+\ BEEB doesn't suport keybuf codes
+\.nogo lda keypress
+\ jsr addkey ;Add key to kbd buffer
 
  IF NoCheatKeys
  ELSE
@@ -325,7 +366,6 @@ kerasegame = '*'
  sta develment
  jmp gtone
 .label_1
- ENDIF
 
 \* Skip to next level?
 
@@ -343,14 +383,18 @@ kerasegame = '*'
 
  jsr shortentime
 .label_2
+ ENDIF
 
 \* Special keys
 
  jsr LegitKeys
 
- jsr DevelKeys
+\ NOT BEEB
+\ jsr DevelKeys
 
+IF _DEBUG
  jsr TempDevel
+ENDIF
 }
 .return_51
  rts
@@ -363,8 +407,19 @@ kerasegame = '*'
 
 .LegitKeys
 {
+\* Show time left
+
+ lda keypress
+ cmp #kshowtime
+ bne ctrl_keys
+ lda #3
+ sta timerequest
+ rts
+
+.ctrl_keys
+
 \ BEEB must hold down CTRL
- LDA beeb_ctrl_key
+ LDA beeb_keypress_ctrl
  BEQ return_51
 
  lda keypress
@@ -390,19 +445,15 @@ kerasegame = '*'
 \* Keyboard/joystick
 
 .label_2 cmp #ksetkbd
- bne label_30
+ bne label_3
  lda #0
  sta joyon
 
-\\ BEEB TEMP
-;zap guard down to 0
- lda #0
- sec
- sbc OppStrength
- sta ChgOppStr
+ JSR redefine_keys
 
 .label_sk1 jmp gtone
 
+IF _NOT_BEEB
 .label_30 cmp #ksetjstk
  bne label_31
  jsr setcenter
@@ -421,6 +472,7 @@ kerasegame = '*'
  eor #1
  sta jvert
  bpl label_sk1
+ENDIF
 
 \* Sound on/off
 
@@ -456,16 +508,19 @@ kerasegame = '*'
 
 \* Show time left
 
-.label_18 cmp #kshowtime
- bne label_19
- lda #3
- sta timerequest
- rts
+.label_18
+\ BEEB no CTRL so moved up
+\ cmp #kshowtime
+\ bne label_19
+\ lda #3
+\ sta timerequest
+\ rts
 
-.label_19 cmp #knext \\ BEEB TEMP
- bne label_20
- inc NextLevel
- bne label_sk1
+.label_19
+\ cmp #knext \\ BEEB TEMP
+\ bne label_20
+\ inc NextLevel
+\ bne label_sk1
 
 .label_20
 
@@ -479,6 +534,7 @@ kerasegame = '*'
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .DevelKeys
 {
  lda develment ;development flag
@@ -496,65 +552,68 @@ kerasegame = '*'
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 \* Temp development keys
 \* (remove for final version)
 \*-------------------------------
 
+IF _DEBUG
 .TempDevel
 {
- IF DebugKeys
-
- lda develment ;development flag
- beq ]rts
+\ BEEB must hold down CTRL
+ LDA beeb_keypress_ctrl
+ BEQ return
 
  lda keypress
  cmp #kforceredraw
- bne :10
+ bne label_10
  lda #2
  sta redrawflg
  lda #0
  sta blackflag
+.return
  rts
 
-:10 cmp #kblackout
- bne :9
+.label_10 cmp #kblackout
+ bne label_9
  lda blackflag
  eor #$ff
  sta blackflag
-]rts rts
+ rts
 
-:9 cmp #kantimatter
- bne :17
+.label_9 cmp #kantimatter
+ bne label_17
  lda #initAMtimer
  sta AMtimer
  rts
 
-:17 cmp #kincstr
- bne :20
+.label_17 cmp #kincstr
+ bne label_20
  inc ChgKidStr
  inc ChgOppStr
  rts
 
-:20 cmp #kincmax
- bne :36
+.label_20 cmp #kincmax
+ bne label_36
  jmp boostmeter
 
-:36 cmp #knextlevel
- bne :28
+.label_36 cmp #knextlevel
+ bne label_28
  inc NextLevel
  rts
 
-:28 cmp #kskip5
- bne :30
+.label_28 cmp #kskip5
+ bne label_30
  lda level
  clc
  adc #5
  sta NextLevel
  rts
-:30
+.label_30
 
+IF _NOT_BEEB
 * keys 0-9
 
  lda keypress
@@ -607,9 +666,10 @@ kerasegame = '*'
  bne :15
  lda PAGE
  jmp screendump
+ENDIF
 
-:15 cmp #kupone
- bne :19
+.label_15 cmp #kupone
+ bne label_19
  lda KidY
  sec
  sbc #63 ;BlockHeight
@@ -617,11 +677,12 @@ kerasegame = '*'
  dec KidBlockY
  rts
 
-:19 cmp #kdecstr
- bne :21
+.label_19 cmp #kdecstr
+ bne label_24
  dec ChgKidStr
-]rts rts
+ rts
 
+IF _NOT_BEEB
 :21 cmp #kautoman
  bne :23
  lda ManCtrl
@@ -639,37 +700,45 @@ kerasegame = '*'
  lda #2
  sta NextLevel
  rts
+ENDIF
 
-:24 cmp #ktimeback
- bne :31
- lda #-2
-:chgtime clc
+.label_24 cmp #ktimeback
+ bne label_31
+ lda #LO(-2)
+.chgtime clc
  adc FrameCount+1
  sta FrameCount+1
  rts
 
-:31 cmp #ktimefwd
- bne :32
+.label_31 cmp #ktimefwd
+ bne label_32
  lda #2
- bne :chgtime
+ bne chgtime
 
-:32 cmp #kerasegame
- bne :33
+.label_32 cmp #kerasegame
+ bne label_33
  lda #$ff
  sta SavLevel
  jmp DoSaveGame
 
-:33 cmp #ktimeup
- bne :34
+.label_33 cmp #ktimeup
+ bne label_34
  lda #$ff
  sta FrameCount+1
  rts
 
-:34
- ENDIF
-.return
+.label_34 cmp #kzapgard
+ bne label_35
+;zap guard down to 0
+ lda #0
+ sec
+ sbc OppStrength
+ sta ChgOppStr
+
+.label_35
  rts
 }
+ENDIF
 
 IF _NOT_BEEB
 *-------------------------------
@@ -686,7 +755,6 @@ preload
  lda #POPside1
  sta BBundID
  rts
-ENDIF
 
 \*-------------------------------
 \*
@@ -709,6 +777,7 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -717,12 +786,10 @@ ENDIF
 \*  Only work in devel mode
 \*
 \*-------------------------------
+
+ IF NoCheatKeys=FALSE
 .checkcodes
 {
- IF NoCheatKeys
- rts
- ELSE
-
  lda #LO(C_boost)
  ldx #HI(C_boost)
  jsr checkcode
@@ -771,8 +838,8 @@ ENDIF
 .label_5
 .return
  rts
- ENDIF
 }
+ENDIF
 
 \*-------------------------------
 \*
@@ -783,6 +850,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .checkcode
 {
  sta smod+1
@@ -836,6 +904,7 @@ ENDIF
 .C_tina EQUS "TINA", 0
 
  ENDIF
+ENDIF
 
 \*-------------------------------
 \*
@@ -861,60 +930,49 @@ ENDIF
  ldx keydown
  bpl return ;No fresh press & no key down
 
- ora #$80 ;stale press, key still down
 .cont
- cmp #kleft
- beq local_left
- cmp #kleft_apple
- bne label_1
+ LDA beeb_keypress_left
+ BPL label_1
 
 .local_left lda #LO(-1)
 .local_setx sta kbdX
- rts
+; also check up
+ bne label_2
+; rts
 
 .label_1
- cmp #kright
- beq local_right
- cmp #kright_apple
- bne label_2
+ LDA beeb_keypress_right
+ BPL label_2
 
 .local_right lda #1
  bne local_setx
 
 .label_2
- cmp #kup
- beq local_up
- cmp #kup_apple
- bne label_3
+ LDA beeb_keypress_up
+ BPL label_3
 
 .local_up lda #LO(-1)
 .local_sety sta kbdY
  rts
 
 .label_3
- cmp #kdown
- beq local_down
- cmp #kdown_apple
- bne label_4
+ LDA beeb_keypress_down
+ BPL label_4
 
 .local_down lda #1
  bne local_sety
 
 .label_4
- cmp #kupleft
- beq local_ul
- cmp #kupleft_apple
- bne label_5
+ LDA beeb_keypress_jumpleft
+ BPL label_5
 
 .local_ul lda #LO(-1)
  sta kbdX
  bne local_sety
 
 .label_5
- cmp #kupright
- beq local_ur
- cmp #kupright_apple
- bne label_6
+ LDA beeb_keypress_jumpright
+ BPL label_6
 
 .local_ur lda #1
  sta kbdX
@@ -1669,31 +1727,30 @@ ENDIF
 
 .BREAD
 {
- lda jbtns
- bne label_1 ;buttons switched
+\ lda jbtns
+\ bne label_1 ;buttons switched
 
 \ lda $c061
 \ ldx $c062
 
  LDA #&79
- LDX #IKN_return EOR &80
+ LDX beeb_keydef_action
  JSR osbyte
- TXA
 
-.label_2 sta BTN0
+.label_2 stx BTN0
  stx BTN1
  rts
 
-.label_1
+\.label_1
 \ ldx $c062
 \ lda $c061
-
- LDA #&79
- LDX #IKN_return EOR &80
- JSR osbyte
- TXA
-
- jmp label_2
+\
+\ LDA #&79
+\ LDX #IKN_return EOR &80
+\ JSR osbyte
+\ TXA
+\
+\ jmp label_2
 }
 
 \*-------------------------------
@@ -1856,7 +1913,7 @@ ENDIF
 
  TXA
  AND #&80
- STA beeb_ctrl_key
+ STA beeb_keypress_ctrl
 
 \ lda $c000
 \ sta keypress
@@ -1934,4 +1991,135 @@ ENDIF
 
 .return
  rts
+}
+
+SMALL_FONT_MAPCHAR
+.redefine_string EQUS "REDEFINE~KEYS~PRESS", &FF
+.redefine_left EQUS "LEFT", &FF
+.redefine_right EQUS "RIGHT", &FF
+.redefine_up EQUS "UP~JUMP", &FF
+.redefine_down EQUS "DOWN~CROUCH", &FF
+.redefine_jumpleft EQUS "JUMP~LEFT", &FF
+.redefine_jumproght EQUS "JUMP~RIGHT", &FF
+.redefine_action EQUS "ACTION", &FF
+ASCII_MAPCHAR
+
+.redefine_index EQUB 0
+
+.redefine_keys
+{
+  \ Wait until next vsync frame swap so we know where we are
+  .wait_vsync
+  LDA vsync_swap_buffers
+  BNE wait_vsync
+
+  \ Put ourselves into single buffer mode
+  JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
+  JSR beeb_clear_status_line
+
+  \ Write initial string
+  LDA #LO(redefine_string):STA beeb_readptr
+  LDA #HI(redefine_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #13 ;PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Wait until no keys are being pressed
+  {
+    .wait_for_no_keys
+    LDA #&79
+    LDX #0
+    JSR osbyte
+
+    CPX #&FF
+    BNE wait_for_no_keys
+  }
+
+  \ Loop round all seven required keys
+  LDX #0
+  .loop  
+  STX redefine_index
+  
+  \ Fortunately beeb_readptr increments after a string plot
+  INC beeb_readptr
+  BNE no_carry
+  INC beeb_readptr+1
+  .no_carry
+
+  \ Clear the line
+  LDY #49
+  LDX #24
+  JSR beeb_clear_status_X
+
+  \ Write next key
+  LDX #49
+  LDY #BEEB_STATUS_ROW
+  LDA #13 ;PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Wait for a keypress
+  .wait_for_key
+  LDA #&79
+  LDX #IKN_shift EOR &80
+  JSR osbyte
+  TXA
+  BMI found_key
+
+  .not_shift
+  LDA #&79
+  LDX #0
+  JSR osbyte
+  CPX #&FF
+  BEQ wait_for_key
+
+  \ Escape will terminate process
+  CPX #IKN_esc
+  BEQ done
+
+  \ Store the key
+  TXA
+  EOR #&80
+  .found_key
+
+  \ See if we already have this one
+  LDX #0
+  .check
+  CPX redefine_index
+  BCS done_check
+
+  \ If so try again
+  CMP beeb_keydef_left, X
+  BEQ wait_for_key
+
+  INX
+  BNE check
+
+  \ If not then store
+  .done_check
+  STA beeb_keydef_left, X
+
+  \ Wait for no keys pressed
+  .wait_for_no_keys
+  LDA #&79
+  LDX #0
+  JSR osbyte
+
+  CPX #&FF
+  BNE wait_for_no_keys
+
+  \ Next key in the list
+  LDX redefine_index
+  INX
+  CPX #7
+  BNE loop
+
+  .done
+  \ Clear the status line and reset to double buffering
+
+  JSR beeb_clear_status_line
+  JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
+
+  \ Mark energy meters to be redrawn
+  JMP markmeters
 }

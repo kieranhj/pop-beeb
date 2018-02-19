@@ -30,6 +30,9 @@
 .vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
 .vbli BRK           ;jmp VBLI ;VBL interrupt
 
+\ Moved from subs.asm
+.PageFlip jmp PAGEFLIP
+
 \.normspeed RTS  ;jmp NORMSPEED         ; NOT BEEB
 \.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
 \.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
@@ -459,3 +462,40 @@ setparam
 
  xc off
 ENDIF
+
+\*-------------------------------
+\*
+\*  P A G E F L I P
+\*
+\*-------------------------------
+
+.PAGEFLIP
+{
+\ jsr normspeed ;IIGS
+\ lda PAGE
+\ bne :1
+\
+\ lda #$20
+\ sta PAGE
+\ lda $C054 ;show page 1
+\
+\:3 lda $C057 ;hires on
+\ lda $C050 ;text off
+\ lda vibes
+\ beq :rts
+\ lda $c05e
+\]rts rts
+\:rts lda $c05f
+\ rts
+\
+\:1 lda #0
+\ sta PAGE
+\ lda $C055 ;show page 2
+\ jmp :3
+
+    LDA PAGE
+    EOR #&20
+    STA PAGE
+
+    JMP shadow_swap_buffers
+}

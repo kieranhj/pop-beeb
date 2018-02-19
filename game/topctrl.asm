@@ -411,6 +411,26 @@ miry = 0
 IF _DEBUG
 .temp_last_count EQUB 0
 .temp_vsync_diff EQUB 0
+
+FR_COUNTER_X=78
+FR_COUNTER_Y=BEEB_STATUS_ROW
+
+.display_vsync_counter
+{
+    JSR beeb_plot_font_prep
+    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr
+    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr+1
+    LDA #13:STA PALETTE
+    LDA temp_vsync_diff
+    CMP #10
+    BCC diff_ok
+    LDA #9
+    .diff_ok
+    INC A
+    JMP beeb_plot_font_glyph
+}
 ENDIF
 
 .MainLoop
@@ -442,6 +462,10 @@ ENDIF
  jsr NextFrame ;Determine what next frame should look like
 
  jsr flashon
+
+IF _DEBUG
+ JSR display_vsync_counter
+ENDIF
 
  jsr FrameAdv ;Draw next frame & show it
 
@@ -685,6 +709,10 @@ ENDIF
 \*-------------------------------
 .FrameAdv
 {
+  .wait_vsync
+  LDA vsync_swap_buffers
+  BNE wait_vsync
+
  lda cutplan ;set by PrepCut
  bne local_cut
 
@@ -694,7 +722,14 @@ ENDIF
  ; even if swapping screens mid-frame
  ; probably need a min frame counter (25Hz)
  ; so wait for 2 vblanks or swap immediately (ala Banjo)
- jmp PageFlip ;Update current screen...
+ ; jmp PageFlip ;Update current screen...
+  
+  LDA PAGE
+  EOR #&20
+  STA PAGE
+
+  INC vsync_swap_buffers
+  RTS
 
 .local_cut jmp DoCleanCut ;or draw new screen from scratch
 }
