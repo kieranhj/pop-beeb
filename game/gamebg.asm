@@ -298,7 +298,7 @@ ASCII_MAPCHAR
     INC A
     STA (beeb_readptr), Y
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #25
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -387,7 +387,7 @@ ASCII_MAPCHAR
     LDA #HI(level_string)
     STA beeb_readptr+1
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #32
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -434,7 +434,7 @@ ASCII_MAPCHAR
     LDA #HI(continue_string)
     STA beeb_readptr+1
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #14
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -680,7 +680,7 @@ EQUB &FF
     LDA #LO(meter_string):STA beeb_readptr
     LDA #HI(meter_string):STA beeb_readptr+1
 
-    LDA #5
+    LDA #PAL_BRY
     LDX #0
     LDY #BEEB_STATUS_ROW
     JSR beeb_plot_font_string
@@ -832,7 +832,7 @@ EQUB &FF
     SBC OppStrength
     TAX
 
-    LDA #5
+    LDA #PAL_BRY
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 
