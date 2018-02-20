@@ -440,6 +440,47 @@ ASCII_MAPCHAR
     JMP beeb_plot_font_string
 }
 
+SMALL_FONT_MAPCHAR
+.error_string
+EQUS "DISC ERROR!", &FF
+ASCII_MAPCHAR
+
+.ERRORMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(error_string)
+    STA beeb_readptr
+    LDA #HI(error_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #30
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.success_string
+EQUS "GAME SAVED OK!", &FF
+ASCII_MAPCHAR
+
+.SUCCESSMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(success_string)
+    STA beeb_readptr
+    LDA #HI(success_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #26
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+
 IF _NOT_BEEB
 *-------------------------------
 * Superimpose "Turn disk over" message
