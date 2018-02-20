@@ -679,8 +679,10 @@ EQUB &FF
 
 .DRAWKIDMETER
 {
- lda inbuilder          ; BEEB TODO - remove ED ONLY
+IF EditorDisk
+ lda inbuilder
  bne return_53
+ENDIF
 
     DEC redkidmeter
 
@@ -811,8 +813,10 @@ EQUB &FF
 
 .DRAWOPPMETER
 {
+IF EditorDisk
  lda inbuilder
  bne return_53
+ENDIF
 
  DEC redoppmeter
 

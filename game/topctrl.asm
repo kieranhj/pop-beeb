@@ -144,7 +144,7 @@ miry = 0
  cpx #locals_top      ; BEEB don't zero all ZP
  bne loop
 
-\ BEEB TO DO JOYSTICK
+\ BEEB TODO JOYSTICK
 \ jsr setcenter ;Center joystick
 
 \ BEEB set keyboard mode
@@ -268,7 +268,9 @@ miry = 0
  sta blackflag
  sta redrawflg
  sta inmenu
+IF EditorDisk
  sta inbuilder
+ENDIF
  sta recheck0
  sta SINGSTEP
  sta ManCtrl

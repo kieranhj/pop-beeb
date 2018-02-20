@@ -1566,7 +1566,7 @@ ENDIF
     \\ This function originally used to display opponent energy bar
     \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LayAND
 }
 
 \*-------------------------------
@@ -1578,7 +1578,7 @@ ENDIF
     \\ This function originally used to display opponent energy bar
     \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LaySTA
 }
 
 

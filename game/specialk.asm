@@ -45,7 +45,7 @@ DebugKeys = 0
 .dloop BRK       ;jmp DLOOP
 .strobe jmp STROBE
 .controller jmp CONTROLLER
-.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
+.setcenter BRK  ;jmp SETCENTER      BEEB TODO JOYSTICK
 .pread BRK      ;jmp PREAD          BEEB TODO JOYSTICK
 
 .getselect jmp GETSELECT
@@ -1584,7 +1584,7 @@ ENDIF
 \*  Strobe keyboard
 \*
 \*-------------------------------
-.DLOOP
+
 .STROBE
 {
  jsr keys ;Detect & respond to keypresses
