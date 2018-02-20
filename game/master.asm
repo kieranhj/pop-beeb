@@ -1335,6 +1335,9 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
+ lda #30
+ jmp tpause
+
  RTS
 }
 
