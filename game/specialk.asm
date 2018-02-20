@@ -504,7 +504,8 @@ ENDIF
  bne label_18
  lda level
  sta SavLevel
- jmp DoSaveGame
+ ;jmp DoSaveGame
+ RTS  ; request save game in MainLoop
 
 \* Show time left
 
@@ -719,7 +720,8 @@ ENDIF
  bne label_33
  lda #$ff
  sta SavLevel
- jmp DoSaveGame
+; jmp DoSaveGame
+ RTS  ; request save game in MainLoop
 
 .label_33 cmp #ktimeup
  bne label_34

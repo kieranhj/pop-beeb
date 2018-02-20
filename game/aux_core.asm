@@ -305,7 +305,9 @@ IF _JMP_TABLE
 .twinkle RTS        ; JUMP_B TWINKLE                BEEB TODO GFX
 .flow JUMP_B FLOW, GAMEBG_BASE, 22
 .pmask RTS          ; JUMP_B PMASK, GAMEBG_BASE, 23 BEEB TODO GFX
+.errormsg JUMP_B ERRORMSG, GAMEBG_BASE, 24
 
+.successmsg JUMP_B SUCCESSMSG, GAMEBG_BASE, 25
 
 \*-------------------------------
 \* grafix.asm
@@ -793,6 +795,9 @@ EQUB LO(INITLAY)
 EQUB 0    ; EQUB LO(TWINKLE)
 EQUB LO(FLOW)
 EQUB 0      ;EQUB LO(PMASK)
+EQUB LO(ERRORMSG)
+
+EQUB LO(SUCCESSMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -1012,6 +1017,9 @@ EQUB HI(INITLAY)
 EQUB 0    ; EQUB HI(TWINKLE)
 EQUB HI(FLOW)
 EQUB 0      ; EQUB HI(PMASK)
+EQUB HI(ERRORMSG)
+
+EQUB HI(SUCCESSMSG)
 
 \*-------------------------------
 \* grafix.asm

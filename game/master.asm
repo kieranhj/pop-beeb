@@ -243,20 +243,41 @@ kresume = IKN_l OR $80
  JSR beeb_set_mode2_no_clear
 
     \\ Own error handler now we're fully initialised
-    IF _DEBUG=FALSE
     SEI
-    LDX #LO(GOATTRACT)
-    LDY #HI(GOATTRACT)
+    LDX #LO(error_handler)
+    LDY #HI(error_handler)
     STX BRKV
     STY BRKV+1
     CLI
-    ENDIF
 
 IF _BOOT_ATTRACT
  jmp AttractLoop
 ELSE
  jmp DOSTARTGAME
 ENDIF
+}
+
+.error_handler
+{
+    \\ Could have been anywhere so kill the stack
+    LDX #&FF
+    TXS
+
+    LDA SavLevel
+    BEQ not_trying_to_save
+
+    \\ We were in middle of save game but an error occured
+    LDA #0
+    STA SavLevel
+
+    LDA #&FF
+    STA SavError
+
+    JMP MainLoop
+
+    \\ We weren't saving so just restart
+    .not_trying_to_save
+    JMP GOATTRACT
 }
 
 IF _TODO
@@ -2301,15 +2322,17 @@ ENDIF
 \* In: SavLevel = level ($ff to erase saved game)
 \*-------------------------------
 
+.SavError EQUB 0
+
 \ Moved from gameeq.h.asm
 .savedgame
 
-.SavLevel skip 1
-.SavStrength skip 1
-.SavMaxed skip 1
-.SavTimer skip 2
- skip 1
-.SavNextMsg skip 1
+.SavLevel EQUB 0
+.SavStrength EQUB 0
+.SavMaxed EQUB 0
+.SavTimer EQUW 0
+EQUB 0
+.SavNextMsg EQUB 0
 
 .savedgame_top
 

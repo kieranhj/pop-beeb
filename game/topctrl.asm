@@ -80,11 +80,14 @@ mousetimer = 150
 LevelMsg = 1
 ContMsg = 2
 TimeMsg = 3
+ErrorMsg = 4
+SuccessMsg = 5
 
 leveltimer = 20 ;level message timer
 contflash = 95
 contoff = 15
 deadenough = 4
+savtimer = 40
 
 \*-------------------------------
 \* Mirror location
@@ -433,8 +436,39 @@ FR_COUNTER_Y=BEEB_STATUS_ROW
 }
 ENDIF
 
+\\ Should probably refactor this out into a proper message system
+
 .MainLoop
 {
+\\ Handle Error Messge
+  {
+    LDA SavError
+    BEQ no_error
+    LDA msgtimer
+    BNE no_error
+    lda #ErrorMsg
+    sta message
+    lda #savtimer
+    sta msgtimer
+    STZ SavError
+    STZ msgdrawn
+    .no_error
+  }
+  \\ Handle Save Game request at top level
+  {
+    LDA SavLevel
+    BEQ no_savegame
+    JSR DoSaveGame
+    STZ SavLevel
+    LDA msgtimer
+    BNE no_savegame
+    lda #SuccessMsg
+    sta message
+    lda #savtimer
+    sta msgtimer
+    .no_savegame
+  }
+
 IF _DEBUG
  SEC
  LDA beeb_vsync_count
@@ -1753,23 +1787,30 @@ ENDIF
  cmp #leveltimer-2
  bcs return_62
 
- lda message
- cmp #LevelMsg
- bne label_1
   LDA msgdrawn
   CMP #REDRAW_FRAMES
   BCS return_62
   INC msgdrawn
+
+ lda message
+ cmp #LevelMsg
+ bne label_1
  jmp printlevel
 
 .label_1
  cmp #TimeMsg
- bne return_62
-  LDA msgdrawn
-  CMP #REDRAW_FRAMES
-  BCS return_62
-  INC msgdrawn
+ bne label_3
  jmp timeleftmsg
+
+.label_3
+ cmp #ErrorMsg
+ bne label_4
+ jmp errormsg
+
+.label_4
+ cmp #SuccessMsg
+ bne return_62
+ jmp successmsg
 
 .no_message_to_display
   LDA msgdrawn
