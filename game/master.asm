@@ -46,7 +46,7 @@ MACRO MASTER_LOAD_HIRES filename
  LDA #HI(beeb_screen_addr)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR PageFlip
 }
 ENDMACRO
 
@@ -57,7 +57,7 @@ MACRO MASTER_LOAD_DHIRES filename, lines
  LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR PageFlip
  JSR beeb_show_screen       ; in case previous blackout
 }
 ENDMACRO
@@ -1053,7 +1053,6 @@ EQUS "PRIN   $"
  sta musicon
  jsr blackout
 
-\ BEEB TODO check mem usage
 \ jsr LoadStage1B
 
  jsr Epilog
@@ -1126,7 +1125,6 @@ EQUS "PRIN   $"
 
 \* Load in Stage 1 data
 
-\ BEEB TODO check memory usage
 \ jmp LoadStage1A
 
  JMP beeb_set_attract_screen
@@ -1190,7 +1188,7 @@ ENDIF
 
 \*-------------------------------
 \*
-\* Credit line disappears
+\* Credit line disappears - BEEB TODO?
 \*
 \*-------------------------------
 
@@ -1199,7 +1197,6 @@ ENDIF
 \* Switch to DHires page 2
 \* (credit line disappears)
 
-\ BEEB TODO
 \ lda PAGE2on
 
 \* Copy DHires page 2 back to hidden page 1
@@ -1209,6 +1206,7 @@ ENDIF
 \* Display page 1
 
 \ lda PAGE2off
+
 .return
  rts
 }
@@ -1349,14 +1347,8 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
-
-
  jsr blackout
 
-
-
-
-\ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0

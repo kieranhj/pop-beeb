@@ -40,7 +40,9 @@ ENDIF
 \ dum $200
 
 .inmenu skip 1
+IF EditorDisk
 .inbuilder skip 1
+ENDIF
 IF _TODO
 ineditor ds 1
 ENDIF

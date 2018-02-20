@@ -99,18 +99,17 @@ ENDIF
 \*-------------------------------
 \* Strength meters
 
+IF _NOT_BEEB
 .KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
-.KidStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-.OppStrX EQUB 27,28,29,30,31,32,34,35,36,37,38,39       \\ BEEB TODO MIRROR
-.OppStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
-\\.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
 .bline EQUB $89,$8a,$8b
+ENDIF
 
 \*-------------------------------
 \* Post in Princess's room
@@ -680,8 +679,10 @@ EQUB &FF
 
 .DRAWKIDMETER
 {
- lda inbuilder          ; BEEB TODO - remove ED ONLY
+IF EditorDisk
+ lda inbuilder
  bne return_53
+ENDIF
 
     DEC redkidmeter
 
@@ -812,8 +813,10 @@ EQUB &FF
 
 .DRAWOPPMETER
 {
+IF EditorDisk
  lda inbuilder
  bne return_53
+ENDIF
 
  DEC redoppmeter
 
@@ -969,7 +972,6 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
-\ BEEB TEMP - comment out
 \ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
 
 .local_tall lda YCO

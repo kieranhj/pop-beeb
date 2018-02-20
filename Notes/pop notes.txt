@@ -2264,3 +2264,17 @@ A+   H+
 0 -  0 -
 Then read in pairs from the bottom starting at either 0,1 depending on parity
 In theory just read from stack_depth (pixels*4+1) or stack_depth-1, depending on parity
+
+20/2/2018
+~~~
+RAM FREE (NOT DEBUG)
+Zero page free =  &0 
+Language workspace RAM free =  &1D 
+Lower workspace RAM free =  &46 
+Core RAM free =  &104 
+Main RAM free =  &EE 
+HAZEL RAM free =  &4E 
+BANK 0 free =  &3F 
+BANK 1 free =  &58 
+BANK 2 free =  &C79 
+BANK 3 free =  &20E 

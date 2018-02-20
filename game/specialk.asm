@@ -20,8 +20,8 @@ DebugKeys = 0
  IF _JMP_TABLE=FALSE
 .keys jmp KEYS
 .clrjstk jmp CLRJSTK
-.zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
-.addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.zerosound RTS ;jmp ZEROSOUND
+.addsound RTS  ;jmp ADDSOUND
 .facejstk jmp FACEJSTK
 
 .SaveSelect jmp SAVESELECT
@@ -37,7 +37,7 @@ DebugKeys = 0
 .keeptime jmp KEEPTIME
 
 .shortentime BRK ;jmp SHORTENTIME
-.cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
+.cuesong RTS     ;jmp CUESONG
 \jmp DoSaveGame
 \jmp LoadLevelX
 \jmp decstr
@@ -45,8 +45,8 @@ DebugKeys = 0
 .dloop BRK       ;jmp DLOOP
 .strobe jmp STROBE
 .controller jmp CONTROLLER
-.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
-.pread BRK      ;jmp PREAD          JOYSTICK
+.setcenter BRK  ;jmp SETCENTER      BEEB TODO JOYSTICK
+.pread BRK      ;jmp PREAD          BEEB TODO JOYSTICK
 
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -518,12 +518,6 @@ ENDIF
 \ rts
 
 .label_19
-\ cmp #knext \\ BEEB TEMP
-\ bne label_20
-\ inc NextLevel
-\ bne label_sk1
-
-.label_20
 
 .return
  rts
@@ -1191,7 +1185,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  Z E R O S O U N D
@@ -1265,7 +1259,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB    ; we don't need to pause game whilst music plays
 *-------------------------------
 *
 * Special routine for use by BURN
@@ -1568,7 +1562,9 @@ SHORTENTIME
  lda timetable+1,y
  sta FrameCount+1
 ]rts rts
+ENDIF
 
+IF _NOT_BEEB
 *-------------------------------
 *
 * Cue song
@@ -1588,7 +1584,7 @@ ENDIF
 \*  Strobe keyboard
 \*
 \*-------------------------------
-.DLOOP
+
 .STROBE
 {
  jsr keys ;Detect & respond to keypresses
@@ -1666,7 +1662,7 @@ ENDIF
 
 .CONTROLLER
 {
-\ BEEB TEMP comment out JOYSTICK
+\ BEEB TODO JOYSTICK
 \ jsr JREAD ;read jstk
 
  jmp BREAD ;& btns

@@ -1563,13 +1563,10 @@ ENDIF
 
 .beeb_plot_sprite_MLayAND
 {
-    \\ BEEB TODO
-    \\ Turns out this function is used to display opponent energy bar
-    \\ Can just create a new sprite for this as need to figure out size etc anyway
-    \\ Maybe also placement on Beeb
-    \\ For now just plot it without mirror
+    \\ This function originally used to display opponent energy bar
+    \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LayAND
 }
 
 \*-------------------------------
@@ -1578,13 +1575,10 @@ ENDIF
 
 .beeb_plot_sprite_MLaySTA
 {
-    \\ BEEB TODO
-    \\ Turns out this function is used to display opponent energy bar
-    \\ Can just create a new sprite for this as need to figure out size etc anyway
-    \\ Maybe also placement on Beeb
-    \\ For now just plot it without mirror
+    \\ This function originally used to display opponent energy bar
+    \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LaySTA
 }
 
 
