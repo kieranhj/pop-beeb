@@ -35,7 +35,7 @@ IF _JMP_TABLE=FALSE
 .deadenemy jmp DEADENEMY
 .playcut jmp PLAYCUT
 
-.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TODO SOUND
+.addlowersound jmp ADDLOWERSOUND
 .RemoveObj jmp REMOVEOBJ
 .addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
@@ -979,11 +979,12 @@ ENDIF
 
  lda soundon
  beq label_1
-\ BEEB TEMP comment out TODO SOUND
+\ NOT BEEB - sound played on EVENTV
 \ jsr playback ;play back sound fx
  jsr zerosound
 .label_1
-; jsr songcues
+\ NOT BEEB - sound played on EVENTV
+\ jsr songcues
 
  dec SceneCount
  bne playloop
@@ -1443,46 +1444,47 @@ floorY = 151
  rts
 }
 
-IF _TODO
-*-------------------------------
-* Add lowering-gate sound (only when gate is visible)
-* In: A = state
-*-------------------------------
-ADDLOWERSOUND
- lsr
- bcc ]rts ;alt frames
+\*-------------------------------
+\* Add lowering-gate sound (only when gate is visible)
+\* In: A = state
+\*-------------------------------
+
+.ADDLOWERSOUND
+{
+ lsr A
+ bcc return ;alt frames
 
  lda level
  cmp #3
- bne :n
+ bne label_n
  lda trscrn
  cmp #2 ;Exception: Level 3, screen 2
- beq :y
-:n lda trscrn
+ beq label_y
+.label_n lda trscrn
  cmp scrnLeft
- bne :1
+ bne label_1
  ldy trloc
  cpy #9
- beq :y
+ beq label_y
  cpy #19
- beq :y
+ beq label_y
  cpy #29
- beq :y ;visible to left
-]rts rts
+ beq label_y ;visible to left
+.return rts
 
-:1 cmp VisScrn
- bne ]rts
+.label_1 cmp VisScrn
+ bne return
  ldy trloc
  cpy #9
- beq ]rts
+ beq return
  cpy #19
- beq ]rts
+ beq return
  cpy #29
- beq ]rts
+ beq return
 
-:y lda #LoweringGate
+.label_y lda #LoweringGate
  jmp addsound
-ENDIF
+}
 
 \*-------------------------------
 \*

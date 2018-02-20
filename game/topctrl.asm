@@ -503,13 +503,14 @@ ENDIF
 
  jsr FrameAdv ;Draw next frame & show it
 
-\ BEEB TEMP comment out SOUND
+\ NOT BEEB - sfx play on EVENTV
 \ jsr playback ;Play sounds
+
  jsr zerosound ;& zero sound table
 
  jsr flashoff
 
-\ BEEB TEMP comment out SOND
+\ NOT BEEB - music plays on EVENTV
 \ jsr songcues ;Play music
 
  lda NextLevel
@@ -651,8 +652,8 @@ ENDIF
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
 .label_1
-\ BEEB TEMP comment out SOUND
-\ jsr addsfx ;Add additional sound fx
+
+ jsr addsfx ;Add additional sound fx
 
  jsr chgmeters ;Change strength meters
 
@@ -1178,9 +1179,6 @@ ENDIF
 
  jsr dispmsg ;Superimpose message (if any)
 
-\ BEEB TEMP TEST
-\ JSR beeb_wait_vsync
-
 .label_1
  jmp drawall ;Dump contents of image lists to screen
 }
@@ -1328,7 +1326,6 @@ ENDIF
 
  lda CharLife
  bne label_inc
-\ BEEB TEMP comment out SOUND
  jsr deathsong ;cue death music
 
 .label_inc lda CharLife
@@ -1621,7 +1618,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Play song cues
@@ -1712,24 +1709,27 @@ songcues
  sta PAGE
 
  jmp clearjoy
+ENDIF
 
-*-------------------------------
-*
-* Add additional sound fx
-*
-*-------------------------------
-addsfx
+\*-------------------------------
+\*
+\* Add additional sound fx
+\*
+\*-------------------------------
+
+.addsfx
+{
  lda #167 ;blocked strike
  cmp KidPosn ;if char is striking...
- bne :1
+ bne label_1
  lda #SwordClash1
- bne :clash
-:1 cmp ShadPosn
- bne :2
+ bne clash
+.label_1 cmp ShadPosn
+ bne label_2
  lda #SwordClash2
-:clash jmp addsound
-:2
-ENDIF
+.clash jmp addsound
+.label_2
+}
 .return_62
  rts
 

@@ -1686,15 +1686,13 @@ Release = 7
 .nocut lda #LO(-1)
  rts
 
-\ BEEB TEMP comment out SOUND
-.CUTLEFT ;jsr mirrmusic
+.CUTLEFT jsr mirrmusic
  jsr milestone3
  lda #0
  bpl local_cut
 
 .CUTRIGHT jsr stealsword
-\ BEEB TEMP comment out SOUND
-; jsr jaffmusic
+ jsr jaffmusic
  lda #1
  bpl local_cut
 
@@ -1755,62 +1753,66 @@ Release = 7
 {
  lda level
  cmp #12
- bne return
+ bne return_64
  lda CharScrn
  cmp #18 ;scrn below swordscrn
- bne return
+ bne return_64
  lda #swordscrn
  ldx #swordx
  ldy #swordy
  jsr rdblock
  lda #floor
  sta (BlueType),y
-.return
- rts
 }
+.return_64
+ rts
 
-IF _TODO    ; MUSIC
-*-------------------------------
-* Level 13: Play Jaffar's Theme
-*-------------------------------
-jaffmusic
+\*-------------------------------
+\* Level 13: Play Jaffar's Theme
+\*-------------------------------
+
+.jaffmusic
+{
  lda level
  cmp #13
- bne return
+ bne return_64
  lda exitopen
- bne return
+ bne return_64
  lda CharScrn
  cmp #3
- bne return
+ bne return_64
  lda #s_Jaffar
  ldx #25
  jmp cuesong
+}
 
-*-------------------------------
-* Level 4 ("Mirror"): Play danger theme for mirror
-*-------------------------------
-mirrmusic
+\*-------------------------------
+\* Level 4 ("Mirror"): Play danger theme for mirror
+\*-------------------------------
+
+.mirrmusic
+{
  lda exitopen
- beq :no4
+ beq no4
  cmp #77
- beq :no4
+ beq no4
  lda level
  cmp #4
- bne :no4
+ bne no4
  lda CharBlockY
  cmp #miry
- bne :no4
+ bne no4
  lda CharScrn
  cmp #11 ;scrn to R of mirscrn
- bne :no4
+ bne no4
  lda #s_Danger
  ldx #50
  jsr cuesong
  lda #77
  sta exitopen ;so we don't repeat theme
-:no4
-return rts
-ENDIF
+.no4
+.return rts
+}
 
 \*-------------------------------
 \*
