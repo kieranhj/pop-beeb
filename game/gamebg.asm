@@ -99,18 +99,17 @@ ENDIF
 \*-------------------------------
 \* Strength meters
 
+IF _NOT_BEEB
 .KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
-.KidStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-.OppStrX EQUB 27,28,29,30,31,32,34,35,36,37,38,39       \\ BEEB TODO MIRROR
-.OppStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
-\\.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
 .bline EQUB $89,$8a,$8b
+ENDIF
 
 \*-------------------------------
 \* Post in Princess's room
@@ -245,6 +244,8 @@ ASCII_MAPCHAR
 \ lda #ora
 \ sta OPACITY
 
+    JSR beeb_clear_text_area
+
     jsr getminleft
 
     LDA #LO(minutes_string)
@@ -296,7 +297,7 @@ ASCII_MAPCHAR
     INC A
     STA (beeb_readptr), Y
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #25
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -359,6 +360,8 @@ ASCII_MAPCHAR
 \ sta OPACITY
 \ jmp addmsg
 
+    JSR beeb_clear_text_area
+
     LDY #6
 
     JSR getlevelno
@@ -383,7 +386,7 @@ ASCII_MAPCHAR
     LDA #HI(level_string)
     STA beeb_readptr+1
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #32
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -430,11 +433,52 @@ ASCII_MAPCHAR
     LDA #HI(continue_string)
     STA beeb_readptr+1
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #14
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }
+
+SMALL_FONT_MAPCHAR
+.error_string
+EQUS "DISC ERROR!", &FF
+ASCII_MAPCHAR
+
+.ERRORMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(error_string)
+    STA beeb_readptr
+    LDA #HI(error_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #30
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.success_string
+EQUS "GAME SAVED OK!", &FF
+ASCII_MAPCHAR
+
+.SUCCESSMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(success_string)
+    STA beeb_readptr
+    LDA #HI(success_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #26
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
 
 IF _NOT_BEEB
 *-------------------------------
@@ -635,8 +679,10 @@ EQUB &FF
 
 .DRAWKIDMETER
 {
- lda inbuilder          ; BEEB TODO - remove ED ONLY
+IF EditorDisk
+ lda inbuilder
  bne return_53
+ENDIF
 
     DEC redkidmeter
 
@@ -676,7 +722,7 @@ EQUB &FF
     LDA #LO(meter_string):STA beeb_readptr
     LDA #HI(meter_string):STA beeb_readptr+1
 
-    LDA #5
+    LDA #PAL_BRY
     LDX #0
     LDY #BEEB_STATUS_ROW
     JSR beeb_plot_font_string
@@ -767,8 +813,10 @@ EQUB &FF
 
 .DRAWOPPMETER
 {
+IF EditorDisk
  lda inbuilder
  bne return_53
+ENDIF
 
  DEC redoppmeter
 
@@ -828,7 +876,7 @@ EQUB &FF
     SBC OppStrength
     TAX
 
-    LDA #5
+    LDA #PAL_BRY
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 
@@ -924,7 +972,6 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
-\ BEEB TEMP - comment out
 \ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
 
 .local_tall lda YCO

@@ -19,12 +19,12 @@ CheckTimer = 0
 IF _JMP_TABLE=FALSE
 .addtorches jmp ADDTORCHES
 .doflashon jmp DOFLASHON
-.PageFlip jmp shadow_swap_buffers           ; jmp PAGEFLIP
-\\.demo jmp DEMO        \\ moved to auto.asm
+\\.PageFlip jmp PAGEFLIP        \\ moved to hires_core.asm
+\\.demo jmp DEMO                \\ moved to auto.asm
 .showtime jmp SHOWTIME
 
 .doflashoff jmp DOFLASHOFF
-.lrclse BRK             ; jmp LRCLSE                BEEB TODO FLASH
+.lrclse BRK             ; jmp LRCLSE
 \ jmp potioneffect
 \ jmp checkalert
 \ jmp reflection
@@ -35,7 +35,7 @@ IF _JMP_TABLE=FALSE
 .deadenemy jmp DEADENEMY
 .playcut jmp PLAYCUT
 
-.addlowersound RTS      ; jmp ADDLOWERSOUND         BEEB TODO SOUND
+.addlowersound jmp ADDLOWERSOUND
 .RemoveObj jmp REMOVEOBJ
 .addfall jmp ADDFALL
 .setinitials jmp SETINITIALS
@@ -432,36 +432,6 @@ slicersync = 3 ;# frames out of sync
 .return
  RTS
 }
-
-IF _NOT_BEEB
-*-------------------------------
-*
-*  P A G E F L I P
-*
-*-------------------------------
-PAGEFLIP
- jsr normspeed ;IIGS
- lda PAGE
- bne :1
-
- lda #$20
- sta PAGE
- lda $C054 ;show page 1
-
-:3 lda $C057 ;hires on
- lda $C050 ;text off
- lda vibes
- beq :rts
- lda $c05e
-]rts rts
-:rts lda $c05f
- rts
-
-:1 lda #0
- sta PAGE
- lda $C055 ;show page 2
- jmp :3
-ENDIF
 
 \*-------------------------------
 \*
@@ -918,6 +888,7 @@ ENDIF
  bne loop
  jmp swpage
 .interrupt
+ jsr swpage
  jmp dostartgame
 }
 
@@ -933,7 +904,8 @@ ENDIF
  sta PAGE
 
 \\ BEEB equivalent here to invert RAM bit 2 only
-\\ BEEB TODO danger?
+\\ BEEB effectively become single buffered here!
+\\ BEEB use with caution and make sure you set it back...
 
  lda &fe34
  eor #4	; invert bits 0 (CRTC) & 2 (RAM)
@@ -1007,11 +979,12 @@ ENDIF
 
  lda soundon
  beq label_1
-\ BEEB TEMP comment out TODO SOUND
+\ NOT BEEB - sound played on EVENTV
 \ jsr playback ;play back sound fx
  jsr zerosound
 .label_1
-; jsr songcues
+\ NOT BEEB - sound played on EVENTV
+\ jsr songcues
 
  dec SceneCount
  bne playloop
@@ -1432,6 +1405,8 @@ floorY = 151
  lda msgtimer
  bne return ;wait till other msgs are gone
 
+ STA msgdrawn       ; force this message to draw
+
  lda #TimeMsg
  sta message
  lda #timemsgtimer
@@ -1469,46 +1444,47 @@ floorY = 151
  rts
 }
 
-IF _TODO
-*-------------------------------
-* Add lowering-gate sound (only when gate is visible)
-* In: A = state
-*-------------------------------
-ADDLOWERSOUND
- lsr
- bcc ]rts ;alt frames
+\*-------------------------------
+\* Add lowering-gate sound (only when gate is visible)
+\* In: A = state
+\*-------------------------------
+
+.ADDLOWERSOUND
+{
+ lsr A
+ bcc return ;alt frames
 
  lda level
  cmp #3
- bne :n
+ bne label_n
  lda trscrn
  cmp #2 ;Exception: Level 3, screen 2
- beq :y
-:n lda trscrn
+ beq label_y
+.label_n lda trscrn
  cmp scrnLeft
- bne :1
+ bne label_1
  ldy trloc
  cpy #9
- beq :y
+ beq label_y
  cpy #19
- beq :y
+ beq label_y
  cpy #29
- beq :y ;visible to left
-]rts rts
+ beq label_y ;visible to left
+.return rts
 
-:1 cmp VisScrn
- bne ]rts
+.label_1 cmp VisScrn
+ bne return
  ldy trloc
  cpy #9
- beq ]rts
+ beq return
  cpy #19
- beq ]rts
+ beq return
  cpy #29
- beq ]rts
+ beq return
 
-:y lda #LoweringGate
+.label_y lda #LoweringGate
  jmp addsound
-ENDIF
+}
 
 \*-------------------------------
 \*

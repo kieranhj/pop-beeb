@@ -85,7 +85,9 @@ ENDIF
 \ dum $200
 
 .inmenu skip 1
+IF EditorDisk
 .inbuilder skip 1
+ENDIF
 IF _TODO
 ineditor ds 1
 ENDIF
@@ -107,6 +109,8 @@ ENDIF
 IF _NOT_BEEB
 IIGS ds 1
 ENDIF
+.beeb_keypress_ctrl skip 1
+
 
 \dum $3c0
 

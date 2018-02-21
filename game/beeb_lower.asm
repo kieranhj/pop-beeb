@@ -40,7 +40,9 @@ ENDIF
 \ dum $200
 
 .inmenu skip 1
+IF EditorDisk
 .inbuilder skip 1
+ENDIF
 IF _TODO
 ineditor ds 1
 ENDIF
@@ -62,6 +64,7 @@ ENDIF
 IF _NOT_BEEB
 IIGS ds 1
 ENDIF
+.beeb_keypress_ctrl skip 1
 
 \dum $3c0
 
@@ -196,7 +199,7 @@ ENDIF
 .AMtimer skip 1
 .begrange skip 1
 ;.scrn skip 1
-.keybufptr skip 1
+;.keybufptr skip 1
 .VisScrn skip 1
 .OppStrength skip 1
 ;.jarabove skip 1
@@ -303,9 +306,10 @@ ENDIF
 .OpSword skip 1
 .OpLife skip 1
 
-
+IF _NOT_BEEB
 keybuflen = 10
 .keybuf skip keybuflen
+ENDIF
 
 \*-------------------------------
 \*

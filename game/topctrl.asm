@@ -80,11 +80,14 @@ mousetimer = 150
 LevelMsg = 1
 ContMsg = 2
 TimeMsg = 3
+ErrorMsg = 4
+SuccessMsg = 5
 
 leveltimer = 20 ;level message timer
 contflash = 95
 contoff = 15
 deadenough = 4
+savtimer = 40
 
 \*-------------------------------
 \* Mirror location
@@ -141,7 +144,7 @@ miry = 0
  cpx #locals_top      ; BEEB don't zero all ZP
  bne loop
 
-\ BEEB TO DO JOYSTICK
+\ BEEB TODO JOYSTICK
 \ jsr setcenter ;Center joystick
 
 \ BEEB set keyboard mode
@@ -265,7 +268,9 @@ miry = 0
  sta blackflag
  sta redrawflg
  sta inmenu
+IF EditorDisk
  sta inbuilder
+ENDIF
  sta recheck0
  sta SINGSTEP
  sta ManCtrl
@@ -411,10 +416,61 @@ miry = 0
 IF _DEBUG
 .temp_last_count EQUB 0
 .temp_vsync_diff EQUB 0
+
+FR_COUNTER_X=78
+FR_COUNTER_Y=BEEB_STATUS_ROW
+
+.display_vsync_counter
+{
+    JSR beeb_plot_font_prep
+    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr
+    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr+1
+    LDA #13:STA PALETTE
+    LDA temp_vsync_diff
+    CMP #10
+    BCC diff_ok
+    LDA #9
+    .diff_ok
+    INC A
+    JMP beeb_plot_font_glyph
+}
 ENDIF
+
+\\ Should probably refactor this out into a proper message system
 
 .MainLoop
 {
+\\ Handle Error Messge
+  {
+    LDA SavError
+    BEQ no_error
+    LDA msgtimer
+    BNE no_error
+    lda #ErrorMsg
+    sta message
+    lda #savtimer
+    sta msgtimer
+    STZ SavError
+    STZ msgdrawn
+    .no_error
+  }
+  \\ Handle Save Game request at top level
+  {
+    LDA SavLevel
+    BEQ no_savegame
+    JSR DoSaveGame
+    STZ SavLevel
+    LDA msgtimer
+    BNE no_savegame
+    lda #SuccessMsg
+    sta message
+    lda #savtimer
+    sta msgtimer
+    .no_savegame
+  }
+
 IF _DEBUG
  SEC
  LDA beeb_vsync_count
@@ -443,15 +499,20 @@ ENDIF
 
  jsr flashon
 
+IF _DEBUG
+ JSR display_vsync_counter
+ENDIF
+
  jsr FrameAdv ;Draw next frame & show it
 
-\ BEEB TEMP comment out SOUND
+\ NOT BEEB - sfx play on EVENTV
 \ jsr playback ;Play sounds
+
  jsr zerosound ;& zero sound table
 
  jsr flashoff
 
-\ BEEB TEMP comment out SOND
+\ NOT BEEB - music plays on EVENTV
 \ jsr songcues ;Play music
 
  lda NextLevel
@@ -593,8 +654,8 @@ ENDIF
  jsr checkstrike
  jsr checkstab ;Check for sword strikes
 .label_1
-\ BEEB TEMP comment out SOUND
-\ jsr addsfx ;Add additional sound fx
+
+ jsr addsfx ;Add additional sound fx
 
  jsr chgmeters ;Change strength meters
 
@@ -685,6 +746,10 @@ ENDIF
 \*-------------------------------
 .FrameAdv
 {
+  .wait_vsync
+  LDA vsync_swap_buffers
+  BNE wait_vsync
+
  lda cutplan ;set by PrepCut
  bne local_cut
 
@@ -694,7 +759,14 @@ ENDIF
  ; even if swapping screens mid-frame
  ; probably need a min frame counter (25Hz)
  ; so wait for 2 vblanks or swap immediately (ala Banjo)
- jmp PageFlip ;Update current screen...
+ ; jmp PageFlip ;Update current screen...
+  
+  LDA PAGE
+  EOR #&20
+  STA PAGE
+
+  INC vsync_swap_buffers
+  RTS
 
 .local_cut jmp DoCleanCut ;or draw new screen from scratch
 }
@@ -1109,9 +1181,6 @@ ENDIF
 
  jsr dispmsg ;Superimpose message (if any)
 
-\ BEEB TEMP TEST
-\ JSR beeb_wait_vsync
-
 .label_1
  jmp drawall ;Dump contents of image lists to screen
 }
@@ -1259,7 +1328,6 @@ ENDIF
 
  lda CharLife
  bne label_inc
-\ BEEB TEMP comment out SOUND
  jsr deathsong ;cue death music
 
 .label_inc lda CharLife
@@ -1552,7 +1620,7 @@ ENDIF
  rts
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Play song cues
@@ -1643,24 +1711,27 @@ songcues
  sta PAGE
 
  jmp clearjoy
+ENDIF
 
-*-------------------------------
-*
-* Add additional sound fx
-*
-*-------------------------------
-addsfx
+\*-------------------------------
+\*
+\* Add additional sound fx
+\*
+\*-------------------------------
+
+.addsfx
+{
  lda #167 ;blocked strike
  cmp KidPosn ;if char is striking...
- bne :1
+ bne label_1
  lda #SwordClash1
- bne :clash
-:1 cmp ShadPosn
- bne :2
+ bne clash
+.label_1 cmp ShadPosn
+ bne label_2
  lda #SwordClash2
-:clash jmp addsound
-:2
-ENDIF
+.clash jmp addsound
+.label_2
+}
 .return_62
  rts
 
@@ -1682,7 +1753,10 @@ ENDIF
 
 \* Kid is dead -- message is "Press button to continue"
 
- JSR beeb_clear_text_area
+  \ Always blank the area under the continue message
+    LDY #13
+    LDX #54
+    JSR beeb_clear_status_X
 
  lda msgtimer
  cmp #contoff
@@ -1715,23 +1789,30 @@ ENDIF
  cmp #leveltimer-2
  bcs return_62
 
- lda message
- cmp #LevelMsg
- bne label_1
   LDA msgdrawn
   CMP #REDRAW_FRAMES
   BCS return_62
   INC msgdrawn
+
+ lda message
+ cmp #LevelMsg
+ bne label_1
  jmp printlevel
 
 .label_1
  cmp #TimeMsg
- bne return_62
-  LDA msgdrawn
-  CMP #REDRAW_FRAMES
-  BCS return_62
-  INC msgdrawn
+ bne label_3
  jmp timeleftmsg
+
+.label_3
+ cmp #ErrorMsg
+ bne label_4
+ jmp errormsg
+
+.label_4
+ cmp #SuccessMsg
+ bne return_62
+ jmp successmsg
 
 .no_message_to_display
   LDA msgdrawn

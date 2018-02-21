@@ -46,7 +46,7 @@ MACRO MASTER_LOAD_HIRES filename
  LDA #HI(beeb_screen_addr)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR PageFlip
 }
 ENDMACRO
 
@@ -57,7 +57,7 @@ MACRO MASTER_LOAD_DHIRES filename, lines
  LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JSR PageFlip
  JSR beeb_show_screen       ; in case previous blackout
 }
 ENDMACRO
@@ -243,20 +243,41 @@ kresume = IKN_l OR $80
  JSR beeb_set_mode2_no_clear
 
     \\ Own error handler now we're fully initialised
-    IF _DEBUG=FALSE
     SEI
-    LDX #LO(GOATTRACT)
-    LDY #HI(GOATTRACT)
+    LDX #LO(error_handler)
+    LDY #HI(error_handler)
     STX BRKV
     STY BRKV+1
     CLI
-    ENDIF
 
 IF _BOOT_ATTRACT
  jmp AttractLoop
 ELSE
  jmp DOSTARTGAME
 ENDIF
+}
+
+.error_handler
+{
+    \\ Could have been anywhere so kill the stack
+    LDX #&FF
+    TXS
+
+    LDA SavLevel
+    BEQ not_trying_to_save
+
+    \\ We were in middle of save game but an error occured
+    LDA #0
+    STA SavLevel
+
+    LDA #&FF
+    STA SavError
+
+    JMP MainLoop
+
+    \\ We weren't saving so just restart
+    .not_trying_to_save
+    JMP GOATTRACT
 }
 
 IF _TODO
@@ -574,6 +595,30 @@ ENDIF
  sta newBGset2
  sty newCHset
 
+    \ Switch Guard palettes
+    {
+        CMP #1
+        BEQ is_palace
+
+        \ Is Dungeon
+        LDA #MODE2_YELLOW_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+        
+        LDA #MODE2_RED_PAIR
+        STA palette_table+4*4+1     ; ick!
+        BNE is_done
+
+        .is_palace
+        LDA #MODE2_WHITE_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+
+        LDA #MODE2_GREEN_PAIR
+        STA palette_table+4*4+1     ; ick!
+        .is_done
+    }
+
 \ NOT BEEB
 \ jsr driveon
 
@@ -587,13 +632,6 @@ ENDIF
 
 \ NOT BEEB
 \ jmp driveoff
-
-\ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
-\ If want to map 4 byte palette table to an expanded &34 byte lookup
-\ LDA #0
-\ LDX #LO(fast_palette_lookup_0)
-\ LDY #HI(fast_palette_lookup_0)
-\ JSR beeb_expand_palette_table
 
  RTS
 }
@@ -1015,7 +1053,6 @@ EQUS "PRIN   $"
  sta musicon
  jsr blackout
 
-\ BEEB TODO check mem usage
 \ jsr LoadStage1B
 
  jsr Epilog
@@ -1088,7 +1125,6 @@ EQUS "PRIN   $"
 
 \* Load in Stage 1 data
 
-\ BEEB TODO check memory usage
 \ jmp LoadStage1A
 
  JMP beeb_set_attract_screen
@@ -1152,7 +1188,7 @@ ENDIF
 
 \*-------------------------------
 \*
-\* Credit line disappears
+\* Credit line disappears - BEEB TODO?
 \*
 \*-------------------------------
 
@@ -1161,7 +1197,6 @@ ENDIF
 \* Switch to DHires page 2
 \* (credit line disappears)
 
-\ BEEB TODO
 \ lda PAGE2on
 
 \* Copy DHires page 2 back to hidden page 1
@@ -1171,6 +1206,7 @@ ENDIF
 \* Display page 1
 
 \ lda PAGE2off
+
 .return
  rts
 }
@@ -1297,6 +1333,9 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
+ lda #30
+ jmp tpause
+
  RTS
 }
 
@@ -1308,14 +1347,8 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
-
-
  jsr blackout
 
-
-
-
-\ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
 
  lda #0 ;don't seek track 0
@@ -2281,15 +2314,17 @@ ENDIF
 \* In: SavLevel = level ($ff to erase saved game)
 \*-------------------------------
 
+.SavError EQUB 0
+
 \ Moved from gameeq.h.asm
 .savedgame
 
-.SavLevel skip 1
-.SavStrength skip 1
-.SavMaxed skip 1
-.SavTimer skip 2
- skip 1
-.SavNextMsg skip 1
+.SavLevel EQUB 0
+.SavStrength EQUB 0
+.SavMaxed EQUB 0
+.SavTimer EQUW 0
+EQUB 0
+.SavNextMsg EQUB 0
 
 .savedgame_top
 

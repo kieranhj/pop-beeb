@@ -74,6 +74,8 @@
 
 .vsync_palette_override EQUB &FF
 
+.vsync_swap_buffers	EQUB 0
+
 .event_handler
 {
 	php
@@ -91,6 +93,15 @@
     ;-------------------------------------------------
     ; Add vsync IRQ service routines here 
     ;-------------------------------------------------
+
+	\\ Increment vsync counter
+	INC beeb_vsync_count
+
+	LDA vsync_swap_buffers
+	BEQ no_swap
+	JSR shadow_swap_buffers
+	DEC vsync_swap_buffers
+	.no_swap
 
 IF _AUDIO
     ; call our audio interrupt handler

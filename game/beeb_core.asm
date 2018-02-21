@@ -278,12 +278,6 @@ IF _AUDIO_DEBUG
     jsr BEEB_DEBUG_DRAW_SFX
 ENDIF
 
-    ; I think it was a mistake to wait for vsync here!
-
-    LDA PAGE
-    EOR #&20
-    STA PAGE
-
     lda &fe34
     eor #1+4	; invert bits 0 (CRTC) & 2 (RAM)
     sta &fe34
@@ -609,8 +603,15 @@ ENDIF
     
     JSR PREPREP
 
-    \ Set a palette per swram bank
-    \ Could set palette per sprite table or even per sprite
+    \ On BEEB eor blend mode changed to PALETTE bump
+
+    LDA OPACITY
+    CMP #enum_eor
+    BNE not_eor
+    INC PALETTE
+    .not_eor
+
+    \ PALETTE now set per sprite
 
     LDA PALETTE
     JMP beeb_plot_sprite_setpalette

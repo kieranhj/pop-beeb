@@ -579,12 +579,7 @@ ENDIF
  sta OPACITY
  jmp beeb_plot_sprite_MLAY
 
-.notmirr
- cmp #enum_eor
- bne label_1
- INC PALETTE        ; BEEB eor = increment palette index
-
-.label_1 cmp #enum_and
+.notmirr cmp #enum_and
  bne label_2
  jmp beeb_plot_sprite_LayAND
 
@@ -1171,11 +1166,7 @@ ENDIF
 
 .beeb_plot_sprite_MLAY ;A = OPACITY
 {
- cmp #enum_eor
- bne label_1
- INC PALETTE        ; BEEB eor = increment palette index
-
-.label_1 cmp #enum_and
+ cmp #enum_and
  bne label_2
  jmp beeb_plot_sprite_MLayAND
 
@@ -1572,13 +1563,10 @@ ENDIF
 
 .beeb_plot_sprite_MLayAND
 {
-    \\ BEEB TODO
-    \\ Turns out this function is used to display opponent energy bar
-    \\ Can just create a new sprite for this as need to figure out size etc anyway
-    \\ Maybe also placement on Beeb
-    \\ For now just plot it without mirror
+    \\ This function originally used to display opponent energy bar
+    \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LayAND     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LayAND
 }
 
 \*-------------------------------
@@ -1587,13 +1575,10 @@ ENDIF
 
 .beeb_plot_sprite_MLaySTA
 {
-    \\ BEEB TODO
-    \\ Turns out this function is used to display opponent energy bar
-    \\ Can just create a new sprite for this as need to figure out size etc anyway
-    \\ Maybe also placement on Beeb
-    \\ For now just plot it without mirror
+    \\ This function originally used to display opponent energy bar
+    \\ Now plotted using the font glyph system so not required
 
-    BRK ;JMP beeb_plot_sprite_LaySTA     \\ BEEB TEMP
+    BRK ;JMP beeb_plot_sprite_LaySTA
 }
 
 
