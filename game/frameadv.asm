@@ -2098,7 +2098,10 @@ ENDIF
 .label_3 cmp #TypeSword
  beq label_5
  cmp #TypeComix
+ beq label_5
+ cmp #TypeComixAlt          ; alternate palette for comix
  bne label_4
+ jmp DrawShifted
 .label_5 jmp DrawSword
 
 .label_4 cmp #TypeGd

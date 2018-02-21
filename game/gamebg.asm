@@ -601,6 +601,7 @@ ENDIF
 
 \*-------------------------------
 
+IF 0
 .DrawShifted
 {
 \ lda #1
@@ -614,9 +615,11 @@ ENDIF
  lda #UseLayrsave OR UseCharTable
  jmp addmid
 }
+ENDIF
 
 \*-------------------------------
 
+.DrawShifted
 .DrawEored
 {
  lda #enum_eor          ; BEEB - this increments palette index at lowest level
@@ -1343,17 +1346,19 @@ ENDIF
 
 \* Get color (kid red, opps blue)
 
- lda CharID
- beq label_2 ;kid: 0
- lda #1 ;opponents: 1
-.label_2
- eor FCharX
- eor FCharFace
- and #1 ;look only at low bits
- bne label_1
- inc FCharX
- bne label_1
- inc FCharX+1
+\ NOT BEEB - this shifts sprite X pos by 1 pixel to change colour on Apple II
+\ lda CharID
+\ beq label_2 ;kid: 0
+\ lda #1 ;opponents: 1
+\.label_2
+\ eor FCharX
+\ eor FCharFace
+\ and #1 ;look only at low bits
+\ bne label_1
+\ inc FCharX
+\ bne label_1
+\ inc FCharX+1
+
 .label_1
  lda #starimage
  sta FCharImage
@@ -1368,7 +1373,14 @@ ENDIF
  lda #192
  sta FCharCD
 
+\* Get color (kid red, opps blue)
+
+\ For Beeb we just set the character object type accordingly
  lda #TypeComix
+ ldx CharID
+ beq label_2 ;kid: 0
+ INC A      ; TypeComixAlt
+.label_2
  jmp addcharobj
 }
 .return_27
