@@ -32,7 +32,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 \.LoadLevelX jmp LOADLEVELX         ; moved to master.asm
 .checkalert jmp CHECKALERT
-.dispversion BRK    ; jmp DISPVERSION
+\.dispversion BRK    ; jmp DISPVERSION  ; moved to specialk.asm
 ENDIF
 
 \*-------------------------------

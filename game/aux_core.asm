@@ -365,7 +365,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 .checkalert JUMP_B CHECKALERT, MISC_BASE, 15
-.dispversion BRK    ; jmp DISPVERSION
+\.dispversion BRK    ; jmp DISPVERSION  ; moved to specialk.asm
 
 
 \*-------------------------------
@@ -950,7 +950,7 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB LO(CHECKALERT)
-EQUB 0      ; EQUB LO(DISPVERSION)
+\EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
 \*-------------------------------
 \* beeb-plot-font.asm
@@ -1167,7 +1167,7 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB HI(CHECKALERT)
-EQUB 0      ; EQUB LO(DISPVERSION)
+\EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
 \*-------------------------------
 \* beeb-plot-font.asm
