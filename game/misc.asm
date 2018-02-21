@@ -349,6 +349,10 @@ vibetimer = 3
 
 .label_3 cpx #3
  bne label_4
+ lda #PAL_green
+ sta lightcolor
+ lda #3
+ sta lightning ;3 green flashes
  lda #s_ShortPot
  ldx #25
  jsr cuesong
