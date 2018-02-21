@@ -957,12 +957,15 @@ RefreshPot = %00100000
 BoostPot = %01000000
 MystPot = %01100000
 
-boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or equiv
+boffset = 2             ; BEEB have to plot Mask to use offset + Layrsave to animate!
 
 .SETUPFLASK
 {
  lda #boffset
  sta OFFSET
+
+ lda #enum_mask
+ sta OPACITY
 
  txa
  and #%11100000
@@ -972,7 +975,10 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
-\ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
+\ Mystery potion uses eor (INC PALETTE)
+
+ lda #enum_eor
+ sta OPACITY
 
 .local_tall lda YCO
  sec
@@ -995,9 +1001,6 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  sec
  sbc #14
  sta YCO
-
- lda #enum_sta
- sta OPACITY
 
  lda #LO(bgtable2)
  sta TABLE

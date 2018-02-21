@@ -1641,7 +1641,7 @@ ENDIF
  sta YCO
  ldx state
  jsr setupflask
- lda #UseLay
+ lda #UseLayrsave   ; was UseLay - BEEB uses Layrsave so can plot Mask
  jmp addmidezo
 }
 
