@@ -10,19 +10,23 @@
 CPU 1                       ; MASTER ONLY
 _VERSION = $01              ; BCD version 0.1
 
+_DEBUG = FALSE              ; enable bounds checks and other debug fetures
+_DEMO_BUILD = TRUE          ; restrict to just one level & watermark
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
+_START_LEVEL = 1            ; _DEBUG only start on a different level
+
+_AUDIO = TRUE               ; enable Beeb audio code
+_AUDIO_DEBUG = FALSE        ; enable audio debug text
+
 _TODO = FALSE               ; code still to be ported
-_DEBUG = TRUE               ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
+
 _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
-_ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
-_START_LEVEL = 1            ; _DEBUG only start on a different level
-_AUDIO = TRUE               ; enable Beeb audio code
+
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
-_AUDIO_DEBUG = FALSE         ; enable audio debug text
 
 ; Helpful MACROs
 
