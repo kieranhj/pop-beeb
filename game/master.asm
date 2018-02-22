@@ -1722,7 +1722,7 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-IF 1
+IF 0                ; if all same bank
 .bank1_filename
 EQUS "BANK1  $"
 ELSE
@@ -1736,43 +1736,14 @@ ENDIF
 .loadbank1
 {
     \ Start with CHTAB1 + 3
-    lda #BEEB_SWRAM_SLOT_CHTAB13
+    lda #BEEB_SWRAM_SLOT_CHTAB1
     jsr swr_select_slot
 
-IF 1
+IF 0
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
     LDA #HI(SWRAM_START)
     JSR disksys_load_file
-ELSE
-    \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
-    LDA #HI(chtable1)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 8)
-    LDY #HI(perm_file_names + 8)
-    LDA #HI(chtable3)
-    JSR disksys_load_file
-
-    \ Then CHTAB2 + 5
-    lda #BEEB_SWRAM_SLOT_CHTAB25
-    jsr swr_select_slot
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 16)
-    LDY #HI(perm_file_names + 16)
-    LDA #HI(chtable2)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
-    LDA #HI(chtable5)
-    JSR disksys_load_file
-ENDIF
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
@@ -1801,6 +1772,69 @@ ENDIF
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
+ELSE
+    \ index into table for filename
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
+    LDA #HI(chtable1)
+    JSR disksys_load_file
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 8)
+    LDY #HI(perm_file_names + 8)
+    LDA #HI(chtable3)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable1)
+    STA beeb_readptr
+    LDA #HI(chtable1)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    lda #BEEB_SWRAM_SLOT_CHTAB3
+    jsr swr_select_slot
+
+    \ Relocate the IMG file
+    LDA #LO(chtable3)
+    STA beeb_readptr
+    LDA #HI(chtable3)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    \ Then CHTAB2 + 5
+    lda #BEEB_SWRAM_SLOT_CHTAB2
+    jsr swr_select_slot
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 16)
+    LDY #HI(perm_file_names + 16)
+    LDA #HI(chtable2)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable2)
+    STA beeb_readptr
+    LDA #HI(chtable2)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+    lda #BEEB_SWRAM_SLOT_CHTAB5
+    jsr swr_select_slot
+
+    \ index into table for filename
+    LDX #LO(perm_file_names + 24)
+    LDY #HI(perm_file_names + 24)
+    LDA #HI(chtable5)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
+    LDA #LO(chtable5)
+    STA beeb_readptr
+    LDA #HI(chtable5)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+ENDIF
 
     .return
     RTS
