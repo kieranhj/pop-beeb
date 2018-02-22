@@ -2150,7 +2150,7 @@ Release = 7
  EQUB 1,Fwd
  EQUB 12,Ctr
  EQUB 30,Fwd ;start running...
- EQUB 37,Upfwd ;jump 1st pit
+ EQUB 38,Upfwd ;jump 1st pit       BEEB delay by one frame to fix timing!
  EQUB 47,Ctr
  EQUB 48,Fwd ;& keep running
 d1 = 65

@@ -177,11 +177,13 @@ SHEILA_System_VIA_Register_A_NH   = $FE4F
 MACRO ASCII_MAPCHAR
 
 	MAPCHAR 'A', 'Z', 'A' 
-	MAPCHAR 'a', 'z', 'z'
+	MAPCHAR 'a', 'z', 'a'
 	MAPCHAR '0', '9', '0'
 	MAPCHAR '?', '?'
 	MAPCHAR '!', '!'
 	MAPCHAR '.', '.'
 	MAPCHAR ' ', ' '
+    MAPCHAR ',', ','
+    MAPCHAR '~', '~'
 
 ENDMACRO

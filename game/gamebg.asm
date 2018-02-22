@@ -441,7 +441,7 @@ ASCII_MAPCHAR
 
 SMALL_FONT_MAPCHAR
 .error_string
-EQUS "DISC ERROR!", &FF
+EQUS "DISC WRITE ERROR!", &FF
 ASCII_MAPCHAR
 
 .ERRORMSG
@@ -454,7 +454,7 @@ ASCII_MAPCHAR
     STA beeb_readptr+1
 
     LDA #PAL_FONT
-    LDX #30
+    LDX #24
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }

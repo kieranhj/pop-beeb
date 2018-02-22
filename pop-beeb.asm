@@ -10,19 +10,23 @@
 CPU 1                       ; MASTER ONLY
 _VERSION = $01              ; BCD version 0.1
 
+_DEBUG = FALSE              ; enable bounds checks and other debug fetures
+_DEMO_BUILD = TRUE          ; restrict to just one level & watermark
+_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
+_START_LEVEL = 1            ; _DEBUG only start on a different level
+
+_AUDIO = TRUE               ; enable Beeb audio code
+_AUDIO_DEBUG = FALSE        ; enable audio debug text
+
 _TODO = FALSE               ; code still to be ported
-_DEBUG = TRUE               ; enable bounds checks
 _NOT_BEEB = FALSE           ; Apple II code to remove
+
 _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
-_ALL_LEVELS = TRUE          ; allow user to play all levels
 _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-_BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
-_START_LEVEL = 1            ; _DEBUG only start on a different level
-_AUDIO = TRUE               ; enable Beeb audio code
+
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
-_AUDIO_DEBUG = FALSE         ; enable audio debug text
 
 ; Helpful MACROs
 
@@ -128,6 +132,7 @@ BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
 BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
 BEEB_SCREEN_SIZE = HI((BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8) + &FF) * &100
 BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
+BEEB_SCREEN_VPOS = 32
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
@@ -137,6 +142,7 @@ beeb_status_addr = beeb_screen_addr + BEEB_STATUS_ROW * BEEB_SCREEN_ROW_BYTES
 
 BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
 BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
+BEEB_DOUBLE_HIRES_VPOS = 34
 
 beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
 

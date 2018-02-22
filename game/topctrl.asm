@@ -597,10 +597,10 @@ ENDIF
  beq cut5 ;Princess cuts before certain levels
 
 .cont
-IF _ALL_LEVELS
- jmp RESTART ;Start new level
-ELSE
+IF _DEMO_BUILD
  jmp GOATTRACT
+ELSE
+ jmp RESTART ;Start new level
 ENDIF
 
 \* Princess cuts before certain levels
@@ -1131,6 +1131,10 @@ ENDIF
 \ lda TEXTon
 
  jsr DoSure ;draw b.g. w/o chars
+
+IF _DEMO_BUILD
+ JSR plot_demo_watermark
+ENDIF
 
  jmp markmeters ;mark strength meters
 }
@@ -1822,8 +1826,31 @@ ENDIF
   LDA msgdrawn
   BEQ return_62
   DEC msgdrawn
+  IF _DEMO_BUILD
+  JMP plot_demo_watermark
+  ELSE
   JMP beeb_clear_text_area
+  ENDIF
 }
+
+IF _DEMO_BUILD
+.plot_demo_watermark
+{
+    JSR beeb_clear_text_area
+    LDA #LO(watermark_message)
+    STA beeb_readptr
+    LDA #HI(watermark_message)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #20
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+SMALL_FONT_MAPCHAR
+.watermark_message EQUS "!! WORK IN PROGRESS !!", &FF
+ASCII_MAPCHAR
+ENDIF
 
 IF _NOT_BEEB
 *-------------------------------
