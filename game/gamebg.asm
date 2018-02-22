@@ -601,6 +601,7 @@ ENDIF
 
 \*-------------------------------
 
+IF 0
 .DrawShifted
 {
 \ lda #1
@@ -614,9 +615,11 @@ ENDIF
  lda #UseLayrsave OR UseCharTable
  jmp addmid
 }
+ENDIF
 
 \*-------------------------------
 
+.DrawShifted
 .DrawEored
 {
  lda #enum_eor          ; BEEB - this increments palette index at lowest level
@@ -957,12 +960,15 @@ RefreshPot = %00100000
 BoostPot = %01000000
 MystPot = %01100000
 
-boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or equiv
+boffset = 2             ; BEEB have to plot Mask to use offset + Layrsave to animate!
 
 .SETUPFLASK
 {
  lda #boffset
  sta OFFSET
+
+ lda #enum_mask
+ sta OPACITY
 
  txa
  and #%11100000
@@ -972,7 +978,10 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
-\ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
+\ Mystery potion uses eor (INC PALETTE)
+
+ lda #enum_eor
+ sta OPACITY
 
 .local_tall lda YCO
  sec
@@ -995,9 +1004,6 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  sec
  sbc #14
  sta YCO
-
- lda #enum_sta
- sta OPACITY
 
  lda #LO(bgtable2)
  sta TABLE
@@ -1340,17 +1346,19 @@ ENDIF
 
 \* Get color (kid red, opps blue)
 
- lda CharID
- beq label_2 ;kid: 0
- lda #1 ;opponents: 1
-.label_2
- eor FCharX
- eor FCharFace
- and #1 ;look only at low bits
- bne label_1
- inc FCharX
- bne label_1
- inc FCharX+1
+\ NOT BEEB - this shifts sprite X pos by 1 pixel to change colour on Apple II
+\ lda CharID
+\ beq label_2 ;kid: 0
+\ lda #1 ;opponents: 1
+\.label_2
+\ eor FCharX
+\ eor FCharFace
+\ and #1 ;look only at low bits
+\ bne label_1
+\ inc FCharX
+\ bne label_1
+\ inc FCharX+1
+
 .label_1
  lda #starimage
  sta FCharImage
@@ -1365,7 +1373,14 @@ ENDIF
  lda #192
  sta FCharCD
 
+\* Get color (kid red, opps blue)
+
+\ For Beeb we just set the character object type accordingly
  lda #TypeComix
+ ldx CharID
+ beq label_2 ;kid: 0
+ INC A      ; TypeComixAlt
+.label_2
  jmp addcharobj
 }
 .return_27

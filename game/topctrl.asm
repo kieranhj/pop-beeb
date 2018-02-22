@@ -754,13 +754,17 @@ ENDIF
  bne local_cut
 
  jsr DoFast
- ; in theory wait for vsync / vblank here
- ; but as background doesn't change tearing is less noticable
- ; even if swapping screens mid-frame
- ; probably need a min frame counter (25Hz)
- ; so wait for 2 vblanks or swap immediately (ala Banjo)
+
+ ; Rather than wait for vsync and flip frames here
+ ; We request a frame swap at next vsync and let the game
+ ; continue. If (by some miracle) we haven't flipped
+ ; frame buffers by the time we get back to drawing the
+ ; next frame then we wait for vsync to occur above
+
  ; jmp PageFlip ;Update current screen...
   
+ ; NB. still need to tell the game to work on the next
+ ; frame. PAGE is used to toggle which buffers are used etc.
   LDA PAGE
   EOR #&20
   STA PAGE

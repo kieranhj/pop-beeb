@@ -184,20 +184,10 @@ kerasegame = IKN_9 OR &80
 ; lda $C000
 ; bpl freeze
 
-.wait_for_no_keys
- LDA #&79
- LDX #0
- JSR osbyte
+ JSR specialk_wait_for_no_keys
 
- CPX #&FF
- BNE wait_for_no_keys
+ JSR specialk_wait_for_a_key
 
-.wait_for_key
- LDA #&79
- LDX #0
- JSR osbyte
- CPX #&FF
- BEQ wait_for_key
  TXA
  ORA #&80
 
@@ -1991,6 +1981,12 @@ ENDIF
  rts
 }
 
+\*-------------------------------
+\*
+\*  R E D E F I N E  K E Y S
+\*
+\*-------------------------------
+
 SMALL_FONT_MAPCHAR
 .redefine_string EQUS "REDEFINE~KEYS~PRESS", &FF
 .redefine_left EQUS "LEFT", &FF
@@ -2004,7 +2000,7 @@ ASCII_MAPCHAR
 
 .redefine_index EQUB 0
 
-.redefine_keys
+.specialk_claim_status_line
 {
   \ Wait until next vsync frame swap so we know where we are
   .wait_vsync
@@ -2013,7 +2009,12 @@ ASCII_MAPCHAR
 
   \ Put ourselves into single buffer mode
   JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
-  JSR beeb_clear_status_line
+  JMP beeb_clear_status_line
+}
+
+.redefine_keys
+{
+  JSR specialk_claim_status_line
 
   \ Write initial string
   LDA #LO(redefine_string):STA beeb_readptr
@@ -2024,15 +2025,7 @@ ASCII_MAPCHAR
   JSR beeb_plot_font_string
 
   \ Wait until no keys are being pressed
-  {
-    .wait_for_no_keys
-    LDA #&79
-    LDX #0
-    JSR osbyte
-
-    CPX #&FF
-    BNE wait_for_no_keys
-  }
+  JSR specialk_wait_for_no_keys
 
   \ Loop round all seven required keys
   LDX #0
@@ -2056,7 +2049,7 @@ ASCII_MAPCHAR
   LDA #PAL_FONT
   JSR beeb_plot_font_string
 
-  \ Wait for a keypress
+  \ Wait for a keypress (SHIFT is special)
   .wait_for_key
   LDA #&79
   LDX #IKN_shift EOR &80
@@ -2098,13 +2091,7 @@ ASCII_MAPCHAR
   STA beeb_keydef_left, X
 
   \ Wait for no keys pressed
-  .wait_for_no_keys
-  LDA #&79
-  LDX #0
-  JSR osbyte
-
-  CPX #&FF
-  BNE wait_for_no_keys
+  JSR specialk_wait_for_no_keys
 
   \ Next key in the list
   LDX redefine_index
@@ -2113,6 +2100,10 @@ ASCII_MAPCHAR
   BNE loop
 
   .done
+}
+\\ Drop through
+.specialk_reset_status_line
+{
   \ Clear the status line and reset to double buffering
 
   JSR beeb_clear_status_line
@@ -2120,4 +2111,113 @@ ASCII_MAPCHAR
 
   \ Mark energy meters to be redrawn
   JMP markmeters
+}
+
+.specialk_wait_for_a_key    ; return in X
+{
+     .wait_for_key
+    LDA #&79
+    LDX #0
+    JSR osbyte
+    CPX #&FF
+    BEQ wait_for_key
+    RTS
+}
+
+.specialk_wait_for_no_keys
+{
+    .wait_for_no_keys
+    LDA #&79
+    LDX #0
+    JSR osbyte
+
+    CPX #&FF
+    BNE wait_for_no_keys
+    RTS
+}
+
+\*-------------------------------
+; Display version & build numbers
+\*-------------------------------
+
+SMALL_FONT_MAPCHAR
+.version_string EQUS "VERSION ", &FF
+.build_string EQUS "~BUILD ", &FF
+ASCII_MAPCHAR
+
+.specialk_plot_bcd
+{
+  PHA
+  LSR A:LSR A:LSR A:LSR A
+  INC A
+  JSR beeb_plot_font_glyph
+
+  PLA
+  AND #&F
+  INC A
+  JMP beeb_plot_font_glyph
+}
+
+.dispversion
+{
+  JSR specialk_claim_status_line
+
+  \ Wait until no keys are being pressed
+  JSR specialk_wait_for_no_keys
+
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build
+  JSR specialk_plot_bcd
+
+  LDA pop_beeb_build+1
+  JSR specialk_plot_bcd
+
+  LDA pop_beeb_build+2
+  JSR specialk_plot_bcd
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3
+  JSR specialk_plot_bcd
+
+  LDA pop_beeb_build+4
+  JSR specialk_plot_bcd
+
+  \ Wait for a key press to continue
+  JSR specialk_wait_for_a_key
+
+  \ Back to double buffering
+
+  JMP specialk_reset_status_line
 }
