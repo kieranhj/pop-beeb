@@ -44,6 +44,10 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 
 .vgm_deinit_player
 {
+	\\ Deinitialise music player
+	LDA #&FF
+	STA vgm_player_ended
+
 	\\ Zero volume on all channels
 	LDA #&9F: JSR psg_strobe
 	LDA #&BF: JSR psg_strobe
@@ -100,7 +104,8 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	RTS
 
 	._player_end
-	STA vgm_player_ended
+	; Happens in deinit fn
+	;STA vgm_player_ended
 
 	\\ Silence sound chip
 	JSR vgm_deinit_player

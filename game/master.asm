@@ -1495,6 +1495,11 @@ ENDIF
 {
  jsr blackout
 
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
 \ NOT BEEB
 \ jsr LoadStage3
@@ -1511,13 +1516,11 @@ ENDIF
 
 \ jsr driveoff
 
-\* Go to TOPCTRL
+\ BEEB AUDIO
 
-IF _AUDIO
-    ; SM: hacked in game audio bank load here
-    lda #3
-    jsr BEEB_LOAD_AUDIO_BANK
-ENDIF
+ JSR music_on
+
+\* Go to TOPCTRL
 
  lda #0
  jmp start
@@ -1612,6 +1615,9 @@ ENDIF
 
  lda #1
  sta musicon
+
+ \ BEEB - should probably reconcile with above
+ JSR music_on
 
  IF DemoDisk
  ELSE
