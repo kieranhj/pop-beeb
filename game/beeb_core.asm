@@ -79,6 +79,10 @@ ENDIF
     LDA #BEEB_SCREEN_ROWS
     STA &FE01
 
+    LDA #7:STA &FE00            ; R7 = vertical position
+    LDA #BEEB_SCREEN_VPOS
+    STA &FE01
+
     LDA #12:STA &FE00           ; R12 = screen start address, high
     LDA #HI(beeb_screen_addr/8)
     STA &FE01
@@ -96,6 +100,10 @@ ENDIF
 
     LDA #6:STA &FE00            ; R6 = vertical displayed
     LDA #BEEB_DOUBLE_HIRES_ROWS
+    STA &FE01
+
+    LDA #7:STA &FE00            ; R7 = vertical position
+    LDA #BEEB_DOUBLE_HIRES_VPOS
     STA &FE01
 
     LDA #12:STA &FE00           ; R12 = screen start address, high
