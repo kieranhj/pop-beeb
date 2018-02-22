@@ -4,6 +4,8 @@ rem disk1 now created by beebasm
 
 del "pop-beeb-side-b.ssd"
 
+bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
+
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL0"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL1"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL2"

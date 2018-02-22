@@ -921,3 +921,6 @@ PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
+
+; Want to put this here but disc full...
+;PUTFILE "Other/john.Credits.mode2.bin", "CREDITS", &3000, 0

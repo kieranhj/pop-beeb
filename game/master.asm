@@ -1109,6 +1109,8 @@ EQUS "PRIN   $"
 
  jsr SilentTitle
 
+ jsr BeebCredit
+
  jmp Demo
 }
 
@@ -1391,6 +1393,35 @@ EQUS "SUMUP  $"
 
  RTS
 }
+
+
+\*-------------------------------
+\*
+\*  Beeb credits
+\*
+\*-------------------------------
+
+.credits_filename
+EQUS "CREDITS$"
+
+.BeebCredit
+{
+\ BEEB set drive 2 - hopefully temporary to avoid grinding
+ LDA #2
+ JSR disksys_set_drive
+
+ MASTER_LOAD_DHIRES credits_filename, 0
+
+\ BEEB set drive 0 - before demo load
+ LDA #0
+ JSR disksys_set_drive
+
+ lda #30
+ jmp tpause
+
+ RTS
+}
+
 
 \*-------------------------------
 \*
