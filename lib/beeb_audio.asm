@@ -3,6 +3,8 @@
 
 IF _AUDIO
 
+.beeb_audio
+
 ; all filenames are 8 characters in length
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
@@ -370,5 +372,7 @@ ENDIF ; _AUDIO_DEBUG
 .update_exit
     rts    
 }
+
+.beeb_audio_end
 
 ENDIF ;_AUDIO

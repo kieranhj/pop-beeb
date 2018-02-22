@@ -585,16 +585,20 @@ hrtables_end=P%
 ; Beeb specific data
 INCLUDE "game/beeb_core_data.asm"
 
+.pop_beeb_aux_hazel_data_end
+
+.pop_beeb_aux_hazel_code_start
+
 ; Music & Audio routines crammed in here
 INCLUDE "lib/exomiser.asm"
 INCLUDE "lib/vgmplayer.asm"
 INCLUDE "lib/beeb_audio.asm"
 
-.pop_beeb_aux_hazel_data_end
+.pop_beeb_aux_hazel_code_end
 
-; Save data for Aux HAZEL RAM
+; Save data & code for Aux HAZEL RAM
 
-SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_data_end, 0
+SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_code_end, 0
 
 PRINT "--------"
 PRINT "HAZEL Modules"
@@ -604,8 +608,12 @@ PRINT "BGDATA (formerly CORE) size = ", ~(bgdata_end-bgdata)
 PRINT "BGDATA (formerly HIGH now HAZEL) size = ", ~(bgdata_high_end-bgdata_end)
 PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
 PRINT "BEEB (formerly) CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
+PRINT "EXO size = ", ~(exo_end-exo_start)
+PRINT "VGMPLAYER size = ", ~(vgm_player_end-vgm_player_start)
+PRINT "BEEB AUDIO size = ", ~(beeb_audio_end-beeb_audio)
 PRINT "--------"
 PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
+PRINT "HAZEL code size = ", ~(pop_beeb_aux_hazel_code_end - pop_beeb_aux_hazel_code_start)
 PRINT "HAZEL BSS (blueprint) size = ", ~(pop_beeb_aux_hazel_data_start - blueprnt)
 PRINT "HAZEL high watermark = ", ~P%
 PRINT "HAZEL RAM free = ", ~(HAZEL_TOP - P%)
