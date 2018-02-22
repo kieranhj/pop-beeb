@@ -10,8 +10,8 @@
 CPU 1                       ; MASTER ONLY
 _VERSION = $01              ; BCD version 0.1
 
-_DEBUG = FALSE              ; enable bounds checks and other debug fetures
-_DEMO_BUILD = TRUE          ; restrict to just one level & watermark
+_DEBUG = TRUE               ; enable bounds checks and other debug fetures
+_DEMO_BUILD = FALSE         ; restrict to just one level & watermark
 _BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
 
