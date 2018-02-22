@@ -129,8 +129,8 @@ ENDIF
 \ BEEB - HALVED SIZE OF IMAGE LISTS TO SAVE RAM
 \ HAVE ADDED RUN-TIME BRK IN _DEBUG IF OVERFLOW OCCURS
 \ IDEALLY TRACK THE MAX VALUES OF THESE AND SET ACCORDINGLY
-maxback = 150   ;200    ;x4
-maxfore = 50    ;100    ;x4
+maxback = 160   ;200    ;x4
+maxfore = 40    ;100    ;x4
 maxwipe = 10    ;20     ;x5
 maxpeel = 20    ;46     ;x4
 maxmid = 40     ;46     ;x11
