@@ -94,9 +94,8 @@ game_time_limit = 60 ;game time limit
 kleft = IKN_z
 kdown = IKN_slash
 kright = IKN_x
-kupleft = IKN_semi
 kup = IKN_colon
-kupright = IKN_rsb
+kjump = IKN_rsb
 kbutton = IKN_return
 
 \*  Special keys (legit) - all require CTRL
@@ -110,7 +109,7 @@ ksetkbd = IKN_k OR &80
 ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
-kshowtime = IKN_space OR &80
+kshowtime = IKN_t OR &80
 
 \\ NOT BEEB supported
 ;ksetjstk = IKN_j OR &80
@@ -151,8 +150,7 @@ kerasegame = IKN_9 OR &80
 .beeb_keydef_right EQUB kright EOR &80
 .beeb_keydef_up EQUB kup EOR &80
 .beeb_keydef_down EQUB kdown EOR &80
-.beeb_keydef_jumpleft EQUB kupleft EOR &80
-.beeb_keydef_jumpright EQUB kupright EOR &80
+.beeb_keydef_jump EQUB kjump EOR &80
 .beeb_keydef_action EQUB kbutton EOR &80
 
 \*-------------------------------
@@ -163,8 +161,7 @@ kerasegame = IKN_9 OR &80
 .beeb_keypress_right EQUB 0
 .beeb_keypress_up EQUB 0
 .beeb_keypress_down EQUB 0
-.beeb_keypress_jumpleft EQUB 0
-.beeb_keypress_jumpright EQUB 0
+.beeb_keypress_jump EQUB 0
 
 
 \*-------------------------------
@@ -246,14 +243,9 @@ kerasegame = IKN_9 OR &80
  STX beeb_keypress_down
 
  LDA #&79
- LDX beeb_keydef_jumpleft
+ LDX beeb_keydef_jump
  JSR osbyte
- STX beeb_keypress_jumpleft
-
- LDA #&79
- LDX beeb_keydef_jumpright
- JSR osbyte
- STX beeb_keypress_jumpright
+ STX beeb_keypress_jump
 
 \ Scan all keys
  LDA #&79
@@ -949,22 +941,18 @@ ENDIF
  bne local_sety
 
 .label_4
- LDA beeb_keypress_jumpleft
- BPL label_5
-
-.local_ul lda #LO(-1)
- sta kbdX
- bne local_sety
-
-.label_5
- LDA beeb_keypress_jumpright
+ LDA beeb_keypress_jump
  BPL label_6
 
-.local_ur lda #1
+ lda CharFace
+ bmi local_ul
+ LDA #1
+.local_ul
  sta kbdX
  lda #LO(-1)
  sta kbdY
  bne local_sety
+
 .label_6
 
 .return
@@ -1993,8 +1981,7 @@ SMALL_FONT_MAPCHAR
 .redefine_right EQUS "RIGHT", &FF
 .redefine_up EQUS "UP~JUMP", &FF
 .redefine_down EQUS "DOWN~CROUCH", &FF
-.redefine_jumpleft EQUS "JUMP~LEFT", &FF
-.redefine_jumproght EQUS "JUMP~RIGHT", &FF
+.redefine_jump EQUS "JUMP~FWD", &FF
 .redefine_action EQUS "ACTION", &FF
 ASCII_MAPCHAR
 
@@ -2051,11 +2038,11 @@ ASCII_MAPCHAR
 
   \ Wait for a keypress (SHIFT is special)
   .wait_for_key
-  LDA #&79
-  LDX #IKN_shift EOR &80
-  JSR osbyte
-  TXA
-  BMI found_key
+\  LDA #&79
+\  LDX #IKN_shift EOR &80
+\  JSR osbyte
+\  TXA
+\  BMI found_key
 
   .not_shift
   LDA #&79
@@ -2096,7 +2083,7 @@ ASCII_MAPCHAR
   \ Next key in the list
   LDX redefine_index
   INX
-  CPX #7
+  CPX #6
   BNE loop
 
   .done
@@ -2105,9 +2092,11 @@ ASCII_MAPCHAR
 .specialk_reset_status_line
 {
   \ Clear the status line and reset to double buffering
-
   JSR beeb_clear_status_line
   JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
+
+  \ Print last message again
+  LDA #2:STA msgdrawn
 
   \ Mark energy meters to be redrawn
   JMP markmeters
@@ -2218,7 +2207,5 @@ ASCII_MAPCHAR
   JSR specialk_wait_for_a_key
 
   \ Back to double buffering
-
-  LDA #2:STA msgdrawn
   JMP specialk_reset_status_line
 }
