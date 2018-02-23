@@ -427,7 +427,7 @@ FR_COUNTER_Y=BEEB_STATUS_ROW
     STA beeb_writeptr
     LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
     STA beeb_writeptr+1
-    LDA #13:STA PALETTE
+    LDA #PAL_FONT:STA PALETTE
     LDA temp_vsync_diff
     CMP #10
     BCC diff_ok
