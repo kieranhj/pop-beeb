@@ -2219,5 +2219,6 @@ ASCII_MAPCHAR
 
   \ Back to double buffering
 
+  LDA #2:STA msgdrawn
   JMP specialk_reset_status_line
 }

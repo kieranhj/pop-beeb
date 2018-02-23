@@ -8,7 +8,7 @@
 \*-------------------------------
 
 CPU 1                       ; MASTER ONLY
-_VERSION = $01              ; BCD version 0.1
+_VERSION = $D1              ; BCD version Demo.1
 
 _DEBUG = FALSE              ; enable bounds checks and other debug fetures
 _DEMO_BUILD = TRUE          ; restrict to just one level & watermark
