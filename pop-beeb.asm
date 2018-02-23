@@ -64,7 +64,7 @@ ENDMACRO
 
 PAL_BRW=0
 PAL_BCY=1
-PAL_BCW=2
+PAL_RYW=2
 PAL_BMY=3           ; Dungeon guard regular
 PAL_RMY=4           ; Dungeon guard special
 PAL_BRY=5
@@ -74,8 +74,8 @@ PAL_BRC=8
 PAL_BRG=9
 PAL_RCW=10
 PAL_YCW=11
-PAL_RYW=12
-PAL_YMW=13          ; player & font
+PAL_YMW=12          ; player & font
+PAL_BWC=13          ; shadow player
 PAL_BMW=14          ; Palace guard regular
 PAL_GMW=15          ; Palace guard special
 PAL_RMC=16
