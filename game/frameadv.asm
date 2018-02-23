@@ -1784,20 +1784,21 @@ ENDIF
 
  lda Ay
  sec
- sbc #14
+ sbc #13     ; was 14
  sbc gateposn
  sta doortop ;for CROPCHAR
 .loop sta YCO
 
- lda #doormask
- sta IMAGE
- lda #enum_and
- sta OPACITY
- jsr add
+\ BEEB can mask pixel directly
+\ lda #doormask
+\ sta IMAGE
+\ lda #enum_and
+\ sta OPACITY
+\ jsr add
 
  lda #door
  sta IMAGE
- lda #enum_ora
+ lda #enum_mask
  sta OPACITY
  jsr add
 
