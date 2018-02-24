@@ -170,7 +170,7 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
 	{ 1, 3, 7 },			// 12=red, yellow, white
-	{ 3, 5, 7 },			// 13=yellow, magenta, white (player)
+	{ 6, 5, 7 },			// 13=cyan, magenta, white (player)
 	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
 
@@ -674,7 +674,7 @@ int get_beeb_byte_for_colours_in_palette_selection(int index, int c0, int c1, in
 	return beeb_mode5_colour_to_screen_pixel[p0][0] | beeb_mode5_colour_to_screen_pixel[p1][1] | beeb_mode5_colour_to_screen_pixel[p2][2] | beeb_mode5_colour_to_screen_pixel[p3][3];
 }
 
-int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height)
+int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height, int ystep)
 {
 	int counts[MAX_PALETTES];
 	int num_colours = 0;
@@ -682,7 +682,7 @@ int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width
 
 	for (int c = 0; c < MAX_PALETTES; c++) counts[c] = 0;
 
-	for (int y = 0; y < pixel_height; y++)
+	for (int y = 0; y < pixel_height; y+=ystep)
 	{
 		for (int x = 0; x < pixel_width; x++)
 		{
@@ -842,7 +842,7 @@ void process_font(const char *bitmapname, int font_width, int font_height,const 
 				int pixel_height = font_height;
 				int current_y = 1;
 
-				int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+				int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height, 1);
 
 				if (verbose)
 				{
@@ -1435,7 +1435,11 @@ int main(int argc, char **argv)
 					colours[i][y * colour_width[i] + x8 * 4 + 1] = c1;
 					colours[i][y * colour_width[i] + x8 * 4 + 2] = c2;
 					colours[i][y * colour_width[i] + x8 * 4 + 3] = c3;
+
+				//	printf("%d %d %d %d ", c0, c1, c2, c3);
 				}
+
+			//	printf("\n");
 			}
 
 			current_x += (mode5_width * 4 * 2) + 8;
@@ -1514,7 +1518,7 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+						int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height, (half[i] ? 2 : 1));
 
 						if (verbose)
 						{
