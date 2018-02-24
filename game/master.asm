@@ -56,11 +56,35 @@ MACRO MASTER_LOAD_DHIRES filename, lines
  LDY #HI(filename)
  LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
  JSR disksys_load_file
+
+IF _DEMO_BUILD
+ JSR plot_demo_url
+ENDIF
+
  JSR vblank
  JSR PageFlip
  JSR beeb_show_screen       ; in case previous blackout
 }
 ENDMACRO
+
+IF _DEMO_BUILD
+SMALL_FONT_MAPCHAR
+.url_message EQUS "bitshifters.github.io", &FF
+ASCII_MAPCHAR
+
+.plot_demo_url
+{
+    LDA #LO(url_message)
+    STA beeb_readptr
+    LDA #HI(url_message)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #38
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+ENDIF
 
 \*-------------------------------
 \ lst
