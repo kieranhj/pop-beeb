@@ -8,10 +8,10 @@
 \*-------------------------------
 
 CPU 1                       ; MASTER ONLY
-_VERSION = $D1              ; BCD version Demo.1
+_VERSION = $01              ; BCD version Demo.1
 
-_DEBUG = FALSE              ; enable bounds checks and other debug fetures
-_DEMO_BUILD = TRUE          ; restrict to just one level & watermark
+_DEBUG = TRUE               ; enable bounds checks and other debug fetures
+_DEMO_BUILD = FALSE         ; restrict to just one level & watermark
 _BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level
 
@@ -470,6 +470,10 @@ SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 ; Run time initalised data in Core
 
 .pop_beeb_bss_start
+
+CLEAR &E00, &3000
+ORG beeb_boot_start
+GUARD beeb_boot_end
 
 INCLUDE "game/eq.asm"
 INCLUDE "game/gameeq.asm"
