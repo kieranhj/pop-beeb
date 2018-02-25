@@ -2278,3 +2278,24 @@ BANK 0 free =  &3F
 BANK 1 free =  &58 
 BANK 2 free =  &C79 
 BANK 3 free =  &20E 
+
+22/2/2018
+~~~
+Sprites to upres
+
+CHTAB1 - run, stationary fwd jump, running jump, standing turn, exit
+CHTAB2 - running turn, die sliced, impaled, stationary vertical jump, hang, land, crouch, mouse
+CHTAB3 - step, climb up, sword, collect sword, more sword
+CHTAB5 - fight, drink potion, die stabbed
+
+Prioritise - sword, mouse, fight
+
+Sizes sword + mouse:
+CHTAB1=4766
+CHTAB2=4739
+CHTAB3=3661
+CHTAB5=3240 / 4821
+
+DUNB=2008
+FREE=&C79
+BANK2=&1400

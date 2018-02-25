@@ -2172,7 +2172,7 @@ d2 = 115
  EQUB d2+73,Ctr
 d3 = 193
  EQUB d3,Fwd
- EQUB d3+12,Ctr
+ EQUB d3+11,Ctr ; BEEB delay by one frame seems to make kid more likely to win fight
  EQUB d3+40,EndDemo
 
 \*-------------------------------

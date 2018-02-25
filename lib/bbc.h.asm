@@ -62,6 +62,7 @@ IKN_1 = 48
 IKN_2 = 49
 IKN_5 = 19
 IKN_9 = 37
+IKN_t = 35
 
 \\ Opcodes
 SEI_OP = $78

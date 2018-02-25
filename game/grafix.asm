@@ -115,14 +115,10 @@ cwidthy = 15 ;21
 \*  Addresses of character image tables
 \*  (Bank: 2 = main, 3 = aux)
 
-.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB9
+.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB1, BEEB_SWRAM_SLOT_CHTAB2, BEEB_SWRAM_SLOT_CHTAB3, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB5, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB9
 
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
  EQUB HI(chtable5),HI(chtable6),HI(chtable7), HI(chtable9)
-
-IF _HALF_PLAYER
-.chtabhack EQUB 1,1,1,0,1,0,0,0,0
-ENDIF
 
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel
@@ -887,10 +883,6 @@ RASTER_COL PAL_black
 
  lda #0
  sta TABLE
-IF _HALF_PLAYER
- STA BEEBHACK
-ENDIF
-
 
  lda IMAGE ;Bit 7: 0 = bgtable1, 1 = bgtable2
 IF _DEBUG
@@ -969,12 +961,6 @@ ENDIF
  ldy TABLE
  lda chtabbank,y
  sta BANK
-
-\\ BEEB HACK
-IF _HALF_PLAYER
- lda chtabhack,y
- sta BEEBHACK
-ENDIF
 
  lda #0
  sta TABLE
