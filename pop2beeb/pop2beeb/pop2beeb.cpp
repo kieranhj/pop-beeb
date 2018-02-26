@@ -1068,11 +1068,6 @@ int main(int argc, char **argv)
 
 		total_width += pixel_size[i][0] + 8;
 
-		if (verbose)
-		{
-			printf("Image %d: %d x %d = %d bytes, %d x %d pixels\n", i+1, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1]);
-		}
-
 		if( flip )
 		{
 			flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
@@ -1094,6 +1089,11 @@ int main(int argc, char **argv)
 			half[i] = halfv;
 		}
 
+		if (verbose)
+		{
+			printf("Image %d: %d x %d = %d bytes, %d x %d pixels, parity=%d halfv=%d\n", i + 1, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1], odd, half[i]);
+		}
+
 		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], odd, simple, remove);
 	}
 
@@ -1105,7 +1105,7 @@ int main(int argc, char **argv)
 		parity = NULL;
 	}
 	
-	if (test)
+	if (test && flip)
 	{
 		if (verbose)
 		{
@@ -1154,7 +1154,7 @@ int main(int argc, char **argv)
 
 // This should really be dumped when writing MODE 5 data so is actual code being used to generate Beeb data //
 
-	if (test && mode == 5)
+	if (test && mode == 5 && !flip)
 	{
 		int mode5_total_width = total_width - (num_images * 8);
 		mode5_total_width = 8 * mode5_total_width / 7;
@@ -1182,6 +1182,8 @@ int main(int argc, char **argv)
 
 			for (int y = 0; y < pixel_height; y++)
 			{
+				int actual_y = (pixel_height - 2 - y);			// assume flip
+
 				for (int x8 = 0, x=0; x8 < mode5_width; x8++)
 				{
 					int c[4];
@@ -1190,31 +1192,29 @@ int main(int argc, char **argv)
 
 					for (int j = 0; j < 4; j++)
 					{
-						img(current_x + x, current_y + y, 0) = palette[c[j]][0];
-						img(current_x + x, current_y + y, 1) = palette[c[j]][1];
-						img(current_x + x, current_y + y, 2) = palette[c[j]][2];
-
-						if (half[i] && y < pixel_height-1)
+						if (half[i] && y < pixel_height - 1)
 						{
-							img(current_x + x, current_y + y + 1, 0) = palette[c[j]][0];
-							img(current_x + x, current_y + y + 1, 1) = palette[c[j]][1];
-							img(current_x + x, current_y + y + 1, 2) = palette[c[j]][2];
-
+							img(current_x + x, current_y + actual_y, 0) = palette[c[j]][0];
+							img(current_x + x, current_y + actual_y, 1) = palette[c[j]][1];
+							img(current_x + x, current_y + actual_y, 2) = palette[c[j]][2];
 						}
+
+						img(current_x + x, current_y + actual_y + 1, 0) = palette[c[j]][0];
+						img(current_x + x, current_y + actual_y + 1, 1) = palette[c[j]][1];
+						img(current_x + x, current_y + actual_y + 1, 2) = palette[c[j]][2];
 
 						x++;
 
-						img(current_x + x, current_y + y, 0) = palette[c[j]][0];
-						img(current_x + x, current_y + y, 1) = palette[c[j]][1];
-						img(current_x + x, current_y + y, 2) = palette[c[j]][2];
-
 						if (half[i] && y < pixel_height - 1)
 						{
-							img(current_x + x, current_y + y + 1, 0) = palette[c[j]][0];
-							img(current_x + x, current_y + y + 1, 1) = palette[c[j]][1];
-							img(current_x + x, current_y + y + 1, 2) = palette[c[j]][2];
-
+							img(current_x + x, current_y + actual_y, 0) = palette[c[j]][0];
+							img(current_x + x, current_y + actual_y, 1) = palette[c[j]][1];
+							img(current_x + x, current_y + actual_y, 2) = palette[c[j]][2];
 						}
+
+						img(current_x + x, current_y + actual_y + 1, 0) = palette[c[j]][0];
+						img(current_x + x, current_y + actual_y + 1, 1) = palette[c[j]][1];
+						img(current_x + x, current_y + actual_y + 1, 2) = palette[c[j]][2];
 
 						x++;
 					}

@@ -698,15 +698,15 @@ GUARD SWRAM_TOP
 
 PAGE_ALIGN
 .chtable1
-INCBIN "Images/BEEB.IMG.CHTAB1.HALF.bin"
+INCBIN "Images/BEEB.IMG.CHTAB1.bin"
 
 PAGE_ALIGN
 .chtable2
-INCBIN "Images/BEEB.IMG.CHTAB2.HALF.bin"
+INCBIN "Images/BEEB.IMG.CHTAB2.bin"
 
 PAGE_ALIGN
 .chtable3
-INCBIN "Images/BEEB.IMG.CHTAB3.HALF.bin"
+INCBIN "Images/BEEB.IMG.CHTAB3.bin"
 
 PAGE_ALIGN
 .bgtable1b
@@ -733,7 +733,7 @@ GUARD SWRAM_TOP
 
 PAGE_ALIGN
 .chtable5
-INCBIN "Images/BEEB.IMG.CHTAB5.HALF.bin"
+INCBIN "Images/BEEB.IMG.CHTAB5.bin"
 
 \\ Code + data doesn't technically have to be page aligned...
 PAGE_ALIGN
@@ -921,10 +921,10 @@ PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
 
 ; All saved into single file for BANK1
-PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 
 ; Want to put this here but disc full...
 ;PUTFILE "Other/john.Credits.mode2.bin", "CREDITS", &3000, 0
