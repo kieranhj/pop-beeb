@@ -433,7 +433,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 		*beebptr++ = mode5_width;
 		*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
 
-		*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
+		*beebptr++ = pal | ((height_step>1) ? 0x40 : 0);			// experiment - put palette index into sprite header!!!
 	}
 
 	for (int y = 0; y < pixel_height; y += height_step)
@@ -1495,7 +1495,7 @@ int main(int argc, char **argv)
 					{
 						// Write bytes directly from bitmap
 
-						*beebptr++ = 0xff;			// no palette - store MODE 2 pixel pairs directly
+						*beebptr++ = 0x80 | (half[i]?0x40:0);			// no palette - store MODE 2 pixel pairs directly
 
 						for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 						{
@@ -1527,7 +1527,7 @@ int main(int argc, char **argv)
 
 						// Write bytes directly from bitmap
 
-						*beebptr++ = palsel;			// experiment - put palette index into sprite header!!!
+						*beebptr++ = palsel | (half[i] ? 0x40 : 0);			// experiment - put palette index into sprite header!!!
 
 						for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 						{

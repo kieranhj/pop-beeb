@@ -411,7 +411,7 @@ ASCII_MAPCHAR
 
 SMALL_FONT_MAPCHAR
 .continue_string
-EQUS "Press a button to continue", &FF
+EQUS "Press action to continue", &FF
 ASCII_MAPCHAR
 
 .CONTINUEMSG
@@ -434,7 +434,7 @@ ASCII_MAPCHAR
     STA beeb_readptr+1
 
     LDA #PAL_FONT
-    LDX #14
+    LDX #17
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }

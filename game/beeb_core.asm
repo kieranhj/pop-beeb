@@ -621,7 +621,18 @@ ENDIF
 
     \ PALETTE now set per sprite
 
+    \ BIT 6 of PALETTE specifies whether sprite is secretly half vertical res
+
     LDA PALETTE
+    AND #&40
+    STA BEEBHACK
+
+    \ BIT 7 of PALETTE actually indicates there is no palette - data is 4bpp
+
+    LDA PALETTE
+    AND #&BF
+    STA PALETTE
+
     JMP beeb_plot_sprite_setpalette
 }
 

@@ -8,7 +8,7 @@
 \*-------------------------------
 
 CPU 1                       ; MASTER ONLY
-_VERSION = $01              ; BCD version 0.1
+_VERSION = $01              ; BCD version Demo.1
 
 _DEBUG = TRUE               ; enable bounds checks and other debug fetures
 _DEMO_BUILD = FALSE         ; restrict to just one level & watermark
@@ -148,12 +148,14 @@ beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
 
 BEEB_PEEL_BUFFER_SIZE = &A00
 
-BEEB_SWRAM_SLOT_BGTAB1_B = 2    ; alongside code
+BEEB_SWRAM_SLOT_BGTAB1_B = 1    ; alongside code
 BEEB_SWRAM_SLOT_BGTAB1_A = 0
 BEEB_SWRAM_SLOT_BGTAB2 = 0
-BEEB_SWRAM_SLOT_CHTAB13 = 1
-BEEB_SWRAM_SLOT_CHTAB25 = 1
+BEEB_SWRAM_SLOT_CHTAB1 = 1
+BEEB_SWRAM_SLOT_CHTAB2 = 1
+BEEB_SWRAM_SLOT_CHTAB3 = 1
 BEEB_SWRAM_SLOT_CHTAB4 = 0
+BEEB_SWRAM_SLOT_CHTAB5 = 2
 BEEB_SWRAM_SLOT_CHTAB678 = 0     ; blat BGTAB1
 BEEB_SWRAM_SLOT_CHTAB9 = 1     ; blat CHTAB1325 (player)
 BEEB_SWRAM_SLOT_AUX_HIGH = 3
@@ -469,6 +471,10 @@ SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
 .pop_beeb_bss_start
 
+CLEAR &E00, &3000
+ORG beeb_boot_start
+GUARD beeb_boot_end
+
 INCLUDE "game/eq.asm"
 INCLUDE "game/gameeq.asm"
 
@@ -692,35 +698,19 @@ GUARD SWRAM_TOP
 
 PAGE_ALIGN
 .chtable1
-IF _HALF_PLAYER
 INCBIN "Images/BEEB.IMG.CHTAB1.HALF.bin"
-ELSE
-INCBIN "Images/BEEB.IMG.CHTAB1.bin"
-ENDIF
 
 PAGE_ALIGN
 .chtable2
-IF _HALF_PLAYER
 INCBIN "Images/BEEB.IMG.CHTAB2.HALF.bin"
-ELSE
-INCBIN "Images/BEEB.IMG.CHTAB2.bin"
-ENDIF
 
 PAGE_ALIGN
 .chtable3
-IF _HALF_PLAYER
 INCBIN "Images/BEEB.IMG.CHTAB3.HALF.bin"
-ELSE
-INCBIN "Images/BEEB.IMG.CHTAB3.bin"
-ENDIF
 
 PAGE_ALIGN
-.chtable5
-IF _HALF_PLAYER
-INCBIN "Images/BEEB.IMG.CHTAB5.HALF.bin"
-ELSE
-INCBIN "Images/BEEB.IMG.CHTAB5.bin"
-ENDIF
+.bgtable1b
+INCBIN "Images/BEEB.IMG.BGTAB1.DUNB.bin"    ; larger than PALB
 
 .bank1_end
 
@@ -729,7 +719,7 @@ PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
 
-SAVE "BANK1", bank1_start, bank1_end, 0
+;SAVE "BANK1", bank1_start, bank1_end, 0
 
 \*-------------------------------
 ; BANK 2
@@ -742,8 +732,8 @@ GUARD SWRAM_TOP
 .bank2_start
 
 PAGE_ALIGN
-.bgtable1b
-INCBIN "Images/BEEB.IMG.BGTAB1.DUNB.bin"    ; larger than PALB
+.chtable5
+INCBIN "Images/BEEB.IMG.CHTAB5.HALF.bin"
 
 \\ Code + data doesn't technically have to be page aligned...
 PAGE_ALIGN
@@ -930,16 +920,11 @@ PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
 
-IF _HALF_PLAYER
 ; All saved into single file for BANK1
-;PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
-ELSE
-PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
-ENDIF
+PUTFILE "Images/BEEB.IMG.CHTAB1.HALF.bin", "CHTAB1", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB2.HALF.bin", "CHTAB2", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB3.HALF.bin", "CHTAB3", 0, 0
+PUTFILE "Images/BEEB.IMG.CHTAB5.HALF.bin", "CHTAB5", 0, 0
 
+; Want to put this here but disc full...
+;PUTFILE "Other/john.Credits.mode2.bin", "CREDITS", &3000, 0
