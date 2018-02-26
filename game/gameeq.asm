@@ -220,6 +220,7 @@ IF 1
 
 \dum $320
 ;PAGE_ALIGN
+PRINT "ALIGN LOST ", ~((P%+&7F) AND &FF80)-P%, " BYTES"
 ALIGN &80  ; doesn't need to be page aligned but must be contained within same paage
 
 .CDthisframe skip $10

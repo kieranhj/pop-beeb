@@ -467,19 +467,6 @@ INCLUDE "lib/vsync.asm"
 
 SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
-; Run time initalised data in Core
-
-.pop_beeb_bss_start
-
-CLEAR &E00, &3000
-ORG beeb_boot_start
-GUARD beeb_boot_end
-
-INCLUDE "game/eq.asm"
-INCLUDE "game/gameeq.asm"
-
-.pop_beeb_bss_end
-
 ; Core RAM stats
 
 PRINT "--------"
@@ -501,10 +488,28 @@ PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_s
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
-PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
 PRINT "Core high watermark = ", ~P%
 PRINT "Core RAM free = ", ~(CORE_TOP - P%)
 PRINT "--------"
+
+; Run time initalised data in Core can overlay boot
+
+CLEAR &E00, &3000
+ORG beeb_boot_start
+GUARD beeb_boot_end
+
+.pop_beeb_bss_start
+
+INCLUDE "game/eq.asm"
+INCLUDE "game/gameeq.asm"
+
+.pop_beeb_bss_end
+
+PRINT "--------"
+PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
+PRINT "Core BSS free = ", ~(beeb_boot_end - pop_beeb_bss_end)
+PRINT "--------"
+
 
 \*-------------------------------
 ; Construct MAIN RAM (video & screen)
