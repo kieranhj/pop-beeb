@@ -1061,24 +1061,23 @@ ENDIF
 \ Next scanline
 
 IF _UPSIDE_DOWN
-    LDA beeb_yoffset
+    LDA beeb_writeptr
     AND #&7
     CMP #&7
     BEQ next_char_row
-    INC beeb_yoffset
+
+    INC beeb_writeptr
     JMP plot_lines_loop
 
     .next_char_row
     CLC
     LDA beeb_writeptr
-    ADC #LO(BEEB_SCREEN_ROW_BYTES)
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    ADC #HI(BEEB_SCREEN_ROW_BYTES)
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #0
-    STY beeb_yoffset
     JMP plot_lines_loop
 
 ELSE
@@ -1427,25 +1426,24 @@ ENDIF
 \ Next scanline
 
 IF _UPSIDE_DOWN
-    LDA beeb_yoffset
+    LDA beeb_writeptr
     AND #&7
     CMP #&7
     BEQ next_char_row
-    INC beeb_yoffset
-    BPL plot_lines_loop
+
+    INC beeb_writeptr
+    BRA plot_lines_loop
 
     .next_char_row
     CLC
     LDA beeb_writeptr
-    ADC #LO(BEEB_SCREEN_ROW_BYTES)
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    ADC #HI(BEEB_SCREEN_ROW_BYTES)
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #0
-    STY beeb_yoffset
-    JMP plot_lines_loop
+    BRA plot_lines_loop
 
 ELSE
     LDA beeb_writeptr
@@ -1619,25 +1617,24 @@ ENDIF
 \ Next scanline
 
 IF _UPSIDE_DOWN
-    LDA beeb_yoffset
+    LDA beeb_writeptr
     AND #&7
     CMP #&7
     BEQ next_char_row
-    INC beeb_yoffset
-    BPL plot_lines_loop
+
+    INC beeb_writeptr
+    BRA plot_lines_loop
 
     .next_char_row
     CLC
     LDA beeb_writeptr
-    ADC #LO(BEEB_SCREEN_ROW_BYTES)
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    ADC #HI(BEEB_SCREEN_ROW_BYTES)
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #0
-    STY beeb_yoffset
-    JMP plot_lines_loop
+    BRA plot_lines_loop
 
 ELSE
     LDA beeb_writeptr
@@ -1730,7 +1727,7 @@ ERROR
 
 \ Start at the end of the sprite data
 
-    LDY beeb_yoffset
+    LDY #0
     LDX #0
     CLC
 
@@ -1810,23 +1807,25 @@ ERROR
 
 \ Next scanline
 
-    DEC beeb_yoffset
-    BPL plot_lines_loop
+    LDA beeb_writeptr
+    AND #&7
+    BEQ next_char_row
+
+    DEC beeb_writeptr
+    BRA plot_lines_loop
 
 \ Need to move up a screen char row
 
     .next_char_row
     SEC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #7
-    STY beeb_yoffset
-    JMP plot_lines_loop
+    BRA plot_lines_loop
 
     .done_y
 

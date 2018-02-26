@@ -26,7 +26,7 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 
-_UPSIDE_DOWN = FALSE
+_UPSIDE_DOWN = TRUE
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 

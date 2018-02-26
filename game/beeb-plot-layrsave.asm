@@ -108,7 +108,9 @@ EQUB (1*2*8), (2*2*8), (3*2*8), (4*2*8), (5*2*8), (6*2*8), (7*2*8), (8*2*8), (9*
 
     LDA beeb_writeptr
     AND #&07
+IF _UPSIDE_DOWN=FALSE
     EOR #&07
+ENDIF
     CLC
     ADC PEELBUF
     STA PEELBUF
@@ -241,7 +243,6 @@ IF _UPSIDE_DOWN
     BRA y_loop
 
     .one_row_down
-
     CLC
     LDA beeb_writeptr
     ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
@@ -257,11 +258,9 @@ ELSE
 
     DEC beeb_writeptr
     INC PEELBUF                     ; can't overflow as in multiples of 8
-
     BRA y_loop
 
     .one_row_up
-
     SEC
     LDA beeb_writeptr
     SBC #LO(BEEB_SCREEN_ROW_BYTES-7)

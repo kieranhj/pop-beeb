@@ -74,7 +74,9 @@ ENDIF
 
     LDA beeb_writeptr
     AND #&07
+IF _UPSIDE_DOWN=FALSE
     EOR #&07
+ENDIF
     CLC
     ADC beeb_readptr
     STA beeb_readptr
@@ -218,11 +220,9 @@ ELSE
 
     DEC beeb_writeptr
     INC beeb_readptr                     ; can't overflow as in multiples of 8
-
     BRA y_loop
 
     .one_row_up
-
     SEC
     LDA beeb_writeptr
     SBC #LO(BEEB_SCREEN_ROW_BYTES-7)

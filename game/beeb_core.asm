@@ -853,14 +853,9 @@ ENDIF
     \ XCO (0-39) and YCO (0-191)
     \ OFFSET (0-3) - maybe 0,1 or 8,9?
 
-    \ Mask off Y offset to get character row
-
-\    LDA YCO
-\    AND #&F8
-\    TAY 
+    LDX XCO
     LDY YCO
 
-    LDX XCO
     CLC
     LDA Mult16_LO,X
     ADC YLO,Y
@@ -868,13 +863,6 @@ ENDIF
     LDA Mult16_HI,X
     ADC YHI,Y
     STA beeb_writeptr+1
-
-    LDA YCO
-    AND #&7
-IF _UPSIDE_DOWN
-    EOR #&7
-ENDIF
-    STA beeb_yoffset            ; think about using y remaining counter cf Thrust
 
     \ Handle OFFSET
 
