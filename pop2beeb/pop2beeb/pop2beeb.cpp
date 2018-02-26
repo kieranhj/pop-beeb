@@ -384,7 +384,27 @@ int get_colour(unsigned char *colour_data, int pixel_width, int pixel_height, in
 	return colour_data[y * pixel_width + x];
 }
 
-void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_height, int apple_width, int x8, int y, int &c0, int &c1, int &c2, int &c3, bool point, bool even)
+int get_most_frequent_colour(int ca, int cb, int cc, int cd)
+{
+	int colour_counts[8];
+	int max_count, current_colour = BLACK1;
+	for (int i=0; i < 8; i++) colour_counts[i] = 0;
+	colour_counts[ca]++;
+	colour_counts[cb]++;
+	colour_counts[cc]++;
+	colour_counts[cd]++;
+	for (int i = 0, max_count = 0; i < 8; i++)
+	{
+		if (colour_counts[i] > max_count)
+		{
+			current_colour = i;
+			max_count = colour_counts[i];
+		}
+	}
+	return current_colour;
+}
+
+void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_height, int apple_width, int x8, int y, int &c0, int &c1, int &c2, int &c3, bool point, bool even, bool half)
 {
 	int width_parity = apple_width & 1;
 	int x_parity = point ? 0 : ((x8 & 1)==even);
@@ -393,10 +413,20 @@ void sample_apple_data(unsigned char *colour_data, int pixel_width, int pixel_he
 
 	if (x_parity == 0)
 	{
-		c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
-		c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
-		c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
-		c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
+		if( half )
+		{
+			c0 = get_most_frequent_colour(get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y + 1), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 1, y + 1));
+			c1 = get_most_frequent_colour(get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y + 1), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 3, y + 1));
+			c2 = get_most_frequent_colour(get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y + 1), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 5, y + 1));
+			c3 = get_most_frequent_colour(get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 7, y), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y + 1), get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 7, y + 1));
+		}
+		else
+		{
+			c0 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 0, y);
+			c1 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 2, y);
+			c2 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 4, y);
+			c3 = get_colour(colour_data, pixel_width, pixel_height, x8 * 7 + 6, y);
+		}
 	}
 	else
 	{
@@ -454,7 +484,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 
 			// Or select specific pixels to double-up
 
-			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c0, c1, c2, c3, point, even);
+			sample_apple_data(colour_data, pixel_width, pixel_height, mode5_width, x8, y, c0, c1, c2, c3, point, even, false);
 
 			// Convert 4x pixels to MODE5 2bpp
 
@@ -1188,7 +1218,7 @@ int main(int argc, char **argv)
 				{
 					int c[4];
 
-					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[0], c[1], c[2], c[3], point, even);
+					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[0], c[1], c[2], c[3], point, even, half[i]);
 
 					for (int j = 0; j < 4; j++)
 					{
@@ -1268,7 +1298,7 @@ int main(int argc, char **argv)
 
 				for (int x8 = 0, x = 0; x8 < mode5_width; x8++, x += 4)
 				{
-					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point, even);
+					sample_apple_data(colours[i], pixel_width, pixel_height, mode5_width, x8, y, c[x + 0], c[x + 1], c[x + 2], c[x + 3], point, even, halfv);
 				}
 
 				for(int p=0, x=0; p < (mode5_width*4); p += 3)
