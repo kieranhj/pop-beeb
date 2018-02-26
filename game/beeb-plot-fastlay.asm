@@ -181,6 +181,28 @@ ENDIF
 
 \ Next scanline row
 
+IF _UPSIDE_DOWN
+    LDA beeb_writeptr
+    AND #&07
+    CMP #&7
+    BEQ one_row_down
+
+    INC beeb_writeptr
+    JMP y_loop
+    
+\ Next character row
+
+    .one_row_down
+    CLC
+    LDA beeb_writeptr
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    JMP y_loop
+ELSE
     LDA beeb_writeptr               ; 3c
     AND #&07                        ; 2c
     BEQ one_row_up                  ; 2c
@@ -200,7 +222,7 @@ ENDIF
     STA beeb_writeptr+1
 
     JMP y_loop
-
+ENDIF
     .done_y
 
     \\ Remove the self-mod branch code

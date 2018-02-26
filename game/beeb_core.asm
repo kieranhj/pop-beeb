@@ -855,9 +855,10 @@ ENDIF
 
     \ Mask off Y offset to get character row
 
-    LDA YCO
-    AND #&F8
-    TAY    
+\    LDA YCO
+\    AND #&F8
+\    TAY 
+    LDY YCO
 
     LDX XCO
     CLC
@@ -870,6 +871,9 @@ ENDIF
 
     LDA YCO
     AND #&7
+IF _UPSIDE_DOWN
+    EOR #&7
+ENDIF
     STA beeb_yoffset            ; think about using y remaining counter cf Thrust
 
     \ Handle OFFSET

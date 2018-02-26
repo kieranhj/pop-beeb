@@ -25,11 +25,18 @@
 
 ; Would ideally be PAGE_ALIGN
 .YLO
+IF _UPSIDE_DOWN
+FOR y,191,0,-1
+address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
+EQUB LO(address)
+NEXT
+ELSE
 FOR y,0,191,1
 \\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
 address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB LO(address)
 NEXT
+ENDIF
 \ hex 00000000000000008080808080808080
 \ hex 00000000000000008080808080808080
 \ hex 00000000000000008080808080808080
@@ -47,11 +54,18 @@ NEXT
 
 ; Would ideally be PAGE_ALIGN
 .YHI
+IF _UPSIDE_DOWN
+FOR y,191,0,-1
+address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
+EQUB HI(address)
+NEXT
+ELSE
 FOR y,0,191,1
 \\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
 address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB HI(address)
 NEXT
+ENDIF
 \ hex 2024282C3034383C2024282C3034383C
 \ hex 2125292D3135393D2125292D3135393D
 \ hex 22262A2E32363A3E22262A2E32363A3E

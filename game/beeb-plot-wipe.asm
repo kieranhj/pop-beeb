@@ -74,6 +74,26 @@ ENDIF
     DEX
     BEQ done_y
 
+IF _UPSIDE_DOWN
+    LDA beeb_writeptr
+    AND #&07
+    CMP #&7
+    BEQ one_row_down
+
+    INC beeb_writeptr
+    BRA y_loop
+
+    .one_row_down
+    CLC
+    LDA beeb_writeptr
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    BRA y_loop
+ELSE
     LDA beeb_writeptr
     AND #&07
     BEQ one_row_up
@@ -91,6 +111,7 @@ ENDIF
     STA beeb_writeptr+1
 
     BRA y_loop
+ENDIF
 
     .done_y
     RTS    

@@ -57,6 +57,7 @@ EQUB (1*2*8), (2*2*8), (3*2*8), (4*2*8), (5*2*8), (6*2*8), (7*2*8), (8*2*8), (9*
     \ on Beeb we could skip a column of bytes if offset>3
 
     jsr CROP
+;    BRA skipit
     bmi skipit
 
     lda PEELBUF ;PEELBUF: 2-byte pointer to 1st
@@ -229,6 +230,27 @@ ENDIF
     DEX
     BEQ done_y
 
+IF _UPSIDE_DOWN
+    LDA beeb_writeptr
+    AND #&07                        ; 2c
+    CMP #&7
+    BEQ one_row_down                  ; 2c
+
+    INC beeb_writeptr    
+    INC PEELBUF                     ; can't overflow as in multiples of 8
+    BRA y_loop
+
+    .one_row_down
+
+    CLC
+    LDA beeb_writeptr
+    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+ELSE
     LDA beeb_writeptr               ; 3c
     AND #&07                        ; 2c
     BEQ one_row_up                  ; 2c
@@ -247,6 +269,7 @@ ENDIF
     LDA beeb_writeptr+1
     SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
+ENDIF
 
     CLC
     LDA PEELBUF
