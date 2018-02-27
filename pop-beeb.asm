@@ -446,6 +446,8 @@ _UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
 _UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
 _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
+; If you move a plot function back into Main must update self-mod code in
+; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 
@@ -528,6 +530,8 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
+; If you move a plot function out of Main must update self-mod code in
+; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"

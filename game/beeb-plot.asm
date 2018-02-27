@@ -1790,101 +1790,134 @@ ERROR
 }
 ENDIF
 
+\*-------------------------------
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+\*-------------------------------
 
-.beeb_plot_invert_code
+.beeb_plot_calc_screen_addr
 {
-    \ CMP #&00 <> CMP #&07
-    LDA beeb_plot_sprite_FASTLAYSTA_PP_smCMP+1
-    EOR #&07
-    STA beeb_plot_sprite_FASTLAYSTA_PP_smCMP+1
-    STA beeb_plot_layrsave_smCMP+1
-    STA beeb_plot_peel_smCMP+1
-    STA beeb_plot_wipe_smCMP+1
-    STA beeb_plot_sprite_LayMask_smCMP+1
-    STA beeb_plot_sprite_FASTMASK_smCMP+1
-    STA beeb_plot_sprite_FASTLAYAND_PP_smCMP+1
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
 
-    \ DEC zp <> INC zp
-    LDA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
-    EOR #(OPCODE_DECzp EOR OPCODE_INCzp)
-    STA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
-    STA beeb_plot_layrsave_smDEC
-    STA beeb_plot_peel_smDEC
-    STA beeb_plot_wipe_smDEC
-    STA beeb_plot_sprite_LayMask_smDEC
-    STA beeb_plot_sprite_FASTMASK_smDEC
-    STA beeb_plot_sprite_FASTLAYAND_PP_smDEC
-    
-    \ SEC <> CLC
-    LDA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
-    EOR #(OPCODE_SEC EOR OPCODE_CLC)
-    STA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
-    STA beeb_plot_layrsave_smSEC
-    STA beeb_plot_peel_smSEC
-    STA beeb_plot_wipe_smSEC
-    STA beeb_plot_sprite_LayMask_smSEC
-    STA beeb_plot_sprite_FASTMASK_smSEC
-    STA beeb_plot_sprite_FASTLAYAND_PP_smSEC
+    LDX XCO
+    LDY YCO
 
-    \ SBC #imm <> ADC #imm
-    LDA beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
-    EOR #(OPCODE_SBCimm EOR OPCODE_ADCimm)
-    STA beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
-    STA beeb_plot_sprite_FASTLAYSTA_PP_smSBC2
-    STA beeb_plot_layrsave_smSBC1
-    STA beeb_plot_layrsave_smSBC2
-    STA beeb_plot_peel_smSBC1
-    STA beeb_plot_peel_smSBC2
-    STA beeb_plot_wipe_smSBC1
-    STA beeb_plot_wipe_smSBC2
-    STA beeb_plot_sprite_LayMask_smSBC1
-    STA beeb_plot_sprite_LayMask_smSBC2
-    STA beeb_plot_sprite_FASTMASK_smSBC1
-    STA beeb_plot_sprite_FASTMASK_smSBC2
-    STA beeb_plot_sprite_FASTLAYAND_PP_smSBC1
-    STA beeb_plot_sprite_FASTLAYAND_PP_smSBC2
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
 
-    \ EOR #&07 <> EOR #&00
-    LDA beeb_plot_layrsave_smEOR+1
-    EOR #&07
-    STA beeb_plot_layrsave_smEOR+1
-    STA beeb_plot_peel_smEOR+1
+    \ Handle OFFSET
 
-    RTS  
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
+
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
 }
 
 \*-------------------------------
-\* Invert Y-tables
+; Additional PREP before sprite plotting for Beeb
 \*-------------------------------
-.INVERTY
+
+.beeb_PREPREP
 {
- ldx #191 ;low line
- ldy #0 ;high line
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+    JSR swr_select_slot
 
-\* Switch low & high lines
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
 
-.loop lda YLO,x
- pha
- lda YLO,y
- sta YLO,x
- pla
- sta YLO,y
+    \ On BEEB eor blend mode changed to PALETTE bump
 
- lda YHI,x
- pha
- lda YHI,y
- sta YHI,x
- pla
- sta YHI,y
+    LDA OPACITY
+    CMP #enum_eor
+    BNE not_eor
+    INC PALETTE
+    .not_eor
 
-\* Move 1 line closer to ctr
+    \ PALETTE now set per sprite
 
- dex
- iny
- cpy #96
- bcc loop
+    \ BIT 6 of PALETTE specifies whether sprite is secretly half vertical res
 
- JMP beeb_plot_invert_code
+    LDA PALETTE
+    AND #&40
+    STA BEEBHACK
+
+    \ BIT 7 of PALETTE actually indicates there is no palette - data is 4bpp
+
+    LDA PALETTE
+    AND #&BF
+    STA PALETTE
+
+    JMP beeb_plot_sprite_setpalette
+}
+
+\*-------------------------------
+\*
+\* Palette functions
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_setpalette
+{
+    BMI return
+    ASL A:ASL A
+    TAX
+
+    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
+    .return
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
+    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
+    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
+
+    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
+    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
+
+    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
+    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
 }
 
 .beeb_plot_end

@@ -57,7 +57,6 @@ EQUB (1*2*8), (2*2*8), (3*2*8), (4*2*8), (5*2*8), (6*2*8), (7*2*8), (8*2*8), (9*
     \ on Beeb we could skip a column of bytes if offset>3
 
     jsr CROP
-;    BRA skipit
     bmi skipit
 
     lda PEELBUF ;PEELBUF: 2-byte pointer to 1st

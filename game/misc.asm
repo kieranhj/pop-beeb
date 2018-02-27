@@ -264,21 +264,15 @@ ENDIF
 
 .MARKKIDMETER
 {
-\ ldy #20
-\ bne Mark3
- LDA #REDRAW_FRAMES
- STA redkidmeter
+ INC redkidmeter    ; assume REDRAW_FRAMES=2
+ INC redkidmeter
  RTS
 }
 
 .MARKOPPMETER
 {
-\ ldy #28
-\ bne Mark2
-\ rts
-
- LDA #REDRAW_FRAMES
- STA redoppmeter
+ INC redoppmeter    ; assume REDRAW_FRAMES=2
+ INC redoppmeter
  RTS
 }
 
@@ -296,7 +290,6 @@ vibetimer = 3
  bne return_50
 
  ldx lastpotion
- LDX #4     ; BEEB TEMP
  beq return_50
  bpl notswd
 

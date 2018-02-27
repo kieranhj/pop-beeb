@@ -713,8 +713,6 @@ ENDIF
  sbc OppStrength
  sta ChgOppStr
 
- JSR inverty    ; BEEB TEMP
-
 .label_35
  rts
 }
