@@ -26,6 +26,8 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 
+_UPSIDE_DOWN = FALSE
+
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
@@ -444,6 +446,8 @@ _UNROLL_LAYRSAVE = TRUE     ; unrolled versions of layrsave & peel function
 _UNROLL_WIPE = TRUE         ; unrolled versions of wipe function
 _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
+; If you move a plot function back into Main must update self-mod code in
+; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 
@@ -467,19 +471,6 @@ INCLUDE "lib/vsync.asm"
 
 SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
-; Run time initalised data in Core
-
-.pop_beeb_bss_start
-
-CLEAR &E00, &3000
-ORG beeb_boot_start
-GUARD beeb_boot_end
-
-INCLUDE "game/eq.asm"
-INCLUDE "game/gameeq.asm"
-
-.pop_beeb_bss_end
-
 ; Core RAM stats
 
 PRINT "--------"
@@ -501,10 +492,28 @@ PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_s
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
-PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
 PRINT "Core high watermark = ", ~P%
 PRINT "Core RAM free = ", ~(CORE_TOP - P%)
 PRINT "--------"
+
+; Run time initalised data in Core can overlay boot
+
+CLEAR &E00, &3000
+ORG beeb_boot_start
+GUARD beeb_boot_end
+
+.pop_beeb_bss_start
+
+INCLUDE "game/eq.asm"
+INCLUDE "game/gameeq.asm"
+
+.pop_beeb_bss_end
+
+PRINT "--------"
+PRINT "Core BSS size = ", ~(pop_beeb_bss_end - pop_beeb_bss_start)
+PRINT "Core BSS free = ", ~(beeb_boot_end - pop_beeb_bss_end)
+PRINT "--------"
+
 
 \*-------------------------------
 ; Construct MAIN RAM (video & screen)
@@ -521,6 +530,8 @@ GUARD MAIN_TOP
 
 ; Code & data in MAIN RAM (rendering)
 
+; If you move a plot function out of Main must update self-mod code in
+; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"

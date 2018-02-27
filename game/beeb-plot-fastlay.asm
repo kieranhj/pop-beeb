@@ -60,7 +60,7 @@ EQUB 126, 100, 74, 48, 22, 0
     \\ Poke in stride values according to width
 
     LDX WIDTH
-    STX smStride+1
+    STX beeb_plot_sprite_FASTLAYSTA_PP_smStride+1
 
     DEX
 IF _DEBUG
@@ -73,21 +73,21 @@ ENDIF
     \\ Self-mod a branch after correct number of bytes
 
     LDY fastlaysta_branch_location, X
-    STY remove_branch+1
+    STY beeb_plot_sprite_FASTLAYSTA_PP_remove_branch+1
     BEQ no_branch
 
     LDA #OPCODE_BRA
-    STA branch_origin, Y
+    STA beeb_plot_sprite_FASTLAYSTA_PP_branch_origin, Y
 
     LDA fastlaysta_branch_offset, X
-    STA branch_origin+1, Y
+    STA beeb_plot_sprite_FASTLAYSTA_PP_branch_origin+1, Y
     .no_branch
 
     \\ Unrolled fastlay STA
-
-    .y_loop
-    .branch_origin
-
+}
+.beeb_plot_sprite_FASTLAYSTA_PP_branch_origin
+.beeb_plot_sprite_FASTLAYSTA_PP_y_loop
+{
 \ Byte 0
 
     LDY #0:LDA (IMAGE), Y
@@ -159,61 +159,70 @@ ENDIF
     TXA:AND #&33:TAY
     LDA (beeb_readptr), Y
     LDY #88:STA (beeb_writeptr), Y
+}
 
 \ Next sprite row
 
     CLC
     LDA IMAGE
-    .smStride
+    .beeb_plot_sprite_FASTLAYSTA_PP_smStride
     ADC #6
     STA IMAGE
-    BCC no_carry
-    INC IMAGE+1
-    .no_carry
-
+    {
+        BCC no_carry
+        INC IMAGE+1
+        .no_carry
+    }
 \ Have we completed all rows?
 
     LDY YCO
     DEY
     CPY beeb_height                ; TOPEDGE
     STY YCO
-    BEQ done_y
+    BEQ beeb_plot_sprite_FASTLAYSTA_PP_done_y
 
 \ Next scanline row
 
-    LDA beeb_writeptr               ; 3c
-    AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
+    LDA beeb_writeptr
+    AND #&07
 
-    DEC beeb_writeptr
-    JMP y_loop
+.beeb_plot_sprite_FASTLAYSTA_PP_smCMP
+    CMP #&00                        ; _UPSIDE_DOWN=&07
+    BEQ beeb_plot_sprite_FASTLAYSTA_PP_smSEC                  ; 2c
+
+.beeb_plot_sprite_FASTLAYSTA_PP_smDEC
+    DEC beeb_writeptr               ; _UPSIDE_DOWN=INC
+    JMP beeb_plot_sprite_FASTLAYSTA_PP_y_loop
 
 \ Next character row
 
-    .one_row_up
-    SEC
+.beeb_plot_sprite_FASTLAYSTA_PP_smSEC
+    SEC                             ; _UPSIDE_DOWN=CLC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+.beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7); _UPSIDE_DOWN=ADC
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+.beeb_plot_sprite_FASTLAYSTA_PP_smSBC2
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7); _UPSIDE_DOWN=ADC
     STA beeb_writeptr+1
 
-    JMP y_loop
+    JMP beeb_plot_sprite_FASTLAYSTA_PP_y_loop
 
-    .done_y
+    .beeb_plot_sprite_FASTLAYSTA_PP_done_y
 
     \\ Remove the self-mod branch code
 
-    .remove_branch
+    .beeb_plot_sprite_FASTLAYSTA_PP_remove_branch
+{
     LDY #0
     BEQ return
 
     LDA #OPCODE_LDA_indirect_Y
-    STA branch_origin, Y
+    STA beeb_plot_sprite_FASTLAYSTA_PP_branch_origin, Y
 
     LDA #LO(IMAGE)
-    STA branch_origin+1, Y
+    STA beeb_plot_sprite_FASTLAYSTA_PP_branch_origin+1, Y
 
     .return
     JMP DONE
