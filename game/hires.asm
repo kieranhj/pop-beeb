@@ -2151,39 +2151,6 @@ COPYSCRN
  rts
 ENDIF
 
-IF _TODO
-*-------------------------------
-* Invert Y-tables
-*-------------------------------
-INVERTY
- ldx #191 ;low line
- ldy #0 ;high line
-
-* Switch low & high lines
-
-:loop lda YLO,x
- pha
- lda YLO,y
- sta YLO,x
- pla
- sta YLO,y
-
- lda YHI,x
- pha
- lda YHI,y
- sta YHI,x
- pla
- sta YHI,y
-
-* Move 1 line closer to ctr
-
- dex
- iny
- cpy #96
- bcc :loop
-]rts rts
-ENDIF
-
 \*-------------------------------
 \ lst
 \ ds 1

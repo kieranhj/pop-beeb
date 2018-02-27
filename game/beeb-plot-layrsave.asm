@@ -107,7 +107,10 @@ EQUB (1*2*8), (2*2*8), (3*2*8), (4*2*8), (5*2*8), (6*2*8), (7*2*8), (8*2*8), (9*
 
     LDA beeb_writeptr
     AND #&07
-    EOR #&07
+}
+.beeb_plot_layrsave_smEOR
+    EOR #&07        ; _UPSIDE_DOWN=&00
+{
     CLC
     ADC PEELBUF
     STA PEELBUF
@@ -128,31 +131,31 @@ ENDIF
     \\ Poke in stride values according to width
 
     LDA layrsave_peel_adjust1, X
-    STA smPeel1+1
+    STA beeb_plot_layrsave_smPeel1+1
 
     LDA layrsave_peel_adjust2, X
-    STA smPeel2+1
+    STA beeb_plot_layrsave_smPeel2+1
 
     \\ Self-mod a branch after correct number of bytes
 
     LDY layrsave_branch_location, X
-    STY remove_branch+1
+    STY beeb_plot_layrsave_remove_branch+1
     BEQ no_branch
 
     LDA #OPCODE_BRA
-    STA branch_origin, Y
+    STA beeb_plot_layrsave_branch_origin, Y
 
     LDA layrsave_branch_offset, X
-    STA branch_origin+1, Y
+    STA beeb_plot_layrsave_branch_origin+1, Y
     .no_branch
 
     \\ Unrolled layrsave
 
     LDX beeb_height
-
-    .y_loop
-    .branch_origin
-
+}
+.beeb_plot_layrsave_y_loop
+.beeb_plot_layrsave_branch_origin
+{
     LDY #0
     LDA (beeb_writeptr), Y
     STA (PEELBUF), Y
@@ -227,72 +230,82 @@ ENDIF
 
     .branch_target
     DEX
-    BEQ done_y
+    BEQ beeb_plot_layrsave_done_y
+}
 
     LDA beeb_writeptr               ; 3c
     AND #&07                        ; 2c
-    BEQ one_row_up                  ; 2c
 
-    DEC beeb_writeptr
+.beeb_plot_layrsave_smCMP
+    CMP #&00                        ; _UPSIDE_DOWN=&07
+    BEQ beeb_plot_layrsave_smSEC                  ; 2c
+
+.beeb_plot_layrsave_smDEC
+    DEC beeb_writeptr               ; _UPSIDE_DOWN=INC
     INC PEELBUF                     ; can't overflow as in multiples of 8
+    BRA beeb_plot_layrsave_y_loop
 
-    BRA y_loop
-
-    .one_row_up
-
-    SEC
+.beeb_plot_layrsave_smSEC
+    SEC                             ; _UPSIDE_DOWN=CLC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+.beeb_plot_layrsave_smSBC1
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7); _UPSIDE_DOWN=ADC
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+.beeb_plot_layrsave_smSBC2
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7); _UPSIDE_DOWN=ADC
     STA beeb_writeptr+1
 
     CLC
     LDA PEELBUF
-    .smPeel1
+    .beeb_plot_layrsave_smPeel1
     ADC #0          ; VISWIDTH*2*8
     STA PEELBUF
-    BCC no_carry1
-    INC PEELBUF+1
-    .no_carry1
+    {
+        BCC no_carry1
+        INC PEELBUF+1
+        .no_carry1
+    }
+    JMP beeb_plot_layrsave_y_loop
 
-    JMP y_loop
-
-    .done_y
+    .beeb_plot_layrsave_done_y
     CLC
     LDA PEELBUF
-    .smPeel2
+    .beeb_plot_layrsave_smPeel2
     ADC #0           ; VISWIDTH*2*8
     STA PEELBUF
-    BCC no_carry2
-    INC PEELBUF+1
-    .no_carry2
+    {
+        BCC no_carry2
+        INC PEELBUF+1
+        .no_carry2
+    }
 
 IF _DEBUG
+{
     LDA PEELBUF+1
     CMP #HI(peelbuf_top)
     BCC buf_ok
     BRK
     .buf_ok
+}
 ENDIF
 
-    \\ Remove the self-mod branch code
+\\ Remove the self-mod branch code
 
-    .remove_branch
+.beeb_plot_layrsave_remove_branch
+{
     LDY #0
     BEQ return
 
     LDA #OPCODE_LDA_indirect_Y
-    STA branch_origin, Y
+    STA beeb_plot_layrsave_branch_origin, Y
 
     LDA #LO(beeb_writeptr)
-    STA branch_origin+1, Y
+    STA beeb_plot_layrsave_branch_origin+1, Y
 
     .return
     JMP DONE                ; restore vars
 }
-
 ENDIF
 
 .beeb_plot_layrsave_end
