@@ -83,6 +83,12 @@ OPCODE_BRA = &80
 OPCODE_STAabs = &8D
 OPCODE_STA_indirect_Y = &91
 OPCODE_LDA_indirect_Y = &B1
+OPCODE_DECzp = &C6
+OPCODE_INCzp = &E6
+OPCODE_ADCimm = &69
+OPCODE_SBCimm = &E9
+OPCODE_CLC = &18
+OPCODE_SEC = &38
 
 \\ SN Register Values
 SN_REG_MASK = &70

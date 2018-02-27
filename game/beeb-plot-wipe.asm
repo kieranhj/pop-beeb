@@ -41,10 +41,10 @@ ENDIF
 }
 \\ Fall through!
 .beeb_plot_wipe_4bytes   ; 34 Apple bytes = 8 Beeb bytes
-{
     LDX height
 
-    .y_loop
+.beeb_plot_wipe_y_loop
+{
     LDA #0
 
     LDY #0
@@ -72,50 +72,35 @@ ENDIF
     STA (beeb_writeptr), Y
 
     DEX
-    BEQ done_y
+    BEQ beeb_plot_wipe_done_y
+}
 
-IF _UPSIDE_DOWN
     LDA beeb_writeptr
     AND #&07
-    CMP #&7
-    BEQ one_row_down
 
-    INC beeb_writeptr
-    BRA y_loop
+.beeb_plot_wipe_smCMP
+    CMP #&00
+    BEQ beeb_plot_wipe_smSEC
 
-    .one_row_down
-    CLC
-    LDA beeb_writeptr
-    ADC #LO(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr
-    LDA beeb_writeptr+1
-    ADC #HI(BEEB_SCREEN_ROW_BYTES-7)
-    STA beeb_writeptr+1
-
-    BRA y_loop
-ELSE
-    LDA beeb_writeptr
-    AND #&07
-    BEQ one_row_up
-
+.beeb_plot_wipe_smDEC
     DEC beeb_writeptr
-    BRA y_loop
+    BRA beeb_plot_wipe_y_loop
 
-    .one_row_up
+.beeb_plot_wipe_smSEC
     SEC
     LDA beeb_writeptr
+.beeb_plot_wipe_smSBC1
     SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
+.beeb_plot_wipe_smSBC2
     SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    BRA y_loop
-ENDIF
+    BRA beeb_plot_wipe_y_loop
 
-    .done_y
+.beeb_plot_wipe_done_y
     RTS    
-}
 
 ENDIF
 
