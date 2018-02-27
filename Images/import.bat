@@ -17,5 +17,6 @@ REM FOR %%F in (IMG.CHTAB*.bin) DO ..\pop2beeb\pop2beeb -i %%F -o BEEB.%%F -b %%
 ..\pop2beeb\pop2beeb -i IMG.CHTAB4.GD.bin -o BEEB.IMG.CHTAB4.GD.bin -b IMG.CHTAB4.GD.bin.john.png
 ..\pop2beeb\pop2beeb -i IMG.CHTAB4.FAT.bin -o BEEB.IMG.CHTAB4.FAT.bin -b IMG.CHTAB4.FAT.bin.john.png
 ..\pop2beeb\pop2beeb -i IMG.CHTAB4.SKEL.bin -o BEEB.IMG.CHTAB4.SKEL.bin -b IMG.CHTAB4.SKEL.bin.john.png
+..\pop2beeb\pop2beeb -i IMG.CHTAB4.VIZ.bin -o BEEB.IMG.CHTAB4.VIZ.bin -b IMG.CHTAB4.VIZ.bin.john.png
 
 ..\pop2beeb\pop2beeb -i IMG.CHTAB1.bin -o BEEB.IMG.CHTAB1.bin -b IMG.CHTAB1.bin.john.png
