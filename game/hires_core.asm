@@ -21,7 +21,7 @@
 .copy2000ma BRK    ;jmp copyscrnMA
 
 .copy2000am BRK    ;jmp copyscrnAM
-.inverty RTS       ;jmp INVERTY            BEEB TODO INVERTY
+.inverty jmp INVERTY
 
 \ Moved from grafix.asm
 .rnd jmp RND

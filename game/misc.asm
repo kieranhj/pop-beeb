@@ -296,6 +296,7 @@ vibetimer = 3
  bne return_50
 
  ldx lastpotion
+ LDX #4     ; BEEB TEMP
  beq return_50
  bpl notswd
 
