@@ -537,7 +537,9 @@ ENDIF
     .loop
     LDA #0
 
-    LDY #1
+    LDY #0
+    STA (beeb_writeptr), Y
+    INY
     STA (beeb_writeptr), Y
     INY
     STA (beeb_writeptr), Y

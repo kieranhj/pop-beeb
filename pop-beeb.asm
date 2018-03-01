@@ -26,8 +26,6 @@ _RASTERS = FALSE            ; debug raster for timing
 _HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 
-_UPSIDE_DOWN = FALSE
-
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
 
 ; Helpful MACROs
@@ -425,6 +423,9 @@ INCLUDE "game/beeb_core.asm"
 
 ; PoP source in CORE memory (always present)
 
+; Vsync handler code
+INCLUDE "lib/vsync.asm"
+
 INCLUDE "game/master.asm"
 master_end=P%
 INCLUDE "game/topctrl.asm"
@@ -450,9 +451,6 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 ; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
-
-; Vsync handler code
-INCLUDE "lib/vsync.asm"
 
 ; PoP gameplay code moved from AUX memory
 
