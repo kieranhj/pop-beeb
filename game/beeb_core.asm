@@ -787,22 +787,27 @@ ENDIF
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smCMP+1
     EOR #&07
     STA beeb_plot_sprite_FASTLAYSTA_PP_smCMP+1
+    STA beeb_plot_peel_smCMP+1
 
     \ DEC zp <> INC zp
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
     EOR #(OPCODE_DECzp EOR OPCODE_INCzp)
     STA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
+    STA beeb_plot_peel_smDEC
 
     \ SEC <> CLC
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
     EOR #(OPCODE_SEC EOR OPCODE_CLC)
     STA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
+    STA beeb_plot_peel_smSEC
 
     \ SBC #imm <> ADC #imm
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
     EOR #(OPCODE_SBCimm EOR OPCODE_ADCimm)
     STA beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
     STA beeb_plot_sprite_FASTLAYSTA_PP_smSBC2
+    STA beeb_plot_peel_smSBC1
+    STA beeb_plot_peel_smSBC2
 
 \\ Any code in Main has to be modded twice
 
@@ -831,7 +836,6 @@ ENDIF
     LDA beeb_plot_layrsave_smCMP+1
     EOR #&07
     STA beeb_plot_layrsave_smCMP+1
-    STA beeb_plot_peel_smCMP+1
     STA beeb_plot_wipe_smCMP+1
     STA beeb_plot_sprite_LayMask_smCMP+1
     STA beeb_plot_sprite_FASTMASK_smCMP+1
@@ -841,7 +845,6 @@ ENDIF
     LDA beeb_plot_layrsave_smDEC
     EOR #(OPCODE_DECzp EOR OPCODE_INCzp)
     STA beeb_plot_layrsave_smDEC
-    STA beeb_plot_peel_smDEC
     STA beeb_plot_wipe_smDEC
     STA beeb_plot_sprite_LayMask_smDEC
     STA beeb_plot_sprite_FASTMASK_smDEC
@@ -851,7 +854,6 @@ ENDIF
     LDA beeb_plot_layrsave_smSEC
     EOR #(OPCODE_SEC EOR OPCODE_CLC)
     STA beeb_plot_layrsave_smSEC
-    STA beeb_plot_peel_smSEC
     STA beeb_plot_wipe_smSEC
     STA beeb_plot_sprite_LayMask_smSEC
     STA beeb_plot_sprite_FASTMASK_smSEC
@@ -862,8 +864,6 @@ ENDIF
     EOR #(OPCODE_SBCimm EOR OPCODE_ADCimm)
     STA beeb_plot_layrsave_smSBC1
     STA beeb_plot_layrsave_smSBC2
-    STA beeb_plot_peel_smSBC1
-    STA beeb_plot_peel_smSBC2
     STA beeb_plot_wipe_smSBC1
     STA beeb_plot_wipe_smSBC2
     STA beeb_plot_sprite_LayMask_smSBC1
