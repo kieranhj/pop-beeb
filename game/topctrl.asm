@@ -2013,18 +2013,26 @@ ENDIF
 {
  lda weightless
  beq return_14
- ldx #0
+
  sec
  sbc #1
  sta weightless
- beq label_3
+ beq wtless_ended
+
  ldx #$ff
  cmp #wtlflash
- bcs label_3
+ bcs return_14
+
  lda vibes
- eor #$ff
+ eor #&80 EOR (&40 + PAL_green)
  tax
 .label_3 stx vibes ;Screen flashes as weightlessness ends
+ bne wtless_setpal
+
+.wtless_ended
+ LDX #&80
+.wtless_setpal
+ STX vsync_palette_override
 }
 .return_14 rts
 

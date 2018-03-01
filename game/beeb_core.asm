@@ -51,6 +51,17 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 .beeb_set_palette_all
 {
     STA palloop+1
+
+    \ Super hackballs!
+    BIT #&40
+    BEQ do_all
+
+    \ Just black
+    AND #&F
+    STA &FE21
+    RTS
+
+    .do_all
     CLC
     LDX #0
     LDA #0
