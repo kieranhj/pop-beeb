@@ -1388,6 +1388,7 @@ ENDIF
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
+    ; BEEB TEMP - this should really be done in subs_PlaySongI
     lda #s_Princess
     jsr BEEB_INTROSONG
 ENDIF
