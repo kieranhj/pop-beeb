@@ -893,4 +893,73 @@ ENDIF
     RTS  
 }
 
+
+; X=column [0-79]
+; A=offset [0-1]
+.beeb_dhires_copy_column
+{
+    CLC
+    ADC Mult8_LO, X
+    STA beeb_writeptr
+    LDA #HI(beeb_double_hires_addr)
+    ADC Mult8_HI, X
+    STA beeb_writeptr+1
+
+    LDX #BEEB_DOUBLE_HIRES_ROWS
+    .row_loop
+
+    LDY #0
+    .char_loop
+    LDA (beeb_writeptr), Y
+    PHA
+
+    \\ Write to visible screen
+    LDA &FE34:EOR #&4:STA &FE34
+
+    PLA
+    STA (beeb_writeptr), Y
+
+    \\ Read from invisible screen
+    LDA &FE34:EOR #&4:STA &FE34
+
+    INY:INY
+    CPY #8
+    BCC char_loop
+
+    CLC
+    LDA beeb_writeptr
+    ADC #LO(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    ADC #HI(BEEB_SCREEN_ROW_BYTES)
+    STA beeb_writeptr+1
+    
+    DEX
+    BNE row_loop
+
+    .return
+    RTS
+}
+
+.beeb_dhires_wipe
+{
+    LDX #0
+    .loop
+    STX beeb_temp
+
+    LDA #0
+    JSR beeb_dhires_copy_column
+
+    LDA #1
+    LDX beeb_temp
+    JSR beeb_dhires_copy_column
+
+    LDX beeb_temp
+    INX
+    CPX #80
+    BCC loop
+
+    RTS
+}
+
 .beeb_core_end
