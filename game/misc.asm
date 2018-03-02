@@ -282,7 +282,7 @@ ENDIF
 \*
 \*-------------------------------
 wtlesstimer = 200
-vibetimer = 3
+vibetimer = &80 ;3
 
 .POTIONEFFECT
 {

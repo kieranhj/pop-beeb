@@ -1377,13 +1377,17 @@ EQUS "PROLOG $"
 
 \ jsr ReloadStuff ;wiped out by dhires titles
 
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
     lda #s_Princess
     jsr BEEB_INTROSONG
 ENDIF
