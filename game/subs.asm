@@ -1307,8 +1307,8 @@ floorY = 151
 
 .initit
 {
- lda #' '
- sta scrncolor ;?           \\ NOT BEEB
+\ lda #' '
+\ sta scrncolor ;?           \\ NOT BEEB
  lda #0
  sta vibes
  sta redrawglass

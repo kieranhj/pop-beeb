@@ -42,7 +42,7 @@ IF _JMP_TABLE = FALSE
 .drawglass jmp DRAWGLASS
 
 .initlay jmp INITLAY
-.twinkle BRK        ; jmp TWINKLE
+.twinkle jmp TWINKLE
 .flow jmp FLOW
 .pmask jmp PMASK
 ENDIF
@@ -121,9 +121,17 @@ postimg = $c ;chtable6
 \*-------------------------------
 \* Stars outside Princess's window
 
+IF _NOT_BEEB
 starx = 2
 .stary EQUB $62,$65,$6d,$72
 .stari EQUB $2a,$2b,$2b,$2a ;chtable6
+ENDIF
+
+.staraddr EQUW (beeb_screen_addr + &259B), (beeb_screen_addr + &232D), (beeb_screen_addr + &20A5), (beeb_screen_addr + &1BA6)
+
+\ Stars all right-hand pixel
+\ Twinkle between cyan and blue
+STAR_PIXEL = (MODE2_CYAN_PAIR AND MODE2_RIGHT_MASK) EOR (MODE2_BLUE_PAIR AND MODE2_RIGHT_MASK)
 
 \*-------------------------------
 \* Hourglass
@@ -1091,35 +1099,66 @@ boffset = 2             ; BEEB have to plot Mask to use offset + Layrsave to ani
  rts
 
 
-IF _TODO
-*-------------------------------
-*
-* Twinkle one of the stars outside Princess's window
-* (Update it directly on both screens)
-*
-* In: X = star # (0-3)
-*
-*-------------------------------
-TWINKLE
- lda #starx
- sta XCO
- lda stary,x
- sta YCO
- lda stari,x
- sta IMAGE
- lda #enum_eor
- sta OPACITY
- jsr ]setch6
- jsr fastlay ;<--DIRECT HIRES CALL
- lda PAGE
- eor #$20
- sta PAGE ;& on other page
- jsr fastlay
- lda PAGE
- eor #$20
- sta PAGE
+\*-------------------------------
+\*
+\* Twinkle one of the stars outside Princess's window
+\* (Update it directly on both screens)
+\*
+\* In: X = star # (0-3)
+\*
+\*-------------------------------
+
+.TWINKLE
+{
+\ lda #starx
+\ sta XCO
+\ lda stary,x
+\ sta YCO
+\ lda stari,x
+\ sta IMAGE
+\ lda #enum_eor
+\ sta OPACITY
+\ jsr ]setch6
+\ jsr fastlay ;<--DIRECT HIRES CALL
+\ lda PAGE
+\ eor #$20
+\ sta PAGE ;& on other page
+\ jsr fastlay
+\ lda PAGE
+\ eor #$20
+\ sta PAGE
+
+ TXA
+ ASL A
+ TAX
+
+\ Stars all at fixed screen addresses
+
+ LDA staraddr, X
+ STA beeb_writeptr
+ LDA staraddr+1, X
+ STA beeb_writeptr+1
+
+\ Stars all right-hand cyan pixels
+
+ LDA #STAR_PIXEL
+ EOR (beeb_writeptr)
+ STA (beeb_writeptr)
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
+ LDA #STAR_PIXEL
+ EOR (beeb_writeptr)
+ STA (beeb_writeptr)
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
