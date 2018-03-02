@@ -4,6 +4,7 @@
 ; Our SWR loader is 60% faster than *SRLOAD
 
 _USE_HAZEL_CATALOG = FALSE           ; this might not hold true for DataCentre and/or Turbo MMC etc.
+_USE_OSFILE_LOAD = TRUE
 
 .beeb_disksys_start
 
@@ -17,6 +18,8 @@ DISKSYS_CATALOG_ADDR = SCRATCH_RAM_ADDR
 DISKSYS_BUFFER_ADDR = DISKSYS_CATALOG_ADDR+512 ; &1000 ; must be page aligned
 ENDIF
 DISKSYS_BUFFER_SIZE = 1 ; SECTORS TO READ, MUST BE ONE (for now)
+
+IF _USE_OSFILE_LOAD = FALSE
 
 .osword_params
 .osword_params_drive
@@ -541,5 +544,140 @@ ENDIF
 ; number
 ; . . . and so on
 ; Repeated for up to 31 files
+
+ELSE
+
+.osfile_filename
+EQUS ":0.$.ABCDEFG", 13
+
+.osfile_params
+.osfile_nameaddr
+EQUW osfile_filename
+; file load address
+.osfile_loadaddr
+EQUD 0
+; file exec address
+.osfile_execaddr
+EQUD 0
+; start address or length
+.osfile_length
+EQUD 0
+; end address of attributes
+.osfile_endaddr
+EQUD 0
+
+;--------------------------------------------------------------
+; Set drive number and invalidate cached catalog
+;--------------------------------------------------------------
+; on entry
+; A = drive number
+.disksys_set_drive
+{
+    CLC
+    ADC #'0'
+    STA osfile_filename+1
+    RTS
+}
+
+;--------------------------------------------------------------
+; Load a file from disk to memory (SWR supported)
+; Loads in sector granularity so will always write to page aligned address
+;--------------------------------------------------------------
+; A=memory address MSB (page aligned)
+; X=filename address LSB
+; Y=filename address MSB
+.disksys_load_file
+{
+    \ Final destination
+    STA write_to+2
+
+IF _DEBUG
+    LDA &F4
+    PHA
+ENDIF
+
+    \ Copy filename
+    STX beeb_readptr
+    STY beeb_readptr+1
+
+    LDY #7
+    LDA (beeb_readptr), Y
+    STA osfile_filename+3
+
+    DEY
+    .loop
+    LDA (beeb_readptr), Y
+    STA osfile_filename+5, Y
+    DEY
+    BPL loop
+
+    \ Where to?
+    LDA write_to+2
+    BPL load_direct
+
+    \ Wait until next vsync frame swap so we know which buffer we're using!
+    .wait_vsync
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    
+    \ Load to screen if can't load direct
+    LDA #HI(beeb_screen_addr)
+    STA read_from+2
+
+    .load_direct
+    STA osfile_loadaddr+1
+
+    \ Ask OSFILE to load our file
+	LDX #LO(osfile_params)
+	LDY #HI(osfile_params)
+	LDA #&FF
+    JSR osfile
+
+    \ Looks like OSFILE puts the current ROM back for us :)
+IF _DEBUG
+    PLA
+    CMP &F4
+    BEQ rom_ok
+    BRK
+    .rom_ok
+ENDIF
+
+    LDA write_to+2
+    BPL return
+
+    \ Copy to destination
+    LDY osfile_length+1
+
+    LDA osfile_length+0
+    BNE extra_page
+
+IF _DEBUG
+    CPY #0
+    BNE length_ok
+    BRK             ; this would mean a zero length file
+    .length_ok
+ENDIF
+
+    \ We always copy a complete number of pages
+    DEY
+    .extra_page
+
+    LDX #0
+    .read_from
+    LDA &FF00, X
+    .write_to
+    STA &FF00, X
+    INX
+    BNE read_from
+    INC read_from+2
+    INC write_to+2
+    DEY
+    BPL read_from
+
+    .return
+    RTS
+}
+
+ENDIF
 
 .beeb_disksys_end
