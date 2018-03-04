@@ -52,8 +52,11 @@ EQUB (1*2*8), (2*2*8), (3*2*8), (4*2*8), (5*2*8), (6*2*8), (7*2*8), (8*2*8), (9*
     \ Do we always need this?
 
     .normal
+    LDA OFFSET
+    BEQ no_inc
     inc WIDTH ;extra byte to cover shift right
-
+    .no_inc
+    
     \ on Beeb we could skip a column of bytes if offset>3
 
     jsr CROP
