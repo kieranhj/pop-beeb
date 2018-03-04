@@ -1406,7 +1406,6 @@ int main(int argc, char **argv)
 		for (int i = 0; i < num_images; i++)
 		{
 			int pixel_height = pixel_size[i][1];
-			int current_y = max_height - pixel_height - 1;
 
 			int pixel_width = pixel_size[i][0];
 			int expanded_width = 8 * pixel_width / 7;
@@ -1414,6 +1413,41 @@ int main(int argc, char **argv)
 			int mode5_width = (reduced_width + 3) / 4;
 
 			colour_width[i] = mode5_width * 4;
+
+			// Hacky way to look for the height of the sprite in the image
+
+			int current_y = 0;
+
+			while (current_y < max_height)
+			{
+				if (bitmap(current_x, current_y, 0) == 127 && bitmap(current_x, current_y, 1) == 127 && bitmap(current_x, current_y, 2) == 127)
+				{
+					break;
+				}
+				current_y++;
+			}
+
+			int found_height = 0;
+			current_y++;
+
+			while (current_y < max_height)
+			{
+				if (bitmap(current_x, current_y, 0) == 127 && bitmap(current_x, current_y, 1) == 127 && bitmap(current_x, current_y, 2) == 127)
+				{
+					break;
+				}
+				current_y++;
+				found_height++;
+			}
+
+			// Check this against the size in the image table just in case of cut & paste errors!
+
+			if (found_height != pixel_height)
+			{
+				printf("WARNING: Image %d found height=%d but pixel height=%d\n", i + 1, found_height, pixel_height);
+			}
+
+			current_y = max_height - pixel_height - 1;
 
 			for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 			{
