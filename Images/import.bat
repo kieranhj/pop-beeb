@@ -21,3 +21,4 @@ REM FOR %%F in (IMG.CHTAB*.bin) DO ..\pop2beeb\pop2beeb -i %%F -o BEEB.%%F -b %%
 
 ..\pop2beeb\pop2beeb -i IMG.CHTAB1.bin -o BEEB.IMG.CHTAB1.bin -b IMG.CHTAB1.bin.john.png
 ..\pop2beeb\pop2beeb -i IMG.CHTAB2.bin -o BEEB.IMG.CHTAB2.bin -b IMG.CHTAB2.bin.john.png
+..\pop2beeb\pop2beeb -i IMG.CHTAB3.bin -o BEEB.IMG.CHTAB3.bin -b IMG.CHTAB3.bin.john.png
