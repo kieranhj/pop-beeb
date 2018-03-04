@@ -126,7 +126,7 @@ ENDMACRO
 \*-------------------------------
 
 PAGE_ALIGN
-IF 0
+IF 0            ; now in ZP
 .map_2bpp_to_mode2_pixel            ; background
 {
     EQUB &00                        ; +$00 00000000 either pixel logical 0
@@ -165,6 +165,9 @@ ENDIF
     EQUB LO(fast_palette_lookup_13)
     EQUB LO(fast_palette_lookup_0)
     EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_17)
+    EQUB LO(fast_palette_lookup_18)
 }
 
 .palette_addr_HI
@@ -185,6 +188,9 @@ ENDIF
     EQUB HI(fast_palette_lookup_13)
     EQUB HI(fast_palette_lookup_0)
     EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_17)
+    EQUB HI(fast_palette_lookup_18)
 }
 
 \\ Apple II = black / blue / orange / white 
@@ -212,9 +218,11 @@ ENDIF
     EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; 15=GMW (guard green)
 
     EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_CYAN_PAIR         ; 16=RMC (cutscene)
+    EQUB 0, MODE2_RED_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR         ; 17=RGY
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 18=YMW (font)
 }
 
-BEEB_PALETTE_MAX=16
+BEEB_PALETTE_MAX=18
 
 \*-------------------------------
 ; Expanded palette table going from 2bpp data directly to MODE 2 bytes
@@ -226,7 +234,6 @@ MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; 
 .fast_palette_lookup_1
 MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_YELLOW_PAIR         ; 1=BCY
 
-PAGE_ALIGN
 .fast_palette_lookup_2
 MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR         ; 12=RYW
 
@@ -239,15 +246,6 @@ MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR       ; 
 .fast_palette_lookup_5
 MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; 5=BRY
 
-\*-------------------------------
-; Multipliction table squeezed in from PAGE_ALIGN
-\*-------------------------------
-.Mult16_HI          ; or shift...
-FOR n,0,39,1
-EQUB HI(n*16)
-NEXT
-
-PAGE_ALIGN
 .fast_palette_lookup_6
 MAP_PAIR_TO_MODE2 MODE2_CYAN_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; 6=CRY
 
@@ -260,15 +258,6 @@ MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_CYAN_PAIR            ; 
 .fast_palette_lookup_9
 MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_GREEN_PAIR           ; 9=BRG
 
-\*-------------------------------
-; Multipliction table squeezed in from PAGE_ALIGN
-\*-------------------------------
-.Mult16_LO
-FOR n,0,39,1
-EQUB LO(n*16)
-NEXT
-
-PAGE_ALIGN
 .fast_palette_lookup_10
 MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR           ; 10=RCW
 
@@ -279,7 +268,29 @@ MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_CYAN_PAIR, MODE2_WHITE_PAIR        ; 
 MAP_PAIR_TO_MODE2 MODE2_CYAN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 12=CMW
 
 .fast_palette_lookup_13
-MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_WHITE_PAIR, MODE2_CYAN_PAIR           ; 13=BWC
+MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_WHITE_PAIR, MODE2_CYAN_PAIR          ; 13=BWC
+
+.fast_palette_lookup_17
+MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR         ; 17=RGY
+
+.fast_palette_lookup_18
+MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 18=YMW
+
+\*-------------------------------
+; Multipliction table squeezed in from PAGE_ALIGN
+\*-------------------------------
+.Mult16_LO
+FOR n,0,39,1
+EQUB LO(n*16)
+NEXT
+
+\*-------------------------------
+; Multipliction table squeezed in from PAGE_ALIGN
+\*-------------------------------
+.Mult16_HI          ; or shift...
+FOR n,0,39,1
+EQUB HI(n*16)
+NEXT
 
 \*-------------------------------
 ; Hmm, these multiplication tables include all Mult16 entries.. combine?

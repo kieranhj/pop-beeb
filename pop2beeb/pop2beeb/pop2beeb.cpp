@@ -175,7 +175,8 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
 
 	{ 1, 5, 6 },			// 16=red, magenta, cyan (cutscene)
-//	{ 2, 6, 7 },			// 16=green, cyan, white (font)
+	{ 1, 2, 3 },			// 17=red, green, yellow
+	{ 3, 5, 7 },			// 18=yellow, magenta, white (font)
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
