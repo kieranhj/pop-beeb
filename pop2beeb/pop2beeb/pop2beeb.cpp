@@ -156,7 +156,7 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 {
 	{ 4, 1, 7 },			// 0=blue, red, white = closest to Apple II default colours (blue, orange, white)
 	{ 4, 6, 3 },			// 1=blue, cyan, yellow
-	{ 4, 6, 7 },			// 2=blue, cyan, white
+	{ 1, 3, 7 },			// 2=red, yellow, white
 	{ 4, 5, 3 },			// 3=blue, magenta, yellow
 
 	{ 1, 5, 3 },			// 4=red, magenta, yellow
@@ -169,8 +169,8 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 1, 6, 7 },			// 10=red, cyan, white
 	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
-	{ 1, 3, 7 },			// 12=red, yellow, white
-	{ 6, 5, 7 },			// 13=cyan, magenta, white (player)
+	{ 6, 5, 7 },			// 12=cyan, magenta, white (player)
+	{ 4, 7, 6 },			// 13=blue, white, cyan (shadow)
 	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
 
