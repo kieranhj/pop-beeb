@@ -19,6 +19,14 @@ EQUB 126, 100, 74, 48, 22, 0
     \ Get sprite data address 
 
     JSR beeb_PREPREP
+
+    SEC
+    LDA YCO
+    SBC HEIGHT
+    BCS no_yclip
+    LDA #LO(-1)
+    .no_yclip
+    STA TOPEDGE
 }
 .beeb_plot_sprite_FASTLAYSTA_PP
 {
@@ -49,13 +57,8 @@ EQUB 126, 100, 74, 48, 22, 0
 
 \ Simple Y clip
 
-    SEC
-    LDA YCO
-    SBC HEIGHT
-    BCS no_yclip
-    LDA #LO(-1)
-    .no_yclip
-    STA beeb_height
+    LDA TOPEDGE
+    STA beeb_plot_sprite_FASTLAYSTA_PP_smTOPEDGE+1
 
     \\ Poke in stride values according to width
 
@@ -177,7 +180,8 @@ ENDIF
 
     LDY YCO
     DEY
-    CPY beeb_height                ; TOPEDGE
+    .beeb_plot_sprite_FASTLAYSTA_PP_smTOPEDGE
+    CPY #0                ; TOPEDGE
     STY YCO
     BEQ beeb_plot_sprite_FASTLAYSTA_PP_done_y
 
@@ -227,6 +231,170 @@ ENDIF
     .return
     JMP DONE
 }
+
+ELSE 
+
+
+\*-------------------------------
+\* FASTLAY STA
+\*-------------------------------
+
+.beeb_plot_sprite_FASTLAYSTA
+{
+    \ Get sprite data address 
+
+    JSR beeb_PREPREP
+}
+.beeb_plot_sprite_FASTLAYSTA_PP
+{
+    LDX PALETTE
+    BPL not_full_fat
+    JMP beeb_plot_sprite_FastLaySTAMode2
+    .not_full_fat
+
+    \ BEEB PALETTE
+    LDA palette_addr_LO, X
+    STA smPAL1+1
+    STA smPAL2+1
+    LDA palette_addr_HI, X
+    STA smPAL1+2
+    STA smPAL2+2
+
+    \ Beeb screen address
+
+    JSR beeb_plot_calc_screen_addr      ; can still lose OFFSET calcs
+
+    \ Don't care about Carry
+
+    \ Calculate how many bytes of sprite data to unroll
+
+    LDA WIDTH
+    STA smWIDTH+1
+    STA smXMAX+1
+
+    \ Set sprite data address skipping any bytes NO CLIP
+
+    LDA IMAGE
+    STA sprite_addr+1
+    LDA IMAGE+1
+    STA sprite_addr+2
+
+\ Simple Y clip
+
+    LDA TOPEDGE
+    STA smTOPEDGE+1
+
+.plot_lines_loop
+
+\ Start at the end of the sprite data
+
+    LDY #0
+    LDX #0
+    CLC
+
+    .line_loop
+    STX beeb_temp
+
+\ Load 4 pixels of sprite data
+
+    .sprite_addr
+    LDA &FFFF, X
+    STA beeb_data
+
+\ Lookup pixels D & C
+
+    AND #&CC
+
+\ Shift down due to smaller palette lookup
+
+    LSR A:LSR A                     ; 4c
+
+    TAX
+    .smPAL1
+    LDA &FFFF, X
+
+\ Write to screen
+
+    STA (beeb_writeptr), Y
+
+\ Increment write pointer
+
+    TYA:ADC #8:TAY
+
+\ Lookup pixels B & A
+
+    LDA beeb_data
+    AND #&33
+    TAX
+    .smPAL2
+    LDA &FFFF, X
+
+\ Write to screen
+
+    STA (beeb_writeptr), Y
+
+\ Next screen byte across
+
+    TYA:ADC #8:TAY
+
+\ Increment sprite index
+
+    LDX beeb_temp
+    INX
+
+    .smXMAX
+    CPX #0
+    BCC line_loop
+
+\ Have we completed all rows?
+
+    LDY YCO
+    DEY
+    .smTOPEDGE
+    CPY #0                 ; TOPEDGE
+    STY YCO
+    BEQ done_y
+
+\ Move to next sprite data row
+
+    CLC
+    LDA sprite_addr+1
+    .smWIDTH
+    ADC #0                  ; WIDTH
+    STA sprite_addr+1
+    BCC no_carry
+    INC sprite_addr+2
+    .no_carry
+
+\ Next scanline
+
+    LDA beeb_writeptr
+    AND #&7
+    BEQ next_char_row
+
+    DEC beeb_writeptr
+    BRA plot_lines_loop
+
+\ Need to move up a screen char row
+
+    .next_char_row
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    BRA plot_lines_loop
+
+    .done_y
+
+\ Reset stack before we leave
+
+    JMP DONE
+}
 ENDIF
+
 
 .beeb_plot_fastlay_end

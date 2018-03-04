@@ -38,23 +38,25 @@
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
 .DoSaveGame jmp DOSAVEGAME              ; moved from misc.asm
 
-MACRO MASTER_LOAD_HIRES filename
+.master_load_hires
 {
  JSR beeb_set_game_screen
- LDX #LO(filename)
- LDY #HI(filename)
  LDA #HI(beeb_screen_addr)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip
+ JMP PageFlip
 }
-ENDMACRO
 
-MACRO MASTER_LOAD_DHIRES filename, lines
+MACRO MASTER_LOAD_HIRES filename
 {
  LDX #LO(filename)
  LDY #HI(filename)
- LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
+ JSR master_load_hires
+}
+ENDMACRO
+
+.master_load_dhires
+{
  JSR disksys_load_file
 
 IF _DEMO_BUILD
@@ -63,7 +65,25 @@ ENDIF
 
  JSR vblank
  JSR PageFlip
- JSR beeb_show_screen       ; in case previous blackout
+ JMP beeb_show_screen       ; in case previous blackout
+}
+
+MACRO MASTER_LOAD_DHIRES filename, lines
+{
+ LDX #LO(filename)
+ LDY #HI(filename)
+ LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
+ JSR master_load_dhires
+}
+ENDMACRO
+
+MACRO MASTER_WIPE_DHIRES filename
+{
+ LDX #LO(filename)
+ LDY #HI(filename)
+ LDA #HI(beeb_double_hires_addr)
+ JSR disksys_load_file
+ JSR beeb_dhires_wipe
 }
 ENDMACRO
 
@@ -1214,7 +1234,7 @@ ENDIF
 
 \*-------------------------------
 \*
-\* Credit line disappears - BEEB TODO?
+\* Credit line disappears
 \*
 \*-------------------------------
 
@@ -1232,6 +1252,8 @@ ENDIF
 \* Display page 1
 
 \ lda PAGE2off
+
+\ Not needed on Beeb as just load the whole lower half of the screen
 
 .return
  rts
@@ -1285,9 +1307,25 @@ IF _AUDIO
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
- jsr unpacksplash
+; jsr unpacksplash
 
- jsr copy1to2
+\ Construct the title page without showing it
+
+ LDX #LO(splash_filename)
+ LDY #HI(splash_filename)
+ LDA #HI(beeb_double_hires_addr)
+ JSR disksys_load_file
+
+ LDX #LO(title_filename)
+ LDY #HI(title_filename)
+ LDA #HI(beeb_double_hires_addr + 12 * 640)
+ JSR disksys_load_file
+
+\ Now wipe to reveal
+
+ JSR beeb_dhires_wipe
+
+; jsr copy1to2
 
  lda #20/4
  jsr tpause
@@ -1295,7 +1333,7 @@ ENDIF
 \ lda #delTitle
 \ jsr DeltaExpPop
  
- MASTER_LOAD_DHIRES title_filename, 12
+; MASTER_LOAD_DHIRES title_filename, 12
 
 IF _AUDIO
     lda #s_Title
@@ -1353,7 +1391,7 @@ EQUS "PROLOG $"
 \ sta RAMRDaux
 \ jsr DblExpand
 
- MASTER_LOAD_DHIRES prolog_filename, 0
+ MASTER_WIPE_DHIRES prolog_filename
 
 \ ldx #250
 \ lda #s_Prolog
@@ -1438,7 +1476,7 @@ EQUS "CREDITS$"
  LDA #2
  JSR disksys_set_drive
 
- MASTER_LOAD_DHIRES credits_filename, 0
+ MASTER_WIPE_DHIRES credits_filename
 
 \ BEEB set drive 0 - before demo load
  LDA #0
