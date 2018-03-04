@@ -306,6 +306,211 @@ ENDIF
     .return
     JMP DONE                ; restore vars
 }
+
+
+ELSE
+
+\*-------------------------------
+\*
+\*  L A Y E R S A V E
+\*
+\*  In:  Same as for LAY, plus PEELBUF (2 bytes)
+\*  Out: PEELBUF (updated), PEELIMG (2 bytes), PEELXCO, PEELYCO
+\*
+\*  PEELIMG is 2-byte pointer to beginning of image table.
+\*  (Hi byte = 0 means no image has been stored.)
+\*
+\*  PEELBUF is 2-byte pointer to first available byte in
+\*  peel buffer.
+\*
+\*-------------------------------
+
+.beeb_plot_layrsave
+{
+    JSR beeb_PREPREP
+
+    \ OK to page out sprite data now we have dimensions etc.
+
+    lda OPACITY
+    bpl normal
+
+    \ Mirrored
+    LDA XCO
+    SEC
+    SBC WIDTH
+    STA XCO
+
+    .normal
+    LDA OFFSET
+    BEQ no_offset
+    inc WIDTH ;extra byte to cover shift right
+    .no_offset
+
+    \ on Beeb we could skip a column of bytes if offset>3
+
+    jsr CROP
+    bmi skipit
+
+;RASTER_COL PAL_red
+
+    lda PEELBUF ;PEELBUF: 2-byte pointer to 1st
+    sta PEELIMG ;available byte in peel buffer
+    lda PEELBUF+1
+    sta PEELIMG+1
+
+    \ Mask off Y offset
+
+    LDY YCO
+    STY PEELYCO
+
+    \ Look up Beeb screen address
+
+    LDX XCO
+    STX PEELXCO
+
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    \ Make sprite
+
+    LDA VISWIDTH
+    BNE width_ok
+
+    .skipit
+    JMP SKIPIT
+
+    \ Store visible width
+
+    .width_ok
+    LDY #0
+    STA (PEELBUF), Y
+
+    \ Calculate visible height
+
+    INY
+    LDA YCO
+    SEC
+    SBC TOPEDGE
+    STA (PEELBUF),y ;Height of onscreen portion ("VISHEIGHT")
+
+    TAX             ; beeb_height
+
+    \ Increment (w,h) header to start of image data
+
+    CLC
+    LDA PEELBUF
+    ADC #9
+    AND #&F8
+    STA PEELBUF
+    BCC no_carry
+    INC PEELBUF+1
+    .no_carry
+
+    LDA beeb_writeptr
+    AND #&07
+    EOR #&07
+    CLC
+    ADC PEELBUF
+    STA PEELBUF
+    BCC no_carry2
+    INC PEELBUF+1
+    .no_carry2
+
+    \ Calc extents
+
+    LDA VISWIDTH
+    ASL A                   ; bytes_per_line_on_screen
+    ASL A                   ; 
+    ASL A                   ; 
+    ASL A                   ; x8
+    STA smPEELINC2+1
+    SEC
+    SBC #7
+    STA smPEELINC+1
+    DEC A
+    STA smYMAX+1
+
+    \ X=height
+
+    .y_loop
+
+    .smYMAX
+    LDY #0                  ; could be done backwards?
+    SEC
+
+    .x_loop
+    LDA (beeb_writeptr), Y
+    STA (PEELBUF), Y
+
+    TYA
+    SBC #8    
+    TAY
+
+    BCS x_loop
+
+    DEX
+    BEQ done_y
+
+    \ Next scanline
+
+    LDA beeb_writeptr               ; 3c
+    AND #&07                        ; 2c
+    BEQ one_row_up                  ; 2c
+
+    DEC beeb_writeptr
+    INC PEELBUF                     ; can't overflow as in multiples of 8
+
+    BRA y_loop
+
+    .one_row_up
+
+    SEC
+    LDA beeb_writeptr
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr
+    LDA beeb_writeptr+1
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
+    STA beeb_writeptr+1
+
+    CLC
+    LDA PEELBUF
+    .smPEELINC
+    ADC #0                      ; VISWIDTH*2*8 - 7
+    STA PEELBUF
+    BCC no_carry3
+    INC PEELBUF+1
+    .no_carry3
+
+    BRA y_loop
+
+    .done_y
+    CLC
+    LDA PEELBUF
+    .smPEELINC2
+    ADC #0                  ; VISWIDTH*2*8
+    STA PEELBUF
+    BCC no_carry4
+    INC PEELBUF+1
+    .no_carry4
+
+IF _DEBUG
+    LDA PEELBUF+1
+    CMP #HI(peelbuf_top)
+    BCC buf_ok
+    BRK
+    .buf_ok
+ENDIF
+
+;RASTER_COL PAL_black
+
+    JMP DONE                ; restore vars
+}
+
 ENDIF
 
 .beeb_plot_layrsave_end
