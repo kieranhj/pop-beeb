@@ -2341,21 +2341,28 @@ Remove fns from jump table
 Remove jump tables
 Reduce SWR module
 Fill MAIN RAM now peel buffer size has been set
+
+    BEEB PLOT size =  &3F1 
+    BEEB PLOT WIPE size =  &5F 
+    BEEB PLOT LAY size =  &0 
+
+
 Check CORE code + data
+
     DISKSYS size =  &89 
-    SWR size =  &A5 
+    SWR size =  &34 
     PRINT size =  &14 
-    BEEB BOOT size =  &105 
+    BEEB BOOT size =  &152 
     AUX CORE (jump table) size =  &7E2 
     BEEB CORE size =  &2D5 
-    MASTER size =  &626 
+    MASTER size =  &5F9 
     TOPCTRL size =  &7AD 
-    HIRES (CORE) size =  &C7 
     AUDIO size =  &17 
-    HIRES (moved from MAIN) size =  &147 
+    HIRES size =  &20E 
     BEEB PLOT FASTLAY size =  &141 
     BEEB PLOT LAYRSAVE size =  &173 
     BEEB PLOT PEEL size =  &10B 
+
 Check all HAZEL data & code
     TABLES size =  &488 
     BGDATA (formerly CORE) size =  &FB 

@@ -126,6 +126,8 @@ IF _UNROLL_LAYMASK = FALSE
     JMP beeb_plot_sprite_LayMode2BM     ; beeb_mirror already set
     .not_full_fat
 
+    JSR beeb_plot_sprite_setpalette
+
     \ Beeb screen address
     JSR beeb_plot_calc_screen_addr
 
@@ -1179,7 +1181,7 @@ ENDIF
     AND #&BF
     STA PALETTE
 
-    JMP beeb_plot_sprite_setpalette
+    RTS
 }
 
 \*-------------------------------
