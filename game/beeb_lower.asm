@@ -2,9 +2,6 @@
 ; BSS vars in lower RAM (&900-&D00)
 
 \\ from eq.asm
-IF 1
-
-IF 1
 .midCU skip maxmid
 .midCD skip maxmid
 .midCL skip maxmid
@@ -23,7 +20,6 @@ IF 1
 .objCL skip maxobj
 .objCR skip maxobj
 .objTAB skip maxobj
-ENDIF
 
 .msgX skip maxmsg
 .msgOFF skip maxmsg
@@ -118,11 +114,7 @@ IF _DEBUG
 .msgTOP     skip 1 
 ENDIF
 
-ENDIF
-
 \\ Moved from gameeq.asm
-
-IF 1
 
 \*-------------------------------
 \*  BEEB: moved from ZP
@@ -333,27 +325,3 @@ ENDIF
 ;.soundtable ds maxsfx
 
 .trobcount skip 1
-ENDIF
-
-\*-------------------------------
-\*
-\*  Page 2-3 - AUX MEM
-\*
-\*-------------------------------
-
-IF 0
-\dum $320
-;PAGE_ALIGN
-ALIGN &80  ; doesn't need to be page aligned but must be contained within same paage
-
-.CDthisframe skip $10
-.CDlastframe skip $10
-.CDbelow skip $10
-.CDabove skip $10
-.SNthisframe skip $10
-.SNlastframe skip $10
-.SNbelow skip $10
-.SNabove skip 10
-.BlockYthis skip 1
-.BlockYlast skip 1
-ENDIF

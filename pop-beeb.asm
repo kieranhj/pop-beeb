@@ -62,32 +62,19 @@ INCLUDE "game/specialk.h.asm"
 \*-------------------------------
 
 LANG_START=&300
-LANG_TOP=&800
-
-;LOWER_START=&900
 LOWER_TOP=&D00
 
 ORG LANG_START              ; VDU and language workspace
 GUARD LOWER_TOP              ; sound workspace
 
 INCLUDE "game/beeb_lang.asm"
-
-PRINT "--------"
-PRINT "LANGUAGE Workspace"
-PRINT "--------"
-PRINT "Language workspace high watermark = ", ~P%
-PRINT "Language workspace RAM free = ", ~(LANG_TOP - P%)
-PRINT "--------"
-
-\\ What about PAGE &800 = sound workspace?!
-
-;ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
-;GUARD LOWER_TOP                ; NMI workspace
+INCLUDE "game/gameeq.asm"
 
 INCLUDE "game/beeb_lower.asm"
+INCLUDE "game/eq.asm"
 
 PRINT "--------"
-PRINT "LOWER Workspace"
+PRINT "LANG + LOWER Workspace"
 PRINT "--------"
 PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
@@ -373,9 +360,6 @@ ORG beeb_boot_start
 GUARD beeb_boot_end
 
 .pop_beeb_bss_start
-
-INCLUDE "game/eq.asm"
-INCLUDE "game/gameeq.asm"
 
 .pop_beeb_bss_end
 
