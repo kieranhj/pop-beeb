@@ -1052,7 +1052,7 @@ EQUS "VIZ    $"
 \*-------------------------------
 
 .pacRoom_name
-EQUS "PRIN   $"
+EQUS "PRIN2  $"
 
 .CUTPRINCESS
 {
@@ -1068,7 +1068,22 @@ EQUS "PRIN   $"
 
  JSR beeb_clear_status_line
 
- MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
+\ Need game screen dimensions
+
+ JSR beeb_set_game_screen
+
+\ Load Princess screen image
+\ And MODE2 PLOT overlay
+
+ LDX #LO(pacRoom_name)
+ LDY #HI(pacRoom_name)
+ LDA #HI(PRIN2_START)
+ JSR disksys_load_file
+
+\ Flip the screen buffers
+
+ JSR vblank
+ JSR PageFlip
 
 \ lda #$40
 \ sta IMAGE+1
@@ -1076,12 +1091,14 @@ EQUS "PRIN   $"
 \ sta IMAGE ;copy page 1 to page 2
 \ jmp _copy2000 ;in HIRES
 
- LDA #HI(beeb_screen_addr)
+\ Copy the screen buffers
+
+ LDA #HI(PRIN2_START)
  JSR beeb_copy_shadow
 
- JSR beeb_show_screen           ; BEEB show screen after blackout
+\ Display
 
- RTS
+ JMP beeb_show_screen           ; BEEB show screen after blackout
 }
 
 \*-------------------------------

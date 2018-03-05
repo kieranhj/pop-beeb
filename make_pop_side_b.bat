@@ -2,6 +2,10 @@
 
 rem disk1 now created by beebasm
 
+del "pop-beeb-side-a.ssd.$.PRIN2*"
+
+bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
+
 del "pop-beeb-side-b.ssd"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
@@ -40,5 +44,6 @@ REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB7.mode2.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
 REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB9.mode2.bin"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.PRINCESS.SCENE.mode2.bin"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.PRINCESS.SCENE.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.PRIN2"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Epilog.mode2.bin"

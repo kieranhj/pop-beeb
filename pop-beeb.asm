@@ -4,100 +4,14 @@
 ; Main build file
 
 \*-------------------------------
-; Defines
+; GLOBAL DEFINES
 \*-------------------------------
 
-CPU 1                       ; MASTER ONLY
-_VERSION = $01              ; BCD version Demo.1
+INCLUDE "pop-beeb.h.asm"
 
-_DEBUG = TRUE               ; enable bounds checks and other debug fetures
-_DEMO_BUILD = FALSE         ; restrict to just one level & watermark
-_BOOT_ATTRACT = FALSE        ; boot to attract mode not straight into game
-_START_LEVEL = 1            ; _DEBUG only start on a different level
-
-_AUDIO = TRUE               ; enable Beeb audio code
-_AUDIO_DEBUG = FALSE        ; enable audio debug text
-
-_TODO = FALSE               ; code still to be ported
-_NOT_BEEB = FALSE           ; Apple II code to remove
-
-_IRQ_VSYNC = FALSE          ; remove irq code if doubtful
-_RASTERS = FALSE            ; debug raster for timing
-_HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
-_JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
-
-REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
-
-; Helpful MACROs
-
-MACRO PAGE_ALIGN
-    PRINT "ALIGN LOST ", ~LO(((P% AND &FF) EOR &FF)+1), " BYTES"
-    ALIGN &100
-ENDMACRO
-
-MACRO RASTER_COL col
-IF _RASTERS
-    LDA #&00+col:STA &FE21
-ENDIF
-ENDMACRO
-
-; FONT GLYPHS
-
-HEART_GLYPH=41
-EMPTY_GLYPH=42
-BLANK_GLYPH=43
-GLYPH_DOT=39
-
-MACRO SMALL_FONT_MAPCHAR
-    MAPCHAR '0','9',1
-    MAPCHAR 'A','Z',11
-    MAPCHAR 'a','z',11
-    MAPCHAR '!',37
-    MAPCHAR '?',38
-    MAPCHAR '.',GLYPH_DOT
-    MAPCHAR ',',40
-    MAPCHAR ' ',0
-    MAPCHAR '~',BLANK_GLYPH
-ENDMACRO
-
-; PALETTE DEFINITIONS
-
-PAL_BRW=0
-PAL_BCY=1
-PAL_RYW=2
-PAL_BMY=3           ; Dungeon guard regular
-PAL_RMY=4           ; Dungeon guard special
-PAL_BRY=5
-PAL_CRY=6
-PAL_BGY=7
-PAL_BRC=8
-PAL_BRG=9
-PAL_RCW=10
-PAL_YCW=11
-PAL_CMW=12          ; player
-PAL_BWC=13          ; Shadow
-PAL_BMW=14          ; Palace guard regular
-PAL_GMW=15          ; Palace guard special
-PAL_RMC=16
-PAL_RGY=17
-RAL_YMW=18          ; font
-
-PAL_FONT=RAL_YMW
-
-; Original PoP global defines
-
-EditorDisk = 0 ;1 = dunj, 2 = palace
-CopyProtect = 0
-DemoDisk = 0
-FinalDisk = 1
-ThreeFive = 0 ;3.5" disk?
-
-; Platform includes
-
-INCLUDE "lib/bbc.h.asm"
-INCLUDE "lib/bbc_utils.h.asm"
-
-; POP includes
+\*-------------------------------
+; ZERO PAGE
+\*-------------------------------
 
 locals = $d0                    ; VDU workspace
 locals_top = $e3
@@ -116,52 +30,6 @@ map_2bpp_to_mode2_pixel=&0
 
 INCLUDE "game/eq.h.asm"
 INCLUDE "game/gameeq.h.asm"
-
-; POP defines
-
-INCLUDE "game/soundnames.h.asm"
-INCLUDE "game/seqdata.h.asm"
-
-\*-------------------------------
-; BEEB headers
-\*-------------------------------
-
-BEEB_SCREEN_MODE = 2
-BEEB_SCREEN_WIDTH = 160
-BEEB_PIXELS_PER_BIT = 2
-BEEB_SCREEN_HEIGHT = 200
-BEEB_SCREEN_CHARS = (BEEB_SCREEN_WIDTH / BEEB_PIXELS_PER_BIT)
-BEEB_SCREEN_ROWS = (BEEB_SCREEN_HEIGHT / 8)
-BEEB_SCREEN_SIZE = HI((BEEB_SCREEN_CHARS * BEEB_SCREEN_ROWS * 8) + &FF) * &100
-BEEB_SCREEN_ROW_BYTES = (BEEB_SCREEN_CHARS * 8)
-BEEB_SCREEN_VPOS = 32
-
-beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
-
-BEEB_STATUS_ROW = 24
-
-beeb_status_addr = beeb_screen_addr + BEEB_STATUS_ROW * BEEB_SCREEN_ROW_BYTES
-
-BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
-BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
-BEEB_DOUBLE_HIRES_VPOS = 34
-
-beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
-
-BEEB_PEEL_BUFFER_SIZE = &B00
-
-BEEB_SWRAM_SLOT_BGTAB1_B = 1    ; alongside code
-BEEB_SWRAM_SLOT_BGTAB1_A = 0
-BEEB_SWRAM_SLOT_BGTAB2 = 0
-BEEB_SWRAM_SLOT_CHTAB1 = 1
-BEEB_SWRAM_SLOT_CHTAB2 = 1
-BEEB_SWRAM_SLOT_CHTAB3 = 1
-BEEB_SWRAM_SLOT_CHTAB4 = 0
-BEEB_SWRAM_SLOT_CHTAB5 = 2
-BEEB_SWRAM_SLOT_CHTAB678 = 0     ; blat BGTAB1
-BEEB_SWRAM_SLOT_CHTAB9 = 1     ; blat CHTAB1325 (player)
-BEEB_SWRAM_SLOT_AUX_HIGH = 3
-
 INCLUDE "game/beeb-plot.h.asm"
 
 ; Music Libraries
@@ -451,7 +319,6 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 
 ; If you move a plot function back into Main must update self-mod code in
 ; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
-INCLUDE "game/beeb-plot-mode2.asm"
 INCLUDE "game/beeb-plot-fastlay.asm"
 INCLUDE "game/beeb-plot-peel.asm"
 
@@ -488,7 +355,6 @@ PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
-PRINT "BEEB PLOT MODE2 size = ", ~(beeb_plot_mode2_end - beeb_plot_mode2_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
 PRINT "--------"
@@ -571,6 +437,33 @@ SKIP BEEB_PEEL_BUFFER_SIZE       ; was &800
 PRINT "Screen buffer address = ", ~beeb_screen_addr
 PRINT "Screen buffer size = ", ~BEEB_SCREEN_SIZE
 PRINT "Main RAM free = ", ~(MAIN_TOP - pop_beeb_main_end - BEEB_PEEL_BUFFER_SIZE)
+PRINT "--------"
+
+\*-------------------------------
+; Construct MAIN Cutscene Overlay
+\*-------------------------------
+
+PRIN2_START=beeb_screen_addr-&200       ; magically size of PLOT_MODE2
+\ This eats into peelbuf but we don't care as only in cutscene
+
+CLEAR &3000, &8000
+ORG PRIN2_START
+GUARD &8000
+
+.pop_beeb_prin2_start
+INCLUDE "game/beeb-plot-mode2.asm"
+PAGE_ALIGN
+.pop_beeb_prin2_screen
+INCBIN "Other/john.PRINCESS.SCENE.mode2.bin"
+.pop_beeb_prin2_end
+
+SAVE "PRIN2", pop_beeb_prin2_start, pop_beeb_prin2_end, 0
+
+PRINT "--------"
+PRINT "MAIN Cutscene Overlay"
+PRINT "--------"
+PRINT "BEEB PLOT MODE2 size = ", ~(beeb_plot_mode2_end - beeb_plot_mode2_start)
+PRINT "PRINCESS screen address = ", ~pop_beeb_prin2_screen
 PRINT "--------"
 
 \*-------------------------------
@@ -908,9 +801,7 @@ PAGE_ALIGN
 \*-------------------------------
 
 \ All game levels on SIDE B
-
 \ All background sprites on SIDE B
-
 \ All character sprites on SIDE B
 
 \ Loading screen
@@ -927,7 +818,7 @@ PUTFILE "Other/john.Prolog.mode2.bin", "PROLOG", &3000, 0
 PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
-PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
+;PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
 
