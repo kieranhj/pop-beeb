@@ -64,8 +64,11 @@ INCLUDE "game/specialk.h.asm"
 LANG_START=&300
 LANG_TOP=&800
 
+;LOWER_START=&900
+LOWER_TOP=&D00
+
 ORG LANG_START              ; VDU and language workspace
-GUARD LANG_TOP              ; sound workspace
+GUARD LOWER_TOP              ; sound workspace
 
 INCLUDE "game/beeb_lang.asm"
 
@@ -78,11 +81,8 @@ PRINT "--------"
 
 \\ What about PAGE &800 = sound workspace?!
 
-LOWER_START=&900
-LOWER_TOP=&D00
-
-ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
-GUARD LOWER_TOP                ; NMI workspace
+;ORG LOWER_START                ; envelope / speech / CFS / soft key / char defs
+;GUARD LOWER_TOP                ; NMI workspace
 
 INCLUDE "game/beeb_lower.asm"
 

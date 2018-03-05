@@ -2279,6 +2279,27 @@ BANK 1 free =  &58
 BANK 2 free =  &C79 
 BANK 3 free =  &20E 
 
+5/3/2018
+~~~
+RAM FREE (DEBUG)
+Zero page free =  &0 
+Language workspace RAM free =  &D 
+Lower workspace RAM free =  &3F (&47)
+Core RAM free =  &A8 (&165)
+Core BSS free =  &53 (&2F)
+Main RAM free =  &B0 (&C1)
+HAZEL RAM free =  &4C 
+BANK 0 free =  &3F 
+BANK 1 free =  &328 
+BANK 2 free =  &179 
+BANK 3 free =  &10E (&20E)
+
+TOTAL = &831 (&9E3)
+SWRAM = &5EE (1518)
+MAIN/SHADOW = &B0
+CORE + LOWER = &193 (403)
+
+
 22/2/2018
 ~~~
 Sprites to upres
@@ -2310,3 +2331,56 @@ Large 16/109 = 8x109 = 4x109 = 4*8 + 13*640 + 5
 14/91 = 7x91 = 3.1x92 = 3*8 + 11*640 + 2
 20/112 = 10x112 = 5x112 = 5*8 + 14*640
 Med 22/98
+
+
+RAM thoughts
+~~~
+Reclaim sound workspace page (&800) - might need to check interupts etc.
+Move boot code somewhere that can be trampled - EXO buffer?
+Remove fns from jump table
+Remove jump tables
+Reduce SWR module
+Fill MAIN RAM now peel buffer size has been set
+Check CORE code + data
+    DISKSYS size =  &89 
+    SWR size =  &A5 
+    PRINT size =  &14 
+    BEEB BOOT size =  &105 
+    AUX CORE (jump table) size =  &7E2 
+    BEEB CORE size =  &2D5 
+    MASTER size =  &626 
+    TOPCTRL size =  &7AD 
+    HIRES (CORE) size =  &C7 
+    AUDIO size =  &17 
+    HIRES (moved from MAIN) size =  &147 
+    BEEB PLOT FASTLAY size =  &141 
+    BEEB PLOT LAYRSAVE size =  &173 
+    BEEB PLOT PEEL size =  &10B 
+Check all HAZEL data & code
+    TABLES size =  &488 
+    BGDATA (formerly CORE) size =  &FB 
+    BGDATA (formerly HIGH now HAZEL) size =  &F0 
+    HRTABLES size =  &186 
+    BEEB (formerly) CORE DATA size =  &5A9 
+    EXO size =  &32E 
+    VGMPLAYER size =  &A1 
+    BEEB AUDIO size =  &143 
+What could go in BANK1? (&328 bytes)
+Check BANK2 code + data
+    SEQTABLE size =  &9F1 
+    FRAMEDEFS size =  &7B7 
+    CTRLSUBS size =  &873 
+    COLL size =  &736 
+    AUTO size =  &A36 
+Any code that could go in BANK2? (&179 bytes)
+Check BANK3 code + data
+    CTRL size =  &B47 
+    FRAMEADV size =  &B4D 
+    GAMEBG size =  &467 
+    GRAFIX size =  &43C 
+    SUBS size =  &8B3 
+    MOVER size =  &A5B 
+    MISC size =  &3EE 
+    SPECIALK size =  &5B3 
+    BEEB PLOT FONT (moved from MAIN) size =  &30C 
+Any code that could go in BANK3? (&10E-&20E bytes)
