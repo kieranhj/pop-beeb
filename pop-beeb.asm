@@ -268,7 +268,52 @@ ENDIF
     \\ Actual POP
     \\ Would have been entered directly by the boot loader on Apple II
 
-    JMP firstboot
+;   JMP firstboot
+}
+\ Just drop through!
+
+\*-------------------------------
+\*
+\*  F I R S T B O O T
+\*
+\*-------------------------------
+
+.FIRSTBOOT
+{
+\* Load as much of Stage 3 as we can keep
+
+ jsr loadperm
+
+\* Start attract loop
+
+ jsr initsystem ;in topctrl
+
+ lda #0
+ sta invert ;rightside up Y tables
+
+ lda #1
+ sta soundon ;Sound on
+
+ lda #$ff   ; no level sprites cached
+ sta CHset
+ sta BGset1
+ sta BGset2
+
+ JSR beeb_set_mode2_no_clear
+
+    \\ Own error handler now we're fully initialised
+    SEI
+    LDX #LO(error_handler)
+    LDY #HI(error_handler)
+    STX BRKV
+    STY BRKV+1
+    CLI
+
+IF _BOOT_ATTRACT
+ jmp AttractLoop
+ELSE
+ jmp DOSTARTGAME
+ENDIF
 }
 
 .beeb_boot_end
@@ -292,8 +337,6 @@ INCLUDE "game/master.asm"
 master_end=P%
 INCLUDE "game/topctrl.asm"
 topctrl_end=P%
-INCLUDE "game/hires_core.asm"
-hires_core_end=P%
 INCLUDE "game/audio.asm"
 audio_end=P%
 
@@ -345,9 +388,8 @@ PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
 PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
-PRINT "HIRES (CORE) size = ", ~(hires_core_end - hires_core)
 PRINT "AUDIO size = ", ~(audio_end - audio)
-PRINT "HIRES (moved from MAIN) size = ", ~(hires_end - hires)
+PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
 PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
@@ -476,8 +518,6 @@ INCLUDE "game/tables.asm"
 tables_end=P%
 INCLUDE "game/bgdata.asm"
 bgdata_end=P%
-INCLUDE "game/bgdata_high.asm"
-bgdata_high_end=P%
 INCLUDE "game/hrtables.asm"
 hrtables_end=P%
 
@@ -503,8 +543,7 @@ PRINT "--------"
 PRINT "HAZEL Modules"
 PRINT "--------"
 PRINT "TABLES size = ", ~(tables_end-tables)
-PRINT "BGDATA (formerly CORE) size = ", ~(bgdata_end-bgdata)
-PRINT "BGDATA (formerly HIGH now HAZEL) size = ", ~(bgdata_high_end-bgdata_end)
+PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
 PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
 PRINT "BEEB (formerly) CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
 PRINT "EXO size = ", ~(exo_end-exo_start)
