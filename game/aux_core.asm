@@ -26,7 +26,7 @@ ENDMACRO
     \\ Remember current bank
     LDA &F4: PHA
 
-    LDA #6          ; hard code this aux A = 6
+    LDA #BEEB_SWRAM_SLOT_AUX_B      ; confusingly modules in list A come from AuxB
     STA &F4: STA &FE30
 
     LDA aux_core_fn_table_A_LO, X
@@ -87,7 +87,7 @@ ENDMACRO
     \\ Remember current bank
     LDA &F4: PHA
 
-    LDA #7          ; hard code this aux B = 7
+    LDA #BEEB_SWRAM_SLOT_AUX_HIGH   ; confusingly modules in list B are in Aux High
     STA &F4: STA &FE30
 
     LDA aux_core_fn_table_B_LO, X
