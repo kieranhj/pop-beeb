@@ -356,7 +356,6 @@ _UNROLL_LAYMASK = FALSE     ; unrolled versions of LayMask full-fat sprite plot
 ; beeb_plot_invert_code_in_main in beeb_core.asm for inverting screen!!
 INCLUDE "game/beeb-plot-fastlay.asm"
 INCLUDE "game/beeb-plot-layrsave.asm"
-INCLUDE "game/beeb-plot-peel.asm"
 
 ; PoP gameplay code moved from AUX memory
 
@@ -392,7 +391,6 @@ PRINT "AUDIO size = ", ~(audio_end - audio)
 PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
-PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
@@ -436,6 +434,7 @@ GUARD MAIN_TOP
 INCLUDE "game/beeb-plot.asm"
 INCLUDE "game/beeb-plot-wipe.asm"
 INCLUDE "game/beeb-plot-lay.asm"
+INCLUDE "game/beeb-plot-peel.asm"
 
 .pop_beeb_main_end
 
@@ -449,6 +448,7 @@ PRINT "--------"
 PRINT "BEEB PLOT size = ", ~(beeb_plot_end - beeb_plot_start)
 PRINT "BEEB PLOT WIPE size = ", ~(beeb_plot_wipe_end - beeb_plot_wipe_start)
 PRINT "BEEB PLOT LAY size = ", ~(beeb_plot_lay_end - beeb_plot_lay_start)
+PRINT "BEEB PLOT PEEL size = ", ~(beeb_plot_peel_end - beeb_plot_peel_start)
 PRINT "--------"
 PRINT "Main code size = ", ~(pop_beeb_main_end - pop_beeb_main_start)
 PRINT "Main high watermark = ", ~P%

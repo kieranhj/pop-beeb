@@ -2342,7 +2342,7 @@ Remove jump tables
 Reduce SWR module
 Fill MAIN RAM now peel buffer size has been set
 
-    BEEB PLOT size =  &3F1 
+    BEEB PLOT size =  &373
     BEEB PLOT WIPE size =  &5F 
     BEEB PLOT LAY size =  &0 
 

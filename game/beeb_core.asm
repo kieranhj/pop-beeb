@@ -234,49 +234,11 @@ MACRO BEEB_SELECT_MAIN_MEM
 }
 ENDMACRO
 
-IF 0
-.beeb_select_main_mem
-{
-\ Main & Aux used to map to SHADOW but no longer
-\    LDA &FE34
-\    AND #&FB            ; mask out bit 2
-\    STA &FE34
-
-\ Now maps to multiple SWRAM banks so...
-
-    \\ Remember current bank
-    LDA &F4: PHA
-
-    RTS
-}
-ENDIF
-
 MACRO BEEB_SELECT_AUX_MEM
 {
     PLA:STA &F4:STA &FE30
 }
 ENDMACRO
-
-IF 0
-.beeb_select_aux_mem
-{
-\ Main & Aux used to map to SHADOW but no longer
-\    LDA &FE34
-\    ORA #&C          ; mask in bit 2 & 3 (for HAZEL)
-\    STA &FE34
-\ Then SHADOW + SWRAM
-\    LDA #BEEB_SWRAM_SLOT_AUX_HIGH
-\    JMP swr_select_slot
-
-\ Now maps to multiple SWRAM banks so...
-
-    \\ Restore original bank
-    PLA
-    STA &F4:STA &FE30
-
-    RTS
-}
-ENDIF
 
 ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
 .shadow_init_buffers
@@ -799,21 +761,18 @@ ENDIF
     EOR #&07
     STA beeb_plot_sprite_FASTLAYSTA_PP_smCMP+1
     STA beeb_plot_layrsave_smCMP+1
-    STA beeb_plot_peel_smCMP+1
 
     \ DEC zp <> INC zp
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
     EOR #(OPCODE_DECzp EOR OPCODE_INCzp)
     STA beeb_plot_sprite_FASTLAYSTA_PP_smDEC
     STA beeb_plot_layrsave_smDEC
-    STA beeb_plot_peel_smDEC
 
     \ SEC <> CLC
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
     EOR #(OPCODE_SEC EOR OPCODE_CLC)
     STA beeb_plot_sprite_FASTLAYSTA_PP_smSEC
     STA beeb_plot_layrsave_smSEC
-    STA beeb_plot_peel_smSEC
 
     \ SBC #imm <> ADC #imm
     LDA beeb_plot_sprite_FASTLAYSTA_PP_smSBC1
@@ -822,14 +781,11 @@ ENDIF
     STA beeb_plot_sprite_FASTLAYSTA_PP_smSBC2
     STA beeb_plot_layrsave_smSBC1
     STA beeb_plot_layrsave_smSBC2
-    STA beeb_plot_peel_smSBC1
-    STA beeb_plot_peel_smSBC2
 
     \ EOR #&07 <> EOR #&00
     LDA beeb_plot_layrsave_smEOR+1
     EOR #&07
     STA beeb_plot_layrsave_smEOR+1
-    STA beeb_plot_peel_smEOR+1
 
 \\ Any code in Main has to be modded twice
 
@@ -861,6 +817,7 @@ ENDIF
     STA beeb_plot_sprite_LayMask_smCMP+1
     STA beeb_plot_sprite_FASTMASK_smCMP+1
     STA beeb_plot_sprite_FASTLAYAND_PP_smCMP+1
+    STA beeb_plot_peel_smCMP+1
 
     \ DEC zp <> INC zp
     LDA beeb_plot_wipe_smDEC
@@ -869,6 +826,7 @@ ENDIF
     STA beeb_plot_sprite_LayMask_smDEC
     STA beeb_plot_sprite_FASTMASK_smDEC
     STA beeb_plot_sprite_FASTLAYAND_PP_smDEC
+    STA beeb_plot_peel_smDEC
 
     \ SEC <> CLC
     LDA beeb_plot_wipe_smSEC
@@ -877,6 +835,7 @@ ENDIF
     STA beeb_plot_sprite_LayMask_smSEC
     STA beeb_plot_sprite_FASTMASK_smSEC
     STA beeb_plot_sprite_FASTLAYAND_PP_smSEC
+    STA beeb_plot_peel_smSEC
 
     \ SBC #imm <> ADC #imm
     LDA beeb_plot_wipe_smSBC1
@@ -889,6 +848,13 @@ ENDIF
     STA beeb_plot_sprite_FASTMASK_smSBC2
     STA beeb_plot_sprite_FASTLAYAND_PP_smSBC1
     STA beeb_plot_sprite_FASTLAYAND_PP_smSBC2
+    STA beeb_plot_peel_smSBC1
+    STA beeb_plot_peel_smSBC2
+
+    \ EOR #&07 <> EOR #&00
+    LDA beeb_plot_peel_smEOR+1
+    EOR #&07
+    STA beeb_plot_peel_smEOR+1
 
     RTS  
 }
@@ -960,6 +926,145 @@ ENDIF
     BCC loop
 
     RTS
+}
+
+\*-------------------------------
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+\*-------------------------------
+
+.beeb_plot_calc_screen_addr
+{
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
+
+    LDX XCO
+    LDY YCO
+
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
+
+    \ Handle OFFSET
+
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
+
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
+}
+
+\*-------------------------------
+; Additional PREP before sprite plotting for Beeb
+\*-------------------------------
+
+.beeb_PREPREP
+{
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+IF _DEBUG
+    SEC
+    SBC #4
+    CMP #4
+    BCC bank_ok
+    BRK
+    .bank_ok
+    LDA BANK
+ENDIF
+    JSR swr_select_slot
+
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
+
+    \ On BEEB eor blend mode changed to PALETTE bump
+
+    LDA OPACITY
+    CMP #enum_eor
+    BNE not_eor
+    INC PALETTE
+    .not_eor
+
+    \ PALETTE now set per sprite
+
+    \ BIT 6 of PALETTE specifies whether sprite is secretly half vertical res
+
+    LDA PALETTE
+    AND #&40
+    STA BEEBHACK
+
+    \ BIT 7 of PALETTE actually indicates there is no palette - data is 4bpp
+
+    LDA PALETTE
+    AND #&BF
+    STA PALETTE
+
+    RTS
+}
+
+\*-------------------------------
+\*
+\* Palette functions
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_setpalette
+{
+    BMI return
+    ASL A:ASL A
+    TAX
+
+    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    
+    INX
+    LDA palette_table, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
+    .return
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
+    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
+    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
+
+    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
+    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
+
+    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
+    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
 }
 
 .beeb_core_end
