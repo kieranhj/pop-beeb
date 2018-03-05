@@ -1884,18 +1884,6 @@ ENDIF
     RTS
 }
 
-.loadperm
-{
-    LDA #0
-    JSR disksys_set_drive
-
-    \ Relocate font (in SWRAM)
-    JSR beeb_font_init
-
-    .return
-    rts
-}
-
 IF _TODO
 *-------------------------------
 *

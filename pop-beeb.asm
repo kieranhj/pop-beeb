@@ -282,7 +282,11 @@ ENDIF
 {
 \* Load as much of Stage 3 as we can keep
 
- jsr loadperm
+    LDA #0
+    JSR disksys_set_drive
+
+    \ Relocate font (in SWRAM)
+    JSR beeb_font_init
 
 \* Start attract loop
 
@@ -314,6 +318,51 @@ IF _BOOT_ATTRACT
 ELSE
  jmp DOSTARTGAME
 ENDIF
+}
+
+\*-------------------------------
+; Set custom CRTC mode for game
+\*-------------------------------
+
+.beeb_set_mode2_no_clear
+{
+    \\ Wait vsync
+    LDA #19
+    JSR osbyte
+
+    \\ Set CRTC registers
+    LDX #13
+    .crtcloop
+    STX &FE00
+    LDA beeb_crtcregs, X
+    STA &FE01
+    DEX
+    BPL crtcloop
+
+    \\ Set ULA
+    LDA #&F4            ; MODE 2
+    STA &248            ; Tell the OS or it will mess with ULA settings at vsync
+    STA &FE20
+
+    JMP beeb_set_default_palette
+}
+
+.beeb_crtcregs
+{
+	EQUB 127 			; R0  horizontal total
+	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
+	EQUB 98				; R2  horizontal position
+	EQUB &28			; R3  sync width
+	EQUB 38				; R4  vertical total
+	EQUB 0				; R5  vertical total adjust
+	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
+	EQUB 34				; R7  vertical position; 35=top of screen
+	EQUB 0				; R8  interlace
+	EQUB 7				; R9  scanlines per row
+	EQUB 32				; R10 cursor start
+	EQUB 8				; R11 cursor end
+	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
+	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
 .beeb_boot_end

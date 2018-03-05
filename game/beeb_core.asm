@@ -6,31 +6,6 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 .beeb_core_start
 
-\*-------------------------------
-; Set custom CRTC mode for game
-\*-------------------------------
-
-.beeb_set_mode2_no_clear
-{
-    \\ Wait vsync
-    LDA #19
-    JSR osbyte
-
-    \\ Set CRTC registers
-    LDX #13
-    .crtcloop
-    STX &FE00
-    LDA beeb_crtcregs, X
-    STA &FE01
-    DEX
-    BPL crtcloop
-
-    \\ Set ULA
-    LDA #&F4            ; MODE 2
-    STA &248            ; Tell the OS or it will mess with ULA settings at vsync
-    STA &FE20
-}
-\\ Fall through!
 .beeb_set_default_palette
 {
     \\ Set Palette
@@ -146,25 +121,6 @@ ENDIF
 ; CRTC & ULA data required to configure out special MODE 2
 ; Following data could be dumped after boot!
 
-IF 1
-.beeb_crtcregs
-{
-	EQUB 127 			; R0  horizontal total
-	EQUB BEEB_SCREEN_CHARS				; R1  horizontal displayed
-	EQUB 98				; R2  horizontal position
-	EQUB &28			; R3  sync width
-	EQUB 38				; R4  vertical total
-	EQUB 0				; R5  vertical total adjust
-	EQUB BEEB_SCREEN_ROWS				; R6  vertical displayed
-	EQUB 34				; R7  vertical position; 35=top of screen
-	EQUB 0				; R8  interlace
-	EQUB 7				; R9  scanlines per row
-	EQUB 32				; R10 cursor start
-	EQUB 8				; R11 cursor end
-	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
-	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
-}
-
 .beeb_palette
 {
     EQUB PAL_black
@@ -185,7 +141,6 @@ IF 1
     EQUB PAL_cyan
     EQUB PAL_white
 }
-ENDIF
 
 \*-------------------------------
 ; Relocate image tables
