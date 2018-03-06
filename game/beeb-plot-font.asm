@@ -11,11 +11,33 @@ SMALL_FONT_HEIGHT = 7
 .BEEB_FONT_INIT
 {
     \ Relocate the FONT file
-    LDA #LO(small_font+1)
+    LDA #LO(small_font)
     STA beeb_readptr
-    LDA #HI(small_font+1)
+    LDA #HI(small_font)
     STA beeb_readptr+1
-    JMP beeb_plot_reloc_img
+
+    LDY #1      ; not 0!
+    LDA (beeb_readptr), Y
+    TAX
+
+    \\ Relocate pointers to image data
+    .loop
+    INY
+
+    CLC
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr
+    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    DEX
+    BPL loop
+
+    RTS
 }
 
 .BEEB_PLOT_FONT_PREP

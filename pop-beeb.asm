@@ -680,20 +680,18 @@ GUARD SWRAM_TOP
 .bank1_start
 
 PAGE_ALIGN
+.bgtable1b
+INCBIN "Images/BEEB.IMG.BGTAB1.DUNB.bin"    ; larger than PALB
+
+PAGE_ALIGN
 .chtable1
 INCBIN "Images/BEEB.IMG.CHTAB1.bin"
 
-PAGE_ALIGN
 .chtable2
 INCBIN "Images/BEEB.IMG.CHTAB2.bin"
 
-PAGE_ALIGN
 .chtable3
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
-
-PAGE_ALIGN
-.bgtable1b
-INCBIN "Images/BEEB.IMG.BGTAB1.DUNB.bin"    ; larger than PALB
 
 .bank1_end
 
@@ -702,7 +700,7 @@ PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
 
-;SAVE "BANK1", bank1_start, bank1_end, 0
+SAVE "BANK1", chtable1, bank1_end, 0
 
 \*-------------------------------
 ; BANK 2
@@ -902,9 +900,9 @@ PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
 PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
 
 ; All saved into single file for BANK1
-PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 
 ; Want to put this here but disc full...

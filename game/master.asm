@@ -1766,16 +1766,14 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-IF 0                ; if all same bank
 .bank1_filename
 EQUS "BANK1  $"
-ELSE
+
 .perm_file_names
-EQUS "CHTAB1 $"
-EQUS "CHTAB3 $"
-EQUS "CHTAB2 $"
+;EQUS "CHTAB1 $"
+;EQUS "CHTAB2 $"
+;EQUS "CHTAB3 $"
 EQUS "CHTAB5 $"
-ENDIF
 
 .loadbank1
 {
@@ -1783,23 +1781,15 @@ ENDIF
     lda #BEEB_SWRAM_SLOT_CHTAB1
     jsr swr_select_slot
 
-IF 0
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
-    LDA #HI(SWRAM_START)
+    LDA #HI(chtable1)
     JSR disksys_load_file
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
     STA beeb_readptr
     LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
@@ -1811,64 +1801,19 @@ IF 0
     JSR beeb_plot_reloc_img
 
     \ Relocate the IMG file
-    LDA #LO(chtable5)
-    STA beeb_readptr
-    LDA #HI(chtable5)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-ELSE
-    \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
-    LDA #HI(chtable1)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 8)
-    LDY #HI(perm_file_names + 8)
-    LDA #HI(chtable3)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable1)
-    STA beeb_readptr
-    LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    lda #BEEB_SWRAM_SLOT_CHTAB3
-    jsr swr_select_slot
-
-    \ Relocate the IMG file
     LDA #LO(chtable3)
     STA beeb_readptr
     LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
-    \ Then CHTAB2 + 5
-    lda #BEEB_SWRAM_SLOT_CHTAB2
-    jsr swr_select_slot
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 16)
-    LDY #HI(perm_file_names + 16)
-    LDA #HI(chtable2)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable2)
-    STA beeb_readptr
-    LDA #HI(chtable2)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
 
     lda #BEEB_SWRAM_SLOT_CHTAB5
     jsr swr_select_slot
 
     \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
     LDA #HI(chtable5)
     JSR disksys_load_file
 
@@ -1878,7 +1823,6 @@ ELSE
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-ENDIF
 
     .return
     RTS
@@ -2436,29 +2380,24 @@ EQUB 0
 {
     LDY #0
     LDA (beeb_readptr), Y
-    STA beeb_numimages              \ can get rid of this var
+    TAX
 
     \\ Relocate pointers to image data
-    LDX #0
     .loop
     INY
-\    CLC
-\    LDA (beeb_readptr), Y
-\    ADC #LO(bgtable1)
-\    STA (beeb_readptr), Y
+
+    CLC
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr
+    STA (beeb_readptr), Y
 
     INY
     LDA (beeb_readptr), Y
-\ Now at &0000 for BEEB data
-\    SEC
-\    SBC beeb_writeptr+1
-    CLC
     ADC beeb_readptr+1
     STA (beeb_readptr), Y
 
-    INX
-    CPX beeb_numimages
-    BCC loop
+    DEX
+    BPL loop
 
     .return
     RTS
