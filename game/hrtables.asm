@@ -25,7 +25,7 @@
 
 ; Would ideally be PAGE_ALIGN
 .YLO
-FOR y,0,191,1
+FOR y,0,199,1
 \\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
 address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB LO(address)
@@ -33,9 +33,8 @@ NEXT
 
 ; Would ideally be PAGE_ALIGN
 .YHI
-FOR y,0,191,1
+FOR y,0,199,1
 \\ address=&2000 + (((Y% MOD 64) DIV 8) * &80) + ((Y% MOD 8) * &400) + ((Y% DIV 64) * &28)
 address = beeb_screen_addr + ((y DIV 8) * BEEB_SCREEN_ROW_BYTES) + (y MOD 8)
 EQUB HI(address)
 NEXT
-

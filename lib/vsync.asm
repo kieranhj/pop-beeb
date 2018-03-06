@@ -1,22 +1,3 @@
-
-
-.vsync_init
-{
-
-    \\ Start our event driven fx
-    ldx #LO(event_handler)
-    ldy #HI(event_handler)
-    jsr start_eventv
-    rts    
-}
-
-.vsync_exit
-{
-    \\ Kill our event driven fx
-    jsr stop_eventv
-    rts    
-}
-
 \ ******************************************************************
 \ *	Event Vector Routines
 \ ******************************************************************
@@ -27,9 +8,9 @@
 .start_eventv				; new event handler in X,Y
 {
 	\\ Remove interrupt instructions
-	lda #NOP_OP
-	sta PSG_STROBE_SEI_INSN
-	sta PSG_STROBE_CLI_INSN
+;	lda #NOP_OP
+;	sta PSG_STROBE_SEI_INSN
+;	sta PSG_STROBE_CLI_INSN
 	
 	\\ Set new Event handler
 	sei
@@ -45,10 +26,10 @@
 	\\ Enable VSYNC event.
 	lda #14
 	ldx #4
-	jsr osbyte
-	rts
+	jmp osbyte
 }
 
+IF 0			; not currently used
 .stop_eventv
 {
 	\\ Disable VSYNC event.
@@ -71,6 +52,7 @@
 	sta PSG_STROBE_CLI_INSN
 	rts
 }        
+ENDIF
 
 .vsync_palette_override EQUB &FF
 
@@ -85,7 +67,7 @@
 	\\ Preserve registers
 	pha:txa:pha:tya:pha
 
-	; prevent re-entry
+	; prevent re-entry  - KC do we need this?
 	lda re_entrant
 	bne skip_update
 	inc re_entrant

@@ -35,11 +35,9 @@ EXO_buffer_end = EXO_buffer_start + EXO_buffer_len
 ; RTI (&40) is written to &0d00 for clean NMI handler
 ; -------------------------------------------------------------------
 ; Note that page 13 is used by SmartSPI as workspace RAM, so not safe to put EXO buffer here anymore.
-EXO_TABL_SIZE = 156
 
 IF TRUE
 
-.exo_tabl_bi SKIP EXO_TABL_SIZE
 SMART_SPI_FIX = TRUE
 
 ELSE

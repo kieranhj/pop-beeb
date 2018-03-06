@@ -8,37 +8,9 @@ SMALL_FONT_HEIGHT = 7
 
 .beeb_plot_font_start
 
-.BEEB_FONT_INIT
-{
-    \ Relocate the FONT file
-    LDA #LO(small_font)
-    STA beeb_readptr
-    LDA #HI(small_font)
-    STA beeb_readptr+1
-
-    LDY #1      ; not 0!
-    LDA (beeb_readptr), Y
-    TAX
-
-    \\ Relocate pointers to image data
-    .loop
-    INY
-
-    CLC
-    LDA (beeb_readptr), Y
-    ADC beeb_readptr
-    STA (beeb_readptr), Y
-
-    INY
-    LDA (beeb_readptr), Y
-    ADC beeb_readptr+1
-    STA (beeb_readptr), Y
-
-    DEX
-    BPL loop
-
-    RTS
-}
+.beeb_plot_font_prep jmp BEEB_PLOT_FONT_PREP
+.beeb_plot_font_glyph jmp BEEB_PLOT_FONT_GLYPH
+.beeb_plot_font_string jmp BEEB_PLOT_FONT_STRING
 
 .BEEB_PLOT_FONT_PREP
 {
@@ -456,12 +428,14 @@ ENDIF
 {
     STA PALETTE
 
+    TYA:ASL A:ASL A: ASL A:TAY  ; row*8
+
     CLC
     LDA Mult8_LO,X
-    ADC Row_LO,Y
+    ADC YLO,Y
     STA beeb_writeptr
     LDA Mult8_HI,X
-    ADC Row_HI,Y
+    ADC YHI,Y
     STA beeb_writeptr+1
 
     INC beeb_writeptr       ; only as font is 7 scanlines (can't overflow)
@@ -550,19 +524,5 @@ ASCII_MAPCHAR
   RTS
 }
 ENDIF
-
-PAGE_ALIGN
-.small_font
-INCBIN "Other/small_font.bin"
-
-.Row_LO
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB LO(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
-
-.Row_HI
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB HI(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
 
 .beeb_plot_font_end

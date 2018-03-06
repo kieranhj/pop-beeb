@@ -2377,13 +2377,12 @@ EQUB 0
 \*-------------------------------
 
 .beeb_plot_reloc_img
-{
     LDY #0
     LDA (beeb_readptr), Y
     TAX
 
     \\ Relocate pointers to image data
-    .loop
+.beeb_plot_reloc_img_loop
     INY
 
     CLC
@@ -2397,8 +2396,5 @@ EQUB 0
     STA (beeb_readptr), Y
 
     DEX
-    BPL loop
-
-    .return
+    BPL beeb_plot_reloc_img_loop
     RTS
-}

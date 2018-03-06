@@ -403,6 +403,10 @@ ENDIF
 \\ Bounds check that sprite data pointer is in swram
 IF _DEBUG
  BMI addr_ok
+ CMP #HI(small_font+1)      ; only image table not in SWRAM
+ BEQ addr_ok
+ CMP #HI(small_font+1)+1    ; only image table not in SWRAM
+ BEQ addr_ok
  BRK
  .addr_ok
 ENDIF

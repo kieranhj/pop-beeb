@@ -246,11 +246,13 @@ IF _AUDIO
     jsr audio_init
 ENDIF
 
-
     ; initialise the vsync irq
-    jsr vsync_init
-    
-
+    {
+        \\ Start our event driven fx
+        ldx #LO(event_handler)
+        ldy #HI(event_handler)
+        jsr start_eventv
+    }
 
 IF _DEBUG
 \    JMP beeb_test_load_all_levels
@@ -266,7 +268,7 @@ ENDIF
 
 \*-------------------------------
 \*
-\*  F I R S T B O O T
+\*  F I R S T B O O T - moved from master.asm
 \*
 \*-------------------------------
 
@@ -278,8 +280,19 @@ ENDIF
     JSR disksys_set_drive
 
     \ Relocate font (in SWRAM)
-    JSR beeb_font_init
+    \ Relocate the FONT file
+    {
+        LDA #LO(small_font)
+        STA beeb_readptr
+        LDA #HI(small_font)
+        STA beeb_readptr+1
 
+        LDY #1      ; not 0!
+        LDA (beeb_readptr), Y
+        TAX
+
+        JSR beeb_plot_reloc_img_loop
+    }
 \* Start attract loop
 
  jsr initsystem ;in topctrl
@@ -357,6 +370,13 @@ ENDIF
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
+EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE)-(P%-beeb_boot_start)
+
+IF EXO_pad > 0
+    PRINT "PAD LOST", ~EXO_pad, " BYTES"
+    SKIP EXO_pad
+ENDIF
+
 .beeb_boot_end
 
 ; Global jump table
@@ -383,13 +403,14 @@ INCLUDE "game/master.asm"
 master_end=P%
 INCLUDE "game/topctrl.asm"
 topctrl_end=P%
-INCLUDE "game/audio.asm"
+INCLUDE "game/audio.asm"            ; this can go eventually
 audio_end=P%
 
 ; Code moved back into Core from Main
 
 INCLUDE "game/hires.asm"
 hires_end=P%
+INCLUDE "game/beeb-plot-font.asm"
 
 ; Used to be in Main but unrolled code pushed it out
 
@@ -433,8 +454,9 @@ PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
 PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
-PRINT "AUDIO size = ", ~(audio_end - audio)
+PRINT "AUDIO (LEGACY) size = ", ~(audio_end - audio)
 PRINT "HIRES size = ", ~(hires_end - hires)
+PRINT "BEEB PLOT FONT size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
 PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsave_start)
 PRINT "--------"
@@ -454,6 +476,7 @@ GUARD beeb_boot_end
 
 PAGE_ALIGN
 .EXO_buffer SKIP EXO_buffer_len
+.exo_tabl_bi SKIP EXO_TABL_SIZE
 
 .pop_beeb_bss_end
 
@@ -577,6 +600,9 @@ hrtables_end=P%
 
 ; Beeb specific data
 INCLUDE "game/beeb_palette.asm"
+
+.small_font
+INCBIN "Other/small_font.bin"
 
 .pop_beeb_aux_hazel_data_end
 
@@ -788,7 +814,6 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
-INCLUDE "game/beeb-plot-font.asm"
 
 .pop_beeb_aux_high_end
 
@@ -810,7 +835,6 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
-PRINT "BEEB PLOT FONT (moved from MAIN) size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
