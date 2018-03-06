@@ -2341,59 +2341,7 @@ Remove fns from jump table
 Remove jump tables
 Reduce SWR module
 Fill MAIN RAM now peel buffer size has been set
-
-    BEEB PLOT size =  &373
-    BEEB PLOT WIPE size =  &5F 
-    BEEB PLOT LAY size =  &0 
-
-
-Check CORE code + data
-
-    DISKSYS size =  &89 
-    SWR size =  &34 
-    PRINT size =  &14 
-    BEEB BOOT size =  &152 
-    AUX CORE (jump table) size =  &7E2 
-    BEEB CORE size =  &2D5 
-    MASTER size =  &5F9 
-    TOPCTRL size =  &7AD 
-    AUDIO size =  &17 
-    HIRES size =  &20E 
-    BEEB PLOT FASTLAY size =  &141 
-    BEEB PLOT LAYRSAVE size =  &173 
-    BEEB PLOT PEEL size =  &10B 
-
-Check all HAZEL data & code
-    TABLES size =  &488 
-    BGDATA (formerly CORE) size =  &FB 
-    BGDATA (formerly HIGH now HAZEL) size =  &F0 
-    HRTABLES size =  &186 
-    BEEB (formerly) CORE DATA size =  &5A9 
-    EXO size =  &32E 
-    VGMPLAYER size =  &A1 
-    BEEB AUDIO size =  &143 
-What could go in BANK1? (&328 bytes)
-Check BANK2 code + data
-    SEQTABLE size =  &9F1 
-    FRAMEDEFS size =  &7B7 
-    CTRLSUBS size =  &873 
-    COLL size =  &736 
-    AUTO size =  &A36 
-Any code that could go in BANK2? (&179 bytes)
-Check BANK3 code + data
-    CTRL size =  &B47 
-    FRAMEADV size =  &B4D 
-    GAMEBG size =  &467 
-    GRAFIX size =  &43C 
-    SUBS size =  &8B3 
-    MOVER size =  &A5B 
-    MISC size =  &3EE 
-    SPECIALK size =  &5B3 
-    BEEB PLOT FONT (moved from MAIN) size =  &30C 
-
 Any code that could go in BANK3? (&10E-&20E bytes)
-
-
 
 GOAL: Get as much contiguous free in SWRAM as possible for audio etc.
 
@@ -2403,11 +2351,23 @@ BANK 2: chtab5, seqtab, framedef, ctrlsub, coll, auto = &179 free with &2B lost
 BANK 3: ctrl, frameadv, gamebg, subs, mover, misc, specialk, font = &10E free with &38 lost
 
 Options - remove PAGE alignment requirement
-BANK 1 free =  &4C5 
-
 Move code down to Core
 Move data down to Lower after boot (or load it in)
 
 DUN1A+2 = &2482
 PAL1A+2 = &2940
 Load together would save a PAGE
+
+6/3/2018
+~~~
+Zero page free =  &0 
+Lower workspace RAM free =  &C3 (&CB)
+Core RAM free =  &111 (&1CA)
+Main RAM free =  &1B (&34) 
+HAZEL RAM free =  &78 
+BANK 0 free =  &3F 
+BANK 1 free =  &4C5 
+BANK 2 free =  &179 
+BANK 3 free =  &409 (&4F9)
+~~~
+TOTAL = &CED (&EB7)
