@@ -216,7 +216,7 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 .psg_strobe
 
 .psg_strobe_sei
-	sei					; **SELF-MODIFIED CODE**
+;	sei					; **SELF-MODIFIED CODE**
 
 IF _ENABLE_AUDIO
 
@@ -238,13 +238,13 @@ IF _ENABLE_AUDIO
 ENDIF ; _ENABLE_AUDIO
 
 .psg_strobe_cli
-	cli					; **SELF-MODIFIED CODE**
+;	cli					; **SELF-MODIFIED CODE**
 	RTS
 
 
 
-PSG_STROBE_SEI_INSN = psg_strobe_sei
-PSG_STROBE_CLI_INSN = psg_strobe_cli
+;PSG_STROBE_SEI_INSN = psg_strobe_sei
+;PSG_STROBE_CLI_INSN = psg_strobe_cli
 
 
 

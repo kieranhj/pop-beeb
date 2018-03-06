@@ -14,7 +14,40 @@
 \*-------------------------------
  \org org
 
-\\ All entry points moved to hires_core.asm in Core RAM
+.cls jmp hires_cls
+.lay jmp hires_lay
+.fastlay jmp hires_fastlay
+.layrsave jmp hires_layrsave
+
+.lrcls BRK         ;jmp hires_lrcls    \ is implemented but not safe to call!
+.fastmask jmp hires_fastmask
+.fastblack jmp hires_fastblack
+.peel jmp hires_peel
+.getwidth jmp hires_getwidth
+
+.copy2000 BRK      ;jmp copyscrnMM
+.copy2000aux BRK   ;jmp copyscrnAA
+.setfastaux BRK    ;jmp hires_SETFASTAUX
+.setfastmain BRK   ;jmp hires_SETFASTMAIN
+.copy2000ma BRK    ;jmp copyscrnMA
+
+.copy2000am BRK    ;jmp copyscrnAM
+.inverty jmp INVERTY
+
+\ Moved from grafix.asm
+.rnd jmp RND
+.movemem BRK        ;jmp MOVEMEM
+.copyscrn BRK       ;jmp COPYSCRN
+.vblank jmp beeb_wait_vsync    ;VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+.vbli BRK           ;jmp VBLI ;VBL interrupt
+
+\ Moved from subs.asm
+.PageFlip jmp PAGEFLIP
+
+\.normspeed RTS  ;jmp NORMSPEED         ; NOT BEEB
+\.checkIIGS BRK  ;jmp CHECKIIGS         ; NOT BEEB
+\.fastspeed RTS  ;jmp FASTSPEED         ; NOT BEEB
+
 
 \*-------------------------------
 \ put hrparams
@@ -40,6 +73,182 @@
 \eor = 3 ;OR/shift/XOR
 \mask = 4 ;mask/OR
 
+\*-------------------------------
+\*
+\* Assume hires routines are called from auxmem
+\* (Exit with RAMRD, RAMWRT, ALTZP on)
+\*
+\*-------------------------------
+
+.hires_cls
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_CLS
+\ jsr hires_CLS
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_lay
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_sprite_LAY
+\ jsr hires_LAY
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_fastlay
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ \ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
+ jsr beeb_plot_sprite_FASTLAY
+\ jsr hires_FASTLAY
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_layrsave
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_layrsave
+\ jsr hires_LAYRSAVE
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_lrcls
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ BRK
+\ jsr hires_LRCLS
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_fastmask
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+\ OFFSET not guaranteed to be set in Apple II (not used by hires_FASTLAY)
+ LDA #0
+ STA OFFSET
+ jsr beeb_plot_sprite_FASTMASK
+\ jsr hires_FASTMASK
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_fastblack
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_wipe
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_peel
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+ jsr beeb_plot_peel
+\ jsr hires_PEEL
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ RTS
+}
+
+.hires_getwidth
+{
+\ jsr mainmem
+ BEEB_SELECT_MAIN_MEM
+
+ jsr hires_GETWIDTH
+
+\\ must preserve A&X
+ STA regA+1
+
+\\ must preserve callers SWRAM bank
+
+\ jmp auxmem
+ BEEB_SELECT_AUX_MEM
+ 
+ .regA
+ LDA #0
+ RTS
+}
+
+\*-------------------------------
+\*
+\*  Generate random number
+\*
+\*  RNDseed := (5 * RNDseed + 23) mod 256
+\*
+\*-------------------------------
+.RND
+{
+ lda RNDseed
+ asl A
+ asl A
+ clc
+ adc RNDseed
+ clc
+ adc #23
+ sta RNDseed
+.return rts
+}
+
+\*-------------------------------
+\*
+\*  P A G E F L I P
+\*
+\*-------------------------------
+
+.PAGEFLIP
+{
+\ jsr normspeed ;IIGS
+\ lda PAGE
+\ bne :1
+\
+\ lda #$20
+\ sta PAGE
+\ lda $C054 ;show page 1
+\
+\:3 lda $C057 ;hires on
+\ lda $C050 ;text off
+\ lda vibes
+\ beq :rts
+\ lda $c05e
+\]rts rts
+\:rts lda $c05f
+\ rts
+\
+\:1 lda #0
+\ sta PAGE
+\ lda $C055 ;show page 2
+\ jmp :3
+
+    LDA PAGE
+    EOR #&20
+    STA PAGE
+
+    JMP shadow_swap_buffers
+}
 
 \*-------------------------------
 \*
@@ -194,6 +403,10 @@ ENDIF
 \\ Bounds check that sprite data pointer is in swram
 IF _DEBUG
  BMI addr_ok
+ CMP #HI(small_font+1)      ; only image table not in SWRAM
+ BEQ addr_ok
+ CMP #HI(small_font+1)+1    ; only image table not in SWRAM
+ BEQ addr_ok
  BRK
  .addr_ok
 ENDIF
