@@ -20,12 +20,8 @@
 \ *	Space reserved for runtime buffers not preinitialised
 \ ******************************************************************
 
-EXO_buffer_len = 256
 ; this is now packed in to language workspace at &0400
 \\ If you want to make this bigger than 1024 then need to find somewhere else to put it!!
-
-PAGE_ALIGN
-.EXO_buffer SKIP EXO_buffer_len
 
 \\ Exomiser unpack buffer (must be page aligned)
 \\ Now moved this to the language workspace at &0400 - &0800
@@ -39,11 +35,9 @@ EXO_buffer_end = EXO_buffer_start + EXO_buffer_len
 ; RTI (&40) is written to &0d00 for clean NMI handler
 ; -------------------------------------------------------------------
 ; Note that page 13 is used by SmartSPI as workspace RAM, so not safe to put EXO buffer here anymore.
-EXO_TABL_SIZE = 156
 
 IF TRUE
 
-.exo_tabl_bi SKIP EXO_TABL_SIZE
 SMART_SPI_FIX = TRUE
 
 ELSE

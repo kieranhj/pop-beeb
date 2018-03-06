@@ -2279,6 +2279,27 @@ BANK 1 free =  &58
 BANK 2 free =  &C79 
 BANK 3 free =  &20E 
 
+5/3/2018
+~~~
+RAM FREE (DEBUG)
+Zero page free =  &0 
+Language workspace RAM free =  &D 
+Lower workspace RAM free =  &3F (&47)
+Core RAM free =  &A8 (&165)
+Core BSS free =  &53 (&2F)
+Main RAM free =  &B0 (&C1)
+HAZEL RAM free =  &4C 
+BANK 0 free =  &3F 
+BANK 1 free =  &328 
+BANK 2 free =  &179 
+BANK 3 free =  &10E (&20E)
+
+TOTAL = &831 (&9E3)
+SWRAM = &5EE (1518)
+MAIN/SHADOW = &B0
+CORE + LOWER = &193 (403)
+
+
 22/2/2018
 ~~~
 Sprites to upres
@@ -2310,3 +2331,43 @@ Large 16/109 = 8x109 = 4x109 = 4*8 + 13*640 + 5
 14/91 = 7x91 = 3.1x92 = 3*8 + 11*640 + 2
 20/112 = 10x112 = 5x112 = 5*8 + 14*640
 Med 22/98
+
+
+RAM thoughts
+~~~
+Reclaim sound workspace page (&800) - might need to check interupts etc.
+Move boot code somewhere that can be trampled - EXO buffer?
+Remove fns from jump table
+Remove jump tables
+Reduce SWR module
+Fill MAIN RAM now peel buffer size has been set
+Any code that could go in BANK3? (&10E-&20E bytes)
+
+GOAL: Get as much contiguous free in SWRAM as possible for audio etc.
+
+BANK 0: bgtab1a, bgtab2, chtab4 = &3F free but &1C0 bytes lost to PAGE ALIGN
+BANK 1: chtab1, chtab2, chtab3, bgtab1b = &328 free but &1C5 bytes lost to PAGE ALIGN
+BANK 2: chtab5, seqtab, framedef, ctrlsub, coll, auto = &179 free with &2B lost
+BANK 3: ctrl, frameadv, gamebg, subs, mover, misc, specialk, font = &10E free with &38 lost
+
+Options - remove PAGE alignment requirement
+Move code down to Core
+Move data down to Lower after boot (or load it in)
+
+DUN1A+2 = &2482
+PAL1A+2 = &2940
+Load together would save a PAGE
+
+6/3/2018
+~~~
+Zero page free =  &0 
+Lower workspace RAM free =  &C3 (&CB)
+Core RAM free =  &111 (&1CA)
+Main RAM free =  &1B (&34) 
+HAZEL RAM free =  &78 
+BANK 0 free =  &3F 
+BANK 1 free =  &4C5 
+BANK 2 free =  &179 
+BANK 3 free =  &409 (&4F9)
+~~~
+TOTAL = &CED (&EB7)

@@ -230,76 +230,6 @@ kresume = IKN_l OR $80
 \* RW18 sits in bank 1 of main language card;
 \* driveon switches it in, driveoff switches it out.
 \*
-\*-------------------------------
-\*
-\*  F I R S T B O O T
-\*
-\*-------------------------------
-
-.FIRSTBOOT
-{
-\ NOT BEEB
-\ lda MIXEDoff
-\ jsr setaux
-
-\* Set BBund ID byte
-
-\ lda #POPside1
-\ sta BBundID
-
-\* Load hires tables & add'l hires routines
-
-\ sta RAMWRTmain
-\ lda #2
-\ sta track
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex e0,e1,e2,e3,e4,e5,e6,e7,e8
-\ hex e9,ea,eb,ec,ed,00,00,00,00
-
-\* Load as much of Stage 3 as we can keep
-
- jsr loadperm
-
-\* Turn off drive
-
-\ jsr driveoff
-
-\* Check for IIGS
-
-\ jsr checkIIGS ;returns IIGS
-
-\* Start attract loop
-
- jsr initsystem ;in topctrl
-
- lda #0
- sta invert ;rightside up Y tables
-
- lda #1
- sta soundon ;Sound on
-
- lda #$ff   ; no level sprites cached
- sta CHset
- sta BGset1
- sta BGset2
-
- JSR beeb_set_mode2_no_clear
-
-    \\ Own error handler now we're fully initialised
-    SEI
-    LDX #LO(error_handler)
-    LDY #HI(error_handler)
-    STX BRKV
-    STY BRKV+1
-    CLI
-
-IF _BOOT_ATTRACT
- jmp AttractLoop
-ELSE
- jmp DOSTARTGAME
-ENDIF
-}
 
 .error_handler
 {
@@ -1836,16 +1766,14 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-IF 0                ; if all same bank
 .bank1_filename
 EQUS "BANK1  $"
-ELSE
+
 .perm_file_names
-EQUS "CHTAB1 $"
-EQUS "CHTAB3 $"
-EQUS "CHTAB2 $"
+;EQUS "CHTAB1 $"
+;EQUS "CHTAB2 $"
+;EQUS "CHTAB3 $"
 EQUS "CHTAB5 $"
-ENDIF
 
 .loadbank1
 {
@@ -1853,23 +1781,15 @@ ENDIF
     lda #BEEB_SWRAM_SLOT_CHTAB1
     jsr swr_select_slot
 
-IF 0
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
-    LDA #HI(SWRAM_START)
+    LDA #HI(chtable1)
     JSR disksys_load_file
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
     STA beeb_readptr
     LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
@@ -1881,64 +1801,19 @@ IF 0
     JSR beeb_plot_reloc_img
 
     \ Relocate the IMG file
-    LDA #LO(chtable5)
-    STA beeb_readptr
-    LDA #HI(chtable5)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-ELSE
-    \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
-    LDA #HI(chtable1)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 8)
-    LDY #HI(perm_file_names + 8)
-    LDA #HI(chtable3)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable1)
-    STA beeb_readptr
-    LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    lda #BEEB_SWRAM_SLOT_CHTAB3
-    jsr swr_select_slot
-
-    \ Relocate the IMG file
     LDA #LO(chtable3)
     STA beeb_readptr
     LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
-    \ Then CHTAB2 + 5
-    lda #BEEB_SWRAM_SLOT_CHTAB2
-    jsr swr_select_slot
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 16)
-    LDY #HI(perm_file_names + 16)
-    LDA #HI(chtable2)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable2)
-    STA beeb_readptr
-    LDA #HI(chtable2)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
 
     lda #BEEB_SWRAM_SLOT_CHTAB5
     jsr swr_select_slot
 
     \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
     LDA #HI(chtable5)
     JSR disksys_load_file
 
@@ -1948,22 +1823,9 @@ ELSE
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-ENDIF
 
     .return
     RTS
-}
-
-.loadperm
-{
-    LDA #0
-    JSR disksys_set_drive
-
-    \ Relocate font (in SWRAM)
-    JSR beeb_font_init
-
-    .return
-    rts
 }
 
 IF _TODO
@@ -2509,3 +2371,30 @@ EQUB 0
 
  jmp savegame
 }
+
+\*-------------------------------
+; Relocate image tables
+\*-------------------------------
+
+.beeb_plot_reloc_img
+    LDY #0
+    LDA (beeb_readptr), Y
+    TAX
+
+    \\ Relocate pointers to image data
+.beeb_plot_reloc_img_loop
+    INY
+
+    CLC
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr
+    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    DEX
+    BPL beeb_plot_reloc_img_loop
+    RTS
