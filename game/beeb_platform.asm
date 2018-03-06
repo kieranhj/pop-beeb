@@ -13,7 +13,7 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     LDX #0
     LDA #0
     .palloop
-    ORA beeb_palette,X
+    ORA ula_palette,X
     INX
     STA &FE21
     AND #&F0
@@ -121,7 +121,7 @@ ENDIF
 ; CRTC & ULA data required to configure out special MODE 2
 ; Following data could be dumped after boot!
 
-.beeb_palette
+.ula_palette
 {
     EQUB PAL_black
     EQUB PAL_red

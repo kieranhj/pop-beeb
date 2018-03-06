@@ -15,24 +15,6 @@ _DIV7_TABLES = TRUE                ; use tables (faster) or loop (smaller) to DI
 \*
 \*-------------------------------
 
-\ dum org
-
-\ByteTable ds $100
-\OffsetTable ds $100
-\BlockTable ds $100
-\PixelTable ds $100
-\Mult10 ds $10
-\Mult7 ds $10
-\Mult30 ds $40
-
-\BlockEdge ds 20
-\BlockTop ds 5
-\BlockBot skip 5
-\FloorY ds 5
-\BlockAy ds 5
-\
-\ dend
-
 \*-------------------------------
 \ org org
 \*-------------------------------
@@ -62,15 +44,6 @@ PAGE_ALIGN
 \* Yields: Byte # (0-36)
 \*-------------------------------
 
-\ ds ByteTable-*
-\
-\]byte = 0
-\ lup 36
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\]byte = ]byte+1
-\ --^
-\ db 36,36,36,36
-
 IF _DIV7_TABLES
 .ByteTable
 FOR n,0,35,1
@@ -85,13 +58,6 @@ ENDIF
 \* Index:  Same as ByteTable
 \* Yields: Offset (0-6)
 \*-------------------------------
-\ ds OffsetTable-*
-\
-\ lup 36
-\ db 0,1,2,3,4,5,6
-\ --^
-\ db 0,1,2,3
-\ENDIF
 
 IF _DIV7_TABLES
 .OffsetTable
@@ -107,19 +73,6 @@ ENDIF
 \* Index:  Screen X-coord (0 to 255)
 \* Yields: Block # (-5 to 14)
 \*-------------------------------
-\ ds BlockTable-*
-\
-\]byte = -5
-\ db ]byte,]byte
-\
-\ lup 18
-\]byte = ]byte+1
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\ db ]byte,]byte,]byte,]byte,]byte,]byte,]byte
-\ --^
-\
-\]byte = ]byte+1
-\ db ]byte,]byte
 
 .BlockTable
 EQUB LO(-5),LO(-5)
@@ -136,15 +89,6 @@ EQUB 14,14
 \* Index:  Same as BlockTable
 \* Yields: Pixel # within block (0 to 13)
 \*-------------------------------
-\ ds PixelTable-*
-\
-\ db 12,13
-\
-\ lup 18
-\ db 0,1,2,3,4,5,6,7,8,9,10,11,12,13
-\ --^
-\
-\ db 0,1
 
 .PixelTable
 EQUB 12,13
@@ -154,66 +98,11 @@ NEXT
 EQUB 0,1
 
 \*-------------------------------
-\* Mult10
-\*-------------------------------
-\ ds Mult10-*
-\
-\]byte = 0
-\ lup 16
-\ db ]byte
-\]byte = ]byte+10
-\ --^
-
-.Mult10
-FOR n,0,15,1
-EQUB n * 10
-NEXT
-
-\*-------------------------------
-\* Mult7
-\*-------------------------------
-\ ds Mult7-*
-\
-\]byte = 0
-\ lup 16
-\ db ]byte
-\]byte = ]byte+7
-\ --^
-
-.Mult7
-FOR n,0,15,1
-EQUB n * 7
-NEXT
-
-\*-------------------------------
-\* Mult30
-\*-------------------------------
-\ ds Mult30-*
-\
-\]word = 0
-\ lup 32
-\ dw ]word
-\]word = ]word+30
-\ --^
-
-.Mult30
-FOR n,0,31,1
-EQUW n * 30
-NEXT
-
-\*-------------------------------
 \* BlockEdge
 \*
 \* Index:  Block X (-5 to 14) + 5
 \* Yields: Screen X-coord of left edge of block
 \*-------------------------------
-\ ds BlockEdge-*
-\
-\]byte = -12
-\ lup 20
-\ db ]byte
-\]byte = ]byte+14
-\ --^
 
 .BlockEdge
 FOR n,0,19,1
@@ -265,3 +154,61 @@ NEXT
 \eof ds 1
 \ usr $a9,3,$000,*-org
 \ lst off
+
+\*-------------------------------
+\* Multiplication Tables
+\*
+\*-------------------------------
+
+\*-------------------------------
+\* Mult10
+\*-------------------------------
+.Mult10
+FOR n,0,15,1
+EQUB n * 10
+NEXT
+
+\*-------------------------------
+\* Mult7
+\*-------------------------------
+.Mult7
+FOR n,0,15,1
+EQUB n * 7
+NEXT
+
+\*-------------------------------
+\* Mult30
+\*-------------------------------
+.Mult30
+FOR n,0,31,1
+EQUW n * 30
+NEXT
+
+\*-------------------------------
+; Mult16 LO byte
+\*-------------------------------
+.Mult16_LO
+FOR n,0,39,1
+EQUB LO(n*16)
+NEXT
+
+\*-------------------------------
+; Mult16 HI byte
+\*-------------------------------
+.Mult16_HI          ; or shift...
+FOR n,0,39,1
+EQUB HI(n*16)
+NEXT
+
+\*-------------------------------
+; Hmm, these multiplication tables include all Mult16 entries.. combine?
+\*-------------------------------
+.Mult8_LO
+FOR n,0,79,1
+EQUB LO(n*8)
+NEXT
+
+.Mult8_HI
+FOR n,0,79,1
+EQUB HI(n*8)
+NEXT

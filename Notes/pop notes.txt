@@ -2403,5 +2403,11 @@ BANK 2: chtab5, seqtab, framedef, ctrlsub, coll, auto = &179 free with &2B lost
 BANK 3: ctrl, frameadv, gamebg, subs, mover, misc, specialk, font = &10E free with &38 lost
 
 Options - remove PAGE alignment requirement
+BANK 1 free =  &4C5 
+
 Move code down to Core
 Move data down to Lower after boot (or load it in)
+
+DUN1A+2 = &2482
+PAL1A+2 = &2940
+Load together would save a PAGE

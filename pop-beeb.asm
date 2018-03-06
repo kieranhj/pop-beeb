@@ -573,7 +573,7 @@ INCLUDE "game/hrtables.asm"
 hrtables_end=P%
 
 ; Beeb specific data
-INCLUDE "game/beeb_core_data.asm"
+INCLUDE "game/beeb_palette.asm"
 
 .pop_beeb_aux_hazel_data_end
 
@@ -596,7 +596,7 @@ PRINT "--------"
 PRINT "TABLES size = ", ~(tables_end-tables)
 PRINT "BGDATA size = ", ~(bgdata_end-bgdata)
 PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
-PRINT "BEEB (formerly) CORE DATA size = ", ~(beeb_core_data_end-beeb_core_data_start)
+PRINT "BEEB PALETTE DATA size = ", ~(beeb_palette_end-beeb_palette_start)
 PRINT "EXO size = ", ~(exo_end-exo_start)
 PRINT "VGMPLAYER size = ", ~(vgm_player_end-vgm_player_start)
 PRINT "BEEB AUDIO size = ", ~(beeb_audio_end-beeb_audio)
