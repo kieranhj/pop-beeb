@@ -2390,4 +2390,18 @@ Check BANK3 code + data
     MISC size =  &3EE 
     SPECIALK size =  &5B3 
     BEEB PLOT FONT (moved from MAIN) size =  &30C 
+
 Any code that could go in BANK3? (&10E-&20E bytes)
+
+
+
+GOAL: Get as much contiguous free in SWRAM as possible for audio etc.
+
+BANK 0: bgtab1a, bgtab2, chtab4 = &3F free but &1C0 bytes lost to PAGE ALIGN
+BANK 1: chtab1, chtab2, chtab3, bgtab1b = &328 free but &1C5 bytes lost to PAGE ALIGN
+BANK 2: chtab5, seqtab, framedef, ctrlsub, coll, auto = &179 free with &2B lost
+BANK 3: ctrl, frameadv, gamebg, subs, mover, misc, specialk, font = &10E free with &38 lost
+
+Options - remove PAGE alignment requirement
+Move code down to Core
+Move data down to Lower after boot (or load it in)

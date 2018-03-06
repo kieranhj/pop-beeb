@@ -2427,3 +2427,39 @@ EQUB 0
 
  jmp savegame
 }
+
+\*-------------------------------
+; Relocate image tables
+\*-------------------------------
+
+.beeb_plot_reloc_img
+{
+    LDY #0
+    LDA (beeb_readptr), Y
+    STA beeb_numimages              \ can get rid of this var
+
+    \\ Relocate pointers to image data
+    LDX #0
+    .loop
+    INY
+\    CLC
+\    LDA (beeb_readptr), Y
+\    ADC #LO(bgtable1)
+\    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+\ Now at &0000 for BEEB data
+\    SEC
+\    SBC beeb_writeptr+1
+    CLC
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    INX
+    CPX beeb_numimages
+    BCC loop
+
+    .return
+    RTS
+}

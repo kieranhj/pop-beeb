@@ -375,7 +375,9 @@ ENDIF
 
 ; Beeb source in CORE
 
-INCLUDE "game/beeb_core.asm"
+INCLUDE "game/beeb_test.asm"
+INCLUDE "game/beeb_platform.asm"
+INCLUDE "game/beeb_screen.asm"
 
 ; PoP source in CORE memory (always present)
 
@@ -414,8 +416,6 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 
 ; Data in CORE memory (always present)
 
-; PoP gameplay data moved from AUX memory
-
 .pop_beeb_data_end
 .pop_beeb_end
 
@@ -430,10 +430,12 @@ PRINT "CORE Modules"
 PRINT "--------"
 PRINT "DISKSYS size = ", ~(beeb_disksys_end - beeb_disksys_start)
 PRINT "SWR size = ", ~(beeb_swr_end - beeb_swr_start)
-PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
+;PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
 PRINT "BEEB BOOT size = ", ~(beeb_boot_end - beeb_boot_start)
 PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
-PRINT "BEEB CORE size = ", ~(beeb_core_end - beeb_core_start)
+PRINT "BEEB TEST size = ", ~(beeb_test_end - beeb_test_start)
+PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
+PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "AUDIO size = ", ~(audio_end - audio)
