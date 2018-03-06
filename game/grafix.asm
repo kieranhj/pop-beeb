@@ -118,7 +118,7 @@ cwidthy = 15 ;21
 .chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB1, BEEB_SWRAM_SLOT_CHTAB2, BEEB_SWRAM_SLOT_CHTAB3, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB5, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB9
 
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
- EQUB HI(chtable5),HI(chtable6),HI(chtable7),LO(chtable9)
+ EQUB HI(chtable5),HI(chtable6),HI(chtable7),HI(chtable9)
 
 .chtablist_LO EQUB LO(chtable1),LO(chtable2),LO(chtable3),LO(chtable4)
  EQUB LO(chtable5),LO(chtable6),LO(chtable7),LO(chtable9)
