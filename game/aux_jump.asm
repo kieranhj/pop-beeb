@@ -1,7 +1,7 @@
-; aux_core.asm
+; aux_jump.asm
 ; Entire jump table for Aux (gameplay) code
 
-.aux_core_start
+.aux_jump_start
 
 MACRO JUMP_A name, base, index
 {
@@ -29,10 +29,10 @@ ENDMACRO
     LDA #BEEB_SWRAM_SLOT_AUX_B      ; confusingly modules in list A come from AuxB
     STA &F4: STA &FE30
 
-    LDA aux_core_fn_table_A_LO, X
+    LDA aux_jump_fn_table_A_LO, X
     STA jump_to_addr_A + 1
 
-    LDA aux_core_fn_table_A_HI, X
+    LDA aux_jump_fn_table_A_HI, X
 
 IF _DEBUG
     BMI fn_ok   ; can only jump into upper half of RAM!
@@ -90,10 +90,10 @@ ENDMACRO
     LDA #BEEB_SWRAM_SLOT_AUX_HIGH   ; confusingly modules in list B are in Aux High
     STA &F4: STA &FE30
 
-    LDA aux_core_fn_table_B_LO, X
+    LDA aux_jump_fn_table_B_LO, X
     STA jump_to_addr_B + 1
 
-    LDA aux_core_fn_table_B_HI, X
+    LDA aux_jump_fn_table_B_HI, X
 
 IF _DEBUG
     BMI fn_ok   ; can only jump into upper half of RAM!
@@ -495,12 +495,12 @@ ENDIF
 \* FUNCTION addresses for AUX A
 \*-------------------------------
 
-.aux_core_fn_table_A_LO
+.aux_jump_fn_table_A_LO
 
 \*-------------------------------
 \* auto.asm
 \*-------------------------------
-AUTO_BASE = P%-aux_core_fn_table_A_LO
+AUTO_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(AUTOCTRL)
 EQUB LO(CHECKSTRIKE)
 EQUB LO(CHECKSTAB)
@@ -515,7 +515,7 @@ EQUB LO(DEMO)
 \*-------------------------------
 \* coll.asm
 \*-------------------------------
-COLL_BASE = P%-aux_core_fn_table_A_LO
+COLL_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(CHECKBARR)
 EQUB LO(COLLISIONS)
 EQUB LO(GETFWDDIST)
@@ -533,7 +533,7 @@ EQUB LO(ENEMYCOLL)
 \*-------------------------------
 \* ctrlsubs.asm
 \*-------------------------------
-CTRLSUBS_BASE = P%-aux_core_fn_table_A_LO
+CTRLSUBS_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(GETFRAME)
 EQUB LO(GETSEQ)
 EQUB LO(GETBASEX)
@@ -616,7 +616,7 @@ EQUB LO(GETABOVE)
 EQUB LO(GETABOVEINF)
 EQUB LO(CMPWALL)
 
-.aux_core_fn_table_A_HI
+.aux_jump_fn_table_A_HI
 \*-------------------------------
 \* auto.asm
 \*-------------------------------
@@ -737,12 +737,12 @@ EQUB HI(CMPWALL)
 \* FUNCTION addresses for AUX B
 \*-------------------------------
 
-.aux_core_fn_table_B_LO
+.aux_jump_fn_table_B_LO
 
 \*-------------------------------
 \* ctrl.asm
 \*-------------------------------
-CTRL_BASE = P% - aux_core_fn_table_B_LO
+CTRL_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(PLAYERCTRL)
 EQUB LO(CHECKFLOOR)
 EQUB LO(SHADCTRL)
@@ -756,7 +756,7 @@ EQUB LO(CHECKIMPALE)
 \*-------------------------------
 \* frameadv.asm
 \*-------------------------------
-FRAMEADV_BASE = P% - aux_core_fn_table_B_LO
+FRAMEADV_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(SURE)
 EQUB LO(FAST)
 EQUB LO(GETINITOBJ)
@@ -766,7 +766,7 @@ EQUB LO(ZERORED)
 \*-------------------------------
 \* gamebg.asm
 \*-------------------------------
-GAMEBG_BASE = P% - aux_core_fn_table_B_LO
+GAMEBG_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(UPDATEMETERS)
 EQUB LO(DRAWKIDMETER)
 EQUB LO(DRAWSWORD)
@@ -802,7 +802,7 @@ EQUB LO(SUCCESSMSG)
 \*-------------------------------
 \* grafix.asm
 \*-------------------------------
-GRAFIX_BASE = P% - aux_core_fn_table_B_LO
+GRAFIX_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(DRAWALL)
 \ jmp dispversion
 \.saveblue BRK   ;jmp SAVEBLUE
@@ -830,7 +830,7 @@ EQUB LO(ADDMIDEZO)
 \*-------------------------------
 \* mover.asm
 \*-------------------------------
-MOVER_BASE = P% - aux_core_fn_table_B_LO
+MOVER_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(ANIMTRANS)
 EQUB LO(TRIGSPIKES)
 EQUB LO(PUSHPP)
@@ -857,7 +857,7 @@ EQUB LO(JAMPP)
 \*-------------------------------
 \* specialk.asm
 \*-------------------------------
-SPECIALK_BASE = P% - aux_core_fn_table_B_LO
+SPECIALK_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(KEYS)
 EQUB LO(CLRJSTK)
 EQUB 0     ; EQUB LO(ZEROSOUND)
@@ -895,7 +895,7 @@ EQUB LO(MUSICKEYS)
 \*-------------------------------
 \* subs.asm
 \*-------------------------------
-SUBS_BASE = P% - aux_core_fn_table_B_LO
+SUBS_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(ADDTORCHES)
 EQUB LO(DOFLASHON)
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
@@ -929,7 +929,7 @@ EQUB LO(CRUMBLE)
 \*-------------------------------
 \* misc.asm
 \*-------------------------------
-MISC_BASE = P% - aux_core_fn_table_B_LO
+MISC_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(VANISHCHAR)
 EQUB 0      ; EQUB LO(MOVEMUSIC
 EQUB 0      ; EQUB LO(MOVEAUXLC)
@@ -955,14 +955,14 @@ EQUB LO(CHECKALERT)
 \*-------------------------------
 \* beeb-plot-font.asm
 \*-------------------------------
-FONT_BASE = P% - aux_core_fn_table_B_LO
+FONT_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(BEEB_FONT_INIT)
 EQUB LO(BEEB_PLOT_FONT_PREP)
 EQUB LO(BEEB_PLOT_FONT_GLYPH)
 EQUB LO(BEEB_PLOT_FONT_STRING)
 
 
-.aux_core_fn_table_B_HI
+.aux_jump_fn_table_B_HI
 
 \*-------------------------------
 \* ctrl.asm
@@ -1179,4 +1179,4 @@ EQUB HI(BEEB_PLOT_FONT_STRING)
 
 ENDIF
 
-.aux_core_end
+.aux_jump_end

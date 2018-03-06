@@ -370,7 +370,7 @@ ENDIF
 ; Global jump table
 
 IF _JMP_TABLE
-INCLUDE "game/aux_core.asm"
+INCLUDE "game/aux_jump.asm"
 ENDIF
 
 ; Beeb source in CORE
@@ -432,7 +432,7 @@ PRINT "DISKSYS size = ", ~(beeb_disksys_end - beeb_disksys_start)
 PRINT "SWR size = ", ~(beeb_swr_end - beeb_swr_start)
 ;PRINT "PRINT size = ", ~(beeb_print_end - beeb_print_start)
 PRINT "BEEB BOOT size = ", ~(beeb_boot_end - beeb_boot_start)
-PRINT "AUX CORE (jump table) size = ", ~(aux_core_end - aux_core_start)
+PRINT "AUX JUMP TABLES size = ", ~(aux_jump_end - aux_jump_start)
 PRINT "BEEB TEST size = ", ~(beeb_test_end - beeb_test_start)
 PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
 PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
