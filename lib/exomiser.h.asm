@@ -2,7 +2,7 @@
 \\ EXOMISER (compression library)
 \\ ******************************************************************
 
-
+EXO_buffer_len = 256
 
 \\ Declare ZP vars
 .EXO_zp_src_hi	SKIP 1

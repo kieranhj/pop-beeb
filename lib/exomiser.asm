@@ -20,12 +20,8 @@
 \ *	Space reserved for runtime buffers not preinitialised
 \ ******************************************************************
 
-EXO_buffer_len = 256
 ; this is now packed in to language workspace at &0400
 \\ If you want to make this bigger than 1024 then need to find somewhere else to put it!!
-
-PAGE_ALIGN
-.EXO_buffer SKIP EXO_buffer_len
 
 \\ Exomiser unpack buffer (must be page aligned)
 \\ Now moved this to the language workspace at &0400 - &0800
