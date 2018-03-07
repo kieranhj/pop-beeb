@@ -121,3 +121,18 @@ CALLMPLAY
 :silent lda #0
 return rts
 ENDIF
+
+IF _NOT_BEEB
+*-------------------------------
+*
+* Cue song
+*
+* In: A = song #
+*     X = # of cycles within which song must be played
+*
+*-------------------------------
+CUESONG
+ sta SongCue
+ stx SongCount
+ rts
+ENDIF

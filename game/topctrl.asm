@@ -343,6 +343,10 @@ ENDIF
  sta msgdrawn
  sta PreRecPtr
  sta PlayCount
+ sta FrameCountDelta
+
+ LDA beeb_vsync_count
+ STA FrameCountPrev
 
  ldx SongCue
  cpx #s_Danger
@@ -405,40 +409,15 @@ ENDIF
 
  JSR beeb_show_screen     ; BEEB in case of blackout
 
- jmp MainLoop
+\ jmp MainLoop
 }
+\ Fall through!
 
 \*-------------------------------
 \*
 \*  Main loop
 \*
 \*-------------------------------
-IF _DEBUG
-.temp_last_count EQUB 0
-.temp_vsync_diff EQUB 0
-
-FR_COUNTER_X=78
-FR_COUNTER_Y=BEEB_STATUS_ROW
-
-.display_vsync_counter
-{
-    JSR beeb_plot_font_prep
-    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr
-    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr+1
-    LDA #PAL_FONT:STA PALETTE
-    LDA temp_vsync_diff
-    CMP #10
-    BCC diff_ok
-    LDA #9
-    .diff_ok
-    INC A
-    JMP beeb_plot_font_glyph
-}
-ENDIF
-
-\\ Should probably refactor this out into a proper message system
 
 .MainLoop
 {
@@ -522,8 +501,9 @@ ENDIF
 \ NOT BEEB
 \ jsr yellowcheck ;copy protect!
 
- jmp LoadNextLevel
+\ jmp LoadNextLevel
 }
+\ Fall through!
 
 \*-------------------------------
 \*
@@ -2079,3 +2059,30 @@ ENDIF
 \ ds 1
 \ usr $a9,4,$a00,*-org
 \ lst off
+
+IF _DEBUG
+.temp_last_count EQUB 0
+.temp_vsync_diff EQUB 0
+
+FR_COUNTER_X=78
+FR_COUNTER_Y=BEEB_STATUS_ROW
+
+.display_vsync_counter
+{
+    JSR beeb_plot_font_prep
+    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr
+    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr+1
+    LDA #PAL_FONT:STA PALETTE
+    LDA temp_vsync_diff
+    CMP #10
+    BCC diff_ok
+    LDA #9
+    .diff_ok
+    INC A
+    JMP beeb_plot_font_glyph
+}
+ENDIF
+
+\\ Should probably refactor this out into a proper message system

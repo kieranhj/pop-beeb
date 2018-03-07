@@ -189,7 +189,7 @@ ENDIF
 
 .beeb_wait_vsync
 {
-IF _IRQ_VSYNC
+IF 1        ; rather than osbyte
     LDA beeb_vsync_count
     .wait_loop
     CMP beeb_vsync_count
