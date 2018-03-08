@@ -723,9 +723,9 @@ ENDIF
 .label_33 cmp #ktimeup
  bne label_34
 
- LDA #LO((game_time_limit-1)*game_time_min+1)
+ LDA timetable_lastmin
  STA FrameCount
- LDA #HI((game_time_limit-1)*game_time_min+1)
+ LDA timetable_lastmin+1
  STA FrameCount+1
  rts
 
@@ -1480,12 +1480,13 @@ ENDIF
  EQUW (game_time_limit-15)*game_time_min
 .timetable_20
  EQUW (game_time_limit-10)*game_time_min
- EQUW (game_time_limit-5)*game_time_min
- EQUW (game_time_limit-4)*game_time_min
- EQUW (game_time_limit-3)*game_time_min
- EQUW (game_time_limit-2)*game_time_min
+ EQUW (game_time_limit-5)*game_time_min+1
+ EQUW (game_time_limit-4)*game_time_min+1
+ EQUW (game_time_limit-3)*game_time_min+1
+ EQUW (game_time_limit-2)*game_time_min+1
+ .timetable_lastmin
  EQUW (game_time_limit-1)*game_time_min+1
- EQUW (game_time_limit*game_time_min)+5 ;5 frames after t=0: game over
+ EQUW (game_time_limit*game_time_min)+2 ;5 frames after t=0: game over
  EQUW 65535
 
 nummsg = P%-timetable
@@ -1508,12 +1509,7 @@ nummsg = P%-timetable
 
 \* Inc frame counter
 
-; inc FrameCount
-; bne label_1
-; inc FrameCount+1
-;.label_1 bne label_2
-
-\\ BEEB TODO - use vsync counter to make this more accurate
+\\ BEEB - use vsync counter to make this more accurate
 
   \ Get vsync delta since last time
 

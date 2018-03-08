@@ -1779,7 +1779,15 @@ ENDIF
 
   LDA msgdrawn
   CMP #REDRAW_FRAMES
-  BCS return_62
+  BCC stuff_to_draw
+
+ lda message
+ cmp #TimeMsg
+ LDA msgtimer
+ CMP #2
+ bcs return_62
+  
+  .stuff_to_draw
   INC msgdrawn
 
  lda message
