@@ -1424,7 +1424,7 @@ floorY = 151
 
 .showsec
  lda SecLeft
- cmp #2
+ cmp #1;was 2
  bcc nomsg
 
  lda message
