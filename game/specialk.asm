@@ -2174,19 +2174,6 @@ SMALL_FONT_MAPCHAR
 .build_string EQUS "~BUILD ", &FF
 ASCII_MAPCHAR
 
-.specialk_plot_bcd
-{
-  PHA
-  LSR A:LSR A:LSR A:LSR A
-  INC A
-  JSR beeb_plot_font_glyph
-
-  PLA
-  AND #&F
-  INC A
-  JMP beeb_plot_font_glyph
-}
-
 .dispversion
 {
   JSR specialk_claim_status_line
@@ -2226,22 +2213,22 @@ ASCII_MAPCHAR
   JSR beeb_plot_font_string
   
   LDA pop_beeb_build
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+1
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+2
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA #GLYPH_DOT
   JSR beeb_plot_font_glyph
 
   LDA pop_beeb_build+3
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+4
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   \ Wait for a key press to continue
   JSR specialk_wait_for_a_key

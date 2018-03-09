@@ -11,6 +11,7 @@ SMALL_FONT_HEIGHT = 7
 .beeb_plot_font_prep jmp BEEB_PLOT_FONT_PREP
 .beeb_plot_font_glyph jmp BEEB_PLOT_FONT_GLYPH
 .beeb_plot_font_string jmp BEEB_PLOT_FONT_STRING
+.beeb_font_plot_bcd jmp BEEB_PLOT_FONT_BCD
 
 .BEEB_PLOT_FONT_PREP
 {
@@ -476,8 +477,27 @@ ENDIF
     BNE loop
 
     .done_loop
+    INC beeb_readptr
+    BCC return
+    INC beeb_readptr+1
+    .return
     RTS
 }
+
+.BEEB_PLOT_FONT_BCD
+{
+  PHA
+  LSR A:LSR A:LSR A:LSR A
+  INC A
+  JSR beeb_plot_font_glyph
+
+  PLA
+  AND #&F
+  INC A
+  JMP beeb_plot_font_glyph
+}
+
+
 
 IF 0
 SMALL_FONT_MAPCHAR
