@@ -231,6 +231,13 @@ kresume = IKN_l OR $80
 \* driveon switches it in, driveoff switches it out.
 \*
 
+SMALL_FONT_MAPCHAR
+.error_string1 EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
+.error_string2 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
+.error_string3 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
+.error_string4 EQUS "BUILD~NUMBER:~", &FF
+ASCII_MAPCHAR
+
 .error_handler
 {
     \\ Could have been anywhere so kill the stack
@@ -241,17 +248,45 @@ kresume = IKN_l OR $80
     BEQ not_trying_to_save
 
     \\ We were in middle of save game but an error occured
-    LDA #0
-    STA SavLevel
-
-    LDA #&FF
-    STA SavError
-
-    JMP MainLoop
+    STZ SavLevel        ; clear save flag
+    STX SavError        ; flag error
+    JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
     \\ We weren't saving so just restart
     .not_trying_to_save
-    JMP GOATTRACT
+
+    .wait_vsync
+;    DEX:BEQ stop_wait       ; in case our event handler has crashed
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    .stop_wait
+
+    \\ Attempt to write to visible screen
+    lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
+ 
+    LDA #LO(error_string1):STA beeb_readptr
+    LDA #HI(error_string1):STA beeb_readptr+1
+    LDX #0:LDY #0:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    LDX #0:LDY #2:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+    
+    LDX #0:LDY #4:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    LDX #0:LDY #6:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    LDA pop_beeb_version:JSR beeb_font_plot_bcd
+    LDA pop_beeb_build+0:JSR beeb_font_plot_bcd
+    LDA pop_beeb_build+1:JSR beeb_font_plot_bcd
+    LDA pop_beeb_build+2:JSR beeb_font_plot_bcd
+    LDA pop_beeb_build+3:JSR beeb_font_plot_bcd
+    LDA pop_beeb_build+4:JSR beeb_font_plot_bcd
+
+    .spin
+    BRA spin
 }
 
 IF _TODO
@@ -1373,6 +1408,7 @@ ENDIF
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
+    ; BEEB TEMP - this should really be done in subs_PlaySongI
     lda #s_Princess
     jsr BEEB_INTROSONG
 ENDIF

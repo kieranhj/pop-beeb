@@ -21,6 +21,8 @@ IF _AUDIO
 ; Note that our song IDs dont match the Apple ones since we nicked them from the Master system version.
 .BEEB_CUESONG
 {
+    STA SongCue
+
     ;asl a
     asl a
     tax
@@ -29,7 +31,11 @@ IF _AUDIO
     pha
     ; get address
     lda pop_game_music+1,x
-    beq no_track    ; dont play if entry is 0
+    bne have_track    ; dont play if entry is 0
+    STA SongCue
+    RTS
+
+    .have_track
     tay
     lda pop_game_music+0,x
     tax
@@ -45,6 +51,8 @@ IF _AUDIO
 
 .BEEB_INTROSONG
 {
+    STA SongCue
+
     ;asl a
     asl a
     tax
@@ -53,7 +61,11 @@ IF _AUDIO
     pha
     ; get address
     lda pop_title_music+1,x
-    beq no_track    ; dont play if entry is 0
+    bne have_track    ; dont play if entry is 0
+    STA SongCue
+    RTS
+
+    .have_track
     tay
     lda pop_title_music+0,x
     tax
@@ -363,7 +375,11 @@ ENDIF ; _AUDIO_DEBUG
     \\ Doing the music last gives it priority over SFX
 	\\ Poll the music player
 	jsr vgm_poll_player
+    BCC still_playing
 
+    \ Tell POP that a song has finished (some game features rely on this)
+    STZ SongCue
+    .still_playing
 
     ; restore previously paged ROM bank
     pla

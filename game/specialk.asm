@@ -76,8 +76,9 @@ initAMtimer = 10 ;antimatter cheat key timer
 \FirstSideB = 3
 
 \*-------------------------------
-game_time_min = 725 ;# frames per "minute"
+game_time_min = 60 ;725 ;# frames per "minute"
   ;(actual frame rate approx. 11 fps)
+  ;BEEB - FrameCount now in seconds with a vsync counter to increment seconds
 game_time_sec = game_time_min/60
 game_time_limit = 60 ;game time limit
 
@@ -681,16 +682,36 @@ ENDIF
 
 .label_24 cmp #ktimeback
  bne label_31
- lda #LO(-2)
-.chgtime clc
- adc FrameCount+1
- sta FrameCount+1
+
+ SEC
+ LDA FrameCount
+ SBC #game_time_min * 1
+ STA FrameCount
+ LDA FrameCount+1
+ SBC #0
+ STA FrameCount+1
+ CMP #&FF
+ BNE back_ret
+ LDA #0
+ STA FrameCount
+ STA FrameCount+1
+ .back_ret
  rts
 
 .label_31 cmp #ktimefwd
  bne label_32
- lda #2
- bne chgtime
+ CLC
+ LDA FrameCount
+ ADC #game_time_min * 1
+ STA FrameCount
+ BCC fwd_ret
+ INC FrameCount+1
+ BNE fwd_ret
+ LDA #&FF
+ STA FrameCount
+ STA FrameCount+1
+ .fwd_ret
+ RTS
 
 .label_32 cmp #kerasegame
  bne label_33
@@ -701,8 +722,11 @@ ENDIF
 
 .label_33 cmp #ktimeup
  bne label_34
- lda #$ff
- sta FrameCount+1
+
+ LDA timetable_lastmin
+ STA FrameCount
+ LDA timetable_lastmin+1
+ STA FrameCount+1
  rts
 
 .label_34 cmp #kzapgard
@@ -1456,12 +1480,13 @@ ENDIF
  EQUW (game_time_limit-15)*game_time_min
 .timetable_20
  EQUW (game_time_limit-10)*game_time_min
- EQUW (game_time_limit-5)*game_time_min
- EQUW (game_time_limit-4)*game_time_min
- EQUW (game_time_limit-3)*game_time_min
- EQUW (game_time_limit-2)*game_time_min
+ EQUW (game_time_limit-5)*game_time_min+1
+ EQUW (game_time_limit-4)*game_time_min+1
+ EQUW (game_time_limit-3)*game_time_min+1
+ EQUW (game_time_limit-2)*game_time_min+1
+ .timetable_lastmin
  EQUW (game_time_limit-1)*game_time_min+1
- EQUW (game_time_limit*game_time_min)+5 ;5 frames after t=0: game over
+ EQUW (game_time_limit*game_time_min)+2 ;5 frames after t=0: game over
  EQUW 65535
 
 nummsg = P%-timetable
@@ -1484,19 +1509,49 @@ nummsg = P%-timetable
 
 \* Inc frame counter
 
-\\ BEEB TODO - use vsync counter to make this more accurate
+\\ BEEB - use vsync counter to make this more accurate
+
+  \ Get vsync delta since last time
+
+ SEC
+ LDA beeb_vsync_count
+ TAY
+ SBC FrameCountPrev
+ STY FrameCountPrev
+
+  \ Clamp this to 10 (5Hz)
+
+ CMP #10
+ BCC no_clamp
+ LDA #10
+ .no_clamp
+
+  \ 50 vsyncs make a second
+
+ CLC
+ ADC FrameCountDelta
+ STA FrameCountDelta
+ CMP #50
+ BCC label_2
+ SBC #50
+ STA FrameCountDelta
+
+  \ Increment seconds...
 
  inc FrameCount
  bne label_1
  inc FrameCount+1
 .label_1 bne label_2
+
  lda #$ff
  sta FrameCount
  sta FrameCount+1 ;don't wrap around
 
+.label_2
+
 \* time for next message yet?
 
-.label_2 ldy NextTimeMsg ;0-2-4 for 1st, 2nd, 3rd msgs
+ ldy NextTimeMsg ;0-2-4 for 1st, 2nd, 3rd msgs
  cpy #nummsg
  bcs return ;no more msgs
  lda FrameCount+1
@@ -1540,21 +1595,6 @@ SHORTENTIME
  lda timetable+1,y
  sta FrameCount+1
 ]rts rts
-ENDIF
-
-IF _NOT_BEEB
-*-------------------------------
-*
-* Cue song
-*
-* In: A = song #
-*     X = # of cycles within which song must be played
-*
-*-------------------------------
-CUESONG
- sta SongCue
- stx SongCount
- rts
 ENDIF
 
 \*-------------------------------
@@ -2134,19 +2174,6 @@ SMALL_FONT_MAPCHAR
 .build_string EQUS "~BUILD ", &FF
 ASCII_MAPCHAR
 
-.specialk_plot_bcd
-{
-  PHA
-  LSR A:LSR A:LSR A:LSR A
-  INC A
-  JSR beeb_plot_font_glyph
-
-  PLA
-  AND #&F
-  INC A
-  JMP beeb_plot_font_glyph
-}
-
 .dispversion
 {
   JSR specialk_claim_status_line
@@ -2186,22 +2213,22 @@ ASCII_MAPCHAR
   JSR beeb_plot_font_string
   
   LDA pop_beeb_build
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+1
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+2
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA #GLYPH_DOT
   JSR beeb_plot_font_glyph
 
   LDA pop_beeb_build+3
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   LDA pop_beeb_build+4
-  JSR specialk_plot_bcd
+  JSR beeb_font_plot_bcd
 
   \ Wait for a key press to continue
   JSR specialk_wait_for_a_key

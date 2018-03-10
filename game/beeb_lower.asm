@@ -258,6 +258,8 @@ ENDIF
 .BGset2 skip 1
 .CHset skip 1
 .FrameCount skip 2
+.FrameCountDelta skip 1
+.FrameCountPrev skip 1
 ;.SongCount skip 1
 .PreRecPtr skip 1
 .gotsword skip 1

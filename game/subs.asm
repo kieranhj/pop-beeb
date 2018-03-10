@@ -869,13 +869,14 @@ ENDIF
  tay
  lda soundon
  and musicon
- bne label_1
+; BEEB TODO MUSIC - don't play any music here
+; bne label_1
  txa
  beq return_56
  jmp play
 .label_1 tya
 
- jsr minit
+ jsr BEEB_INTROSONG     ; was minit
  jsr swpage
 .loop jsr musickeys
  cmp #$80
@@ -1423,7 +1424,7 @@ floorY = 151
 
 .showsec
  lda SecLeft
- cmp #2
+ cmp #1;was 2
  bcc nomsg
 
  lda message
