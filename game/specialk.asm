@@ -429,8 +429,10 @@ ENDIF
 
 .label_2 cmp #ksetkbd
  bne label_3
- lda #0
- sta joyon
+
+; BEEB TODO JOYSTICK
+; lda #0
+; sta joyon
 
  JSR redefine_keys
 
@@ -1630,14 +1632,14 @@ ENDIF
 \*
 \*-------------------------------
 .GETSELECT
- lda joyon ;joystick selected?
- bne getjoy ;yes--use jstk
- beq getkbd ;no--use kbd
+; lda joyon ;joystick selected?
+; bne getjoy ;yes--use jstk
+ BRA getkbd ;no--use kbd
 
 .GETDESEL
- lda joyon
- bne getkbd
- beq getjoy
+; lda joyon
+; bne getkbd
+ BRA getjoy
 
 .getjoy
 {

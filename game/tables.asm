@@ -212,3 +212,10 @@ NEXT
 FOR n,0,79,1
 EQUB HI(n*8)
 NEXT
+
+\*-------------------------------
+; Data from ctrlsubs.asm accessed by other modules
+\*-------------------------------
+
+.plus1 EQUB LO(-1),1
+.minus1 EQUB 1,LO(-1)

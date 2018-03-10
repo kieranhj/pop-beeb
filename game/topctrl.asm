@@ -148,11 +148,11 @@ miry = 0
 \ jsr setcenter ;Center joystick
 
 \ BEEB set keyboard mode
- LDA #0
- STA joyon
- sta jvert
- sta jhoriz
- sta jbtns ;set normal params
+; LDA #0
+; STA joyon
+; sta jvert
+; sta jhoriz
+; sta jbtns ;set normal params
 
 \ NOT BEEB
 \ jsr setfastaux ;bgtable in auxmem
