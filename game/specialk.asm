@@ -2061,12 +2061,6 @@ ASCII_MAPCHAR
   .loop  
   STX redefine_index
   
-  \ Fortunately beeb_readptr increments after a string plot
-  INC beeb_readptr
-  BNE no_carry
-  INC beeb_readptr+1
-  .no_carry
-
   \ Clear the line
   LDY #49
   LDX #24

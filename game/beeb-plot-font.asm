@@ -478,7 +478,7 @@ ENDIF
 
     .done_loop
     INC beeb_readptr
-    BCC return
+    BNE return
     INC beeb_readptr+1
     .return
     RTS
