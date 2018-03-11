@@ -240,16 +240,14 @@ ASCII_MAPCHAR
 
 .error_handler
 {
-    \\ Could have been anywhere so kill the stack
-    LDX #&FF
-    TXS
-
     LDA SavLevel
     BEQ not_trying_to_save
 
     \\ We were in middle of save game but an error occured
     STZ SavLevel        ; clear save flag
+    LDX #&FF
     STX SavError        ; flag error
+    TXS
     JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
     \\ We weren't saving so just restart
@@ -261,9 +259,13 @@ ASCII_MAPCHAR
     BNE wait_vsync
     .stop_wait
 
-    \\ Attempt to write to visible screen
+    LDA &FE34:AND #&5:BEQ same_same
+    CMP #&5:BEQ same_same
+
+    \\ Attempt to write to visible screen - flip to single buffer
     lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
  
+    .same_same
     LDA #LO(error_string1):STA beeb_readptr
     LDA #HI(error_string1):STA beeb_readptr+1
     LDX #0:LDY #0:LDA #PAL_FONT
