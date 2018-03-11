@@ -38,13 +38,20 @@ IF _DEBUG
     BRK
 .width_ok
 ENDIF
+
+    LDA YCO
+    TAX
+    SBC height
+    BCS no_yclip
+    LDA #LO(-1)
+    .no_yclip
+    STA beeb_plot_wipe_y_loop_smTop+1
 }
 \\ Fall through!
 .beeb_plot_wipe_4bytes   ; 34 Apple bytes = 8 Beeb bytes
-    LDX height
 
 .beeb_plot_wipe_y_loop
-{
+
     LDA #0
 
     LDY #0
@@ -72,8 +79,9 @@ ENDIF
     STA (beeb_writeptr), Y
 
     DEX
+.beeb_plot_wipe_y_loop_smTop
+    CPX #&FF
     BEQ beeb_plot_wipe_done_y
-}
 
     LDA beeb_writeptr
     AND #&07
