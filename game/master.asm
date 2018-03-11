@@ -38,29 +38,73 @@
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
 .DoSaveGame jmp DOSAVEGAME              ; moved from misc.asm
 
-MACRO MASTER_LOAD_HIRES filename
+.master_load_hires
 {
  JSR beeb_set_game_screen
- LDX #LO(filename)
- LDY #HI(filename)
  LDA #HI(beeb_screen_addr)
  JSR disksys_load_file
  JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
+ JMP PageFlip
+}
+
+MACRO MASTER_LOAD_HIRES filename
+{
+ LDX #LO(filename)
+ LDY #HI(filename)
+ JSR master_load_hires
 }
 ENDMACRO
+
+.master_load_dhires
+{
+ JSR disksys_load_file
+
+IF _DEMO_BUILD
+ JSR plot_demo_url
+ENDIF
+
+ JSR vblank
+ JSR PageFlip
+ JMP beeb_show_screen       ; in case previous blackout
+}
 
 MACRO MASTER_LOAD_DHIRES filename, lines
 {
  LDX #LO(filename)
  LDY #HI(filename)
  LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
- JSR disksys_load_file
- JSR vblank
- JSR PageFlip               ; BEEB TODO figure out single/double buffer & wipe
- JSR beeb_show_screen       ; in case previous blackout
+ JSR master_load_dhires
 }
 ENDMACRO
+
+MACRO MASTER_WIPE_DHIRES filename
+{
+ LDX #LO(filename)
+ LDY #HI(filename)
+ LDA #HI(beeb_double_hires_addr)
+ JSR disksys_load_file
+ JSR beeb_dhires_wipe
+}
+ENDMACRO
+
+IF _DEMO_BUILD
+SMALL_FONT_MAPCHAR
+.url_message EQUS "bitshifters.github.io", &FF
+ASCII_MAPCHAR
+
+.plot_demo_url
+{
+    LDA #LO(url_message)
+    STA beeb_readptr
+    LDA #HI(url_message)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #38
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+ENDIF
 
 \*-------------------------------
 \ lst
@@ -186,78 +230,74 @@ kresume = IKN_l OR $80
 \* RW18 sits in bank 1 of main language card;
 \* driveon switches it in, driveoff switches it out.
 \*
-\*-------------------------------
-\*
-\*  F I R S T B O O T
-\*
-\*-------------------------------
 
-.FIRSTBOOT
+SMALL_FONT_MAPCHAR
+.error_string1 EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
+.error_string2 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
+.error_string3 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
+.error_string4 EQUS "BUILD~NUMBER:~", &FF
+.error_string5 EQUS "PC:~",&FF
+ASCII_MAPCHAR
+
+.error_handler
 {
-\ NOT BEEB
-\ lda MIXEDoff
-\ jsr setaux
+    LDA SavLevel
+    BEQ not_trying_to_save
 
-\* Set BBund ID byte
+    \\ We were in middle of save game but an error occured
+    STZ SavLevel        ; clear save flag
+    LDX #&FF
+    STX SavError        ; flag error
+    TXS
+    JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
-\ lda #POPside1
-\ sta BBundID
+    \\ We weren't saving so just restart
+    .not_trying_to_save
 
-\* Load hires tables & add'l hires routines
+    .wait_vsync
+;    DEX:BEQ stop_wait       ; in case our event handler has crashed
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    .stop_wait
 
-\ sta RAMWRTmain
-\ lda #2
-\ sta track
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex e0,e1,e2,e3,e4,e5,e6,e7,e8
-\ hex e9,ea,eb,ec,ed,00,00,00,00
+    LDA &FE34:AND #&5:BEQ same_same
+    CMP #&5:BEQ same_same
 
-\* Load as much of Stage 3 as we can keep
+    \\ Attempt to write to visible screen - flip to single buffer
+    lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
+ 
+    .same_same
+    LDA #LO(error_string1):STA beeb_readptr
+    LDA #HI(error_string1):STA beeb_readptr+1
+    LDX #0:LDY #0:LDA #PAL_FONT
+    JSR beeb_plot_font_string
 
- jsr loadperm
+    LDX #0:LDY #2:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+    
+    LDX #0:LDY #4:LDA #PAL_FONT
+    JSR beeb_plot_font_string
 
-\* Turn off drive
+    LDX #0:LDY #6:LDA #PAL_FONT
+    JSR beeb_plot_font_string
 
-\ jsr driveoff
+    LDA pop_beeb_version:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+4:JSR beeb_plot_font_bcd
 
-\* Check for IIGS
+    LDX #56:LDY #6:LDA #PAL_FONT
+    JSR beeb_plot_font_string
 
-\ jsr checkIIGS ;returns IIGS
+    TSX:LDA &103, X: JSR beeb_plot_font_bcd
+    TSX:LDA &102, X: JSR beeb_plot_font_bcd
 
-\* Start attract loop
-
- jsr initsystem ;in topctrl
-
- lda #0
- sta invert ;rightside up Y tables
-
- lda #1
- sta soundon ;Sound on
-
- lda #$ff   ; no level sprites cached
- sta CHset
- sta BGset1
- sta BGset2
-
- JSR beeb_set_mode2_no_clear
-
-    \\ Own error handler now we're fully initialised
-    IF _DEBUG=FALSE
-    SEI
-    LDX #LO(GOATTRACT)
-    LDY #HI(GOATTRACT)
-    STX BRKV
-    STY BRKV+1
-    CLI
-    ENDIF
-
-IF _BOOT_ATTRACT
- jmp AttractLoop
-ELSE
- jmp DOSTARTGAME
-ENDIF
+    .spin
+    BRA spin
 }
+
 
 IF _TODO
 *-------------------------------
@@ -574,6 +614,30 @@ ENDIF
  sta newBGset2
  sty newCHset
 
+    \ Switch Guard palettes
+    {
+        CMP #1
+        BEQ is_palace
+
+        \ Is Dungeon
+        LDA #MODE2_YELLOW_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+        
+        LDA #MODE2_RED_PAIR
+        STA palette_table+4*4+1     ; ick!
+        BNE is_done
+
+        .is_palace
+        LDA #MODE2_WHITE_PAIR
+        STA palette_table+4*3+3     ; ick!
+        STA palette_table+4*4+3     ; ick!
+
+        LDA #MODE2_GREEN_PAIR
+        STA palette_table+4*4+1     ; ick!
+        .is_done
+    }
+
 \ NOT BEEB
 \ jsr driveon
 
@@ -587,13 +651,6 @@ ENDIF
 
 \ NOT BEEB
 \ jmp driveoff
-
-\ BEEB TODO - expand correct palettes for Dungeon vs Palace bg lookups
-\ If want to map 4 byte palette table to an expanded &34 byte lookup
-\ LDA #0
-\ LDX #LO(fast_palette_lookup_0)
-\ LDY #HI(fast_palette_lookup_0)
-\ JSR beeb_expand_palette_table
 
  RTS
 }
@@ -970,7 +1027,7 @@ EQUS "VIZ    $"
 \*-------------------------------
 
 .pacRoom_name
-EQUS "PRIN   $"
+EQUS "PRIN2  $"
 
 .CUTPRINCESS
 {
@@ -986,7 +1043,22 @@ EQUS "PRIN   $"
 
  JSR beeb_clear_status_line
 
- MASTER_LOAD_HIRES pacRoom_name ; also sets game screen mode
+\ Need game screen dimensions
+
+ JSR beeb_set_game_screen
+
+\ Load Princess screen image
+\ And MODE2 PLOT overlay
+
+ LDX #LO(pacRoom_name)
+ LDY #HI(pacRoom_name)
+ LDA #HI(PRIN2_START)
+ JSR disksys_load_file
+
+\ Flip the screen buffers
+
+ JSR vblank
+ JSR PageFlip
 
 \ lda #$40
 \ sta IMAGE+1
@@ -994,12 +1066,14 @@ EQUS "PRIN   $"
 \ sta IMAGE ;copy page 1 to page 2
 \ jmp _copy2000 ;in HIRES
 
- LDA #HI(beeb_screen_addr)
+\ Copy the screen buffers
+
+ LDA #HI(PRIN2_START)
  JSR beeb_copy_shadow
 
- JSR beeb_show_screen           ; BEEB show screen after blackout
+\ Display
 
- RTS
+ JMP beeb_show_screen           ; BEEB show screen after blackout
 }
 
 \*-------------------------------
@@ -1015,7 +1089,6 @@ EQUS "PRIN   $"
  sta musicon
  jsr blackout
 
-\ BEEB TODO check mem usage
 \ jsr LoadStage1B
 
  jsr Epilog
@@ -1072,6 +1145,8 @@ EQUS "PRIN   $"
 
  jsr SilentTitle
 
+ jsr BeebCredit
+
  jmp Demo
 }
 
@@ -1088,7 +1163,6 @@ EQUS "PRIN   $"
 
 \* Load in Stage 1 data
 
-\ BEEB TODO check memory usage
 \ jmp LoadStage1A
 
  JMP beeb_set_attract_screen
@@ -1161,7 +1235,6 @@ ENDIF
 \* Switch to DHires page 2
 \* (credit line disappears)
 
-\ BEEB TODO
 \ lda PAGE2on
 
 \* Copy DHires page 2 back to hidden page 1
@@ -1171,6 +1244,9 @@ ENDIF
 \* Display page 1
 
 \ lda PAGE2off
+
+\ Not needed on Beeb as just load the whole lower half of the screen
+
 .return
  rts
 }
@@ -1223,9 +1299,25 @@ IF _AUDIO
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
- jsr unpacksplash
+; jsr unpacksplash
 
- jsr copy1to2
+\ Construct the title page without showing it
+
+ LDX #LO(splash_filename)
+ LDY #HI(splash_filename)
+ LDA #HI(beeb_double_hires_addr)
+ JSR disksys_load_file
+
+ LDX #LO(title_filename)
+ LDY #HI(title_filename)
+ LDA #HI(beeb_double_hires_addr + 12 * 640)
+ JSR disksys_load_file
+
+\ Now wipe to reveal
+
+ JSR beeb_dhires_wipe
+
+; jsr copy1to2
 
  lda #20/4
  jsr tpause
@@ -1233,7 +1325,7 @@ ENDIF
 \ lda #delTitle
 \ jsr DeltaExpPop
  
- MASTER_LOAD_DHIRES title_filename, 12
+; MASTER_LOAD_DHIRES title_filename, 12
 
 IF _AUDIO
     lda #s_Title
@@ -1291,11 +1383,14 @@ EQUS "PROLOG $"
 \ sta RAMRDaux
 \ jsr DblExpand
 
- MASTER_LOAD_DHIRES prolog_filename, 0
+ MASTER_WIPE_DHIRES prolog_filename
 
 \ ldx #250
 \ lda #s_Prolog
 \ jmp master_PlaySongI
+
+ lda #30
+ jmp tpause
 
  RTS
 }
@@ -1308,23 +1403,22 @@ EQUS "PROLOG $"
 
 .PrincessScene
 {
-
-
  jsr blackout
 
-
-
-
-\ BEEB TODO check mem usage by titles
 \ jsr ReloadStuff ;wiped out by dhires titles
+
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
+    ; BEEB TEMP - this should really be done in subs_PlaySongI
     lda #s_Princess
     jsr BEEB_INTROSONG
 ENDIF
@@ -1358,6 +1452,35 @@ EQUS "SUMUP  $"
 
  RTS
 }
+
+
+\*-------------------------------
+\*
+\*  Beeb credits
+\*
+\*-------------------------------
+
+.credits_filename
+EQUS "CREDITS$"
+
+.BeebCredit
+{
+\ BEEB set drive 2 - hopefully temporary to avoid grinding
+ LDA #2
+ JSR disksys_set_drive
+
+ MASTER_WIPE_DHIRES credits_filename
+
+\ BEEB set drive 0 - before demo load
+ LDA #0
+ JSR disksys_set_drive
+
+ lda #30
+ jmp tpause
+
+ RTS
+}
+
 
 \*-------------------------------
 \*
@@ -1462,6 +1585,11 @@ ENDIF
 {
  jsr blackout
 
+IF _AUDIO
+    ; SM: hacked in game audio bank load here
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
 
 \ NOT BEEB
 \ jsr LoadStage3
@@ -1478,13 +1606,11 @@ ENDIF
 
 \ jsr driveoff
 
-\* Go to TOPCTRL
+\ BEEB AUDIO
 
-IF _AUDIO
-    ; SM: hacked in game audio bank load here
-    lda #3
-    jsr BEEB_LOAD_AUDIO_BANK
-ENDIF
+ JSR music_on
+
+\* Go to TOPCTRL
 
  lda #0
  jmp start
@@ -1579,6 +1705,9 @@ ENDIF
 
  lda #1
  sta musicon
+
+ \ BEEB - should probably reconcile with above
+ JSR music_on
 
  IF DemoDisk
  ELSE
@@ -1683,69 +1812,30 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-IF 1
 .bank1_filename
 EQUS "BANK1  $"
-ELSE
+
 .perm_file_names
-EQUS "CHTAB1 $"
-EQUS "CHTAB3 $"
-EQUS "CHTAB2 $"
+;EQUS "CHTAB1 $"
+;EQUS "CHTAB2 $"
+;EQUS "CHTAB3 $"
 EQUS "CHTAB5 $"
-ENDIF
 
 .loadbank1
 {
     \ Start with CHTAB1 + 3
-    lda #BEEB_SWRAM_SLOT_CHTAB13
+    lda #BEEB_SWRAM_SLOT_CHTAB1
     jsr swr_select_slot
 
-IF 1
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
-    LDA #HI(SWRAM_START)
-    JSR disksys_load_file
-ELSE
-    \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
     LDA #HI(chtable1)
     JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 8)
-    LDY #HI(perm_file_names + 8)
-    LDA #HI(chtable3)
-    JSR disksys_load_file
-
-    \ Then CHTAB2 + 5
-    lda #BEEB_SWRAM_SLOT_CHTAB25
-    jsr swr_select_slot
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 16)
-    LDY #HI(perm_file_names + 16)
-    LDA #HI(chtable2)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
-    LDA #HI(chtable5)
-    JSR disksys_load_file
-ENDIF
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
     STA beeb_readptr
     LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
@@ -1757,6 +1847,23 @@ ENDIF
     JSR beeb_plot_reloc_img
 
     \ Relocate the IMG file
+    LDA #LO(chtable3)
+    STA beeb_readptr
+    LDA #HI(chtable3)
+    STA beeb_readptr+1
+    JSR beeb_plot_reloc_img
+
+
+    lda #BEEB_SWRAM_SLOT_CHTAB5
+    jsr swr_select_slot
+
+    \ index into table for filename
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
+    LDA #HI(chtable5)
+    JSR disksys_load_file
+
+    \ Relocate the IMG file
     LDA #LO(chtable5)
     STA beeb_readptr
     LDA #HI(chtable5)
@@ -1765,18 +1872,6 @@ ENDIF
 
     .return
     RTS
-}
-
-.loadperm
-{
-    LDA #0
-    JSR disksys_set_drive
-
-    \ Relocate font (in SWRAM)
-    JSR beeb_font_init
-
-    .return
-    rts
 }
 
 IF _TODO
@@ -2281,15 +2376,17 @@ ENDIF
 \* In: SavLevel = level ($ff to erase saved game)
 \*-------------------------------
 
+.SavError EQUB 0
+
 \ Moved from gameeq.h.asm
 .savedgame
 
-.SavLevel skip 1
-.SavStrength skip 1
-.SavMaxed skip 1
-.SavTimer skip 2
- skip 1
-.SavNextMsg skip 1
+.SavLevel EQUB 0
+.SavStrength EQUB 0
+.SavMaxed EQUB 0
+.SavTimer EQUW 0
+EQUB 0
+.SavNextMsg EQUB 0
 
 .savedgame_top
 
@@ -2320,3 +2417,30 @@ ENDIF
 
  jmp savegame
 }
+
+\*-------------------------------
+; Relocate image tables
+\*-------------------------------
+
+.beeb_plot_reloc_img
+    LDY #0
+    LDA (beeb_readptr), Y
+    TAX
+
+    \\ Relocate pointers to image data
+.beeb_plot_reloc_img_loop
+    INY
+
+    CLC
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr
+    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    DEX
+    BPL beeb_plot_reloc_img_loop
+    RTS

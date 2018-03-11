@@ -1286,27 +1286,28 @@ gatemargin = 6 ;higher = more generous
  lda (BlueSpec),y
  and #$7f
  cmp #slicerExt ;slicer closed?
- beq local_slice ;yes--slice!
+ beq coll_slice ;yes--slice!
 
 \* No--keep checking
 
 .ok ldx tempblockx
  dex
  bpl loop
-.return
+}
+.return_65
  rts
 
 \* Slice!
 \* In: rdblock results for slicer block
-
-.local_slice
+.coll_slice
+{
  lda (BlueSpec),y
  ora #$80
  sta (BlueSpec),y ;set hibit (smear)
 
 .cont lda CharPosn
  cmp #178 ;if already cut in half (e.g. by another slicer),
- beq return ;leave him alone
+ beq return_65 ;leave him alone
 
  lda tempblockx
  jsr getblockej ;edge of slicer block
@@ -1383,7 +1384,7 @@ gatemargin = 6 ;higher = more generous
  beq safe
 
  jsr rdblock1
- jsr local_slice
+ jsr coll_slice
  sec
  rts
 

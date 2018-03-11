@@ -1641,7 +1641,7 @@ ENDIF
  sta YCO
  ldx state
  jsr setupflask
- lda #UseLay
+ lda #UseLayrsave   ; was UseLay - BEEB uses Layrsave so can plot Mask
  jmp addmidezo
 }
 
@@ -1784,20 +1784,21 @@ ENDIF
 
  lda Ay
  sec
- sbc #14
+ sbc #13     ; was 14
  sbc gateposn
  sta doortop ;for CROPCHAR
 .loop sta YCO
 
- lda #doormask
- sta IMAGE
- lda #enum_and
- sta OPACITY
- jsr add
+\ BEEB can mask pixel directly
+\ lda #doormask
+\ sta IMAGE
+\ lda #enum_and
+\ sta OPACITY
+\ jsr add
 
  lda #door
  sta IMAGE
- lda #enum_ora
+ lda #enum_mask
  sta OPACITY
  jsr add
 
@@ -2098,7 +2099,10 @@ ENDIF
 .label_3 cmp #TypeSword
  beq label_5
  cmp #TypeComix
+ beq label_5
+ cmp #TypeComixAlt          ; alternate palette for comix
  bne label_4
+ jmp DrawShifted
 .label_5 jmp DrawSword
 
 .label_4 cmp #TypeGd

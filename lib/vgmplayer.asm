@@ -44,6 +44,10 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 
 .vgm_deinit_player
 {
+	\\ Deinitialise music player
+	LDA #&FF
+	STA vgm_player_ended
+
 	\\ Zero volume on all channels
 	LDA #&9F: JSR psg_strobe
 	LDA #&BF: JSR psg_strobe
@@ -100,7 +104,8 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	RTS
 
 	._player_end
-	STA vgm_player_ended
+	; Happens in deinit fn
+	;STA vgm_player_ended
 
 	\\ Silence sound chip
 	JSR vgm_deinit_player
@@ -211,7 +216,7 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 .psg_strobe
 
 .psg_strobe_sei
-	sei					; **SELF-MODIFIED CODE**
+;	sei					; **SELF-MODIFIED CODE**
 
 IF _ENABLE_AUDIO
 
@@ -233,13 +238,13 @@ IF _ENABLE_AUDIO
 ENDIF ; _ENABLE_AUDIO
 
 .psg_strobe_cli
-	cli					; **SELF-MODIFIED CODE**
+;	cli					; **SELF-MODIFIED CODE**
 	RTS
 
 
 
-PSG_STROBE_SEI_INSN = psg_strobe_sei
-PSG_STROBE_CLI_INSN = psg_strobe_cli
+;PSG_STROBE_SEI_INSN = psg_strobe_sei
+;PSG_STROBE_CLI_INSN = psg_strobe_cli
 
 
 

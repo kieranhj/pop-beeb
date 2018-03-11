@@ -16,6 +16,7 @@ static unsigned char pixels[256][10000];
 
 static unsigned char colours[256][10000];
 static int colour_width[256];
+static bool half[256];
 
 #define BLACK0 0
 #define PURPLE 1
@@ -155,10 +156,10 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 {
 	{ 4, 1, 7 },			// 0=blue, red, white = closest to Apple II default colours (blue, orange, white)
 	{ 4, 6, 3 },			// 1=blue, cyan, yellow
-	{ 4, 6, 7 },			// 2=blue, cyan, white
+	{ 1, 3, 7 },			// 2=red, yellow, white
 	{ 4, 5, 3 },			// 3=blue, magenta, yellow
 
-	{ 1, 3, 7 },			// 4=red, yellow, white
+	{ 1, 5, 3 },			// 4=red, magenta, yellow
 	{ 4, 1, 3 },			// 5=blue, red, yellow
 	{ 6, 1, 3 },			// 6=cyan, red, yellow
 	{ 4, 2, 3 },			// 7=blue, green, yellow
@@ -168,13 +169,14 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 	{ 1, 6, 7 },			// 10=red, cyan, white
 	{ 3, 5, 7 },			// 11=yellow, cyan, white
 
-	{ 1, 3, 5 },			// 12=red, yellow, magenta
-	{ 3, 5, 7 },			// 13=yellow, magenta, white (player)
+	{ 6, 5, 7 },			// 12=cyan, magenta, white (player)
+	{ 4, 7, 6 },			// 13=blue, white, cyan (shadow)
 	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
 	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
 
 	{ 1, 5, 6 },			// 16=red, magenta, cyan (cutscene)
-//	{ 2, 6, 7 },			// 16=green, cyan, white (font)
+	{ 1, 2, 3 },			// 17=red, green, yellow
+	{ 3, 5, 7 },			// 18=yellow, magenta, white (font)
 };
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
@@ -432,7 +434,7 @@ int convert_colour_to_mode5(unsigned char *colour_data, int pixel_width, int pix
 		*beebptr++ = mode5_width;
 		*beebptr++ = pixel_height; // don't tell POP that the height has changed - we'll hack that in code :(
 
-		*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
+		*beebptr++ = pal | ((height_step>1) ? 0x40 : 0);			// experiment - put palette index into sprite header!!!
 	}
 
 	for (int y = 0; y < pixel_height; y += height_step)
@@ -673,7 +675,7 @@ int get_beeb_byte_for_colours_in_palette_selection(int index, int c0, int c1, in
 	return beeb_mode5_colour_to_screen_pixel[p0][0] | beeb_mode5_colour_to_screen_pixel[p1][1] | beeb_mode5_colour_to_screen_pixel[p2][2] | beeb_mode5_colour_to_screen_pixel[p3][3];
 }
 
-int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height)
+int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width, int pixel_height, int ystep)
 {
 	int counts[MAX_PALETTES];
 	int num_colours = 0;
@@ -681,7 +683,7 @@ int get_palette_selection_for_colour(unsigned char *colour_data, int pixel_width
 
 	for (int c = 0; c < MAX_PALETTES; c++) counts[c] = 0;
 
-	for (int y = 0; y < pixel_height; y++)
+	for (int y = 0; y < pixel_height; y+=ystep)
 	{
 		for (int x = 0; x < pixel_width; x++)
 		{
@@ -841,11 +843,11 @@ void process_font(const char *bitmapname, int font_width, int font_height,const 
 				int pixel_height = font_height;
 				int current_y = 1;
 
-				int pal = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+				int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height, 1);
 
 				if (verbose)
 				{
-					printf("Glyph %d matched palette %d\n", i + 1, pal);
+					printf("Glyph %d matched palette %d\n", i + 1, palsel);
 				}
 
 				// Now we know our address
@@ -872,14 +874,14 @@ void process_font(const char *bitmapname, int font_width, int font_height,const 
 
 						//	printf("%d %d %d %d ", c0, c1, c2, c3);
 
-						unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(pal, c0, c1, c2, c3);
+						unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(palsel, c0, c1, c2, c3);
 
 						//	unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
 						//	unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
 						//	unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
 						//	unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
 
-						//	unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
+						//	unsigned char beebbyte = get_beeb_byte_for_palette(palsel, r0, g0, b0, 0) | get_beeb_byte_for_palette(palsel, r1, g1, b1, 1) | get_beeb_byte_for_palette(palsel, r2, g2, b2, 2) | get_beeb_byte_for_palette(palsel, r3, g3, b3, 3);
 
 						*beebptr++ = beebbyte;
 					}
@@ -958,7 +960,7 @@ int main(int argc, char **argv)
 	const char *const bitmapname = cimg_option("-b", (char*)0, "Bitmap filename to use instead of automatic conversion");
 	const int mode = cimg_option("-mode", 5, "BBC MODE number (6='attribute' mode)");
 	const int remove = cimg_option("-remove", 0, "Remove Apple II colour # from data");
-	int pal = cimg_option("-pal", 0, "Palette selection for bitmap");
+	const int pal = cimg_option("-pal", 0, "Palette selection");
 	const bool test = cimg_option("-test", false, "Save test images");
 	const bool flip = cimg_option("-flip", false, "Flip pixels in Y");
 	const bool halfv = cimg_option("-halfv", false, "Halve vertical resolution");
@@ -1004,6 +1006,11 @@ int main(int argc, char **argv)
 	sprintf(parityfile, "%s.txt", inputname);
 
 	FILE *parity = fopen(parityfile, "rb");
+
+	char halffile[256];
+	sprintf(halffile, "%s.half.txt", inputname);
+
+	FILE *halff = fopen(halffile, "rb");
 
 	fread(imagetab, 1, 48 * 1024, input);				// forgotten how to file length of file!
 	fclose(input);
@@ -1062,11 +1069,6 @@ int main(int argc, char **argv)
 
 		total_width += pixel_size[i][0] + 8;
 
-		if (verbose)
-		{
-			printf("Image %d: %d x %d = %d bytes, %d x %d pixels\n", i+1, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1]);
-		}
-
 		if( flip )
 		{
 			flip_pixels_in_y(pixels[i], pixel_size[i][0], pixel_size[i][1]);
@@ -1077,6 +1079,20 @@ int main(int argc, char **argv)
 		if (parity)
 		{
 			odd = fgetc(parity) == '1' ? 1 : 0;
+		}
+
+		if (halff)
+		{
+			half[i] = fgetc(halff) == '1' ? 1 : 0;
+		}
+		else
+		{
+			half[i] = halfv;
+		}
+
+		if (verbose)
+		{
+			printf("Image %d: %d x %d = %d bytes, %d x %d pixels, parity=%d halfv=%d\n", i + 1, image_size[i][0], image_size[i][1], bytes, pixel_size[i][0], pixel_size[i][1], odd, half[i]);
 		}
 
 		colour_width[i] = convert_pixels_to_colour(pixels[i], pixel_size[i][0], pixel_size[i][1], colours[i], odd, simple, remove);
@@ -1090,7 +1106,7 @@ int main(int argc, char **argv)
 		parity = NULL;
 	}
 	
-	if (test)
+	if (test && flip)
 	{
 		if (verbose)
 		{
@@ -1139,7 +1155,7 @@ int main(int argc, char **argv)
 
 // This should really be dumped when writing MODE 5 data so is actual code being used to generate Beeb data //
 
-	if (test && mode == 5)
+	if (test && mode == 5 && !flip)
 	{
 		int mode5_total_width = total_width - (num_images * 8);
 		mode5_total_width = 8 * mode5_total_width / 7;
@@ -1167,6 +1183,8 @@ int main(int argc, char **argv)
 
 			for (int y = 0; y < pixel_height; y++)
 			{
+				int actual_y = (pixel_height - 2 - y);			// assume flip
+
 				for (int x8 = 0, x=0; x8 < mode5_width; x8++)
 				{
 					int c[4];
@@ -1175,37 +1193,35 @@ int main(int argc, char **argv)
 
 					for (int j = 0; j < 4; j++)
 					{
-						img(current_x + x, current_y + y, 0) = palette[c[j]][0];
-						img(current_x + x, current_y + y, 1) = palette[c[j]][1];
-						img(current_x + x, current_y + y, 2) = palette[c[j]][2];
-
-						if (halfv && y < pixel_height-1)
+						if (half[i] && y < pixel_height - 1)
 						{
-							img(current_x + x, current_y + y + 1, 0) = palette[c[j]][0];
-							img(current_x + x, current_y + y + 1, 1) = palette[c[j]][1];
-							img(current_x + x, current_y + y + 1, 2) = palette[c[j]][2];
-
+							img(current_x + x, current_y + actual_y, 0) = palette[c[j]][0];
+							img(current_x + x, current_y + actual_y, 1) = palette[c[j]][1];
+							img(current_x + x, current_y + actual_y, 2) = palette[c[j]][2];
 						}
+
+						img(current_x + x, current_y + actual_y + 1, 0) = palette[c[j]][0];
+						img(current_x + x, current_y + actual_y + 1, 1) = palette[c[j]][1];
+						img(current_x + x, current_y + actual_y + 1, 2) = palette[c[j]][2];
 
 						x++;
 
-						img(current_x + x, current_y + y, 0) = palette[c[j]][0];
-						img(current_x + x, current_y + y, 1) = palette[c[j]][1];
-						img(current_x + x, current_y + y, 2) = palette[c[j]][2];
-
-						if (halfv && y < pixel_height - 1)
+						if (half[i] && y < pixel_height - 1)
 						{
-							img(current_x + x, current_y + y + 1, 0) = palette[c[j]][0];
-							img(current_x + x, current_y + y + 1, 1) = palette[c[j]][1];
-							img(current_x + x, current_y + y + 1, 2) = palette[c[j]][2];
-
+							img(current_x + x, current_y + actual_y, 0) = palette[c[j]][0];
+							img(current_x + x, current_y + actual_y, 1) = palette[c[j]][1];
+							img(current_x + x, current_y + actual_y, 2) = palette[c[j]][2];
 						}
+
+						img(current_x + x, current_y + actual_y + 1, 0) = palette[c[j]][0];
+						img(current_x + x, current_y + actual_y + 1, 1) = palette[c[j]][1];
+						img(current_x + x, current_y + actual_y + 1, 2) = palette[c[j]][2];
 
 						x++;
 					}
 				}
 
-				if (halfv)	y++;
+				if (half[i])	y++;
 			}
 
 			img.draw_rectangle(current_x-1, current_y-1, current_x + (mode5_width * 4 * 2), current_y + pixel_height, color, 0.5f, 0xffffffff);
@@ -1278,7 +1294,7 @@ int main(int argc, char **argv)
 						img(current_x + x, current_y + y, 1) = palette[pixel][1];
 						img(current_x + x, current_y + y, 2) = palette[pixel][2];
 
-						if (halfv && y < pixel_height - 1)
+						if (half[i] && y < pixel_height - 1)
 						{
 							img(current_x + x, current_y + y + 1, 0) = palette[pixel][0];
 							img(current_x + x, current_y + y + 1, 1) = palette[pixel][1];
@@ -1292,7 +1308,7 @@ int main(int argc, char **argv)
 						img(current_x + x, current_y + y, 1) = palette[pixel][1];
 						img(current_x + x, current_y + y, 2) = palette[pixel][2];
 
-						if (halfv && y < pixel_height - 1)
+						if (half[i] && y < pixel_height - 1)
 						{
 							img(current_x + x, current_y + y + 1, 0) = palette[pixel][0];
 							img(current_x + x, current_y + y + 1, 1) = palette[pixel][1];
@@ -1304,7 +1320,7 @@ int main(int argc, char **argv)
 					}
 				}
 
-				if (halfv)	y++;
+				if (half[i])	y++;
 			}
 
 			img.draw_rectangle(current_x - 1, current_y - 1, current_x + (mode5_width * 4 * 2), current_y + pixel_height, color, 0.5f, 0xffffffff);
@@ -1391,7 +1407,6 @@ int main(int argc, char **argv)
 		for (int i = 0; i < num_images; i++)
 		{
 			int pixel_height = pixel_size[i][1];
-			int current_y = max_height - pixel_height - 1;
 
 			int pixel_width = pixel_size[i][0];
 			int expanded_width = 8 * pixel_width / 7;
@@ -1400,7 +1415,42 @@ int main(int argc, char **argv)
 
 			colour_width[i] = mode5_width * 4;
 
-			for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
+			// Hacky way to look for the height of the sprite in the image
+
+			int current_y = 0;
+
+			while (current_y < max_height)
+			{
+				if (bitmap(current_x, current_y, 0) == 127 && bitmap(current_x, current_y, 1) == 127 && bitmap(current_x, current_y, 2) == 127)
+				{
+					break;
+				}
+				current_y++;
+			}
+
+			int found_height = 0;
+			current_y++;
+
+			while (current_y < max_height)
+			{
+				if (bitmap(current_x, current_y, 0) == 127 && bitmap(current_x, current_y, 1) == 127 && bitmap(current_x, current_y, 2) == 127)
+				{
+					break;
+				}
+				current_y++;
+				found_height++;
+			}
+
+			// Check this against the size in the image table just in case of cut & paste errors!
+
+			if (found_height != pixel_height)
+			{
+				printf("WARNING: Image %d found height=%d but pixel height=%d\n", i + 1, found_height, pixel_height);
+			}
+
+			current_y = max_height - pixel_height - 1;
+
+			for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 			{
 				int actual_y = !flip ? (pixel_height - 1 - y) : y;
 
@@ -1420,7 +1470,11 @@ int main(int argc, char **argv)
 					colours[i][y * colour_width[i] + x8 * 4 + 1] = c1;
 					colours[i][y * colour_width[i] + x8 * 4 + 2] = c2;
 					colours[i][y * colour_width[i] + x8 * 4 + 3] = c3;
+
+				//	printf("%d %d %d %d ", c0, c1, c2, c3);
 				}
+
+			//	printf("\n");
 			}
 
 			current_x += (mode5_width * 4 * 2) + 8;
@@ -1476,9 +1530,9 @@ int main(int argc, char **argv)
 					{
 						// Write bytes directly from bitmap
 
-						*beebptr++ = 0xff;			// no palette - store MODE 2 pixel pairs directly
+						*beebptr++ = 0x80 | (half[i]?0x40:0);			// no palette - store MODE 2 pixel pairs directly
 
-						for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
+						for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 						{
 							for (int x8 = 0; x8 < mode5_width; x8++)
 							{
@@ -1499,18 +1553,18 @@ int main(int argc, char **argv)
 					}
 					else
 					{
-						pal = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height);
+						int palsel = get_palette_selection_for_colour(colours[i], colour_width[i], pixel_height, (half[i] ? 2 : 1));
 
 						if (verbose)
 						{
-							printf("Image %d matched palette %d\n", i + 1, pal);
+							printf("Image %d matched palette %d\n", i + 1, palsel);
 						}
 
 						// Write bytes directly from bitmap
 
-						*beebptr++ = pal;			// experiment - put palette index into sprite header!!!
+						*beebptr++ = palsel | (half[i] ? 0x40 : 0);			// experiment - put palette index into sprite header!!!
 
-						for (int y = 0; y < pixel_height; y += (halfv ? 2 : 1))
+						for (int y = 0; y < pixel_height; y += (half[i] ? 2 : 1))
 						{
 							for (int x8 = 0; x8 < mode5_width; x8++)
 							{
@@ -1521,14 +1575,14 @@ int main(int argc, char **argv)
 
 								//	printf("%d %d %d %d ", c0, c1, c2, c3);
 
-								unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(pal, c0, c1, c2, c3);
+								unsigned char beebbyte = get_beeb_byte_for_colours_in_palette_selection(palsel, c0, c1, c2, c3);
 
 								//	unsigned char r0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 0), g0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 1), b0 = bitmap(current_x + x8 * 8 + 0, current_y + actual_y, 2);
 								//	unsigned char r1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 0), g1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 1), b1 = bitmap(current_x + x8 * 8 + 2, current_y + actual_y, 2);
 								//	unsigned char r2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 0), g2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 1), b2 = bitmap(current_x + x8 * 8 + 4, current_y + actual_y, 2);
 								//	unsigned char r3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 0), g3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 1), b3 = bitmap(current_x + x8 * 8 + 6, current_y + actual_y, 2);
 
-								//	unsigned char beebbyte = get_beeb_byte_for_palette(pal, r0, g0, b0, 0) | get_beeb_byte_for_palette(pal, r1, g1, b1, 1) | get_beeb_byte_for_palette(pal, r2, g2, b2, 2) | get_beeb_byte_for_palette(pal, r3, g3, b3, 3);
+								//	unsigned char beebbyte = get_beeb_byte_for_palette(palsel, r0, g0, b0, 0) | get_beeb_byte_for_palette(palsel, r1, g1, b1, 1) | get_beeb_byte_for_palette(palsel, r2, g2, b2, 2) | get_beeb_byte_for_palette(palsel, r3, g3, b3, 3);
 
 								*beebptr++ = beebbyte;
 							}
@@ -1605,13 +1659,13 @@ int main(int argc, char **argv)
 
 					if (mode == 5)
 					{
-						bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point, even, pal);
+						bytes_written += convert_colour_to_mode5(colours[i], pixel_size[i][0], pixel_size[i][1], half[i] ? 2 : 1, beebptr, test, point, even, pal);
 					}
 
 					if (mode == 6)
 					{
 						// TODO
-						//	bytes_written += convert_colour_to_attr6(colours[i], pixel_size[i][0], pixel_size[i][1], halfv ? 2 : 1, beebptr, test, point);
+						//	bytes_written += convert_colour_to_attr6(colours[i], pixel_size[i][0], pixel_size[i][1], half[i] ? 2 : 1, beebptr, test, point);
 					}
 
 					beebptr += bytes_written;

@@ -1,7 +1,7 @@
-; aux_core.asm
+; aux_jump.asm
 ; Entire jump table for Aux (gameplay) code
 
-.aux_core_start
+.aux_jump_start
 
 MACRO JUMP_A name, base, index
 {
@@ -26,13 +26,13 @@ ENDMACRO
     \\ Remember current bank
     LDA &F4: PHA
 
-    LDA #6          ; hard code this aux A = 6
+    LDA #BEEB_SWRAM_SLOT_AUX_B      ; confusingly modules in list A come from AuxB
     STA &F4: STA &FE30
 
-    LDA aux_core_fn_table_A_LO, X
+    LDA aux_jump_fn_table_A_LO, X
     STA jump_to_addr_A + 1
 
-    LDA aux_core_fn_table_A_HI, X
+    LDA aux_jump_fn_table_A_HI, X
 
 IF _DEBUG
     BMI fn_ok   ; can only jump into upper half of RAM!
@@ -87,13 +87,13 @@ ENDMACRO
     \\ Remember current bank
     LDA &F4: PHA
 
-    LDA #7          ; hard code this aux B = 7
+    LDA #BEEB_SWRAM_SLOT_AUX_HIGH   ; confusingly modules in list B are in Aux High
     STA &F4: STA &FE30
 
-    LDA aux_core_fn_table_B_LO, X
+    LDA aux_jump_fn_table_B_LO, X
     STA jump_to_addr_B + 1
 
-    LDA aux_core_fn_table_B_HI, X
+    LDA aux_jump_fn_table_B_HI, X
 
 IF _DEBUG
     BMI fn_ok   ; can only jump into upper half of RAM!
@@ -302,10 +302,12 @@ IF _JMP_TABLE
 .drawglass JUMP_B DRAWGLASS, GAMEBG_BASE, 19
 
 .initlay JUMP_B INITLAY, GAMEBG_BASE, 20
-.twinkle RTS        ; JUMP_B TWINKLE                BEEB TODO GFX
+.twinkle JUMP_B TWINKLE, GAMEBG_BASE, 21
 .flow JUMP_B FLOW, GAMEBG_BASE, 22
-.pmask RTS          ; JUMP_B PMASK, GAMEBG_BASE, 23 BEEB TODO GFX
+.pmask RTS          ; JUMP_B PMASK, GAMEBG_BASE, 23 NOT BEEB
+.errormsg JUMP_B ERRORMSG, GAMEBG_BASE, 24
 
+.successmsg JUMP_B SUCCESSMSG, GAMEBG_BASE, 25
 
 \*-------------------------------
 \* grafix.asm
@@ -363,7 +365,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 .checkalert JUMP_B CHECKALERT, MISC_BASE, 15
-.dispversion BRK    ; jmp DISPVERSION
+\.dispversion BRK    ; jmp DISPVERSION  ; moved to specialk.asm
 
 
 \*-------------------------------
@@ -401,11 +403,11 @@ BRK ; bcc MOVEAUXLC ;relocatable
 .keys JUMP_B KEYS, SPECIALK_BASE, 0
 .clrjstk JUMP_B CLRJSTK, SPECIALK_BASE, 1
 IF _AUDIO
-.zerosound jmp BEEB_ZEROSOUND ;RTS ;jmp ZEROSOUND          BEEB TODO SOUND
-.addsound jmp BEEB_ADDSOUND ; RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.zerosound jmp BEEB_ZEROSOUND
+.addsound jmp BEEB_ADDSOUND
 ELSE
-.zerosound RTS ;jmp ZEROSOUND          BEEB TODO SOUND
-.addsound RTS  ;jmp ADDSOUND           BEEB TODO SOUND
+.zerosound RTS ;jmp ZEROSOUND
+.addsound RTS  ;jmp ADDSOUND
 ENDIF
 
 .facejstk JUMP_B FACEJSTK, SPECIALK_BASE, 4
@@ -424,9 +426,9 @@ ENDIF
 
 .shortentime BRK ;jmp SHORTENTIME
 IF _AUDIO
-.cuesong jmp BEEB_CUESONG ;RTS     ;jmp CUESONG          BEEB TODO MUSIC
+.cuesong jmp BEEB_CUESONG
 ELSE
-.cuesong RTS     ;jmp CUESONG          BEEB TODO MUSIC
+.cuesong RTS     ;jmp CUESONG
 ENDIF
 
 \jmp DoSaveGame
@@ -437,8 +439,8 @@ ENDIF
 .strobe JUMP_B STROBE, SPECIALK_BASE, 18
 .controller JUMP_B CONTROLLER, SPECIALK_BASE, 19
 
-.setcenter RTS  ;jmp SETCENTER      BEEB TODO JOYSTICK
-.pread BRK      ;jmp PREAD          JOYSTICK
+.setcenter BRK  ;jmp SETCENTER      BEEB TODO JOYSTICK
+.pread BRK      ;jmp PREAD          BEEB TODO JOYSTICK
 .getselect JUMP_B GETSELECT, SPECIALK_BASE, 22
 .getdesel JUMP_B GETDESEL, SPECIALK_BASE, 23
 .musickeys JUMP_B MUSICKEYS, SPECIALK_BASE, 24
@@ -450,7 +452,7 @@ ENDIF
 
 .addtorches JUMP_B ADDTORCHES, SUBS_BASE, 0
 .doflashon JUMP_B DOFLASHON, SUBS_BASE, 1
-.PageFlip JMP shadow_swap_buffers           ; JUMP_B PAGEFLIP
+\.PageFlip \\ moved to hires_core.asm
 .subs_demo BRK          ; JUMP_B DEMO, SUBS_BASE, 3   \\ moved to auto.asm
 .showtime JUMP_B SHOWTIME, SUBS_BASE, 4
 
@@ -466,7 +468,7 @@ ENDIF
 .deadenemy JUMP_B DEADENEMY, SUBS_BASE, 9
 .playcut JUMP_B PLAYCUT, SUBS_BASE, 10
 
-.addlowersound RTS      ; JUMP_B ADDLOWERSOUND         BEEB TODO SOUND
+.addlowersound JUMP_B ADDLOWERSOUND, SUBS_BASE, 11
 .RemoveObj JUMP_B REMOVEOBJ, SUBS_BASE, 12
 .addfall JUMP_B ADDFALL, SUBS_BASE, 13
 .setinitials JUMP_B SETINITIALS, SUBS_BASE, 14
@@ -480,25 +482,15 @@ ENDIF
 
 
 \*-------------------------------
-\* beeb-plot-font.asm
-\*-------------------------------
-
-.beeb_font_init JUMP_B BEEB_FONT_INIT, FONT_BASE, 0
-.beeb_plot_font_prep JUMP_B BEEB_PLOT_FONT_PREP, FONT_BASE, 1
-.beeb_plot_font_glyph JUMP_B BEEB_PLOT_FONT_GLYPH, FONT_BASE, 2
-.beeb_plot_font_string JUMP_B BEEB_PLOT_FONT_STRING, FONT_BASE, 3
-
-
-\*-------------------------------
 \* FUNCTION addresses for AUX A
 \*-------------------------------
 
-.aux_core_fn_table_A_LO
+.aux_jump_fn_table_A_LO
 
 \*-------------------------------
 \* auto.asm
 \*-------------------------------
-AUTO_BASE = P%-aux_core_fn_table_A_LO
+AUTO_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(AUTOCTRL)
 EQUB LO(CHECKSTRIKE)
 EQUB LO(CHECKSTAB)
@@ -513,7 +505,7 @@ EQUB LO(DEMO)
 \*-------------------------------
 \* coll.asm
 \*-------------------------------
-COLL_BASE = P%-aux_core_fn_table_A_LO
+COLL_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(CHECKBARR)
 EQUB LO(COLLISIONS)
 EQUB LO(GETFWDDIST)
@@ -531,7 +523,7 @@ EQUB LO(ENEMYCOLL)
 \*-------------------------------
 \* ctrlsubs.asm
 \*-------------------------------
-CTRLSUBS_BASE = P%-aux_core_fn_table_A_LO
+CTRLSUBS_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(GETFRAME)
 EQUB LO(GETSEQ)
 EQUB LO(GETBASEX)
@@ -614,7 +606,7 @@ EQUB LO(GETABOVE)
 EQUB LO(GETABOVEINF)
 EQUB LO(CMPWALL)
 
-.aux_core_fn_table_A_HI
+.aux_jump_fn_table_A_HI
 \*-------------------------------
 \* auto.asm
 \*-------------------------------
@@ -735,12 +727,12 @@ EQUB HI(CMPWALL)
 \* FUNCTION addresses for AUX B
 \*-------------------------------
 
-.aux_core_fn_table_B_LO
+.aux_jump_fn_table_B_LO
 
 \*-------------------------------
 \* ctrl.asm
 \*-------------------------------
-CTRL_BASE = P% - aux_core_fn_table_B_LO
+CTRL_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(PLAYERCTRL)
 EQUB LO(CHECKFLOOR)
 EQUB LO(SHADCTRL)
@@ -754,7 +746,7 @@ EQUB LO(CHECKIMPALE)
 \*-------------------------------
 \* frameadv.asm
 \*-------------------------------
-FRAMEADV_BASE = P% - aux_core_fn_table_B_LO
+FRAMEADV_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(SURE)
 EQUB LO(FAST)
 EQUB LO(GETINITOBJ)
@@ -764,7 +756,7 @@ EQUB LO(ZERORED)
 \*-------------------------------
 \* gamebg.asm
 \*-------------------------------
-GAMEBG_BASE = P% - aux_core_fn_table_B_LO
+GAMEBG_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(UPDATEMETERS)
 EQUB LO(DRAWKIDMETER)
 EQUB LO(DRAWSWORD)
@@ -790,14 +782,17 @@ EQUB LO(DRAWPOST)
 EQUB LO(DRAWGLASS)
 
 EQUB LO(INITLAY)
-EQUB 0    ; EQUB LO(TWINKLE)
+EQUB LO(TWINKLE)
 EQUB LO(FLOW)
 EQUB 0      ;EQUB LO(PMASK)
+EQUB LO(ERRORMSG)
+
+EQUB LO(SUCCESSMSG)
 
 \*-------------------------------
 \* grafix.asm
 \*-------------------------------
-GRAFIX_BASE = P% - aux_core_fn_table_B_LO
+GRAFIX_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(DRAWALL)
 \ jmp dispversion
 \.saveblue BRK   ;jmp SAVEBLUE
@@ -825,7 +820,7 @@ EQUB LO(ADDMIDEZO)
 \*-------------------------------
 \* mover.asm
 \*-------------------------------
-MOVER_BASE = P% - aux_core_fn_table_B_LO
+MOVER_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(ANIMTRANS)
 EQUB LO(TRIGSPIKES)
 EQUB LO(PUSHPP)
@@ -852,11 +847,11 @@ EQUB LO(JAMPP)
 \*-------------------------------
 \* specialk.asm
 \*-------------------------------
-SPECIALK_BASE = P% - aux_core_fn_table_B_LO
+SPECIALK_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(KEYS)
 EQUB LO(CLRJSTK)
-EQUB 0     ; EQUB LO(ZEROSOUND)          BEEB TODO SOUND
-EQUB 0     ; EQUB LO(ADDSOUND)           BEEB TODO SOUND
+EQUB 0     ; EQUB LO(ZEROSOUND)
+EQUB 0     ; EQUB LO(ADDSOUND)
 EQUB LO(FACEJSTK)
 
 EQUB LO(SAVESELECT)
@@ -872,7 +867,7 @@ EQUB LO(GETMINLEFT)
 EQUB LO(KEEPTIME)
 
 EQUB 0         ; EQUB LO(SHORTENTIME)
-EQUB 0         ; EQUB LO(CUESONG)          BEEB TODO MUSIC
+EQUB 0         ; EQUB LO(CUESONG)
  \jmp DoSaveGame
  \jmp LoadLevelX
  \jmp decstr
@@ -890,7 +885,7 @@ EQUB LO(MUSICKEYS)
 \*-------------------------------
 \* subs.asm
 \*-------------------------------
-SUBS_BASE = P% - aux_core_fn_table_B_LO
+SUBS_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(ADDTORCHES)
 EQUB LO(DOFLASHON)
 EQUB 0    ; EQUB LO(shadow_swap_buffers)   ; JUMP_TO PAGEFLIP
@@ -898,7 +893,7 @@ EQUB 0    ; LO(DEMO)    // moved to auto.asm
 EQUB LO(SHOWTIME)
 
 EQUB LO(DOFLASHOFF)
-EQUB 0    ; EQUB LO(LRCLSE)                BEEB TODO FLASH
+EQUB 0    ; EQUB LO(LRCLSE)
 \ JUMP_TO potioneffect  ; in misc.asm
 \ JUMP_TO checkalert    ; in misc.asm
 \ JUMP_TO reflection    ; in misc.asm
@@ -909,7 +904,7 @@ EQUB LO(PAUSE)
 EQUB LO(DEADENEMY)
 EQUB LO(PLAYCUT)
 
-EQUB 0    ; EQUB LO(ADDLOWERSOUND)         BEEB TODO SOUND
+EQUB LO(ADDLOWERSOUND)
 EQUB LO(REMOVEOBJ)
 EQUB LO(ADDFALL)
 EQUB LO(SETINITIALS)
@@ -924,7 +919,7 @@ EQUB LO(CRUMBLE)
 \*-------------------------------
 \* misc.asm
 \*-------------------------------
-MISC_BASE = P% - aux_core_fn_table_B_LO
+MISC_BASE = P% - aux_jump_fn_table_B_LO
 EQUB LO(VANISHCHAR)
 EQUB 0      ; EQUB LO(MOVEMUSIC
 EQUB 0      ; EQUB LO(MOVEAUXLC)
@@ -945,19 +940,10 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB LO(CHECKALERT)
-EQUB 0      ; EQUB LO(DISPVERSION)
-
-\*-------------------------------
-\* beeb-plot-font.asm
-\*-------------------------------
-FONT_BASE = P% - aux_core_fn_table_B_LO
-EQUB LO(BEEB_FONT_INIT)
-EQUB LO(BEEB_PLOT_FONT_PREP)
-EQUB LO(BEEB_PLOT_FONT_GLYPH)
-EQUB LO(BEEB_PLOT_FONT_STRING)
+\EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
 
-.aux_core_fn_table_B_HI
+.aux_jump_fn_table_B_HI
 
 \*-------------------------------
 \* ctrl.asm
@@ -1009,9 +995,12 @@ EQUB HI(DRAWPOST)
 EQUB HI(DRAWGLASS)
 
 EQUB HI(INITLAY)
-EQUB 0    ; EQUB HI(TWINKLE)
+EQUB HI(TWINKLE)
 EQUB HI(FLOW)
 EQUB 0      ; EQUB HI(PMASK)
+EQUB HI(ERRORMSG)
+
+EQUB HI(SUCCESSMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -1071,8 +1060,8 @@ EQUB HI(JAMPP)
 \*-------------------------------
 EQUB HI(KEYS)
 EQUB HI(CLRJSTK)
-EQUB 0     ; EQUB HI(ZEROSOUND)          BEEB TODO SOUND
-EQUB 0     ; EQUB HI(ADDSOUND)           BEEB TODO SOUND
+EQUB 0     ; EQUB HI(ZEROSOUND)
+EQUB 0     ; EQUB HI(ADDSOUND)
 EQUB HI(FACEJSTK)
 
 EQUB HI(SAVESELECT)
@@ -1088,7 +1077,7 @@ EQUB HI(GETMINLEFT)
 EQUB HI(KEEPTIME)
 
 EQUB 0         ; EQUB HI(SHORTENTIME)
-EQUB 0         ; EQUB HI(CUESONG)          BEEB TODO MUSIC
+EQUB 0         ; EQUB HI(CUESONG)
  \jmp DoSaveGame
  \jmp LoadLevelX
  \jmp decstr
@@ -1098,7 +1087,7 @@ EQUB HI(STROBE)
 EQUB HI(CONTROLLER)
 
 EQUB 0          ; EQUB HI(SETCENTER)      BEEB TODO JOYSTICK
-EQUB 0          ; EQUB HI(PREAD)          JOYSTICK
+EQUB 0          ; EQUB HI(PREAD)          BEEB TODO JOYSTICK
 EQUB HI(GETSELECT)
 EQUB HI(GETDESEL)
 EQUB HI(MUSICKEYS)
@@ -1113,7 +1102,7 @@ EQUB 0    ; HI(DEMO)    // moved to auto.asm
 EQUB HI(SHOWTIME)
 
 EQUB HI(DOFLASHOFF)
-EQUB 0    ; EQUB HI(LRCLSE)                BEEB TODO FLASH
+EQUB 0    ; EQUB HI(LRCLSE)
 \ JUMP_TO potioneffect  ; in misc.asm
 \ JUMP_TO checkalert    ; in misc.asm
 \ JUMP_TO reflection    ; in misc.asm
@@ -1124,7 +1113,7 @@ EQUB HI(PAUSE)
 EQUB HI(DEADENEMY)
 EQUB HI(PLAYCUT)
 
-EQUB 0    ; EQUB HI(ADDLOWERSOUND)         BEEB TODO SOUND
+EQUB HI(ADDLOWERSOUND)
 EQUB HI(REMOVEOBJ)
 EQUB HI(ADDFALL)
 EQUB HI(SETINITIALS)
@@ -1159,16 +1148,8 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 
 \.LoadLevelX jmp LOADLEVELX             ; moved to master.asm
 EQUB HI(CHECKALERT)
-EQUB 0      ; EQUB LO(DISPVERSION)
-
-\*-------------------------------
-\* beeb-plot-font.asm
-\*-------------------------------
-EQUB HI(BEEB_FONT_INIT)
-EQUB HI(BEEB_PLOT_FONT_PREP)
-EQUB HI(BEEB_PLOT_FONT_GLYPH)
-EQUB HI(BEEB_PLOT_FONT_STRING)
+\EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
 ENDIF
 
-.aux_core_end
+.aux_jump_end

@@ -306,7 +306,7 @@ RASTER_COL PAL_yellow
 
 \ Now plot that data to the screen left to right
 
-    LDY beeb_yoffset
+    LDY #0
     CLC
 
 .plot_screen_loop
@@ -384,8 +384,11 @@ RASTER_COL PAL_yellow
 
 \ Next scanline
 
-    DEC beeb_yoffset
-    BMI next_char_row
+    LDA beeb_writeptr
+    AND #&07
+    BEQ next_char_row
+
+    DEC beeb_writeptr
     JMP plot_lines_loop
 
 \ Need to move up a screen char row
@@ -393,14 +396,12 @@ RASTER_COL PAL_yellow
     .next_char_row
     SEC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #7
-    STY beeb_yoffset
     JMP plot_lines_loop
 
     .done_y
@@ -633,7 +634,7 @@ RASTER_COL PAL_yellow
 
 \ Now plot that data to the screen
 
-    LDY beeb_yoffset
+    LDY #0
     CLC
 
 .plot_screen_loop
@@ -708,8 +709,11 @@ RASTER_COL PAL_yellow
 
 \ Next scanline
 
-    DEC beeb_yoffset
-    BMI next_char_row
+    LDA beeb_writeptr
+    AND #&07
+    BEQ next_char_row
+
+    DEC beeb_writeptr
     JMP plot_lines_loop
 
 \ Need to move up a screen char row
@@ -717,14 +721,12 @@ RASTER_COL PAL_yellow
     .next_char_row
     SEC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #7
-    STY beeb_yoffset
     JMP plot_lines_loop
 
     .done_y
@@ -786,7 +788,7 @@ ENDIF
 
 \ Start at the end of the sprite data
 
-    LDY beeb_yoffset
+    LDY #0
     LDX #0
     CLC
 
@@ -850,23 +852,25 @@ ENDIF
 
 \ Next scanline
 
-    DEC beeb_yoffset
-    BPL plot_lines_loop
+    LDA beeb_writeptr
+    AND #&07
+    BEQ next_char_row
+
+    DEC beeb_writeptr
+    BRA plot_lines_loop
 
 \ Need to move up a screen char row
 
     .next_char_row
     SEC
     LDA beeb_writeptr
-    SBC #LO(BEEB_SCREEN_ROW_BYTES)
+    SBC #LO(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr
     LDA beeb_writeptr+1
-    SBC #HI(BEEB_SCREEN_ROW_BYTES)
+    SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
-    LDY #7
-    STY beeb_yoffset
-    JMP plot_lines_loop
+    BRA plot_lines_loop
 
     .done_y
 

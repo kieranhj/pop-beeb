@@ -8,15 +8,10 @@ SMALL_FONT_HEIGHT = 7
 
 .beeb_plot_font_start
 
-.BEEB_FONT_INIT
-{
-    \ Relocate the FONT file
-    LDA #LO(small_font+1)
-    STA beeb_readptr
-    LDA #HI(small_font+1)
-    STA beeb_readptr+1
-    JMP beeb_plot_reloc_img
-}
+.beeb_plot_font_prep jmp BEEB_PLOT_FONT_PREP
+.beeb_plot_font_glyph jmp BEEB_PLOT_FONT_GLYPH
+.beeb_plot_font_string jmp BEEB_PLOT_FONT_STRING
+.beeb_plot_font_bcd jmp BEEB_PLOT_FONT_BCD
 
 .BEEB_PLOT_FONT_PREP
 {
@@ -434,12 +429,14 @@ ENDIF
 {
     STA PALETTE
 
+    TYA:ASL A:ASL A: ASL A:TAY  ; row*8
+
     CLC
     LDA Mult8_LO,X
-    ADC Row_LO,Y
+    ADC YLO,Y
     STA beeb_writeptr
     LDA Mult8_HI,X
-    ADC Row_HI,Y
+    ADC YHI,Y
     STA beeb_writeptr+1
 
     INC beeb_writeptr       ; only as font is 7 scanlines (can't overflow)
@@ -480,8 +477,27 @@ ENDIF
     BNE loop
 
     .done_loop
+    INC beeb_readptr
+    BNE return
+    INC beeb_readptr+1
+    .return
     RTS
 }
+
+.BEEB_PLOT_FONT_BCD
+{
+  PHA
+  LSR A:LSR A:LSR A:LSR A
+  INC A
+  JSR beeb_plot_font_glyph
+
+  PLA
+  AND #&F
+  INC A
+  JMP beeb_plot_font_glyph
+}
+
+
 
 IF 0
 SMALL_FONT_MAPCHAR
@@ -501,46 +517,32 @@ ASCII_MAPCHAR
   LDA #HI(string1):STA beeb_readptr+1;
   LDX #0
   LDY #0
-  LDA #0
+  LDA #PAL_BRW
   JSR beeb_plot_font_string
 
   LDA #LO(string2):STA beeb_readptr
   LDA #HI(string2):STA beeb_readptr+1
   LDX #10
   LDY #2
-  LDA #14
+  LDA #PAL_BMW
   JSR beeb_plot_font_string
 
   LDA #LO(string3):STA beeb_readptr
   LDA #HI(string3):STA beeb_readptr+1
   LDX #40
   LDY #4
-  LDA #4
+  LDA #PAL_RYW
   JSR beeb_plot_font_string
 
   LDA #LO(string4):STA beeb_readptr
   LDA #HI(string4):STA beeb_readptr+1
   LDX #15
   LDY #24
-  LDA #10
+  LDA #PAL_RCW
   JSR beeb_plot_font_string
  
   RTS
 }
 ENDIF
-
-PAGE_ALIGN
-.small_font
-INCBIN "Other/small_font.bin"
-
-.Row_LO
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB LO(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
-
-.Row_HI
-FOR n,0,BEEB_SCREEN_ROWS-1,1
-EQUB HI(beeb_screen_addr + BEEB_SCREEN_ROW_BYTES * n)
-NEXT
 
 .beeb_plot_font_end

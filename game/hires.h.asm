@@ -20,11 +20,11 @@ GUARD locals_top
 .CARRY skip 1
 
 \ORG $18
-.hires_index
-.ztemp
-.AMASK skip 1
-.BMASK skip 1
+;.hires_index
+.ztemp SKIP 1
+;.AMASK skip 1
+;.BMASK skip 1
 .VISWIDTH skip 1
 .RMOST skip 1
-.carryim skip 1
-.imbyte skip 1
+;.carryim skip 1
+;.imbyte skip 1

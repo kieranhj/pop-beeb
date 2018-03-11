@@ -6,25 +6,38 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 
 ## Keys
 
-* **Z** or **J** - Left
-* **X** or **K** - Right
-* **'** or **I** - Up
-* **/** or **K** - Down
-* **;** or **U** - Left Jump
-* **#** or **O** - Right Jump
-* **RETURN** - Action/Grab Ledge/Sneak
+**Player Controls**
 
-**Debug Keys**
+* `Z` - Left
+* `X` - Right
+* `:` or `*` - Up / Jump (possibly  `quote` on your PC keyboard)
+* `/` or `?` - Down / Crouch
+* `]` - Forward Jump (possibly `#` on your PC keyboard)
+* `RETURN` - Action / grab ledge / sneak / attack
+* `T` - Show time remaining
 
-* **CTRL+N** - Skip Level
-* **CTRL+K** - Kill Guard
-* **CTRL+A** - Restart Level
-* **CTRL+R** - Return to titles
-* **CTRL+SPACE** - Show time remaining
-* **R** - Resurrect
+**Helper Keys**
 
+* `CTRL`+`K` - Redefine keys
+* `CTRL`+`A` - Restart level
+* `CTRL`+`R` - Return to titles
+* `CTRL`+`G` - Save game to disc (must be write enabled)
+* `CTRL`+`P` - Pause (`P` to step or any other key to continue)
 
+**Debug Keys (Development Build only!)**
 
+* `CTRL`+`N` - Next level
+* `CTRL`+`5` - Skip 5 levels
+* `CTRL`+`Z` - Zap (Kill) guard
+* `CTRL`+`W` - Increase max energy
+* `CTRL`+`S` - Increase energy
+* `CTRL`+`D` - Decrease energy
+* `CTRL`+`E` - Move Player up one row on screen
+* `CTRL`+`Q` - Antimatter (press and walk through gates etc.)
+* `CTRL`+`1` - Add one minute to time remaining
+* `CTRL`+`2` - Remove one minute from time remaining
+* `CTRL`+`0` - Set time remaining to 60 seconds...
+* `R` - Resurrect (after death)
 
 
 ## References

@@ -42,7 +42,7 @@ IF _JMP_TABLE = FALSE
 .drawglass jmp DRAWGLASS
 
 .initlay jmp INITLAY
-.twinkle BRK        ; jmp TWINKLE
+.twinkle jmp TWINKLE
 .flow jmp FLOW
 .pmask jmp PMASK
 ENDIF
@@ -99,18 +99,17 @@ ENDIF
 \*-------------------------------
 \* Strength meters
 
+IF _NOT_BEEB
 .KidStrX EQUB 00,01,02,03,04,05,06,08,09,10,11,12
-.KidStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
+.KidStrOFF EQUB 00,01,02,03,04,05,06,00,01,02,03,04
 
-.OppStrX EQUB 27,28,29,30,31,32,34,35,36,37,38,39       \\ BEEB TODO MIRROR
-.OppStrOFF EQUB 00,00,00,00,00,00,00,00,00,00,00,00     \\ BEEB TODO OFFSET
-\\.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
-\\.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
+.OppStrX EQUB 39,38,37,36,35,34,32,31,30,29,28,27
+.OppStrOFF EQUB 05,04,03,02,01,00,06,05,04,03,02,01
 
 bullet = $88 ;in bgtable2
 blank = $8c
 .bline EQUB $89,$8a,$8b
+ENDIF
 
 \*-------------------------------
 \* Post in Princess's room
@@ -122,9 +121,17 @@ postimg = $c ;chtable6
 \*-------------------------------
 \* Stars outside Princess's window
 
+IF _NOT_BEEB
 starx = 2
 .stary EQUB $62,$65,$6d,$72
 .stari EQUB $2a,$2b,$2b,$2a ;chtable6
+ENDIF
+
+.staraddr EQUW (beeb_screen_addr + &259B), (beeb_screen_addr + &232D), (beeb_screen_addr + &20A5), (beeb_screen_addr + &1BA6)
+
+\ Stars all right-hand pixel
+\ Twinkle between cyan and blue
+STAR_PIXEL = (MODE2_CYAN_PAIR AND MODE2_RIGHT_MASK) EOR (MODE2_BLUE_PAIR AND MODE2_RIGHT_MASK)
 
 \*-------------------------------
 \* Hourglass
@@ -245,6 +252,8 @@ ASCII_MAPCHAR
 \ lda #ora
 \ sta OPACITY
 
+    JSR beeb_clear_text_area
+
     jsr getminleft
 
     LDA #LO(minutes_string)
@@ -296,7 +305,7 @@ ASCII_MAPCHAR
     INC A
     STA (beeb_readptr), Y
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #25
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -359,6 +368,8 @@ ASCII_MAPCHAR
 \ sta OPACITY
 \ jmp addmsg
 
+    JSR beeb_clear_text_area
+
     LDY #6
 
     JSR getlevelno
@@ -383,7 +394,7 @@ ASCII_MAPCHAR
     LDA #HI(level_string)
     STA beeb_readptr+1
 
-    LDA #13
+    LDA #PAL_FONT
     LDX #32
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
@@ -408,7 +419,7 @@ ASCII_MAPCHAR
 
 SMALL_FONT_MAPCHAR
 .continue_string
-EQUS "Press a button to continue", &FF
+EQUS "Press action to continue", &FF
 ASCII_MAPCHAR
 
 .CONTINUEMSG
@@ -430,11 +441,52 @@ ASCII_MAPCHAR
     LDA #HI(continue_string)
     STA beeb_readptr+1
 
-    LDA #13
-    LDX #14
+    LDA #PAL_FONT
+    LDX #17
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 }
+
+SMALL_FONT_MAPCHAR
+.error_string
+EQUS "DISC WRITE ERROR!", &FF
+ASCII_MAPCHAR
+
+.ERRORMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(error_string)
+    STA beeb_readptr
+    LDA #HI(error_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #24
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.success_string
+EQUS "GAME SAVED OK!", &FF
+ASCII_MAPCHAR
+
+.SUCCESSMSG
+{
+    JSR beeb_clear_text_area
+
+    LDA #LO(success_string)
+    STA beeb_readptr
+    LDA #HI(success_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #26
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
 
 IF _NOT_BEEB
 *-------------------------------
@@ -557,6 +609,7 @@ ENDIF
 
 \*-------------------------------
 
+IF 0
 .DrawShifted
 {
 \ lda #1
@@ -570,9 +623,11 @@ ENDIF
  lda #UseLayrsave OR UseCharTable
  jmp addmid
 }
+ENDIF
 
 \*-------------------------------
 
+.DrawShifted
 .DrawEored
 {
  lda #enum_eor          ; BEEB - this increments palette index at lowest level
@@ -635,8 +690,10 @@ EQUB &FF
 
 .DRAWKIDMETER
 {
- lda inbuilder          ; BEEB TODO - remove ED ONLY
+IF EditorDisk
+ lda inbuilder
  bne return_53
+ENDIF
 
     DEC redkidmeter
 
@@ -676,7 +733,7 @@ EQUB &FF
     LDA #LO(meter_string):STA beeb_readptr
     LDA #HI(meter_string):STA beeb_readptr+1
 
-    LDA #5
+    LDA #PAL_BRY
     LDX #0
     LDY #BEEB_STATUS_ROW
     JSR beeb_plot_font_string
@@ -767,8 +824,10 @@ EQUB &FF
 
 .DRAWOPPMETER
 {
+IF EditorDisk
  lda inbuilder
  bne return_53
+ENDIF
 
  DEC redoppmeter
 
@@ -828,7 +887,7 @@ EQUB &FF
     SBC OppStrength
     TAX
 
-    LDA #5
+    LDA #PAL_BRY
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
 
@@ -909,12 +968,15 @@ RefreshPot = %00100000
 BoostPot = %01000000
 MystPot = %01100000
 
-boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or equiv
+boffset = 2             ; BEEB have to plot Mask to use offset + Layrsave to animate!
 
 .SETUPFLASK
 {
  lda #boffset
  sta OFFSET
+
+ lda #enum_mask
+ sta OPACITY
 
  txa
  and #%11100000
@@ -924,8 +986,10 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  beq local_tall ;special flask (taller)
  bcc cont
 
-\ BEEB TEMP - comment out
-\ inc OFFSET ;mystery potion (blue)      ; BEEB TODO - different palette
+\ Mystery potion uses eor (INC PALETTE)
+
+ lda #enum_eor
+ sta OPACITY
 
 .local_tall lda YCO
  sec
@@ -948,9 +1012,6 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  sec
  sbc #14
  sta YCO
-
- lda #enum_sta
- sta OPACITY
 
  lda #LO(bgtable2)
  sta TABLE
@@ -1038,35 +1099,66 @@ boffset = 0             ; BEEB GFX PERF was 2 but means we can use FASTLAY or eq
  rts
 
 
-IF _TODO
-*-------------------------------
-*
-* Twinkle one of the stars outside Princess's window
-* (Update it directly on both screens)
-*
-* In: X = star # (0-3)
-*
-*-------------------------------
-TWINKLE
- lda #starx
- sta XCO
- lda stary,x
- sta YCO
- lda stari,x
- sta IMAGE
- lda #enum_eor
- sta OPACITY
- jsr ]setch6
- jsr fastlay ;<--DIRECT HIRES CALL
- lda PAGE
- eor #$20
- sta PAGE ;& on other page
- jsr fastlay
- lda PAGE
- eor #$20
- sta PAGE
+\*-------------------------------
+\*
+\* Twinkle one of the stars outside Princess's window
+\* (Update it directly on both screens)
+\*
+\* In: X = star # (0-3)
+\*
+\*-------------------------------
+
+.TWINKLE
+{
+\ lda #starx
+\ sta XCO
+\ lda stary,x
+\ sta YCO
+\ lda stari,x
+\ sta IMAGE
+\ lda #enum_eor
+\ sta OPACITY
+\ jsr ]setch6
+\ jsr fastlay ;<--DIRECT HIRES CALL
+\ lda PAGE
+\ eor #$20
+\ sta PAGE ;& on other page
+\ jsr fastlay
+\ lda PAGE
+\ eor #$20
+\ sta PAGE
+
+ TXA
+ ASL A
+ TAX
+
+\ Stars all at fixed screen addresses
+
+ LDA staraddr, X
+ STA beeb_writeptr
+ LDA staraddr+1, X
+ STA beeb_writeptr+1
+
+\ Stars all right-hand cyan pixels
+
+ LDA #STAR_PIXEL
+ EOR (beeb_writeptr)
+ STA (beeb_writeptr)
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
+ LDA #STAR_PIXEL
+ EOR (beeb_writeptr)
+ STA (beeb_writeptr)
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+
  rts
-ENDIF
+}
 
 \*-------------------------------
 \*
@@ -1293,17 +1385,19 @@ ENDIF
 
 \* Get color (kid red, opps blue)
 
- lda CharID
- beq label_2 ;kid: 0
- lda #1 ;opponents: 1
-.label_2
- eor FCharX
- eor FCharFace
- and #1 ;look only at low bits
- bne label_1
- inc FCharX
- bne label_1
- inc FCharX+1
+\ NOT BEEB - this shifts sprite X pos by 1 pixel to change colour on Apple II
+\ lda CharID
+\ beq label_2 ;kid: 0
+\ lda #1 ;opponents: 1
+\.label_2
+\ eor FCharX
+\ eor FCharFace
+\ and #1 ;look only at low bits
+\ bne label_1
+\ inc FCharX
+\ bne label_1
+\ inc FCharX+1
+
 .label_1
  lda #starimage
  sta FCharImage
@@ -1318,7 +1412,14 @@ ENDIF
  lda #192
  sta FCharCD
 
+\* Get color (kid red, opps blue)
+
+\ For Beeb we just set the character object type accordingly
  lda #TypeComix
+ ldx CharID
+ beq label_2 ;kid: 0
+ INC A      ; TypeComixAlt
+.label_2
  jmp addcharobj
 }
 .return_27

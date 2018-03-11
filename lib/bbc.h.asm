@@ -56,6 +56,13 @@ IKN_i = 37
 IKN_u = 53
 IKN_o = 54
 IKN_caps = 64
+IKN_w = 33
+IKN_0 = 39
+IKN_1 = 48
+IKN_2 = 49
+IKN_5 = 19
+IKN_9 = 37
+IKN_t = 35
 
 \\ Opcodes
 SEI_OP = $78
@@ -76,6 +83,12 @@ OPCODE_BRA = &80
 OPCODE_STAabs = &8D
 OPCODE_STA_indirect_Y = &91
 OPCODE_LDA_indirect_Y = &B1
+OPCODE_DECzp = &C6
+OPCODE_INCzp = &E6
+OPCODE_ADCimm = &69
+OPCODE_SBCimm = &E9
+OPCODE_CLC = &18
+OPCODE_SEC = &38
 
 \\ SN Register Values
 SN_REG_MASK = &70
@@ -171,11 +184,13 @@ SHEILA_System_VIA_Register_A_NH   = $FE4F
 MACRO ASCII_MAPCHAR
 
 	MAPCHAR 'A', 'Z', 'A' 
-	MAPCHAR 'a', 'z', 'z'
+	MAPCHAR 'a', 'z', 'a'
 	MAPCHAR '0', '9', '0'
 	MAPCHAR '?', '?'
 	MAPCHAR '!', '!'
 	MAPCHAR '.', '.'
 	MAPCHAR ' ', ' '
+    MAPCHAR ',', ','
+    MAPCHAR '~', '~'
 
 ENDMACRO

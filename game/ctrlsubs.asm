@@ -119,7 +119,7 @@ ENDIF
 \ dum locals
 \
 \ctrlsubs_tempright ds 1
-\ztemp ds 2
+\ctrlsubs_ztemp ds 2
 \tempstate ds 1
 \]cutdir ds 1
 \
@@ -127,9 +127,6 @@ ENDIF
 
 \*-------------------------------
 \*  Misc. data
-
-.plus1 EQUB LO(-1),1
-.minus1 EQUB 1,LO(-1)
 
 maxmaxstr = 10 ;strength meter maximum
 
@@ -399,19 +396,19 @@ thinner = 3
 \*-------------------------------
 .ADDFCHARX
 {
- sta ztemp
+ sta ctrlsubs_ztemp
  bpl label_1 ;hibit clr
 
  lda #0
  sec
- sbc ztemp
- sta ztemp ;make it posititve
+ sbc ctrlsubs_ztemp
+ sta ctrlsubs_ztemp ;make it posititve
 
  lda #$ff ;hibit set
 .label_1 eor FCharFace
  bmi left
 
- lda ztemp
+ lda ctrlsubs_ztemp
  clc
  adc FCharX
  sta FCharX
@@ -423,7 +420,7 @@ thinner = 3
 
 .left lda FCharX
  sec
- sbc ztemp
+ sbc ctrlsubs_ztemp
  sta FCharX
 
  lda FCharX+1
@@ -1036,11 +1033,11 @@ thinner = 3
 {
  sec
  sbc #1
- sta ztemp
+ sta ctrlsubs_ztemp
  sta framepoint
 
  lda #0
- sta ztemp+1
+ sta ctrlsubs_ztemp+1
  sta framepoint+1
 
  asl framepoint
@@ -1050,11 +1047,11 @@ thinner = 3
 
  lda framepoint
  clc
- adc ztemp
+ adc ctrlsubs_ztemp
  sta framepoint
 
  lda framepoint+1
- adc ztemp+1
+ adc ctrlsubs_ztemp+1
  sta framepoint+1 ;make it x5
  rts
 }
@@ -1072,11 +1069,11 @@ thinner = 3
 {
  sec
  sbc #1
- sta ztemp
+ sta ctrlsubs_ztemp
  sta framepoint
 
  lda #0
- sta ztemp+1
+ sta ctrlsubs_ztemp+1
  sta framepoint+1
 
  asl framepoint
@@ -1084,11 +1081,11 @@ thinner = 3
 
  lda framepoint
  clc
- adc ztemp
+ adc ctrlsubs_ztemp
  sta framepoint
 
  lda framepoint+1
- adc ztemp+1
+ adc ctrlsubs_ztemp+1
  sta framepoint+1 ;+1 is 3
 
  lda framepoint
@@ -1118,13 +1115,13 @@ thinner = 3
 {
  lda Fimage
  and #%10000000 ;bit 2 of table #
- sta ztemp
+ sta ctrlsubs_ztemp
 
  lda Fsword
  and #%11000000 ;bits 0-1 of table #
 
  lsr A
- adc ztemp
+ adc ctrlsubs_ztemp
  lsr A
  lsr A
  lsr A
@@ -1245,23 +1242,23 @@ thinner = 3
 \* get leading edge (for collision detection)
 
  lda #0
- sta ztemp
+ sta ctrlsubs_ztemp
 
  lda Fcheck
  and #Fthinmark
  beq nothin
 
  lda #thinner ;make character 3 bits thinner
- sta ztemp ;on both sides
+ sta ctrlsubs_ztemp ;on both sides
 
 .nothin lda leftej
  clc
- adc ztemp
+ adc ctrlsubs_ztemp
  sta CDLeftEj
 
  lda rightej
  sec
- sbc ztemp
+ sbc ctrlsubs_ztemp
  sta CDRightEj
 
  rts
@@ -1992,7 +1989,7 @@ ENDIF
 
 .CHECKLEDGE
 {
- sta ztemp
+ sta ctrlsubs_ztemp
 
  lda (BlueSpec),y
  sta coll_tempstate
@@ -2013,7 +2010,7 @@ ENDIF
 
 \* Clear above -- is there a ledge in front?
 
- lda ztemp ;must be a solid floorpiece
+ lda ctrlsubs_ztemp ;must be a solid floorpiece
 ;with exposed ledge
  cmp #loose
  bne local_notloose

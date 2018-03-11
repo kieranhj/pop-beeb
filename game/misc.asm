@@ -32,7 +32,7 @@ BRK ; bcc MOVEAUXLC ;relocatable
 
 \.LoadLevelX jmp LOADLEVELX         ; moved to master.asm
 .checkalert jmp CHECKALERT
-.dispversion BRK    ; jmp DISPVERSION
+\.dispversion BRK    ; jmp DISPVERSION  ; moved to specialk.asm
 ENDIF
 
 \*-------------------------------
@@ -264,21 +264,15 @@ ENDIF
 
 .MARKKIDMETER
 {
-\ ldy #20
-\ bne Mark3
- LDA #REDRAW_FRAMES
- STA redkidmeter
+ INC redkidmeter    ; assume REDRAW_FRAMES=2
+ INC redkidmeter
  RTS
 }
 
 .MARKOPPMETER
 {
-\ ldy #28
-\ bne Mark2
-\ rts
-
- LDA #REDRAW_FRAMES
- STA redoppmeter
+ INC redoppmeter    ; assume REDRAW_FRAMES=2
+ INC redoppmeter
  RTS
 }
 
@@ -288,7 +282,7 @@ ENDIF
 \*
 \*-------------------------------
 wtlesstimer = 200
-vibetimer = 3
+vibetimer = &80 ;3
 
 .POTIONEFFECT
 {
@@ -349,6 +343,10 @@ vibetimer = 3
 
 .label_3 cpx #3
  bne label_4
+ lda #PAL_green
+ sta lightcolor
+ lda #3
+ sta lightning ;3 green flashes
  lda #s_ShortPot
  ldx #25
  jsr cuesong

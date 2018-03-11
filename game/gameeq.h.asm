@@ -222,4 +222,5 @@ TypeGd = 2
 TypeSword = 3
 TypeReflect = 4
 TypeComix = 5
+TypeComixAlt = 6        ; Comix sprite but in different colour for enemy
 TypeFF = $80

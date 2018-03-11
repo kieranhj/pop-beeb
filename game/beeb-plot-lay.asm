@@ -6,6 +6,8 @@
 
 IF _UNROLL_LAYMASK
 
+ERROR
+
 BEEB_MAX_LAY_WIDTH=10
 
 MACRO BEEB_PLOT_LAYMASK_BYTES x_byte
@@ -36,6 +38,9 @@ BEEB_PLOT_LAYMASK_UNROLL_SIZE=&17
     .nothing_to_do
     jmp DONE
     .cont
+
+    LDA PALETTE
+    JSR beeb_plot_sprite_setpalette
 
     \ XCO & YCO are screen coordinates
     \ XCO (0-39) and YCO (0-191)
@@ -401,6 +406,9 @@ NEXT
     .nothing_to_do
     jmp DONE
     .cont
+
+    LDA PALETTE
+    JSR beeb_plot_sprite_setpalette
 
     \ XCO & YCO are screen coordinates
     \ XCO (0-39) and YCO (0-191)

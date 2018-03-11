@@ -115,14 +115,13 @@ cwidthy = 15 ;21
 \*  Addresses of character image tables
 \*  (Bank: 2 = main, 3 = aux)
 
-.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB13, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB25, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB9
+.chtabbank EQUB BEEB_SWRAM_SLOT_CHTAB1, BEEB_SWRAM_SLOT_CHTAB2, BEEB_SWRAM_SLOT_CHTAB3, BEEB_SWRAM_SLOT_CHTAB4, BEEB_SWRAM_SLOT_CHTAB5, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB678, BEEB_SWRAM_SLOT_CHTAB9
 
 .chtablist EQUB HI(chtable1),HI(chtable2),HI(chtable3),HI(chtable4)
- EQUB HI(chtable5),HI(chtable6),HI(chtable7), HI(chtable9)
+ EQUB HI(chtable5),HI(chtable6),HI(chtable7),HI(chtable9)
 
-IF _HALF_PLAYER
-.chtabhack EQUB 1,1,1,0,1,0,0,0,0
-ENDIF
+.chtablist_LO EQUB LO(chtable1),LO(chtable2),LO(chtable3),LO(chtable4)
+ EQUB LO(chtable5),LO(chtable6),LO(chtable7),LO(chtable9)
 
 \ NOT BEEB
 \.dummy EQUB maxpeel,maxpeel
@@ -666,7 +665,6 @@ RASTER_COL PAL_black
  sta YCO
 
  lda fgOP,x ;opacity
- \ BEEB TEMP moved this here so enum_mask OPACITY gets passed through
  sta OPACITY ;fastlay for everything else
  cmp #enum_mask
  bne label_1
@@ -886,13 +884,6 @@ RASTER_COL PAL_black
 \lda #3 ;auxmem
 \sta BANK
 
- lda #0
- sta TABLE
-IF _HALF_PLAYER
- STA BEEBHACK
-ENDIF
-
-
  lda IMAGE ;Bit 7: 0 = bgtable1, 1 = bgtable2
 IF _DEBUG
  BNE image_ok1
@@ -914,6 +905,9 @@ ENDIF
  LDA #BEEB_SWRAM_SLOT_BGTAB2
  STA BANK
 
+ lda #LO(bgtable2)
+ sta TABLE
+
  lda #HI(bgtable2)
  bne ok
 
@@ -931,6 +925,9 @@ ENDIF
  LDA #BEEB_SWRAM_SLOT_BGTAB1_A
  STA BANK
 
+ lda #LO(bgtable1a)
+ sta TABLE
+
  lda #HI(bgtable1a)
  BNE ok
 
@@ -944,6 +941,9 @@ ENDIF
 
  LDA #BEEB_SWRAM_SLOT_BGTAB1_B
  STA BANK
+
+ lda #LO(bgtable1b)
+ sta TABLE
 
  lda #HI(bgtable1b)
 
@@ -971,13 +971,7 @@ ENDIF
  lda chtabbank,y
  sta BANK
 
-\\ BEEB HACK
-IF _HALF_PLAYER
- lda chtabhack,y
- sta BEEBHACK
-ENDIF
-
- lda #0
+ lda chtablist_LO,y
  sta TABLE
  lda chtablist,y
  sta TABLE+1
