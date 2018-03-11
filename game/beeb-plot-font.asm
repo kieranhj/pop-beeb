@@ -11,7 +11,7 @@ SMALL_FONT_HEIGHT = 7
 .beeb_plot_font_prep jmp BEEB_PLOT_FONT_PREP
 .beeb_plot_font_glyph jmp BEEB_PLOT_FONT_GLYPH
 .beeb_plot_font_string jmp BEEB_PLOT_FONT_STRING
-.beeb_font_plot_bcd jmp BEEB_PLOT_FONT_BCD
+.beeb_plot_font_bcd jmp BEEB_PLOT_FONT_BCD
 
 .BEEB_PLOT_FONT_PREP
 {

@@ -236,6 +236,7 @@ SMALL_FONT_MAPCHAR
 .error_string2 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
 .error_string3 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
 .error_string4 EQUS "BUILD~NUMBER:~", &FF
+.error_string5 EQUS "PC:~",&FF
 ASCII_MAPCHAR
 
 .error_handler
@@ -280,16 +281,23 @@ ASCII_MAPCHAR
     LDX #0:LDY #6:LDA #PAL_FONT
     JSR beeb_plot_font_string
 
-    LDA pop_beeb_version:JSR beeb_font_plot_bcd
-    LDA pop_beeb_build+0:JSR beeb_font_plot_bcd
-    LDA pop_beeb_build+1:JSR beeb_font_plot_bcd
-    LDA pop_beeb_build+2:JSR beeb_font_plot_bcd
-    LDA pop_beeb_build+3:JSR beeb_font_plot_bcd
-    LDA pop_beeb_build+4:JSR beeb_font_plot_bcd
+    LDA pop_beeb_version:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+    LDA pop_beeb_build+4:JSR beeb_plot_font_bcd
+
+    LDX #56:LDY #6:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    TSX:LDA &103, X: JSR beeb_plot_font_bcd
+    TSX:LDA &102, X: JSR beeb_plot_font_bcd
 
     .spin
     BRA spin
 }
+
 
 IF _TODO
 *-------------------------------

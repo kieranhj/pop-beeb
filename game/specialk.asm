@@ -2209,22 +2209,22 @@ ASCII_MAPCHAR
   JSR beeb_plot_font_string
   
   LDA pop_beeb_build
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+1
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+2
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA #GLYPH_DOT
   JSR beeb_plot_font_glyph
 
   LDA pop_beeb_build+3
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+4
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   \ Wait for a key press to continue
   JSR specialk_wait_for_a_key
