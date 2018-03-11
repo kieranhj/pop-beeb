@@ -360,18 +360,18 @@ ENDIF
     jsr disksys_file_info
     ; we ignore load & exec address
     ; just need length & start sector 
-    stx &9e
-    sty &9f
+    stx beeb_readptr
+    sty beeb_readptr+1
 
     ; get file length in bytes
     ldy #4
-    lda (&9e),y
+    lda (beeb_readptr),y
     sta file_length+0
     iny
-    lda (&9e),y
+    lda (beeb_readptr),y
     sta file_length+1
     iny
-    lda (&9e),y
+    lda (beeb_readptr),y
     lsr a
     lsr a
     lsr a
@@ -380,11 +380,11 @@ ENDIF
     sta file_length+2
 
     ; get sector offset (10 bits)
-    lda (&9e),y
+    lda (beeb_readptr),y
     and #3
     sta file_sector+1
     iny
-    lda (&9e),y
+    lda (beeb_readptr),y
     sta file_sector+0    
 
     ; round up file length to total sector count
