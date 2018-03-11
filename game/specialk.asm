@@ -2061,12 +2061,6 @@ ASCII_MAPCHAR
   .loop  
   STX redefine_index
   
-  \ Fortunately beeb_readptr increments after a string plot
-  INC beeb_readptr
-  BNE no_carry
-  INC beeb_readptr+1
-  .no_carry
-
   \ Clear the line
   LDY #49
   LDX #24
@@ -2215,22 +2209,22 @@ ASCII_MAPCHAR
   JSR beeb_plot_font_string
   
   LDA pop_beeb_build
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+1
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+2
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA #GLYPH_DOT
   JSR beeb_plot_font_glyph
 
   LDA pop_beeb_build+3
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   LDA pop_beeb_build+4
-  JSR beeb_font_plot_bcd
+  JSR beeb_plot_font_bcd
 
   \ Wait for a key press to continue
   JSR specialk_wait_for_a_key
