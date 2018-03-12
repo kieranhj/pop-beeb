@@ -262,6 +262,12 @@ IF _JMP_TABLE
 .getaboveinf JUMP_A GETABOVEINF, CTRLSUBS_BASE, 66
 .cmpwall JUMP_A CMPWALL, CTRLSUBS_BASE, 67
 
+\*-------------------------------
+\* intervy.asm
+\*-------------------------------
+
+.inverty JUMP_A INVERTY, INVERTY_BASE, 0
+
 
 \*-------------------------------
 \* frameadv.asm
@@ -606,6 +612,12 @@ EQUB LO(GETABOVE)
 EQUB LO(GETABOVEINF)
 EQUB LO(CMPWALL)
 
+\*-------------------------------
+\* inverty.asm
+\*-------------------------------
+INVERTY_BASE = P%-aux_jump_fn_table_A_LO
+EQUB LO(INVERTY)
+
 .aux_jump_fn_table_A_HI
 \*-------------------------------
 \* auto.asm
@@ -722,6 +734,11 @@ EQUB HI(GETBEHIND)
 EQUB HI(GETABOVE)
 EQUB HI(GETABOVEINF)
 EQUB HI(CMPWALL)
+
+\*-------------------------------
+\* inverty.asm
+\*-------------------------------
+EQUB HI(INVERTY)
 
 \*-------------------------------
 \* FUNCTION addresses for AUX B
