@@ -767,6 +767,8 @@ INCLUDE "game/coll.asm"
 coll_end=P%
 INCLUDE "game/auto.asm"
 auto_end=P%
+INCLUDE "game/inverty.asm"
+inverty_end=P%
 
 .pop_beeb_aux_b_end
 
@@ -784,6 +786,7 @@ PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
 PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
 PRINT "COLL size = ", ~(coll_end-coll)
 PRINT "AUTO size = ", ~(auto_end-auto)
+PRINT "INVERTY size = ", ~(inverty_end-INVERTY)
 PRINT "--------"
 PRINT "Aux B code+data size = ", ~(pop_beeb_aux_b_end - pop_beeb_aux_b_start)
 PRINT "Aux B high watermark = ", ~P%
