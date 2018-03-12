@@ -231,14 +231,6 @@ kresume = IKN_l OR $80
 \* driveon switches it in, driveoff switches it out.
 \*
 
-SMALL_FONT_MAPCHAR
-.error_string1 EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
-.error_string2 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
-.error_string3 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
-.error_string4 EQUS "BUILD~NUMBER:~", &FF
-.error_string5 EQUS "PC:~",&FF
-ASCII_MAPCHAR
-
 .error_handler
 {
     LDA SavLevel
@@ -267,8 +259,8 @@ ASCII_MAPCHAR
     lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
  
     .same_same
-    LDA #LO(error_string1):STA beeb_readptr
-    LDA #HI(error_string1):STA beeb_readptr+1
+    LDA #LO(crash_strings):STA beeb_readptr
+    LDA #HI(crash_strings):STA beeb_readptr+1
     LDX #0:LDY #0:LDA #PAL_FONT
     JSR beeb_plot_font_string
 

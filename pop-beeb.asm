@@ -80,6 +80,9 @@ PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 PRINT "--------"
 
+SAVE "Lower", &C00, &D00,0
+
+
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
 SCRATCH_RAM_ADDR = &300
@@ -109,7 +112,7 @@ INCLUDE "lib/print.asm"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
-
+.lower_filename EQUS "Lower  $"
 
 .pop_beeb_entry
 {
@@ -167,6 +170,11 @@ INCLUDE "lib/print.asm"
     JSR disksys_load_file
 
     \\ Load executable overlays
+
+    LDX #LO(lower_filename)
+    LDY #HI(lower_filename)
+    LDA #&0C
+    JSR disksys_load_file
 
     \\ Load Main
 

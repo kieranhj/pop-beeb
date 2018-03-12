@@ -192,5 +192,7 @@ MACRO ASCII_MAPCHAR
 	MAPCHAR ' ', ' '
     MAPCHAR ',', ','
     MAPCHAR '~', '~'
+    MAPCHAR ':', ':'
+    MAPCHAR '/', '/'
 
 ENDMACRO

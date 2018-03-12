@@ -327,3 +327,16 @@ ENDIF
 ;.soundtable ds maxsfx
 
 .trobcount skip 1
+
+\*-------------------------------
+\* Relocated from Core at boot
+\*-------------------------------
+
+.crash_strings
+SMALL_FONT_MAPCHAR
+EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
+EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
+EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
+EQUS "BUILD~NUMBER:~", &FF
+EQUS "PC:~",&FF
+ASCII_MAPCHAR
