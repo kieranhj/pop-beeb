@@ -332,11 +332,13 @@ ENDIF
 \* Relocated from Core at boot
 \*-------------------------------
 
-.crash_strings
 SMALL_FONT_MAPCHAR
+.version_string EQUS "VERSION ", &FF
+.build_string EQUS "~BUILD ", &FF
+
+.crash_strings
 EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
-EQUS "BUILD~NUMBER:~", &FF
 EQUS "PC:~",&FF
 ASCII_MAPCHAR

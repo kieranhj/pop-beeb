@@ -259,6 +259,8 @@ kresume = IKN_l OR $80
     lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
  
     .same_same
+    JSR beeb_print_version_and_build
+    
     LDA #LO(crash_strings):STA beeb_readptr
     LDA #HI(crash_strings):STA beeb_readptr+1
     LDX #0:LDY #0:LDA #PAL_FONT
@@ -273,15 +275,7 @@ kresume = IKN_l OR $80
     LDX #0:LDY #6:LDA #PAL_FONT
     JSR beeb_plot_font_string
 
-    LDA pop_beeb_version:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+4:JSR beeb_plot_font_bcd
-
-    LDX #56:LDY #6:LDA #PAL_FONT
-    JSR beeb_plot_font_string
+    \\ Plot Program Counter that was pushed onto the stack
 
     TSX:LDA &103, X: JSR beeb_plot_font_bcd
     TSX:LDA &102, X: JSR beeb_plot_font_bcd
@@ -290,6 +284,48 @@ kresume = IKN_l OR $80
     BRA spin
 }
 
+.beeb_print_version_and_build
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4:JMP beeb_plot_font_bcd
+}
 
 IF _TODO
 *-------------------------------
