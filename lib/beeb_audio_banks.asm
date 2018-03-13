@@ -18,8 +18,6 @@ INCBIN "audio/music/Prince of Persia - 08 - Mirror Prince.raw.exo" ; 701 bytes
 SAVE "Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
 
 
-
-
 ;----------------------------------------------------------------
 ; Intro music bank
 ;----------------------------------------------------------------
@@ -32,7 +30,6 @@ GUARD ANDY_TOP
 INCBIN "audio/music/Prince of Persia - 02 - Intro.raw.exo" ; 3497 bytes
 .pop_audio_bank1_end
 SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
-
 
 
 ;----------------------------------------------------------------
@@ -48,8 +45,7 @@ INCBIN "audio/music/Prince of Persia - 03 - Hourglass.raw.exo"
 .pop_music_09
 INCBIN "audio/music/Prince of Persia - 09 - Grand Vizier.raw.exo" ; 1698 bytes
 .pop_audio_bank2_end
-SAVE "Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
-
+;SAVE "Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
 
 
 ;----------------------------------------------------------------
@@ -62,15 +58,31 @@ GUARD ANDY_TOP
 .pop_audio_bank3_start
 
 .pop_music_start
-INCBIN "audio/music/Prince of Persia - 04 - Level Start.raw.exo"
+INCBIN "audio/ip/m-begin.raw.exo"
 .pop_music_sword
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 .pop_music_potion
-INCBIN "audio/music/Prince of Persia - 06 - Potion.raw.exo"
+INCBIN "audio/ip/m-lifepotion.raw.exo"
 .pop_music_death
 INCBIN "audio/music/Prince of Persia - 07 - Death.raw.exo"
 
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
 
-; TODO add more banks for the in game sfx & music
+
+;----------------------------------------------------------------
+; Cutscene audio bank
+;----------------------------------------------------------------
+
+CLEAR 0, &FFFF
+ORG ANDY_START
+GUARD ANDY_TOP
+.pop_audio_bank4_start
+.pop_music_tragic
+INCBIN "audio/ip/m-cutscene-notmuchtime.raw.exo"
+.pop_music_timer
+INCBIN "audio/ip/m-cutscene-pre2_4_6_C.raw.exo"
+.pop_music_heartbeat
+INCBIN "audio/ip/m-cutscene-pre8_9.raw.exo"
+.pop_audio_bank4_end
+SAVE "Audio4", pop_audio_bank4_start, pop_audio_bank4_end, 0

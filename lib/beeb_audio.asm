@@ -9,8 +9,10 @@ IF _AUDIO
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
 .audio2_filename EQUS "Audio2 $"    ; grand vizier music
-.audio3_filename EQUS "Audio3 $"    ; game audio - sfx & music jingles
+.audio3_filename EQUS "Audio3 $"    ; game music jingles
+.audio4_filename EQUS "Audio4 $"    ; cutscene music
 
+.beeb_audio_loaded_bank EQUB &FF
 
 ; POP BBC PORT - Music player hook
 ; See aux_core.asm for the jump tables
@@ -80,11 +82,15 @@ IF _AUDIO
 ; Does not currently save SWR bank selection - this might need looking at.
 .BEEB_LOAD_AUDIO_BANK
 {
+    CMP beeb_audio_loaded_bank
+    BEQ already_loaded
+
     pha
     jsr music_stop
     jsr audio_sfx_stop
 
     pla
+    STA beeb_audio_loaded_bank
     tax
 
     ; preserve current SWR banksel
@@ -112,6 +118,8 @@ IF _AUDIO
     ; restore SWR bank
     pla
     jsr swr_select_bank
+    
+    .already_loaded
     rts
 }
 
@@ -239,17 +247,17 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_start;, &8080 ; s_Danger = 3
     EQUW pop_music_sword;, &8080 ; s_Sword = 4
     EQUW pop_music_start;, &8080 ; s_Rejoin = 5
-    EQUW pop_music_start;, &8080 ; s_Shadow = 6
+    EQUW pop_music_death;, &8080 ; s_Shadow = 6
     EQUW pop_music_sword;, &8080 ; s_Vict = 7
     EQUW pop_music_sword;, &8080 ; s_Stairs = 8
     EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
     EQUW pop_music_start;, &8080 ; s_Jaffar = 10
     EQUW pop_music_potion;, &8080 ; s_Potion = 11
     EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
-    EQUW pop_music_start;, &8080 ; s_Timer = 13
-    EQUW pop_music_death;, &8080 ; s_Tragic = 14
+    EQUW pop_music_timer;, &8080 ; s_Timer = 13
+    EQUW pop_music_tragic;, &8080 ; s_Tragic = 14
     EQUW pop_music_start;, &8080 ; s_Embrace = 15
-    EQUW pop_music_start;, &8080 ; s_Heartbeat = 16
+    EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16
 
 ; as per 
 .pop_title_music
