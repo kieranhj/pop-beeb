@@ -730,9 +730,13 @@ INCBIN "Images/BEEB.IMG.CHTAB2.bin"
 .chtable3
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
 
+PAGE_ALIGN                                  ; technically no reason to be PAGE ALIGNED
+INCLUDE "lib/beeb_sfx_bank.asm"
+
 .bank1_end
 
 PRINT "--------"
+PRINT "SFX size = ", ~(pop_sfx_end - pop_sfx_start)
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"

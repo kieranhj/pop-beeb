@@ -306,7 +306,7 @@ ENDIF ; _AUDIO_DEBUG
     asl a
     tax
     ; get bank
-    lda #&80 ; lda pop_sound_fx+2,x
+    lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
     pha
     ; get address
     lda pop_sound_fx+1,x
@@ -363,14 +363,16 @@ ENDIF ; _AUDIO_DEBUG
     lda &f4
     pha
 
-    ; page in the music bank
-    lda audio_bank
+    ; page in the sfx bank
+    lda #BEEB_AUDIO_SFX_BANK
     jsr swr_select_bank
-
-
 
     \\ Poll the SFX player
     jsr vgm_sfx_update
+
+    ; page in the music bank
+    lda audio_bank
+    jsr swr_select_bank
 
     \\ Doing the music last gives it priority over SFX
 	\\ Poll the music player
