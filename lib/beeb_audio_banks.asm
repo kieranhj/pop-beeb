@@ -62,6 +62,8 @@ INCBIN "audio/ip/m-begin.raw.exo"
 .pop_music_sword
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 .pop_music_potion
+INCBIN "audio/ip/m-potion.raw.exo"
+.pop_music_lifepotion
 INCBIN "audio/ip/m-lifepotion.raw.exo"
 .pop_music_death
 INCBIN "audio/music/Prince of Persia - 07 - Death.raw.exo"
