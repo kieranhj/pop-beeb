@@ -17,6 +17,11 @@ INCBIN "audio/music/Prince of Persia - 08 - Mirror Prince.raw.exo" ; 701 bytes
 .pop_audio_bank0_end
 SAVE "Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
 
+PRINT "--------"
+PRINT "AUDIO BANK 0 size = ", ~(pop_audio_bank0_end - pop_audio_bank0_start)
+PRINT "AUDIO BANK 0 free = ", ~(ANDY_TOP - pop_audio_bank0_end)
+PRINT "--------"
+
 
 ;----------------------------------------------------------------
 ; Intro music bank
@@ -30,6 +35,11 @@ GUARD ANDY_TOP
 INCBIN "audio/music/Prince of Persia - 02 - Intro.raw.exo" ; 3497 bytes
 .pop_audio_bank1_end
 SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
+
+PRINT "--------"
+PRINT "AUDIO BANK 1 size = ", ~(pop_audio_bank1_end - pop_audio_bank1_start)
+PRINT "AUDIO BANK 1 free = ", ~(ANDY_TOP - pop_audio_bank1_end)
+PRINT "--------"
 
 
 ;----------------------------------------------------------------
@@ -47,6 +57,10 @@ INCBIN "audio/music/Prince of Persia - 09 - Grand Vizier.raw.exo" ; 1698 bytes
 .pop_audio_bank2_end
 ;SAVE "Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
 
+PRINT "--------"
+PRINT "AUDIO BANK 2 size = ", ~(pop_audio_bank2_end - pop_audio_bank2_start)
+PRINT "AUDIO BANK 2 free = ", ~(ANDY_TOP - pop_audio_bank2_end)
+PRINT "--------"
 
 ;----------------------------------------------------------------
 ; Game audio bank
@@ -71,6 +85,10 @@ INCBIN "audio/music/Prince of Persia - 07 - Death.raw.exo"
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
 
+PRINT "--------"
+PRINT "AUDIO BANK 3 size = ", ~(pop_audio_bank3_end - pop_audio_bank3_start)
+PRINT "AUDIO BANK 3 free = ", ~(ANDY_TOP - pop_audio_bank3_end)
+PRINT "--------"
 
 ;----------------------------------------------------------------
 ; Cutscene audio bank
@@ -88,3 +106,8 @@ INCBIN "audio/ip/m-cutscene-pre2_4_6_C.raw.exo"
 INCBIN "audio/ip/m-cutscene-pre8_9.raw.exo"
 .pop_audio_bank4_end
 SAVE "Audio4", pop_audio_bank4_start, pop_audio_bank4_end, 0
+
+PRINT "--------"
+PRINT "AUDIO BANK 4 size = ", ~(pop_audio_bank4_end - pop_audio_bank4_start)
+PRINT "AUDIO BANK 4 free = ", ~(ANDY_TOP - pop_audio_bank4_end)
+PRINT "--------"
