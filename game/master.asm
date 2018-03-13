@@ -57,32 +57,45 @@ ENDMACRO
 
 .master_load_dhires
 {
- JSR disksys_load_file
-
 IF _DEMO_BUILD
  JSR plot_demo_url
 ENDIF
 
+ JSR beeb_clear_dhires_line
  JSR vblank
  JSR PageFlip
  JMP beeb_show_screen       ; in case previous blackout
 }
 
-MACRO MASTER_LOAD_DHIRES filename, lines
+MACRO MASTER_LOAD_DHIRES filename, pu_size
 {
  LDX #LO(filename)
  LDY #HI(filename)
- LDA #HI(beeb_double_hires_addr + lines * 80 * 8)
+ LDA #HI(&8000 - pu_size)
+ JSR disksys_load_file
+
+ LDA #7:JSR swr_select_slot
+ LDX #LO(&8002 - pu_size)
+ LDY #HI(&8002 - pu_size)
+ JSR unpack
+
  JSR master_load_dhires
 }
 ENDMACRO
 
-MACRO MASTER_WIPE_DHIRES filename
+MACRO MASTER_WIPE_DHIRES filename, pu_size
 {
  LDX #LO(filename)
  LDY #HI(filename)
- LDA #HI(beeb_double_hires_addr)
+ LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
+
+ LDA #7:JSR swr_select_slot
+ LDX #LO(&8002 - pu_size)
+ LDY #HI(&8002 - pu_size)
+ JSR unpack
+
+ JSR beeb_clear_dhires_line
  JSR beeb_dhires_wipe
 }
 ENDMACRO
@@ -1251,7 +1264,7 @@ ENDIF
 \ lda #delPresents
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES presents_filename, 12
+ MASTER_LOAD_DHIRES presents_filename, pu_presents_size
 
 
 
@@ -1309,7 +1322,7 @@ EQUS "BYLINE $"
 \ lda #delByline
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES byline_filename, 12
+ MASTER_LOAD_DHIRES byline_filename, pu_byline_size
 
 \ ldx #80
 \ lda #s_Byline
@@ -1344,13 +1357,25 @@ ENDIF
 
  LDX #LO(splash_filename)
  LDY #HI(splash_filename)
- LDA #HI(beeb_double_hires_addr)
+ LDA #HI(pu_splash_loadat)
  JSR disksys_load_file
+
+ LDA #7:JSR swr_select_slot
+ LDX #LO(pu_splash_loadat + 2)
+ LDY #HI(pu_splash_loadat + 2)
+ JSR unpack
 
  LDX #LO(title_filename)
  LDY #HI(title_filename)
- LDA #HI(beeb_double_hires_addr + 12 * 640)
+ LDA #HI(pu_title_loadat)
  JSR disksys_load_file
+
+ LDA #7:JSR swr_select_slot
+ LDX #LO(pu_title_loadat + 2)
+ LDY #HI(pu_title_loadat + 2)
+ JSR unpack
+
+ JSR beeb_clear_dhires_line
 
 \ Now wipe to reveal
 
@@ -1387,7 +1412,7 @@ ENDIF
 \ lda #delTitle
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES title_filename, 12
+ MASTER_LOAD_DHIRES title_filename, pu_title_size
 
 IF _AUDIO
     lda #s_Title
@@ -1422,7 +1447,7 @@ EQUS "PROLOG $"
 \ sta RAMRDaux
 \ jsr DblExpand
 
- MASTER_WIPE_DHIRES prolog_filename
+ MASTER_WIPE_DHIRES prolog_filename, pu_prolog_size
 
 \ ldx #250
 \ lda #s_Prolog
@@ -1477,7 +1502,7 @@ EQUS "SUMUP  $"
 
 \ jsr setdhires
 
- MASTER_LOAD_DHIRES sumup_filename, 0
+ MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
 
 \ ldx #250
 \ lda #s_Sumup
@@ -1498,15 +1523,7 @@ EQUS "CREDITS$"
 
 .BeebCredit
 {
-\ BEEB set drive 2 - hopefully temporary to avoid grinding
- LDA #2
- JSR disksys_set_drive
-
- MASTER_WIPE_DHIRES credits_filename
-
-\ BEEB set drive 0 - before demo load
- LDA #0
- JSR disksys_set_drive
+ MASTER_WIPE_DHIRES credits_filename, pu_credits_size
 
  lda #30
  jmp tpause
@@ -1536,13 +1553,13 @@ EQUS "EPILOG $"
 
 \ jsr setdhires
 
- jsr SetupDHires
-
- MASTER_LOAD_DHIRES epilog_filename, 0
-
 \ BEEB set drive 0 - going to attract after this anyway
  LDA #0
  JSR disksys_set_drive
+
+ jsr SetupDHires
+
+ MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
 
  lda #s_Epilog
  jsr PlaySongNI
@@ -1565,11 +1582,7 @@ EQUS "SPLASH $"
 
 .unpacksplash
 {
-\ lda #pacSplash
-\ sta RAMRDaux
-\ jmp DblExpand
-
- MASTER_LOAD_DHIRES splash_filename, 0
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size
 
  RTS
 }

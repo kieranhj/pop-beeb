@@ -13,7 +13,7 @@ del "pop-beeb-side-b.ssd"
 REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio3"
 REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL0"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL1"
@@ -51,4 +51,4 @@ REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB9.mode2.bin"
 
 REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.PRINCESS.SCENE.mode2.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.PRIN2"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Epilog.mode2.bin"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Epilog.mode2.bin"

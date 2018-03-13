@@ -10,6 +10,12 @@
 INCLUDE "pop-beeb.h.asm"
 
 \*-------------------------------
+; CALCULATE FILESIZES
+\*-------------------------------
+
+INCLUDE "lib/filesizes.asm"
+
+\*-------------------------------
 ; ZERO PAGE
 \*-------------------------------
 
@@ -829,6 +835,7 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
+INCLUDE "lib/unpack.asm"
 
 .pop_beeb_aux_high_end
 
@@ -927,11 +934,11 @@ PAGE_ALIGN
 PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0
 
 \ Attract files
-PUTFILE "Other/john.Splash.mode2.bin", "SPLASH", &3000, 0
-PUTFILE "Other/john.Title.mode2.bin", "TITLE", &3000, 0
-PUTFILE "Other/john.Presents.mode2.bin", "PRESENT", &3000, 0
-PUTFILE "Other/john.Byline.mode2.bin", "BYLINE", &3000, 0
-PUTFILE "Other/john.Prolog.mode2.bin", "PROLOG", &3000, 0
+PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
+PUTFILE "Other/title.pu.bin", "TITLE", &3000, 0
+PUTFILE "Other/presents.pu.bin", "PRESENT", &3000, 0
+PUTFILE "Other/byline.pu.bin", "BYLINE", &3000, 0
+PUTFILE "Other/prolog.pu.bin", "PROLOG", &3000, 0
 
 \ Cutscene files
 PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
@@ -939,7 +946,7 @@ PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
 PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
 ;PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
 
-PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
+PUTFILE "Other/sumup.pu.bin", "SUMUP", &3000, 0
 
 ; All saved into single file for BANK1
 ;PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
@@ -948,4 +955,5 @@ PUTFILE "Other/john.Sumup.mode2.bin", "SUMUP", &3000, 0
 PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 
 ; Want to put this here but disc full...
-;PUTFILE "Other/john.Credits.mode2.bin", "CREDITS", &3000, 0
+PUTFILE "Other/credits.pu.bin", "CREDITS", &3000, 0
+PUTFILE "Other/epilog.pu.bin", "EPILOG", &3000, 0
