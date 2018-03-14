@@ -25,17 +25,20 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
 
 .beeb_set_palette_all
 {
+IF 0                \\ KC decided only ever to flash black background
     STA palloop+1
 
     \ Super hackballs!
     BIT #&40
     BEQ do_all
+ENDIF
 
     \ Just black
     AND #&F
     STA &FE21
     RTS
 
+IF 0
     .do_all
     CLC
     LDX #0
@@ -49,6 +52,7 @@ TIMER_start = (TIMER_latch /2)		; some % down the frame is our vsync point
     BCC palloop
     
     RTS
+ENDIF
 }
 
 \\ Just set CRTC registers we care about for game vs attract mode
