@@ -674,6 +674,17 @@ ENDIF
  jsr rdbg2 ;bg set 2
  jsr rdch4 ;char set 4
 
+IF _AUDIO
+    LDA #0
+    JSR disksys_set_drive       ; gah!
+
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+
+    LDA #2
+    JSR disksys_set_drive
+ENDIF
+
 \ NOT BEEB - don't know what this is yet!
 \ jsr vidstuff
 
@@ -1435,12 +1446,6 @@ EQUS "PROLOG $"
 
 \ jsr ReloadStuff ;wiped out by dhires titles
 
-IF _AUDIO
-    ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
-ENDIF
-
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
@@ -1539,8 +1544,15 @@ EQUS "EPILOG $"
  LDA #0
  JSR disksys_set_drive
 
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0              ; BEEB TODO not correct bank!
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  lda #s_Epilog
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #15
  jsr pauseNI
  jsr unpacksplash
@@ -1548,7 +1560,7 @@ EQUS "EPILOG $"
  jsr pauseNI
 
  lda #s_Curtain
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #60
  jsr pauseNI
 
@@ -1636,7 +1648,7 @@ ENDIF
 
 \ BEEB AUDIO
 
- JSR music_on
+ JSR audio_update_on
 
 \* Go to TOPCTRL
 
@@ -1735,7 +1747,7 @@ ENDIF
  sta musicon
 
  \ BEEB - should probably reconcile with above
- JSR music_on
+ JSR audio_update_on
 
  IF DemoDisk
  ELSE
@@ -2080,6 +2092,12 @@ EQUS "CHTAB9 $"
 
 .LoadStage2_Attract
 {
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
     lda #BEEB_SWRAM_SLOT_CHTAB9
     jsr swr_select_slot
 
@@ -2155,6 +2173,12 @@ EQUS "CHTAB9 $"
     JMP LoadStage2_Attract
 
     .in_game
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #4
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
     LDA #2
     JSR disksys_set_drive
 
