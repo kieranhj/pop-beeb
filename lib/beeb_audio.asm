@@ -42,6 +42,7 @@ ENDIF
     lda pop_game_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
+    PLA
     RTS
 
     .have_track
@@ -80,6 +81,7 @@ ENDIF
     lda pop_title_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
+    PLA
     RTS
 
     .have_track
