@@ -121,6 +121,7 @@ kshowtime = IKN_t OR &80
 \* BEEB all required CTRL
 
 knextlevel = IKN_n OR &80
+knextlevel2 = IKN_m OR &80
 ;kclean = 'm'-CTRL
 ;kscreendump = '@'
 ;kreload = 'c'-CTRL
@@ -579,8 +580,11 @@ IF _DEBUG
  bne label_36
  jmp boostmeter
 
-.label_36 cmp #knextlevel
+.label_36 CMP #knextlevel2
+ BEQ gonext
+ cmp #knextlevel
  bne label_28
+ .gonext
  inc NextLevel
  rts
 

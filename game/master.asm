@@ -1557,12 +1557,19 @@ EQUS "EPILOG $"
  LDA #0
  JSR disksys_set_drive
 
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0              ; BEEB TODO not correct bank!
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  jsr SetupDHires
 
  MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
 
  lda #s_Epilog
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #15
  jsr pauseNI
  jsr unpacksplash
@@ -1570,7 +1577,7 @@ EQUS "EPILOG $"
  jsr pauseNI
 
  lda #s_Curtain
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #60
  jsr pauseNI
 
@@ -1654,7 +1661,7 @@ ENDIF
 
 \ BEEB AUDIO
 
- JSR music_on
+ JSR audio_update_on
 
 \* Go to TOPCTRL
 
@@ -1753,7 +1760,7 @@ ENDIF
  sta musicon
 
  \ BEEB - should probably reconcile with above
- JSR music_on
+ JSR audio_update_on
 
  IF DemoDisk
  ELSE
