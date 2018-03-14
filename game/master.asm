@@ -1641,7 +1641,7 @@ ENDIF
 
 \ BEEB AUDIO
 
- JSR music_on
+ JSR audio_update_on
 
 \* Go to TOPCTRL
 
@@ -1740,7 +1740,7 @@ ENDIF
  sta musicon
 
  \ BEEB - should probably reconcile with above
- JSR music_on
+ JSR audio_update_on
 
  IF DemoDisk
  ELSE

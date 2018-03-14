@@ -23,6 +23,13 @@ IF _AUDIO
 ; Note that our song IDs dont match the Apple ones since we nicked them from the Master system version.
 .BEEB_CUESONG
 {
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
     STA SongCue
 
     ;asl a
@@ -44,6 +51,7 @@ IF _AUDIO
     pla
     ; play the track
     jsr music_play
+
 .no_track
 	rts
 }
@@ -53,6 +61,13 @@ IF _AUDIO
 
 .BEEB_INTROSONG
 {
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
     STA SongCue
 
     ;asl a
@@ -73,7 +88,8 @@ IF _AUDIO
     tax
     pla
     ; play the track
-    jsr music_play    
+    jsr music_play
+
 .no_track
     rts
 }
@@ -86,8 +102,13 @@ IF _AUDIO
     BEQ already_loaded
 
     pha
+
+    ; Kill all audio
     jsr music_stop
     jsr audio_sfx_stop
+
+    ; Don't let update run
+    JSR audio_update_off
 
     pla
     STA beeb_audio_loaded_bank
@@ -119,6 +140,9 @@ IF _AUDIO
     pla
     jsr swr_select_bank
     
+    ; OK to make noise now
+    JSR audio_update_on
+
     .already_loaded
     rts
 }
@@ -194,15 +218,7 @@ ENDIF ; _AUDIO_DEBUG
 ; call this function once to initialise the audio system
 .audio_init
 {
-	jsr music_off
-
-	rts
-}
-
-.audio_quit
-{
-    jsr music_off
-    rts
+	JMP audio_update_off        ; don't update until we've initialised
 }
 
 \\ Initialise music player - pass in VGM_stream_data address in X/Y, RAM bank number in A, or &80 for ANDY
@@ -229,12 +245,11 @@ ENDIF ; _AUDIO_DEBUG
     pla
     jsr swr_select_bank
 
-	jsr music_on
-
+    ; override any sfx playing
+    jsr audio_sfx_stop
 
     cli
     rts
-    
 }
 
 
@@ -301,10 +316,11 @@ ENDIF ; _AUDIO_DEBUG
 
 .audio_sfx_stop
 {
-    lda #0
-    sta pop_sound_fx+0
-    sta pop_sound_fx+1
-    rts
+;   lda #0
+;   sta pop_sound_fx+0
+;   sta pop_sound_fx+1
+;   rts
+    JMP vgm_sfx_stop
 }
 
 ; A contains sound effect id - 0 to 19
@@ -313,6 +329,10 @@ ENDIF ; _AUDIO_DEBUG
  ;   asl a
     asl a
     tax
+
+    LDA vgm_player_ended
+    BEQ skip_sfx
+
     ; get bank
     lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
     pha
@@ -324,36 +344,36 @@ ENDIF ; _AUDIO_DEBUG
     pla
     ; play the track
     jsr vgm_sfx_play ;music_play
+
+    .skip_sfx
     rts 
 }
 
 
 
-.audio_music_enabled    EQUB 0      ; flag for enabling music playback updates
+.audio_update_enabled    EQUB 0      ; flag for enabling music playback updates
 .audio_bank             EQUB 0      ; SWR bank containing audio, will always be &80 now - ANDY RAM
 
 ; Enable music updates
-.music_on
+.audio_update_on
 {
     lda #1
-    sta audio_music_enabled
+    sta audio_update_enabled
     rts
 }
 
 ; Disable music updates
-.music_off
+.audio_update_off
 {
     lda #0
-    sta audio_music_enabled
+    sta audio_update_enabled
 	rts
 }
 
 ; Stop any currently playing music and silence chip
 .music_stop
 {
-	jsr music_off
-    jsr vgm_deinit_player    
-    rts
+    JMP vgm_deinit_player    
 }
 
 
@@ -364,7 +384,7 @@ ENDIF ; _AUDIO_DEBUG
 .audio_update
 {
 ;    bra music_update_exit ; test code
-    lda audio_music_enabled
+    lda audio_update_enabled
     beq update_exit
 
 
