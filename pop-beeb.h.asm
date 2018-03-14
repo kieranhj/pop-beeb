@@ -13,7 +13,7 @@ _VERSION = $01              ; BCD version Demo.1
 _DEBUG = TRUE               ; enable bounds checks and other debug fetures
 _DEMO_BUILD = FALSE         ; restrict to just one level & watermark
 _BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
-_START_LEVEL = 14            ; _DEBUG only start on a different level
+_START_LEVEL = 1            ; _DEBUG only start on a different level
 
 _AUDIO = TRUE               ; enable Beeb audio code
 _AUDIO_DEBUG = FALSE        ; enable audio debug text
