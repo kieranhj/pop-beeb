@@ -5,7 +5,7 @@
 .audio
 
 .gtone RTS      ;jmp GTONE          BEEB TODO SOUND
-.minit jmp MINIT
+.minit jmp BEEB_CUESONG     ; jmp MINIT
 .mplay jmp MPLAY
 .whoop BRK      ;jmp WHOOP
 
@@ -71,41 +71,15 @@ tone
 :pitch ds 2
 ENDIF
 
-\*-------------------------------
-\*
-\*  Call sound routines (in aux l.c. bank 1)
-\*  Exit with bank 2 switched in
-\*
-\*-------------------------------
-\grafix_bank1in bit RWBANK1
-\ bit RWBANK1
-\ rts
-
-.mplay_temp
-EQUB 0
-
-.MINIT
-{
-\ jsr grafix_bank1in
-\ jsr CALLMINIT
- LDA #&FF
- STA mplay_temp
- RTS
-}
-
-\grafix_bank2in bit RWBANK2
-\ bit RWBANK2
-\ rts
+\ On BEEB music player happens on EVENTV
+\ This returns 0 when music has ended
+\ Don't like that it knows VGM player internals
+\ but will do for now
 
 .MPLAY
 {
-\ jsr grafix_bank1in
-\ jsr CALLMPLAY
-\ jmp grafix_bank2in
-
- LDA mplay_temp
- DEC A
- STA mplay_temp
+ LDA vgm_player_ended
+ EOR #&FF
  RTS
 }
 
@@ -146,4 +120,19 @@ CALLMPLAY
 
 :silent lda #0
 return rts
+ENDIF
+
+IF _NOT_BEEB
+*-------------------------------
+*
+* Cue song
+*
+* In: A = song #
+*     X = # of cycles within which song must be played
+*
+*-------------------------------
+CUESONG
+ sta SongCue
+ stx SongCount
+ rts
 ENDIF

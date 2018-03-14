@@ -230,98 +230,101 @@ kresume = IKN_l OR $80
 \* RW18 sits in bank 1 of main language card;
 \* driveon switches it in, driveoff switches it out.
 \*
-\*-------------------------------
-\*
-\*  F I R S T B O O T
-\*
-\*-------------------------------
-
-.FIRSTBOOT
-{
-\ NOT BEEB
-\ lda MIXEDoff
-\ jsr setaux
-
-\* Set BBund ID byte
-
-\ lda #POPside1
-\ sta BBundID
-
-\* Load hires tables & add'l hires routines
-
-\ sta RAMWRTmain
-\ lda #2
-\ sta track
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex e0,e1,e2,e3,e4,e5,e6,e7,e8
-\ hex e9,ea,eb,ec,ed,00,00,00,00
-
-\* Load as much of Stage 3 as we can keep
-
- jsr loadperm
-
-\* Turn off drive
-
-\ jsr driveoff
-
-\* Check for IIGS
-
-\ jsr checkIIGS ;returns IIGS
-
-\* Start attract loop
-
- jsr initsystem ;in topctrl
-
- lda #0
- sta invert ;rightside up Y tables
-
- lda #1
- sta soundon ;Sound on
-
- lda #$ff   ; no level sprites cached
- sta CHset
- sta BGset1
- sta BGset2
-
- JSR beeb_set_mode2_no_clear
-
-    \\ Own error handler now we're fully initialised
-    SEI
-    LDX #LO(error_handler)
-    LDY #HI(error_handler)
-    STX BRKV
-    STY BRKV+1
-    CLI
-
-IF _BOOT_ATTRACT
- jmp AttractLoop
-ELSE
- jmp DOSTARTGAME
-ENDIF
-}
 
 .error_handler
 {
-    \\ Could have been anywhere so kill the stack
-    LDX #&FF
-    TXS
-
     LDA SavLevel
     BEQ not_trying_to_save
 
     \\ We were in middle of save game but an error occured
-    LDA #0
-    STA SavLevel
-
-    LDA #&FF
-    STA SavError
-
-    JMP MainLoop
+    STZ SavLevel        ; clear save flag
+    LDX #&FF
+    STX SavError        ; flag error
+    TXS
+    JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
     \\ We weren't saving so just restart
     .not_trying_to_save
-    JMP GOATTRACT
+
+    .wait_vsync
+;    DEX:BEQ stop_wait       ; in case our event handler has crashed
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    .stop_wait
+
+    LDA &FE34:AND #&5:BEQ same_same
+    CMP #&5:BEQ same_same
+
+    \\ Attempt to write to visible screen - flip to single buffer
+    lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
+ 
+    .same_same
+    JSR beeb_print_version_and_build
+    
+    LDA #LO(crash_strings):STA beeb_readptr
+    LDA #HI(crash_strings):STA beeb_readptr+1
+    LDX #0:LDY #0:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    LDX #0:LDY #2:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+    
+    LDX #0:LDY #4:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    LDX #0:LDY #6:LDA #PAL_FONT
+    JSR beeb_plot_font_string
+
+    \\ Plot Program Counter that was pushed onto the stack
+
+    TSX:LDA &103, X: JSR beeb_plot_font_bcd
+    TSX:LDA &102, X: JSR beeb_plot_font_bcd
+
+    .spin
+    BRA spin
+}
+
+.beeb_print_version_and_build
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4:JMP beeb_plot_font_bcd
 }
 
 IF _TODO
@@ -1443,6 +1446,7 @@ ENDIF
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
+    ; BEEB TEMP - this should really be done in subs_PlaySongI
     lda #s_Princess
     jsr BEEB_INTROSONG
 ENDIF
@@ -1836,16 +1840,14 @@ ENDIF
 \ jsr setmain
 \ jmp Tmoveauxlc
 \
-IF 0                ; if all same bank
 .bank1_filename
 EQUS "BANK1  $"
-ELSE
+
 .perm_file_names
-EQUS "CHTAB1 $"
-EQUS "CHTAB3 $"
-EQUS "CHTAB2 $"
+;EQUS "CHTAB1 $"
+;EQUS "CHTAB2 $"
+;EQUS "CHTAB3 $"
 EQUS "CHTAB5 $"
-ENDIF
 
 .loadbank1
 {
@@ -1853,23 +1855,15 @@ ENDIF
     lda #BEEB_SWRAM_SLOT_CHTAB1
     jsr swr_select_slot
 
-IF 0
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
-    LDA #HI(SWRAM_START)
+    LDA #HI(chtable1)
     JSR disksys_load_file
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
     STA beeb_readptr
     LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    \ Relocate the IMG file
-    LDA #LO(chtable3)
-    STA beeb_readptr
-    LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
@@ -1881,64 +1875,19 @@ IF 0
     JSR beeb_plot_reloc_img
 
     \ Relocate the IMG file
-    LDA #LO(chtable5)
-    STA beeb_readptr
-    LDA #HI(chtable5)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-ELSE
-    \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
-    LDA #HI(chtable1)
-    JSR disksys_load_file
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 8)
-    LDY #HI(perm_file_names + 8)
-    LDA #HI(chtable3)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable1)
-    STA beeb_readptr
-    LDA #HI(chtable1)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
-
-    lda #BEEB_SWRAM_SLOT_CHTAB3
-    jsr swr_select_slot
-
-    \ Relocate the IMG file
     LDA #LO(chtable3)
     STA beeb_readptr
     LDA #HI(chtable3)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
 
-    \ Then CHTAB2 + 5
-    lda #BEEB_SWRAM_SLOT_CHTAB2
-    jsr swr_select_slot
-
-    \ index into table for filename
-    LDX #LO(perm_file_names + 16)
-    LDY #HI(perm_file_names + 16)
-    LDA #HI(chtable2)
-    JSR disksys_load_file
-
-    \ Relocate the IMG file
-    LDA #LO(chtable2)
-    STA beeb_readptr
-    LDA #HI(chtable2)
-    STA beeb_readptr+1
-    JSR beeb_plot_reloc_img
 
     lda #BEEB_SWRAM_SLOT_CHTAB5
     jsr swr_select_slot
 
     \ index into table for filename
-    LDX #LO(perm_file_names + 24)
-    LDY #HI(perm_file_names + 24)
+    LDX #LO(perm_file_names)
+    LDY #HI(perm_file_names)
     LDA #HI(chtable5)
     JSR disksys_load_file
 
@@ -1948,22 +1897,9 @@ ELSE
     LDA #HI(chtable5)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
-ENDIF
 
     .return
     RTS
-}
-
-.loadperm
-{
-    LDA #0
-    JSR disksys_set_drive
-
-    \ Relocate font (in SWRAM)
-    JSR beeb_font_init
-
-    .return
-    rts
 }
 
 IF _TODO
@@ -2509,3 +2445,30 @@ EQUB 0
 
  jmp savegame
 }
+
+\*-------------------------------
+; Relocate image tables
+\*-------------------------------
+
+.beeb_plot_reloc_img
+    LDY #0
+    LDA (beeb_readptr), Y
+    TAX
+
+    \\ Relocate pointers to image data
+.beeb_plot_reloc_img_loop
+    INY
+
+    CLC
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr
+    STA (beeb_readptr), Y
+
+    INY
+    LDA (beeb_readptr), Y
+    ADC beeb_readptr+1
+    STA (beeb_readptr), Y
+
+    DEX
+    BPL beeb_plot_reloc_img_loop
+    RTS

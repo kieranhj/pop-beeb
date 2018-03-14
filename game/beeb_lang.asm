@@ -10,7 +10,6 @@
 \*
 \*-------------------------------
 
-IF 1
 .genCLS skip 1
 
 .bgX skip maxback
@@ -40,23 +39,3 @@ IF 1
 .midIMG skip maxmid
 .midOP skip maxmid
 .midTYP skip maxmid
-ENDIF
-IF 0
-.midCU skip maxmid
-.midCD skip maxmid
-.midCL skip maxmid
-.midCR skip maxmid
-.midTAB skip maxmid
-.objINDX skip maxobj
-.objX skip maxobj
-.objOFF skip maxobj
-.objY skip maxobj
-.objIMG skip maxobj
-.objFACE skip maxobj
-.objTYP skip maxobj
-.objCU skip maxobj
-.objCD skip maxobj
-.objCL skip maxobj
-.objCR skip maxobj
-.objTAB skip maxobj
-ENDIF
