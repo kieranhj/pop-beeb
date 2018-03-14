@@ -857,6 +857,7 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
+PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%

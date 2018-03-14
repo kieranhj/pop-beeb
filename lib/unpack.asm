@@ -3,39 +3,26 @@
 ; fixed params =~	-48 bytes -> 306
 ;			223 bytes
 
-SHORT = 0	;1	; assume file is ok
-IRQLOAD = 0	;1
-
 bitstr=beeb_temp
 LZPOS=beeb_readptr
 
+.pucrunch_start
+
 	; processor 6502
 	; ORG $c000
-.unpack
+.PUCRUNCH_UNPACK
 {
 
 	; Call with X = HI of packed data, Y = LO of packed data
 	; Returns exec address in X = HI and Y = LO
 	; Carry will be set for error, cleared for OK
-IF SHORT=0
-	;sei
-	;lda #&35	; C64 processor flags, unneeded
-	;sta 1
-ENDIF
-IF IRQLOAD=1
-	;jsr initloader
-ELSE
+
 	; Setup read pointer
 	stx INPOS
 	sty INPOS+1
-ENDIF
 
-IF SHORT=1
-	ldx #5
-222$	jsr getbyt	; skip 'p', 'u', endAddr HI&LO, leave starting escape in A
-	dex
-	bne 222$
-ELSE
+\\ We can skip reading the first 4 bytes
+IF 0
 	jsr getbyt	; 'p'
 	cmp #112
 	beq s9
@@ -48,8 +35,9 @@ ELSE
 	jmp eof2
 .s8:	jsr getbyt	; skip endAddr
 	jsr getbyt
-	jsr getbyt
 ENDIF
+
+	jsr getbyt
 	sta esc+1	; starting escape
 
 	jsr getbyt	; read startAddr
@@ -79,10 +67,11 @@ ENDIF
 	jsr getbyt
 	sta elzpb+1
 
+\\ We don't care about the EXEC address
 	jsr getbyt	; exec address
-	sta lo+1	; lo
+\	sta lo+1	; lo
 	jsr getbyt
-	sta hi+1	; hi
+\	sta hi+1	; hi
 
 	jsr getbyt	; rleUsed
 	ldx #0
@@ -179,23 +168,15 @@ ENDIF
 	bne noeof
 	; EOF
 .eof:
-IF SHORT=0
+
 	; EOF
 	clc
-.eof2:	;lda #&37	; c64 processofr flags, unneeded
-	; sta 1
-	cli
-ENDIF
-IF IRQLOAD=1
-	;jsr endloader
-lo = .+1
-hi = .+2
-	jmp $aaaa
-ELSE
-.hi:	ldx #0
-.lo:	ldy #0
+.eof2:
+
+\ Don't care about EXEC address
+\.hi:	ldx #0
+\.lo:	ldy #0
 	rts
-ENDIF
 
 
 .noeof:	sbc #0		; C is clear -> subtract 1  (1..126 -> 0..125)
@@ -226,17 +207,12 @@ ENDIF
 
 .getnew:pha		; 1 Byte/3 cycles
 
-if IRQLOAD=1
-	;jsr READBYTE	; should not change X or Y, return byte in A
-	; An implementation would first check if any bytes are available
-	; and if not, transfer a block from drive.
-ELSE
 INPOS = *+1
 	lda &aaaa	; ** PARAMETER
 	inc INPOS
 	bne s0a
 	inc INPOS+1
-ENDIF
+
 .s0a:	sec
 	rol a		; Shift out the next bit and
 			;  shift in C=1 (last bit marker)
@@ -289,3 +265,5 @@ OUTPOS = *+1		; ZP
 	EQUB 0,0,0,0,0,0,0,0
 
 }
+
+.pucrunch_end
