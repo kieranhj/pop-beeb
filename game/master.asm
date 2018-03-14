@@ -1544,8 +1544,15 @@ EQUS "EPILOG $"
  LDA #0
  JSR disksys_set_drive
 
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0              ; BEEB TODO not correct bank!
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  lda #s_Epilog
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #15
  jsr pauseNI
  jsr unpacksplash
@@ -1553,7 +1560,7 @@ EQUS "EPILOG $"
  jsr pauseNI
 
  lda #s_Curtain
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #60
  jsr pauseNI
 
