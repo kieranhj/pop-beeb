@@ -80,6 +80,9 @@ PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 PRINT "--------"
 
+SAVE "Lower", &C00, &D00,0
+
+
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
 SCRATCH_RAM_ADDR = &300
@@ -109,7 +112,7 @@ INCLUDE "lib/print.asm"
 .hazel_filename EQUS "Hazel  $"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
-
+.lower_filename EQUS "Lower  $"
 
 .pop_beeb_entry
 {
@@ -167,6 +170,11 @@ INCLUDE "lib/print.asm"
     JSR disksys_load_file
 
     \\ Load executable overlays
+
+    LDX #LO(lower_filename)
+    LDY #HI(lower_filename)
+    LDA #&0C
+    JSR disksys_load_file
 
     \\ Load Main
 
@@ -722,9 +730,13 @@ INCBIN "Images/BEEB.IMG.CHTAB2.bin"
 .chtable3
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
 
+PAGE_ALIGN                                  ; technically no reason to be PAGE ALIGNED
+INCLUDE "lib/beeb_sfx_bank.asm"
+
 .bank1_end
 
 PRINT "--------"
+PRINT "AUDIO SFX size = ", ~(pop_sfx_end - pop_sfx_start)
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
@@ -759,6 +771,8 @@ INCLUDE "game/coll.asm"
 coll_end=P%
 INCLUDE "game/auto.asm"
 auto_end=P%
+INCLUDE "game/inverty.asm"
+inverty_end=P%
 
 .pop_beeb_aux_b_end
 
@@ -776,6 +790,7 @@ PRINT "FRAMEDEFS size = ", ~(framedef_end-framedef)
 PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
 PRINT "COLL size = ", ~(coll_end-coll)
 PRINT "AUTO size = ", ~(auto_end-auto)
+PRINT "INVERTY size = ", ~(inverty_end-INVERTY)
 PRINT "--------"
 PRINT "Aux B code+data size = ", ~(pop_beeb_aux_b_end - pop_beeb_aux_b_start)
 PRINT "Aux B high watermark = ", ~P%

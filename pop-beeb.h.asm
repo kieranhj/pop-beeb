@@ -100,7 +100,7 @@ INCLUDE "lib/bbc.h.asm"
 INCLUDE "lib/bbc_utils.h.asm"
 
 \*-------------------------------
-; POP BEEB defines
+; POP BEEB screen defines
 \*-------------------------------
 
 BEEB_SCREEN_MODE = 2
@@ -115,9 +115,17 @@ BEEB_SCREEN_VPOS = 32
 
 beeb_screen_addr = &8000 - BEEB_SCREEN_SIZE
 
+\*-------------------------------
+; POP BEEB status defines
+\*-------------------------------
+
 BEEB_STATUS_ROW = 24
 
 beeb_status_addr = beeb_screen_addr + BEEB_STATUS_ROW * BEEB_SCREEN_ROW_BYTES
+
+\*-------------------------------
+; POP BEEB attract screen aka double hires
+\*-------------------------------
 
 BEEB_DOUBLE_HIRES_ROWS = 28     ; 28*8 = 224
 BEEB_DOUBLE_HIRES_SIZE = (BEEB_SCREEN_CHARS * BEEB_DOUBLE_HIRES_ROWS * 8)
@@ -125,7 +133,15 @@ BEEB_DOUBLE_HIRES_VPOS = 34
 
 beeb_double_hires_addr = &8000 - BEEB_DOUBLE_HIRES_SIZE
 
+\*-------------------------------
+; POP BEEB peel buffers
+\*-------------------------------
+
 BEEB_PEEL_BUFFER_SIZE = &C00
+
+\*-------------------------------
+; SWRAM allocations
+\*-------------------------------
 
 BEEB_SWRAM_SLOT_BGTAB1_B = 5    ; alongside code
 BEEB_SWRAM_SLOT_BGTAB1_A = 4
@@ -140,7 +156,11 @@ BEEB_SWRAM_SLOT_CHTAB9 = 5      ; blat CHTAB1325 (player)
 BEEB_SWRAM_SLOT_AUX_B = 6       ; some code
 BEEB_SWRAM_SLOT_AUX_HIGH = 7    ; all code
 
+BEEB_AUDIO_SFX_BANK=5           ; BANK1==ROM5
+
+\*-------------------------------
 ; POP defines
+\*-------------------------------
 
 INCLUDE "game/soundnames.h.asm"
 INCLUDE "game/seqdata.h.asm"

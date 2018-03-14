@@ -32,7 +32,7 @@
 .copy2000ma BRK    ;jmp copyscrnMA
 
 .copy2000am BRK    ;jmp copyscrnAM
-.inverty jmp INVERTY
+\.inverty jmp INVERTY
 
 \ Moved from grafix.asm
 .rnd jmp RND

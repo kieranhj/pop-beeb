@@ -231,14 +231,6 @@ kresume = IKN_l OR $80
 \* driveon switches it in, driveoff switches it out.
 \*
 
-SMALL_FONT_MAPCHAR
-.error_string1 EQUS "POP~CRASHED!~PLEASE~SEND~BUG~REPORT~TO", &FF
-.error_string2 EQUS "HTTP://BITSHIFTERS.GITHUB.IO", &FF
-.error_string3 EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
-.error_string4 EQUS "BUILD~NUMBER:~", &FF
-.error_string5 EQUS "PC:~",&FF
-ASCII_MAPCHAR
-
 .error_handler
 {
     LDA SavLevel
@@ -267,8 +259,10 @@ ASCII_MAPCHAR
     lda &fe34:eor #4:sta &fe34	; invert bits 0 (CRTC) & 2 (RAM)
  
     .same_same
-    LDA #LO(error_string1):STA beeb_readptr
-    LDA #HI(error_string1):STA beeb_readptr+1
+    JSR beeb_print_version_and_build
+    
+    LDA #LO(crash_strings):STA beeb_readptr
+    LDA #HI(crash_strings):STA beeb_readptr+1
     LDX #0:LDY #0:LDA #PAL_FONT
     JSR beeb_plot_font_string
 
@@ -281,15 +275,7 @@ ASCII_MAPCHAR
     LDX #0:LDY #6:LDA #PAL_FONT
     JSR beeb_plot_font_string
 
-    LDA pop_beeb_version:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
-    LDA pop_beeb_build+4:JSR beeb_plot_font_bcd
-
-    LDX #56:LDY #6:LDA #PAL_FONT
-    JSR beeb_plot_font_string
+    \\ Plot Program Counter that was pushed onto the stack
 
     TSX:LDA &103, X: JSR beeb_plot_font_bcd
     TSX:LDA &102, X: JSR beeb_plot_font_bcd
@@ -298,6 +284,48 @@ ASCII_MAPCHAR
     BRA spin
 }
 
+.beeb_print_version_and_build
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4:JMP beeb_plot_font_bcd
+}
 
 IF _TODO
 *-------------------------------
@@ -645,6 +673,17 @@ ENDIF
  jsr rdbg1 ;bg set 1
  jsr rdbg2 ;bg set 2
  jsr rdch4 ;char set 4
+
+IF _AUDIO
+    LDA #0
+    JSR disksys_set_drive       ; gah!
+
+    lda #3
+    jsr BEEB_LOAD_AUDIO_BANK
+
+    LDA #2
+    JSR disksys_set_drive
+ENDIF
 
 \ NOT BEEB - don't know what this is yet!
 \ jsr vidstuff
@@ -1407,12 +1446,6 @@ EQUS "PROLOG $"
 
 \ jsr ReloadStuff ;wiped out by dhires titles
 
-IF _AUDIO
-    ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
-ENDIF
-
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
@@ -1511,8 +1544,15 @@ EQUS "EPILOG $"
  LDA #0
  JSR disksys_set_drive
 
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0              ; BEEB TODO not correct bank!
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
  lda #s_Epilog
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #15
  jsr pauseNI
  jsr unpacksplash
@@ -1520,7 +1560,7 @@ EQUS "EPILOG $"
  jsr pauseNI
 
  lda #s_Curtain
- jsr PlaySongNI
+ jsr BEEB_INTROSONG
  lda #60
  jsr pauseNI
 
@@ -1608,7 +1648,7 @@ ENDIF
 
 \ BEEB AUDIO
 
- JSR music_on
+ JSR audio_update_on
 
 \* Go to TOPCTRL
 
@@ -1707,7 +1747,7 @@ ENDIF
  sta musicon
 
  \ BEEB - should probably reconcile with above
- JSR music_on
+ JSR audio_update_on
 
  IF DemoDisk
  ELSE
@@ -2052,6 +2092,12 @@ EQUS "CHTAB9 $"
 
 .LoadStage2_Attract
 {
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #1
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
     lda #BEEB_SWRAM_SLOT_CHTAB9
     jsr swr_select_slot
 
@@ -2127,6 +2173,12 @@ EQUS "CHTAB9 $"
     JMP LoadStage2_Attract
 
     .in_game
+IF _AUDIO
+    ; SM: added intro music load & play trigger here
+    lda #4
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
     LDA #2
     JSR disksys_set_drive
 

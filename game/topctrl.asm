@@ -1181,9 +1181,8 @@ ENDIF
 \*-------------------------------
 .flashon
 {
- lda lightning
- beq label_1
  lda lightcolor
+ ldx lightning
  bne label_2
 .label_1 lda ChgKidStr
  bpl return_12

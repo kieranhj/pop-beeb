@@ -121,6 +121,7 @@ kshowtime = IKN_t OR &80
 \* BEEB all required CTRL
 
 knextlevel = IKN_n OR &80
+knextlevel2 = IKN_m OR &80
 ;kclean = 'm'-CTRL
 ;kscreendump = '@'
 ;kreload = 'c'-CTRL
@@ -579,8 +580,11 @@ IF _DEBUG
  bne label_36
  jmp boostmeter
 
-.label_36 cmp #knextlevel
+.label_36 CMP #knextlevel2
+ BEQ gonext
+ cmp #knextlevel
  bne label_28
+ .gonext
  inc NextLevel
  rts
 
@@ -2165,11 +2169,6 @@ ASCII_MAPCHAR
 ; Display version & build numbers
 \*-------------------------------
 
-SMALL_FONT_MAPCHAR
-.version_string EQUS "VERSION ", &FF
-.build_string EQUS "~BUILD ", &FF
-ASCII_MAPCHAR
-
 .dispversion
 {
   JSR specialk_claim_status_line
@@ -2177,54 +2176,8 @@ ASCII_MAPCHAR
   \ Wait until no keys are being pressed
   JSR specialk_wait_for_no_keys
 
-  \ Write initial string
-  LDA #LO(version_string):STA beeb_readptr
-  LDA #HI(version_string):STA beeb_readptr+1
-  LDX #10
-  LDY #BEEB_STATUS_ROW
-  LDA #PAL_FONT
-  JSR beeb_plot_font_string
-
-  \ Print version #
-  LDA pop_beeb_version
-  LSR A:LSR A:LSR A:LSR A
-  CLC
-  ADC #1
-  JSR beeb_plot_font_glyph
-
-  LDA #GLYPH_DOT
-  JSR beeb_plot_font_glyph
-
-  LDA pop_beeb_version
-  AND #&F
-  CLC
-  ADC #1
-  JSR beeb_plot_font_glyph
-
-  LDA #LO(build_string):STA beeb_readptr
-  LDA #HI(build_string):STA beeb_readptr+1
-  LDX #38
-  LDY #BEEB_STATUS_ROW
-  LDA #PAL_FONT
-  JSR beeb_plot_font_string
-  
-  LDA pop_beeb_build
-  JSR beeb_plot_font_bcd
-
-  LDA pop_beeb_build+1
-  JSR beeb_plot_font_bcd
-
-  LDA pop_beeb_build+2
-  JSR beeb_plot_font_bcd
-
-  LDA #GLYPH_DOT
-  JSR beeb_plot_font_glyph
-
-  LDA pop_beeb_build+3
-  JSR beeb_plot_font_bcd
-
-  LDA pop_beeb_build+4
-  JSR beeb_plot_font_bcd
+  \ Print version & build no.
+  JSR beeb_print_version_and_build
 
   \ Wait for a key press to continue
   JSR specialk_wait_for_a_key

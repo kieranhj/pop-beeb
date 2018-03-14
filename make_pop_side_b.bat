@@ -5,8 +5,13 @@ rem disk1 now created by beebasm
 del "pop-beeb-side-a.ssd.$.PRIN2*"
 
 bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
+REM bin\bbcim -e "pop-beeb-side-a.ssd" Audio3
+REM bin\bbcim -e "pop-beeb-side-a.ssd" Audio4
 
 del "pop-beeb-side-b.ssd"
+
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio3"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
 
