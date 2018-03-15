@@ -1387,13 +1387,16 @@ ENDIF
  cpx #archbot
  bne drawfloor_drawflr
 
-.post jsr sub
- lda #CUpost
- bne cont
+.post ; Beeb doesn't require special masking for pillars when climbing up
+ BRA drawfloor_drawflr
+; jsr sub
+; lda #CUpost
+; bne cont
 
 .flr jsr sub
  lda #CUpiece
-.cont sta IMAGE
+.cont
+ sta IMAGE
  lda #enum_ora
  sta OPACITY
  jsr add
