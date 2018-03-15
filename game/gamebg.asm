@@ -1415,10 +1415,12 @@ ENDIF
 \* Get color (kid red, opps blue)
 
 \ For Beeb we just set the character object type accordingly
+
  lda #TypeComix
- ldx CharID
- beq label_2 ;kid: 0
- INC A      ; TypeComixAlt
+; KC decided only to have red hit fx - blue ones don't look good for guards
+; ldx CharID
+; beq label_2 ;kid: 0
+; INC A      ; TypeComixAlt
 .label_2
  jmp addcharobj
 }
