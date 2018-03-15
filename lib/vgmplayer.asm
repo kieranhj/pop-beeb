@@ -138,6 +138,7 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 {
 	stx vgm_sfx_addr+0
 	sty vgm_sfx_addr+1
+
 	rts
 }
 
@@ -167,6 +168,7 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	lda vgm_sfx_addr+1
 	beq finished
 
+; Ignore music player status for sfx
 	lda vgm_player_ended
 	beq finished
 

@@ -950,8 +950,18 @@ maxmob = mobspace-1
 
 .local_stop jsr stopobj
 
+\ Only play GateDown sfx if gate is visible on screen (or is exit on right)
+
+ LDA trscrn
+ CMP VisScrn
+ BEQ do_gatedown_sfx
+ cmp scrnLeft
+ BNE skip_gatedown_sfx
+
+ .do_gatedown_sfx
  lda #GateDown
  jsr addsound
+ .skip_gatedown_sfx
 
  jmp cont
 

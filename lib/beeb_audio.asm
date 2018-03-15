@@ -9,8 +9,10 @@ IF _AUDIO
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
 .audio2_filename EQUS "Audio2 $"    ; grand vizier music
-.audio3_filename EQUS "Audio3 $"    ; game audio - sfx & music jingles
+.audio3_filename EQUS "Audio3 $"    ; game music jingles
+.audio4_filename EQUS "Audio4 $"    ; cutscene music
 
+.beeb_audio_loaded_bank EQUB &FF
 
 ; POP BBC PORT - Music player hook
 ; See aux_core.asm for the jump tables
@@ -21,6 +23,13 @@ IF _AUDIO
 ; Note that our song IDs dont match the Apple ones since we nicked them from the Master system version.
 .BEEB_CUESONG
 {
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
     STA SongCue
 
     ;asl a
@@ -33,6 +42,7 @@ IF _AUDIO
     lda pop_game_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
+    PLA
     RTS
 
     .have_track
@@ -42,6 +52,7 @@ IF _AUDIO
     pla
     ; play the track
     jsr music_play
+
 .no_track
 	rts
 }
@@ -51,6 +62,13 @@ IF _AUDIO
 
 .BEEB_INTROSONG
 {
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
     STA SongCue
 
     ;asl a
@@ -63,6 +81,7 @@ IF _AUDIO
     lda pop_title_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
+    PLA
     RTS
 
     .have_track
@@ -71,7 +90,8 @@ IF _AUDIO
     tax
     pla
     ; play the track
-    jsr music_play    
+    jsr music_play
+
 .no_track
     rts
 }
@@ -80,11 +100,20 @@ IF _AUDIO
 ; Does not currently save SWR bank selection - this might need looking at.
 .BEEB_LOAD_AUDIO_BANK
 {
+    CMP beeb_audio_loaded_bank
+    BEQ already_loaded
+
     pha
+
+    ; Kill all audio
     jsr music_stop
     jsr audio_sfx_stop
 
+    ; Don't let update run
+    JSR audio_update_off
+
     pla
+    STA beeb_audio_loaded_bank
     tax
 
     ; preserve current SWR banksel
@@ -112,6 +141,11 @@ IF _AUDIO
     ; restore SWR bank
     pla
     jsr swr_select_bank
+    
+    ; OK to make noise now
+    JSR audio_update_on
+
+    .already_loaded
     rts
 }
 
@@ -186,15 +220,7 @@ ENDIF ; _AUDIO_DEBUG
 ; call this function once to initialise the audio system
 .audio_init
 {
-	jsr music_off
-
-	rts
-}
-
-.audio_quit
-{
-    jsr music_off
-    rts
+	JMP audio_update_off        ; don't update until we've initialised
 }
 
 \\ Initialise music player - pass in VGM_stream_data address in X/Y, RAM bank number in A, or &80 for ANDY
@@ -221,12 +247,11 @@ ENDIF ; _AUDIO_DEBUG
     pla
     jsr swr_select_bank
 
-	jsr music_on
-
+    ; override any sfx playing
+    jsr audio_sfx_stop
 
     cli
     rts
-    
 }
 
 
@@ -238,18 +263,18 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_death;, &8080 ; s_Heroic = 2 ; "heroic death" music
     EQUW pop_music_start;, &8080 ; s_Danger = 3
     EQUW pop_music_sword;, &8080 ; s_Sword = 4
-    EQUW pop_music_start;, &8080 ; s_Rejoin = 5
-    EQUW pop_music_start;, &8080 ; s_Shadow = 6
+    EQUW pop_music_sword;, &8080 ; s_Rejoin = 5
+    EQUW pop_music_death;, &8080 ; s_Shadow = 6
     EQUW pop_music_sword;, &8080 ; s_Vict = 7
     EQUW pop_music_sword;, &8080 ; s_Stairs = 8
     EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
     EQUW pop_music_start;, &8080 ; s_Jaffar = 10
-    EQUW pop_music_potion;, &8080 ; s_Potion = 11
+    EQUW pop_music_lifepotion;, &8080 ; s_Potion = 11
     EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
-    EQUW pop_music_start;, &8080 ; s_Timer = 13
-    EQUW pop_music_death;, &8080 ; s_Tragic = 14
+    EQUW pop_music_timer;, &8080 ; s_Timer = 13
+    EQUW pop_music_tragic;, &8080 ; s_Tragic = 14
     EQUW pop_music_start;, &8080 ; s_Embrace = 15
-    EQUW pop_music_start;, &8080 ; s_Heartbeat = 16
+    EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16
 
 ; as per 
 .pop_title_music
@@ -293,10 +318,11 @@ ENDIF ; _AUDIO_DEBUG
 
 .audio_sfx_stop
 {
-    lda #0
-    sta pop_sound_fx+0
-    sta pop_sound_fx+1
-    rts
+;   lda #0
+;   sta pop_sound_fx+0
+;   sta pop_sound_fx+1
+;   rts
+    JMP vgm_sfx_stop
 }
 
 ; A contains sound effect id - 0 to 19
@@ -305,8 +331,12 @@ ENDIF ; _AUDIO_DEBUG
  ;   asl a
     asl a
     tax
+
+    LDA vgm_player_ended
+    BEQ skip_sfx
+
     ; get bank
-    lda #&80 ; lda pop_sound_fx+2,x
+    lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
     pha
     ; get address
     lda pop_sound_fx+1,x
@@ -316,36 +346,36 @@ ENDIF ; _AUDIO_DEBUG
     pla
     ; play the track
     jsr vgm_sfx_play ;music_play
+
+    .skip_sfx
     rts 
 }
 
 
 
-.audio_music_enabled    EQUB 0      ; flag for enabling music playback updates
+.audio_update_enabled    EQUB 0      ; flag for enabling music playback updates
 .audio_bank             EQUB 0      ; SWR bank containing audio, will always be &80 now - ANDY RAM
 
 ; Enable music updates
-.music_on
+.audio_update_on
 {
     lda #1
-    sta audio_music_enabled
+    sta audio_update_enabled
     rts
 }
 
 ; Disable music updates
-.music_off
+.audio_update_off
 {
     lda #0
-    sta audio_music_enabled
+    sta audio_update_enabled
 	rts
 }
 
 ; Stop any currently playing music and silence chip
 .music_stop
 {
-	jsr music_off
-    jsr vgm_deinit_player    
-    rts
+    JMP vgm_deinit_player    
 }
 
 
@@ -356,21 +386,23 @@ ENDIF ; _AUDIO_DEBUG
 .audio_update
 {
 ;    bra music_update_exit ; test code
-    lda audio_music_enabled
+    lda audio_update_enabled
     beq update_exit
 
 
     lda &f4
     pha
 
-    ; page in the music bank
-    lda audio_bank
+    ; page in the sfx bank
+    lda #BEEB_AUDIO_SFX_BANK
     jsr swr_select_bank
-
-
 
     \\ Poll the SFX player
     jsr vgm_sfx_update
+
+    ; page in the music bank
+    lda audio_bank
+    jsr swr_select_bank
 
     \\ Doing the music last gives it priority over SFX
 	\\ Poll the music player
