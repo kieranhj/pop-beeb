@@ -107,6 +107,13 @@
     JMP beeb_clear_status_X
 }
 
+.beeb_clear_dhires_line
+{
+    LDY #&80/8
+    LDX #80
+    JMP beeb_clear_status_X
+}
+
 \*-------------------------------
 ; "Double Hires" FX for Attract
 \*-------------------------------
