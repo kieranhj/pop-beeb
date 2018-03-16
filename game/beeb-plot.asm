@@ -312,28 +312,15 @@ IF _UNROLL_LAYMASK = FALSE
 
     \ Save a cycle per line - player typically min 24 lines
 
+    LDA WIDTH
+    STA beeb_plot_sprite_LayMask_smWIDTH+1
+
 IF _HALF_PLAYER
     LDA BEEBHACK
-    BEQ no_beebhack
-
-    \ The ugliest hack :(
-    LDA WIDTH
     STA beeb_plot_sprite_LayMask_smEOR+1
-    LDA #0
-    STA beeb_plot_sprite_LayMask_smWIDTH+1
-    BEQ done_beebhack
-
-    .no_beebhack
-    LDA WIDTH
-    STA beeb_plot_sprite_LayMask_smWIDTH+1
-    LDA #0
-    STA beeb_plot_sprite_LayMask_smEOR+1
-
-    .done_beebhack
-ELSE
-    LDA WIDTH
-    STA beeb_plot_sprite_LayMask_smWIDTH+1
+    STZ BEEBHACK
 ENDIF
+
     LDA TOPEDGE
     STA beeb_plot_sprite_LayMask_smTOPEDGE+1
 
@@ -345,7 +332,8 @@ ENDIF
     \ Remember where the stack is now
     
     TSX
-    STX beeb_plot_sprite_LayMask_smSTACKTOP+1          ; use this to reset stack
+    STX beeb_plot_sprite_LayMask_smSTACKTOP1+1          ; use this to reset stack
+    STX beeb_plot_sprite_LayMask_smSTACKTOP2+1          ; use this to reset stack
 
     \ Calculate bottom of the stack and self-mod read address
 
@@ -455,6 +443,8 @@ RASTER_COL PAL_cyan
 
 RASTER_COL PAL_yellow
 
+.beeb_plot_sprite_LayMask_plot_screen_start
+
 \ Sort out where to start in the stack lookup
 
     .beeb_plot_sprite_LayMask_smStackStart
@@ -510,12 +500,6 @@ RASTER_COL PAL_yellow
     CPY #0
     BCC beeb_plot_sprite_LayMask_plot_screen_loop
 
-\ Reset the stack pointer
-
-    .beeb_plot_sprite_LayMask_smSTACKTOP
-    LDX #0                 ; beeb_stack_ptr
-    TXS
-
 \ Have we completed all rows?
 
     LDY YCO
@@ -524,28 +508,6 @@ RASTER_COL PAL_yellow
     CPY #0                 ; TOPEDGE
     STY YCO
     BEQ beeb_plot_sprite_LayMask_done_y
-
-\ Move to next sprite data row
-
-    CLC
-    LDA beeb_plot_sprite_LayMask_sprite_addr+1
-    .beeb_plot_sprite_LayMask_smWIDTH
-    ADC #0                  ; WIDTH
-    STA beeb_plot_sprite_LayMask_sprite_addr+1
-    {
-        BCC no_carry
-        INC beeb_plot_sprite_LayMask_sprite_addr+2
-        .no_carry
-    }
-
-\ Special case for half-height sprites
-
-IF _HALF_PLAYER
-    LDA beeb_plot_sprite_LayMask_smWIDTH+1
-    .beeb_plot_sprite_LayMask_smEOR
-    EOR #0
-    STA beeb_plot_sprite_LayMask_smWIDTH+1
-ENDIF
 
 \ Next scanline
 
@@ -557,7 +519,7 @@ ENDIF
 
 .beeb_plot_sprite_LayMask_smDEC
     DEC beeb_writeptr
-    JMP beeb_plot_sprite_LayMask_plot_lines_loop
+    BRA beeb_plot_sprite_LayMask_next_screen_row
 
 \ Need to move up a screen char row
 
@@ -572,11 +534,53 @@ ENDIF
     SBC #HI(BEEB_SCREEN_ROW_BYTES-7)
     STA beeb_writeptr+1
 
+\ Move to next row on screen
+
+.beeb_plot_sprite_LayMask_next_screen_row
+
+\ Special case for half-height sprites
+
+IF _HALF_PLAYER
+    LDA BEEBHACK
+    .beeb_plot_sprite_LayMask_smEOR
+    EOR #&FF
+    STA BEEBHACK
+    BNE beeb_plot_sprite_LayMask_plot_screen_start
+
+\    LDA beeb_plot_sprite_LayMask_smWIDTH+1
+\    .beeb_plot_sprite_LayMask_smEOR
+\    EOR #0
+\    STA beeb_plot_sprite_LayMask_smWIDTH+1
+ENDIF
+
+\ Reset the stack pointer
+
+    .beeb_plot_sprite_LayMask_smSTACKTOP1
+    LDX #0                 ; beeb_stack_ptr
+    TXS
+
+\ Move to next row of sprite data
+
+    CLC
+    LDA beeb_plot_sprite_LayMask_sprite_addr+1
+    .beeb_plot_sprite_LayMask_smWIDTH
+    ADC #0                  ; WIDTH
+    STA beeb_plot_sprite_LayMask_sprite_addr+1
+    {
+        BCC no_carry
+        INC beeb_plot_sprite_LayMask_sprite_addr+2
+        .no_carry
+    }
+
     JMP beeb_plot_sprite_LayMask_plot_lines_loop
 
     .beeb_plot_sprite_LayMask_done_y
 
 \ Reset stack before we leave
+
+    .beeb_plot_sprite_LayMask_smSTACKTOP2
+    LDX #0                 ; beeb_stack_ptr
+    TXS
 
     PLA
 ;RASTER_COL PAL_black
