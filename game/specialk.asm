@@ -4,7 +4,7 @@
 
 .specialk
 \EditorDisk = 0
-NoCheatKeys = 1 ;removes all cheat keys
+NoCheatKeys = 0 ;removes all cheat keys
 DebugKeys = 0
 \ tr on
 \ lst off
@@ -36,7 +36,7 @@ DebugKeys = 0
 .getminleft jmp GETMINLEFT
 .keeptime jmp KEEPTIME
 
-.shortentime BRK ;jmp SHORTENTIME
+.shortentime RTS ;jmp SHORTENTIME
 .cuesong RTS     ;jmp CUESONG
 \jmp DoSaveGame
 \jmp LoadLevelX
@@ -318,7 +318,7 @@ kerasegame = IKN_9 OR &80
  cmp #13
  bcs return
  sta NextLevel
- jsr shortentime
+ jsr SHORTENTIME
 .return
  rts
 
@@ -333,12 +333,10 @@ kerasegame = IKN_9 OR &80
 
 \* Normal key handling
 
-\ BEEB doesn't suport keybuf codes
-\.nogo lda keypress
-\ jsr addkey ;Add key to kbd buffer
+ IF NoCheatKeys=0
 
- IF NoCheatKeys
- ELSE
+.nogo lda keypress
+ jsr addkey ;Add key to kbd buffer
 
 \* Set development flag?
 
@@ -365,7 +363,7 @@ kerasegame = IKN_9 OR &80
  bcc label_2
  inc NextLevel
 
- jsr shortentime
+ jsr SHORTENTIME
 .label_2
  ENDIF
 
@@ -374,7 +372,7 @@ kerasegame = IKN_9 OR &80
  jsr LegitKeys
 
 \ NOT BEEB
-\ jsr DevelKeys
+ jsr DevelKeys
 
 IF _DEBUG
  jsr TempDevel
@@ -417,6 +415,11 @@ ENDIF
 
 .label_1a cmp #kabort
  bne label_1b
+
+\ BEEB addition - show time after abort level
+ lda #1
+ sta timerequest ;show time remaining
+
  jmp restart
 
 .label_1b
@@ -515,7 +518,6 @@ ENDIF
 \*
 \*-------------------------------
 
-IF _NOT_BEEB
 .DevelKeys
 {
  lda develment ;development flag
@@ -523,17 +525,16 @@ IF _NOT_BEEB
 
  jsr checkcodes ;secret codes
 
- lda keypress
- cmp #kclean
- bne label_1
- lda #0
- sta develment
- rts
+; lda keypress
+; cmp #kclean
+; bne label_1
+; lda #0
+; sta develment
+; rts
 .label_1
 .return
  rts
 }
-ENDIF
 
 \*-------------------------------
 \* Temp development keys
@@ -763,6 +764,7 @@ preload
  lda #POPside1
  sta BBundID
  rts
+ENDIF
 
 \*-------------------------------
 \*
@@ -772,6 +774,7 @@ preload
 \*
 \*-------------------------------
 
+IF NoCheatKeys=0
 .addkey
 {
  ldx keybufptr ;index to last key entry
@@ -841,7 +844,7 @@ ENDIF
  bmi label_5
  lda #14
  sta NextLevel
- jsr shortentime
+ jsr SHORTENTIME
  rts
 .label_5
 .return
@@ -858,7 +861,7 @@ ENDIF
 \*
 \*-------------------------------
 
-IF _NOT_BEEB
+IF NoCheatKeys=0
 .checkcode
 {
  sta smod+1
@@ -871,11 +874,11 @@ IF _NOT_BEEB
  beq return ;0 = code seq delimiter
  cmp keybuf,x
  beq match
- cmp #'A' ;alpha?
- bcc fail
- cmp #'Z'+1
- bcs fail
- ora #$20 ;yes--try LC too
+; cmp #'A' ;alpha?
+; bcc fail
+; cmp #'Z'+1
+; bcs fail
+ ora #$80 ;yes--try LC too
  cmp keybuf,x
  bne fail
 
@@ -897,19 +900,20 @@ IF _NOT_BEEB
 \* Use all caps; LC will be accepted too
 \*
 \*-------------------------------
-.C_skip EQUS "SKIP", 0
+
+.C_skip EQUS IKN_p, IKN_i, IKN_k, IKN_s, 0           ; "SKIP"
 
  IF NoCheatKeys
  ELSE
 
-.C_devel EQUS "POP", 0
-.C_go0 EQUS "GO0", 0
-.C_go1 EQUS "GO1", 0
-.C_zap2 EQUS "ZAP", 0
-.C_boost EQUS "BOOST", 0
-.C_restore EQUS "R", 0
-.C_zap1 EQUS "Z", 0
-.C_tina EQUS "TINA", 0
+.C_devel EQUS IKN_p, IKN_o, IKN_p, 0                ; "POP"
+;.C_go0 EQUS "GO0", 0
+;.C_go1 EQUS "GO1", 0
+.C_zap2 EQUS IKN_l, IKN_l, IKN_i, IKN_k, 0          ; "KILL"
+.C_boost EQUS IKN_t, IKN_s, IKN_o, IKN_o, IKN_b, 0  ; "BOOST"
+.C_restore EQUS IKN_t, IKN_s, IKN_e, IKN_r, 0       ; "REST"
+.C_zap1 EQUS IKN_p, IKN_a, IKN_z, 0                 ; "ZAP"
+.C_tina EQUS IKN_a, IKN_n, IKN_i, IKN_t, 0          ; "TINA"
 
  ENDIF
 ENDIF
@@ -1583,25 +1587,27 @@ nummsg = P%-timetable
  rts
 }
 
-IF _TODO
-*-------------------------------
-*
-* Shorten remaining time to 15 minutes
-* (e.g., 1st time player cheats by skipping a level)
-*
-*-------------------------------
-SHORTENTIME
+\*-------------------------------
+\*
+\* Shorten remaining time to 15 minutes
+\* (e.g., 1st time player cheats by skipping a level)
+\*
+\*-------------------------------
+
+.SHORTENTIME
+{
  ldy NextTimeMsg
  cpy #20
- bcs ]rts ;time is already short enough
+ bcs return ;time is already short enough
  ldy #18
  sty NextTimeMsg
  lda timetable,y
  sta FrameCount
  lda timetable+1,y
  sta FrameCount+1
-]rts rts
-ENDIF
+.return
+ rts
+}
 
 \*-------------------------------
 \*

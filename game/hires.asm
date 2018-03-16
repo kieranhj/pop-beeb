@@ -594,18 +594,17 @@ ENDIF
  clc
  adc #1 ;top line
  cmp BOTCUT
-IF _HALF_PLAYER
+
  bcc not_os
  JMP cancel
  .not_os
-ELSE
- bcs cancel ;Entire shape is o.s.
-ENDIF
+
  sec
  sbc #1
  sta TOPEDGE ;top line -1
 
-IF _HALF_PLAYER
+\\ BEEBHACK for half res sprites
+
     LDA BEEBHACK
     BEQ no_beebhack
 
@@ -623,29 +622,27 @@ IF _HALF_PLAYER
     STA smEOR+1
 
     .done_beebhack
-ENDIF
 
  ldx YCO
 .loop
  lda IMAGE
  clc
-IF _HALF_PLAYER
+
+\\ BEEBHACK for half res sprites
  .smWIDTH
  adc #0
-ELSE
- adc WIDTH
-ENDIF
+
  sta IMAGE
  bcc label_1
  inc IMAGE+1
 .label_1
 
-IF _HALF_PLAYER         \\ :(
+\\ BEEBHACK for half res sprites
+
  LDA smWIDTH+1
  .smEOR
  EOR #0
  STA smWIDTH+1
-ENDIF
 
  dex
  cpx BOTCUT
