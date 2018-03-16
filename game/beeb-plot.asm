@@ -315,11 +315,9 @@ IF _UNROLL_LAYMASK = FALSE
     LDA WIDTH
     STA beeb_plot_sprite_LayMask_smWIDTH+1
 
-IF _HALF_PLAYER
     LDA BEEBHACK
     STA beeb_plot_sprite_LayMask_smEOR+1
     STZ BEEBHACK
-ENDIF
 
     LDA TOPEDGE
     STA beeb_plot_sprite_LayMask_smTOPEDGE+1
@@ -540,18 +538,11 @@ RASTER_COL PAL_yellow
 
 \ Special case for half-height sprites
 
-IF _HALF_PLAYER
     LDA BEEBHACK
-    .beeb_plot_sprite_LayMask_smEOR
+      .beeb_plot_sprite_LayMask_smEOR
     EOR #&FF
     STA BEEBHACK
     BNE beeb_plot_sprite_LayMask_plot_screen_start
-
-\    LDA beeb_plot_sprite_LayMask_smWIDTH+1
-\    .beeb_plot_sprite_LayMask_smEOR
-\    EOR #0
-\    STA beeb_plot_sprite_LayMask_smWIDTH+1
-ENDIF
 
 \ Reset the stack pointer
 
