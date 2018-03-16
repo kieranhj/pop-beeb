@@ -200,18 +200,17 @@ miry = 0
 \*-------------------------------
 
 .ResumeGame
-{
- IF DemoDisk
- rts
- ELSE
-
 \ NOT BEEB
 \ jsr flipdisk ;Ask player to flip disk
 \ lda #POPside2
 \ sta BBundID ;& expect side 2 from now on
 
-.cont jsr loadgame ;Load saved-game info from disk
+LDA #&FF:STA SavLevel ; tell error handler we're trying to load
 
+jsr loadgame ;Load saved-game info from disk
+
+.ResumeGame_ReEnter   ; come back here if error occurs
+{
  lda SavLevel ;Has a game been saved?
  bpl ok ;Yes
 
@@ -231,6 +230,7 @@ miry = 0
 
 .ok lda SavStrength
  sta origstrength
+ sta MaxKidStr      ; needed if we do level load not restart below
 
  lda SavTimer+1
  sta FrameCount+1
@@ -252,9 +252,10 @@ miry = 0
  lda SavLevel
  sta level
  sta NextLevel
- jmp RESTART
 
- ENDIF
+\ BEEB addition - show cutscene before level after save game load
+ jmp LoadNextLevel
+; jmp RESTART
 }
 
 \*-------------------------------
