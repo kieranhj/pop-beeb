@@ -237,10 +237,17 @@ kresume = IKN_l OR $80
     BEQ not_trying_to_save
 
     \\ We were in middle of save game but an error occured
-    STZ SavLevel        ; clear save flag
     LDX #&FF
+    TXS                 ; reset stack
+
+    BPL go_mainloop
+    STX SavLevel
+    STZ SavError
+    JMP ResumeGame_ReEnter  ; if loading
+
+    .go_mainloop        ; if saving
     STX SavError        ; flag error
-    TXS
+    STZ SavLevel        ; clear save flag
     JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
     \\ We weren't saving so just restart
