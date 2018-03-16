@@ -1364,6 +1364,11 @@ IF _DEBUG
  lda BTN0
  ora BTN1
  bpl return
+
+\ BEEB addition - show time after death
+ lda #1
+ sta timerequest ;show time remaining
+
  jmp RESTART ;Button press restarts level
 
 .gameover

@@ -417,6 +417,11 @@ ENDIF
 
 .label_1a cmp #kabort
  bne label_1b
+
+\ BEEB addition - show time after abort level
+ lda #1
+ sta timerequest ;show time remaining
+
  jmp restart
 
 .label_1b
