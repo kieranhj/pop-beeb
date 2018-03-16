@@ -222,5 +222,6 @@ TypeGd = 2
 TypeSword = 3
 TypeReflect = 4
 TypeComix = 5
-TypeComixAlt = 6        ; Comix sprite but in different colour for enemy
+; KC decided only to have red hit fx - blue ones don't look good for guards
+;TypeComixAlt = 6        ; Comix sprite but in different colour for enemy
 TypeFF = $80

@@ -649,27 +649,28 @@ ENDIF
  sta newBGset2
  sty newCHset
 
-    \ Switch Guard palettes
+    \ Switch Guard palettes - super hacky and can only get away with it because background sprites
+    \ Using these palettes never become loose pieces that can move - otherwise they would change too!
     {
         CMP #1
         BEQ is_palace
 
         \ Is Dungeon
         LDA #MODE2_YELLOW_PAIR
-        STA palette_table+4*3+3     ; ick!
-        STA palette_table+4*4+3     ; ick!
+        STA palette_table+4*3+3     ; ick! Change colour 3 in palette 3 to Yellow (guard outfit)
+        STA palette_table+4*4+3     ; ick! Change colour 3 in palette 4 to Yellow (guard outfit)
         
         LDA #MODE2_RED_PAIR
-        STA palette_table+4*4+1     ; ick!
+        STA palette_table+4*4+1     ; ick! Change colour 1 in palette 4 to Red (special guard)
         BNE is_done
 
         .is_palace
         LDA #MODE2_WHITE_PAIR
-        STA palette_table+4*3+3     ; ick!
-        STA palette_table+4*4+3     ; ick!
+        STA palette_table+4*3+3     ; ick! Change colour 3 in palette 3 to White (guard outfit)
+        STA palette_table+4*4+3     ; ick! Change colour 3 in palette 3 to White (guard outfit)
 
         LDA #MODE2_GREEN_PAIR
-        STA palette_table+4*4+1     ; ick!
+        STA palette_table+4*4+1     ; ick! Change colour 1 in palette 4 to Green (special guard)
         .is_done
     }
 
