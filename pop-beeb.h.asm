@@ -23,7 +23,6 @@ _NOT_BEEB = FALSE           ; Apple II code to remove
 
 _IRQ_VSYNC = FALSE          ; remove irq code if doubtful
 _RASTERS = FALSE            ; debug raster for timing
-_HALF_PLAYER = TRUE         ; use half-height player sprites for RAM :(
 _JMP_TABLE = TRUE           ; use a single global jump table - BEEB REMOVE ME
 
 REDRAW_FRAMES = 2           ; needs to be 2 if double-buffering
