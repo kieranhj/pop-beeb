@@ -267,7 +267,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_death;, &8080 ; s_Shadow = 6
     EQUW pop_music_sword;, &8080 ; s_Vict = 7
     EQUW pop_music_sword;, &8080 ; s_Stairs = 8
-    EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
+    EQUW pop_music_rejoin;, &8080 ; s_Upstairs = 9
     EQUW pop_music_start;, &8080 ; s_Jaffar = 10
     EQUW pop_music_lifepotion;, &8080 ; s_Potion = 11
     EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
