@@ -80,7 +80,9 @@ INCBIN "audio/ip/m-potion.raw.exo"
 .pop_music_lifepotion
 INCBIN "audio/ip/m-lifepotion.raw.exo"
 .pop_music_death
-INCBIN "audio/music/Prince of Persia - 07 - Death.raw.exo"
+INCBIN "audio/ip/m-playerdeath-reg.raw.exo"
+.pop_music_heroic
+INCBIN "audio/ip/m-playerdeath-sword.raw.exo"
 
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0

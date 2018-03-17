@@ -260,7 +260,7 @@ ENDIF ; _AUDIO_DEBUG
 .pop_game_music
     EQUW 0 ;, &8080
     EQUW pop_music_death;, &8080 ; s_Accid = 1 ; "accidental death" music
-    EQUW pop_music_death;, &8080 ; s_Heroic = 2 ; "heroic death" music
+    EQUW pop_music_heroic;, &8080 ; s_Heroic = 2 ; "heroic death" music
     EQUW pop_music_start;, &8080 ; s_Danger = 3
     EQUW pop_music_sword;, &8080 ; s_Sword = 4
     EQUW pop_music_sword;, &8080 ; s_Rejoin = 5

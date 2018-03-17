@@ -958,3 +958,5 @@ PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
 ; Want to put this here but disc full...
 PUTFILE "Other/credits.pu.bin", "CREDITS", &3000, 0
 PUTFILE "Other/epilog.pu.bin", "EPILOG", &3000, 0
+
+PUTFILE "Manual.txt", "MANUAL", &FFFF, 0
