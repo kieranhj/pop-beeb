@@ -74,7 +74,7 @@ GUARD ANDY_TOP
 .pop_music_start
 INCBIN "audio/ip/m-begin.raw.exo"
 .pop_music_sword
-INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
+INCBIN "audio/ip/m-killguard-or-sword.raw.exo"
 .pop_music_potion
 INCBIN "audio/ip/m-potion-sliced.raw.exo"
 .pop_music_lifepotion
