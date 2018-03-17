@@ -76,7 +76,7 @@ INCBIN "audio/ip/m-begin.raw.exo"
 .pop_music_sword
 INCBIN "audio/music/Prince of Persia - 05 - Get Sword.raw.exo"
 .pop_music_potion
-INCBIN "audio/ip/m-potion.raw.exo"
+INCBIN "audio/ip/m-potion-sliced.raw.exo"
 .pop_music_lifepotion
 INCBIN "audio/ip/m-lifepotion.raw.exo"
 .pop_music_death
@@ -85,6 +85,8 @@ INCBIN "audio/ip/m-playerdeath-reg.raw.exo"
 INCBIN "audio/ip/m-playerdeath-sword.raw.exo"
 .pop_music_rejoin
 INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
+.pop_music_glug
+INCBIN "audio/ip/3glugs.raw.exo"
 
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0

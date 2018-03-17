@@ -50,6 +50,8 @@ s_Tragic = 14       ; Tragic ending cut scene (out of time I think)
 s_Embrace = 15      ; Happy ending cut scene
 s_Heartbeat = 16    ; Princess cut scene 2/5/8
 
+s_Glug = 17         ; Added for drinking a potion
+
 \* title music
 \* Set 1 (title)
 

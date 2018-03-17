@@ -275,6 +275,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_tragic;, &8080 ; s_Tragic = 14
     EQUW pop_music_start;, &8080 ; s_Embrace = 15
     EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16
+    EQUW pop_music_glug; s_Glug = 17
 
 ; as per 
 .pop_title_music
