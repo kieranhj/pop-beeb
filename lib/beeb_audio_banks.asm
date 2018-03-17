@@ -83,6 +83,8 @@ INCBIN "audio/ip/m-lifepotion.raw.exo"
 INCBIN "audio/ip/m-playerdeath-reg.raw.exo"
 .pop_music_heroic
 INCBIN "audio/ip/m-playerdeath-sword.raw.exo"
+.pop_music_rejoin
+INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
 
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
