@@ -413,7 +413,6 @@ INCLUDE "lib/swr.asm"
 
 INCLUDE "game/beeb_test.asm"
 INCLUDE "game/beeb_platform.asm"
-INCLUDE "game/beeb_screen.asm"
 
 ; PoP source in CORE memory (always present)
 
@@ -472,7 +471,6 @@ PRINT "BEEB BOOT size = ", ~(beeb_boot_end - beeb_boot_start)
 PRINT "AUX JUMP TABLES size = ", ~(aux_jump_end - aux_jump_start)
 PRINT "BEEB TEST size = ", ~(beeb_test_end - beeb_test_start)
 PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
-PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "AUDIO (LEGACY) size = ", ~(audio_end - audio)
@@ -845,6 +843,7 @@ misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
 INCLUDE "lib/unpack.asm"
+INCLUDE "game/beeb_screen.asm"
 
 .pop_beeb_aux_high_end
 
@@ -867,6 +866,7 @@ PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
 PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
+PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%

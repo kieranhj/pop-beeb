@@ -130,97 +130,161 @@ ENDIF
 }
 
 \*-------------------------------
-; IRQ code
+\* IN: XCO, YCO
+\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
 \*-------------------------------
 
-IF _IRQ_VSYNC
-.beeb_irq_init
+.beeb_plot_calc_screen_addr
 {
-	SEI
-	LDA IRQ1V:STA old_irqv
-	LDA IRQ1V+1:STA old_irqv+1
+    \ XCO & YCO are screen coordinates
+    \ XCO (0-39) and YCO (0-191)
+    \ OFFSET (0-3) - maybe 0,1 or 8,9?
 
-	LDA #LO(beeb_irq_handler):STA IRQ1V
-	LDA #HI(beeb_irq_handler):STA IRQ1V+1		; set interrupt handler
+    LDX XCO
+    LDY YCO
 
-	LDA #64						; A=00000000
-	STA &FE4B					; R11=Auxillary Control Register (timer 1 latched mode)
+    CLC
+    LDA Mult16_LO,X
+    ADC YLO,Y
+    STA beeb_writeptr
+    LDA Mult16_HI,X
+    ADC YHI,Y
+    STA beeb_writeptr+1
 
-	LDA #&C0					; A=11000000
-	STA &FE4E					; R14=Interrupt Enable (enable timer 1 interrupt)
+    \ Handle OFFSET
 
-	LDA #LO(TIMER_start)
-	STA &FE44					; R4=T1 Low-Order Latches (write)
-	LDA #HI(TIMER_start)
-	STA &FE45					; R5=T1 High-Order Counter
-	
-	LDA #LO(TIMER_latch)
-	STA &FE46
-	LDA #HI(TIMER_latch)
-	STA &FE47
-	CLI
+    LDA OFFSET
+    LSR A
+    STA beeb_mode2_offset       ; not needed by every caller
 
-	RTS
+    AND #&1
+    STA beeb_parity             ; this is parity
+
+    ROR A                       ; return parity in C
+    RTS
 }
 
-.old_irqv
-EQUW &FFFF
+\*-------------------------------
+; Additional PREP before sprite plotting for Beeb
+\*-------------------------------
 
-.beeb_irq_handler
+.beeb_PREPREP
 {
-	LDA &FC
-	PHA
-
-	LDA &FE4D
-	AND #&40			; timer 1
-	BEQ return_to_os
-
-	\\ Acknowledge timer1 interrupt
-	STA &FE4D
-
-	\\ Increment vsync counter
-	INC beeb_vsync_count
-
-	\\ Pass on to OS IRQ handler
-	.return_to_os
-	PLA
-	STA &FC
-	JMP (old_irqv)		; RTI
-}
+    \\ Must have a swram bank to select or assert
+    LDA BANK
+IF _DEBUG
+    SEC
+    SBC #4
+    CMP #4
+    BCC bank_ok
+    BRK
+    .bank_ok
+    LDA BANK
 ENDIF
+    JSR swr_select_slot
 
-\*-------------------------------
-; Test whether key is pressed (from Thrust!)
-; A=Internal Key Number (IKN)
-; Returns A=0 pressed A<>0 not pressed
-\*-------------------------------
+    \ Turns TABLE & IMAGE# into IMAGE ptr
+    \ Obtains WIDTH & HEIGHT
+    
+    JSR PREPREP
 
-IF 0
-.beeb_test_key
-{
-        PHP
+    \ On BEEB eor blend mode changed to PALETTE bump
 
-	.L3AA7
-        LDX     #$03
-        LDY     #$0B
-        SEI
-        STX     SHEILA_System_VIA_Register_B
-        LDX     #$7F
-        STX     SHEILA_System_VIA_Data_Dir
-        STA     SHEILA_System_VIA_Register_A_NH
-        LDA     SHEILA_System_VIA_Register_A_NH
-        STY     SHEILA_System_VIA_Register_B
-        PLP
-        LDX     #$00
-        ROL     A
-        BCC     no_press
+    LDA OPACITY
+    CMP #enum_eor
+    BNE not_eor
+    INC PALETTE
+    .not_eor
 
-        LDX     #$FF
-		
-	.no_press
-        CPX     #$FF
-        RTS
+    \ PALETTE now set per sprite
+
+    \ BIT 6 of PALETTE specifies whether sprite is secretly half vertical res
+
+    LDA PALETTE
+    AND #&40
+    STA BEEBHACK
+
+    \ BIT 7 of PALETTE actually indicates there is no palette - data is 4bpp
+
+    LDA PALETTE
+    AND #&BF
+    STA PALETTE
+
+    RTS
 }
-ENDIF
+
+\*-------------------------------
+\*
+\* Palette functions
+\*
+\*-------------------------------
+
+.beeb_plot_sprite_setpalette
+{
+    BMI return
+    ASL A:ASL A
+    TAX
+
+    LDA palette_table+1, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
+
+    LDA palette_table+2, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
+    
+    LDA palette_table+3, X
+    AND #MODE2_RIGHT_MASK
+    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
+    ASL A
+    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
+
+    .return
+    RTS
+}
+
+.beeb_plot_sprite_FlipPalette
+{
+\ L&R pixels need to be swapped over
+
+    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
+    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
+
+    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
+    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
+
+    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
+    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
+
+    RTS    
+}
+
+\*-------------------------------
+; Clear Beeb screen buffer
+\*-------------------------------
+
+.beeb_CLS
+{
+\\ Ignore PAGE as no page flipping yet
+
+  ldx #HI(BEEB_SCREEN_SIZE)
+  lda #HI(beeb_screen_addr)
+
+  sta loop+2
+  lda #0
+  ldy #0
+  .loop
+  sta &3000,Y
+  iny
+  bne loop
+  inc loop+2
+  dex
+  bne loop
+  rts
+}
 
 .beeb_platform_end
