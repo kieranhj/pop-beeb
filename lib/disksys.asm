@@ -588,15 +588,9 @@ EQUD 0
 ; A=memory address MSB (page aligned)
 ; X=filename address LSB
 ; Y=filename address MSB
-.disksys_load_file
+.disksys_load_direct
 {
-    \ Final destination
-    STA write_to+2
-
-IF _DEBUG
-    LDA &F4
-    PHA
-ENDIF
+    STA osfile_loadaddr+1
 
     \ Copy filename
     STX beeb_readptr
@@ -613,21 +607,10 @@ ENDIF
     DEY
     BPL loop
 
-    \ Where to?
-    LDA write_to+2
-    BPL load_direct
-
-    \ Wait until next vsync frame swap so we know which buffer we're using!
-    .wait_vsync
-    LDA vsync_swap_buffers
-    BNE wait_vsync
-    
-    \ Load to screen if can't load direct
-    LDA #HI(disksys_loadto_addr)
-    STA read_from+2
-
-    .load_direct
-    STA osfile_loadaddr+1
+IF _DEBUG
+    LDA &F4
+    PHA
+ENDIF
 
     \ Ask OSFILE to load our file
 	LDX #LO(osfile_params)
@@ -643,6 +626,29 @@ IF _DEBUG
     BRK
     .rom_ok
 ENDIF
+
+    RTS
+}
+
+.disksys_load_file
+{
+    \ Final destination
+    STA write_to+2
+
+    \ Where to?
+    BPL load_direct
+
+    \ Wait until next vsync frame swap so we know which buffer we're using!
+    .wait_vsync
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    
+    \ Load to screen if can't load direct
+    LDA #HI(disksys_loadto_addr)
+    STA read_from+2
+
+    .load_direct
+    JSR disksys_load_direct
 
     LDA write_to+2
     BPL return
@@ -678,6 +684,19 @@ ENDIF
 
     .return
     RTS
+}
+
+.disksys_decrunch_file
+{
+    \ Final destination is baked into pu file
+
+    \ Load to screen as can't load direct
+    LDA #HI(disksys_loadto_addr)
+    JSR disksys_load_direct
+
+    LDX #LO(disksys_loadto_addr + 6)
+    LDY #HI(disksys_loadto_addr + 6)
+    JMP PUCRUNCH_UNPACK
 }
 
 ENDIF
