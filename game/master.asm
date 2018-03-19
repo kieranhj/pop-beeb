@@ -74,7 +74,7 @@ MACRO MASTER_LOAD_DHIRES filename, pu_size
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(&8006 - pu_size)
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
@@ -90,7 +90,7 @@ MACRO MASTER_WIPE_DHIRES filename, pu_size
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(&8006 - pu_size)
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
@@ -1161,7 +1161,7 @@ ENDIF
  LDA #HI(pu_splash_loadat)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(pu_splash_loadat + 6)
  LDY #HI(pu_splash_loadat + 6)
  JSR PUCRUNCH_UNPACK
@@ -1171,7 +1171,7 @@ ENDIF
  LDA #HI(pu_title_loadat)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(pu_title_loadat + 6)
  LDY #HI(pu_title_loadat + 6)
  JSR PUCRUNCH_UNPACK

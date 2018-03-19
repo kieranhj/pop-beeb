@@ -425,6 +425,7 @@ INCLUDE "game/topctrl.asm"
 topctrl_end=P%
 INCLUDE "game/audio.asm"            ; this can go eventually
 audio_end=P%
+INCLUDE "lib/unpack.asm"
 
 ; Code moved back into Core from Main
 
@@ -474,6 +475,7 @@ PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "AUDIO (LEGACY) size = ", ~(audio_end - audio)
+PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
 PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT FONT size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
@@ -842,7 +844,6 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
-INCLUDE "lib/unpack.asm"
 INCLUDE "game/beeb_screen.asm"
 
 .pop_beeb_aux_high_end
@@ -865,7 +866,6 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
-PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
 PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
