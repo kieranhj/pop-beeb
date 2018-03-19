@@ -22,8 +22,8 @@
 
 ;.firstboot jmp FIRSTBOOT               ; moved to pop-beeb.asm
 ;.loadlevel jmp LOADLEVEL
-.reload BRK       ;jmp RELOAD                 EDITOR
-.loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
+;.reload BRK       ;jmp RELOAD          ; EDITOR
+;.loadstage2 BRK   ;jmp LoadStage2      ; UNUSED EXTERN?
 .goattract
 .attractmode jmp ATTRACTMODE
 .cutprincess jmp CUTPRINCESS
@@ -32,7 +32,7 @@
 .dostartgame jmp DOSTARTGAME
 
 .epilog jmp EPILOG
-.loadaltset BRK   ;jmp LOADALTSET
+;.loadaltset BRK   ;jmp LOADALTSET      ; unusued Editor?
 \_screendump
 
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
@@ -120,43 +120,6 @@ ASCII_MAPCHAR
 ENDIF
 
 \*-------------------------------
-\ lst
-\ put eq
-\ lst
-\ put gameeq
-\ lst off
-\
-\Tmoveauxlc = moveauxlc-$b000
-
-\*-------------------------------
-\* RW18 ID bytes
-\
-\POPside1 = $a9
-\POPside2 = $ad
-\
-\* RW18 zero page vars
-\
-\slot = $fd
-\track = $fe
-\lastrack = $ff
-\
-\* RW18 commands
-\
-\DrvOn = $00
-\DrvOff = $01
-\Seek = $02
-\RdSeqErr = $03
-\RdGrpErr = $04
-\WrtSeqErr = $05
-\WrtGrpErr = $06
-\ModID = $07
-\RdSeq = $83
-\RdGrp = $84
-\WrtSeq = $85
-\WrtGrp = $86
-\Inc = $40 ;.Inc to inc track
-
-\*-------------------------------
 \* Local vars
 
 \dum locals
@@ -195,33 +158,6 @@ pacProom = $84
 \*-------------------------------
 \* Soft switches
 \ Already defined in grafix.asm
-\IOUDISoff = $c07f
-\IOUDISon = $c07e
-\DHIRESoff = $c05f
-\DHIRESon = $c05e
-\HIRESon = $c057
-\HIRESoff = $c056
-\PAGE2on = $c055
-\PAGE2off = $c054
-\MIXEDon = $c053
-\MIXEDoff = $c052
-\TEXTon = $c051
-\TEXToff = $c050
-\ALTCHARon = $c00f
-\ALTCHARoff = $c00e
-\ADCOLon = $c00d
-\ADCOLoff = $c00c
-\ALTZPon = $c009
-\ALTZPoff = $c008
-\RAMWRTaux = $c005
-\RAMWRTmain = $c004
-\RAMRDaux = $c003
-\RAMRDmain = $c002
-\ADSTOREon = $c001
-\ADSTOREoff = $c000
-
-\RWBANK2 = $c083
-\RWBANK1 = $c08b
 
 \*-------------------------------
 IF FinalDisk==0
@@ -347,7 +283,7 @@ kresume = IKN_l OR $80
   LDA pop_beeb_build+4:JMP beeb_plot_font_bcd
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *   Reload code & images
@@ -546,27 +482,6 @@ EQUD savedgame_top
 
 .SAVEGAME
 {
-\ NOT BEEB
-\ jsr checkdisk ;sets main
-\
-\ sta RAMRDaux
-\ ldx #15
-\:loop lda savedgame,x ;aux
-\ sta $200,x ;main
-\ dex
-\ bpl :loop
-\ sta RAMRDmain
-\
-\ lda #23
-\ sta track
-\ jsr rw18
-\ db WrtGrpErr
-\ hex 02,00,00,00,00,00,00,00,00
-\ hex 00,00,00,00,00,00,00,00,00
-\ bcc :ok
-\ jsr whoop
-\:ok jmp driveoff
-
     LDA #LO(savedgame)
     STA savegame_params+2
     STA savegame_params+10
@@ -590,25 +505,6 @@ EQUD savedgame_top
 
 .LOADGAME
 {
-\ NOT BEEB
-\ jsr checkdisk ;sets main
-\
-\ lda #23
-\ sta track
-\ jsr rw18
-\ db RdGrp
-\ hex 02,00,00,00,00,00,00,00,00
-\ hex 00,00,00,00,00,00,00,00,00
-\
-\ sta RAMWRTaux
-\ ldx #15
-\:loop lda $200,x ;main
-\ sta savedgame,x ;aux
-\ dex
-\ bpl :loop
-\
-\ jmp driveoff
-
     LDA #LO(savedgame)
     STA savegame_params+2
 
@@ -758,7 +654,7 @@ ENDIF
 \ lda bluepREG
 \]rts rts
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 vidstuff
  lda BBundID
@@ -1804,7 +1700,7 @@ EQUS "CHTAB5 $"
     RTS
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  Stage 1: static dbl hires screens -- no animation
