@@ -162,4 +162,83 @@
     RTS
 }
 
+\*-------------------------------
+; Debug fns
+\*-------------------------------
+
+IF _DEBUG
+.temp_last_count EQUB 0
+
+FR_COUNTER_X=78
+FR_COUNTER_Y=BEEB_STATUS_ROW
+
+.BEEB_DISPLAY_VSYNC_COUNTER
+{
+
+    JSR beeb_plot_font_prep
+    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr
+    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr+1
+    LDA #PAL_FONT:STA PALETTE
+
+    SEC
+    LDA beeb_vsync_count
+    TAY
+    SBC temp_last_count
+    STY temp_last_count
+
+    CMP #10
+    BCC diff_ok
+    LDA #9
+    .diff_ok
+    INC A
+    JMP beeb_plot_font_glyph
+}
+ENDIF
+
+.BEEB_PRINT_VERSION_AND_BUILD
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4
+  JMP beeb_plot_font_bcd
+}
+
 .beeb_screen_end

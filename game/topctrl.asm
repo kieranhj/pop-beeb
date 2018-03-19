@@ -451,15 +451,6 @@ ENDIF
     .no_savegame
   }
 
-IF _DEBUG
- SEC
- LDA beeb_vsync_count
- TAY
- SBC temp_last_count
- STA temp_vsync_diff
- STY temp_last_count
-ENDIF
-
  jsr rnd
 
  lda #0
@@ -480,7 +471,7 @@ ENDIF
  jsr flashon
 
 IF _DEBUG
- JSR display_vsync_counter
+ JSR beeb_display_vsync_counter
 ENDIF
 
  jsr FrameAdv ;Draw next frame & show it
@@ -2072,30 +2063,5 @@ ENDIF
 \ ds 1
 \ usr $a9,4,$a00,*-org
 \ lst off
-
-IF _DEBUG
-.temp_last_count EQUB 0
-.temp_vsync_diff EQUB 0
-
-FR_COUNTER_X=78
-FR_COUNTER_Y=BEEB_STATUS_ROW
-
-.display_vsync_counter
-{
-    JSR beeb_plot_font_prep
-    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr
-    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr+1
-    LDA #PAL_FONT:STA PALETTE
-    LDA temp_vsync_diff
-    CMP #10
-    BCC diff_ok
-    LDA #9
-    .diff_ok
-    INC A
-    JMP beeb_plot_font_glyph
-}
-ENDIF
 
 \\ Should probably refactor this out into a proper message system
