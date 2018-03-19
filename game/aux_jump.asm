@@ -268,6 +268,15 @@ IF _JMP_TABLE
 
 .inverty JUMP_A INVERTY, INVERTY_BASE, 0
 
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+
+.beeb_copy_shadow JUMP_A BEEB_COPY_SHADOW, BEEB_MASTER_BASE, 0
+.beeb_hide_screen JUMP_A BEEB_HIDE_SCREEN, BEEB_MASTER_BASE, 1
+.beeb_show_screen JUMP_A BEEB_SHOW_SCREEN, BEEB_MASTER_BASE, 2
+.beeb_set_game_screen JUMP_A BEEB_SET_GAME_SCREEN, BEEB_MASTER_BASE, 3
+.beeb_set_attract_screen JUMP_A BEEB_SET_ATTRACT_SCREEN, BEEB_MASTER_BASE, 4
 
 \*-------------------------------
 \* frameadv.asm
@@ -618,6 +627,17 @@ EQUB LO(CMPWALL)
 INVERTY_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(INVERTY)
 
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+BEEB_MASTER_BASE = P%-aux_jump_fn_table_A_LO
+EQUB LO(BEEB_COPY_SHADOW)
+EQUB LO(BEEB_HIDE_SCREEN)
+EQUB LO(BEEB_SHOW_SCREEN)
+EQUB LO(BEEB_SET_GAME_SCREEN)
+EQUB LO(BEEB_SET_ATTRACT_SCREEN)
+
+
 .aux_jump_fn_table_A_HI
 \*-------------------------------
 \* auto.asm
@@ -739,6 +759,16 @@ EQUB HI(CMPWALL)
 \* inverty.asm
 \*-------------------------------
 EQUB HI(INVERTY)
+
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+EQUB HI(BEEB_COPY_SHADOW)
+EQUB HI(BEEB_HIDE_SCREEN)
+EQUB HI(BEEB_SHOW_SCREEN)
+EQUB HI(BEEB_SET_GAME_SCREEN)
+EQUB HI(BEEB_SET_ATTRACT_SCREEN)
+
 
 \*-------------------------------
 \* FUNCTION addresses for AUX B

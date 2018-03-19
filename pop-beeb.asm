@@ -202,9 +202,13 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_main_start)
     JSR disksys_load_file
 
-\ Setup SHADOW buffers
+\ Setup SHADOW buffers for double buffering
 
-    JSR shadow_init_buffers
+    ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
+    lda &fe34
+    and #255-1  ; set D to 0
+    ora #4    	; set X to 1
+    sta &fe34
 
     \\ Load Aux
 
@@ -307,6 +311,9 @@ ENDIF
 
         JSR beeb_plot_reloc_img_loop
     }
+
+ STZ map_2bpp_to_mode2_pixel+&00         ; left + right 0
+
 \* Start attract loop
 
  jsr initsystem ;in topctrl
@@ -779,6 +786,7 @@ INCLUDE "game/auto.asm"
 auto_end=P%
 INCLUDE "game/inverty.asm"
 inverty_end=P%
+INCLUDE "game/beeb_master.asm"
 
 .pop_beeb_aux_b_end
 
@@ -797,6 +805,7 @@ PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
 PRINT "COLL size = ", ~(coll_end-coll)
 PRINT "AUTO size = ", ~(auto_end-auto)
 PRINT "INVERTY size = ", ~(inverty_end-INVERTY)
+PRINT "BEEB MASTER size = ", ~(beeb_master_end-beeb_master_start)
 PRINT "--------"
 PRINT "Aux B code+data size = ", ~(pop_beeb_aux_b_end - pop_beeb_aux_b_start)
 PRINT "Aux B high watermark = ", ~P%

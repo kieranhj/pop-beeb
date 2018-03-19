@@ -55,72 +55,6 @@ IF 0
 ENDIF
 }
 
-\\ Just set CRTC registers we care about for game vs attract mode
-
-.beeb_set_game_screen
-{
-IF BEEB_SCREEN_CHARS<>80
-    LDA #1:STA &FE00            ; R1 = horizontal displayed
-    LDA #BEEB_SCREEN_CHARS
-    STA &FE01
-ENDIF
-
-    LDA #6:STA &FE00            ; R6 = vertical displayed
-    LDA #BEEB_SCREEN_ROWS
-    STA &FE01
-
-    LDA #7:STA &FE00            ; R7 = vertical position
-    LDA #BEEB_SCREEN_VPOS
-    STA &FE01
-
-    LDA #12:STA &FE00           ; R12 = screen start address, high
-    LDA #HI(beeb_screen_addr/8)
-    STA &FE01
-
-    LDA #13:STA &FE00               ; R13 = screen start address, low
-    LDA #LO(beeb_screen_addr/8)
-    STA &FE01
-
-    RTS
-}
-
-.beeb_set_attract_screen
-{
-    \\ Assume base MODE is 2 - if changed this to MODE 1 need to twiddle ULA
-
-    LDA #6:STA &FE00            ; R6 = vertical displayed
-    LDA #BEEB_DOUBLE_HIRES_ROWS
-    STA &FE01
-
-    LDA #7:STA &FE00            ; R7 = vertical position
-    LDA #BEEB_DOUBLE_HIRES_VPOS
-    STA &FE01
-
-    LDA #12:STA &FE00           ; R12 = screen start address, high
-    LDA #HI(beeb_double_hires_addr/8)
-    STA &FE01
-
-    LDA #13:STA &FE00               ; R13 = screen start address, low
-    LDA #LO(beeb_double_hires_addr/8)
-    STA &FE01
-
-    RTS
-}
-
-.beeb_hide_screen
-{
-    LDA #8:STA &FE00            ; R8 = interlace
-    LDA #&30:STA &FE01          ; blank screen
-    RTS
-}
-
-.beeb_show_screen
-{
-    LDA #8:STA &FE00            ; R8 = interlace
-    LDA #&00:STA &FE01          ; show screen (no interlace)
-    RTS
-}
-
 \*-------------------------------
 ; CRTC & ULA data required to configure out special MODE 2
 ; Following data could be dumped after boot!
@@ -161,16 +95,6 @@ MACRO BEEB_SELECT_AUX_MEM
     PLA:STA &F4:STA &FE30
 }
 ENDMACRO
-
-; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
-.shadow_init_buffers
-{
-    lda &fe34
-    and #255-1  ; set D to 0
-    ora #4    	; set X to 1
-    sta &fe34
-    rts
-}
 
 ; in double buffer mode, both display & main memory swap, but point to the opposite memory 
 .shadow_swap_buffers
@@ -298,46 +222,5 @@ IF 0
         RTS
 }
 ENDIF
-
-\*-------------------------------
-; Copy SHADOW
-; A=Start address PAGE
-\*-------------------------------
-
-.beeb_copy_shadow
-{
-    STA smRead+2
-    STA smWrite+2
-
-    LDX #0
-    
-    .next_page
-    \\ Read from visible screen
-    LDA &FE34:EOR #&4:STA &FE34
-
-    .read_page_loop
-    .smRead
-    LDA &FF00, X
-    STA DISKSYS_BUFFER_ADDR, X
-    INX
-    BNE read_page_loop
-
-    \\ Copy to alternate screen
-    LDA &FE34:EOR #&4:STA &FE34
-
-    .write_page_loop
-    LDA DISKSYS_BUFFER_ADDR, X
-    .smWrite
-    STA &FF00, X
-    INX
-    BNE write_page_loop
-
-    INC smRead+2
-    INC smWrite+2
-
-    BPL next_page
-
-    RTS
-}
 
 .beeb_platform_end

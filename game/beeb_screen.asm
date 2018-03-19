@@ -282,24 +282,19 @@ ENDIF
     ASL A:ASL A
     TAX
 
-    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
-
-    INX
-    LDA palette_table, X
+    LDA palette_table+1, X
     AND #MODE2_RIGHT_MASK
     STA map_2bpp_to_mode2_pixel+$01                     ; right 1
     ASL A
     STA map_2bpp_to_mode2_pixel+$02                     ; left 1
 
-    INX
-    LDA palette_table, X
+    LDA palette_table+2, X
     AND #MODE2_RIGHT_MASK
     STA map_2bpp_to_mode2_pixel+$10                     ; right 2
     ASL A
     STA map_2bpp_to_mode2_pixel+$20                     ; left 2
     
-    INX
-    LDA palette_table, X
+    LDA palette_table+3, X
     AND #MODE2_RIGHT_MASK
     STA map_2bpp_to_mode2_pixel+$11                     ; right 3
     ASL A
