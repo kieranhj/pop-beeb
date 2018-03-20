@@ -1490,8 +1490,8 @@ ENDIF
 IF _AUDIO
     ; SM: added intro music load & play trigger here
     ; BEEB TEMP - this should really be done in subs_PlaySongI
-    lda #s_Princess
-    jsr BEEB_INTROSONG
+;    lda #s_Princess
+;    jsr BEEB_INTROSONG
 ENDIF
 
  lda #0 ;cut #0 (intro)
@@ -1509,13 +1509,6 @@ EQUS "SUMUP  $"
 
 .Prolog2
 {
-IF _AUDIO
-    ; SM: added title music load & play trigger here
-    ; load title audio bank
-    lda #0
-    jsr BEEB_LOAD_AUDIO_BANK
-ENDIF
-
 \ lda #pacSumup
 \ sta RAMRDmain
 \ jsr DblExpand
@@ -1524,16 +1517,11 @@ ENDIF
 
  MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
 
-\ ldx #250
+ ldx #250/4
+\ BEEB - just delay as music already playing
 \ lda #s_Sumup
 \ jmp master_PlaySongI
-
-IF _AUDIO
-    lda #s_Sumup
-    jsr BEEB_INTROSONG
-ENDIF
-
- RTS
+ JMP tpause
 }
 
 
@@ -2327,6 +2315,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .PlaySongNI ;non-interruptible
 {
 ;(& ignores sound/music toggles)
@@ -2342,9 +2331,11 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 
+IF _NOT_BEEB
 .master_PlaySongI ;interruptible
 {
 \ jsr setaux
@@ -2364,6 +2355,7 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 .master_pause txa ;falls thru to tpause
 \*-------------------------------

@@ -701,7 +701,7 @@ ENDIF
 
  lda #s_Princess
  ldx #8
- jsr subs_PlaySongI
+ jsr subs_PlaySongI     ; play song to end before continuing
 
  lda #5
  jsr play
@@ -710,9 +710,11 @@ ENDIF
  jsr pjumpseq ;princess hears something...
  lda #9
  jsr play
- lda #s_Squeek
- ldx #0
- jsr subs_PlaySongI ;door squeaks...
+
+\ NOT BEEB - unless we get a squeak SFX?
+\ lda #s_Squeek
+\ ldx #0
+\ jsr subs_PlaySongI ;door squeaks...
 
  lda #7
  sta SPEED
@@ -727,9 +729,16 @@ ENDIF
  jsr vjumpseq
  lda #4
  jsr play ;vizier enters
+
+\ lda #s_Vizier
+\ ldx #12
+\ jsr subs_PlaySongI
+\ BEEB - start tune that will play across Vizier sequence
  lda #s_Vizier
- ldx #12
- jsr subs_PlaySongI
+ jsr BEEB_INTROSONG
+ lda #12
+ jsr play
+ 
  lda #4
  jsr play
 
@@ -741,9 +750,13 @@ ENDIF
  jsr vjumpseq
  lda #4
  jsr play ;stops in front of princess
- lda #s_Buildup
- ldx #25
- jsr subs_PlaySongI
+
+\ lda #s_Buildup
+\ ldx #25
+\ jsr subs_PlaySongI
+\ BEEB - just delay as song already playing
+ lda #25
+ jsr play
 
  lda #Vraise ;raises arms
  jsr vjumpseq
@@ -766,9 +779,15 @@ ENDIF
  jsr play
  lda #0
  sta psandcount ;sand starts flowing
+
+\ lda #s_Magic
+\ ldx #8
+\ jsr subs_PlaySongI
+\ BEEB - start tune that will play across Vizier sequence
  lda #s_Magic
- ldx #8
- jsr subs_PlaySongI
+ jsr BEEB_INTROSONG
+ lda #8
+ jsr play
 
  lda #7
  sta SPEED
@@ -787,9 +806,12 @@ ENDIF
 
  lda #12
  sta SPEED
- lda #s_StTimer
- ldx #20
- jmp subs_PlaySongI
+\ lda #s_StTimer
+\ ldx #20
+\ jmp subs_PlaySongI
+\ BEEB - just delay as song already playing
+ lda #20
+ jmp play 
 }
 
 \*-------------------------------
@@ -834,8 +856,10 @@ ENDIF
 \*-------------------------------
 .PlaySong
 {
-\ BEEB TODO MUSIC
- jsr minit
+IF _AUDIO
+ JSR BEEB_CUESONG               ; was jsr minit
+ENDIF
+
  jsr swpage
 .loop lda #1
  jsr strobe
@@ -847,7 +871,7 @@ ENDIF
  jsr pburn
  jsr pstars
  jsr pflow
- jsr mplay
+ jsr BEEB_MUSIC_IS_PLAYING      ; was jsr mplay
  cmp #0
  bne loop
 .interrupt
@@ -869,14 +893,16 @@ ENDIF
  tay
  lda soundon
  and musicon
-; BEEB TODO MUSIC - don't play any music here
-; bne label_1
+ bne label_1
  txa
  beq return_56
  jmp play
 .label_1 tya
 
- jsr BEEB_INTROSONG     ; was minit
+IF _AUDIO
+ jsr BEEB_INTROSONG             ; was jsr minit
+ENDIF
+
  jsr swpage
 .loop jsr musickeys
  cmp #$80
@@ -884,7 +910,7 @@ ENDIF
  jsr pburn
  jsr pstars
  jsr pflow
- jsr mplay
+ jsr BEEB_MUSIC_IS_PLAYING      ; was jsr mplay
  cmp #0
  bne loop
  jmp swpage

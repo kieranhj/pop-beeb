@@ -209,13 +209,19 @@ IF _AUDIO_DEBUG
 ENDIF ; _AUDIO_DEBUG
 
 
-	rts	
 }
+\\ Fall through!
 .BEEB_ZEROSOUND
 {
     rts
 }
 
+.BEEB_MUSIC_IS_PLAYING
+{
+    LDA vgm_player_ended
+    EOR #&FF
+    RTS
+}
 
 ; call this function once to initialise the audio system
 .audio_init
@@ -284,13 +290,13 @@ ENDIF ; _AUDIO_DEBUG
     EQUW 0;, &8080 ; s_Byline = 2
     EQUW 0;, &8080 ; s_Title = 3
     EQUW 0;, &8080 ; s_Prolog = 4
-    EQUW pop_music_sumup;, &8080 ; s_Sumup = 5
+    EQUW 0;, &8080 ; s_Sumup = 5
     EQUW 0; there is no 6
     EQUW pop_music_princess;, &8080 ; s_Princess = 7
     EQUW 0;, &8080 ; s_Squeek = 8
     EQUW 0;, &8080 ; s_Vizier = 9
-    EQUW pop_music_leaves;, &8080 ; s_Buildup = 10
-    EQUW 0;, &8080 ; s_Magic = 11
+    EQUW 0;, &8080 ; s_Buildup = 10
+    EQUW pop_music_leaves;, &8080 ; s_Magic = 11
     EQUW 0;, &8080 ; s_StTimer = 12
 
 ; These sounds map to the sound triggers named in soundnames.h.asm

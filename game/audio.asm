@@ -5,9 +5,9 @@
 .audio
 
 .gtone RTS      ;jmp GTONE          BEEB TODO SOUND
-.minit jmp BEEB_CUESONG     ; jmp MINIT
-.mplay jmp MPLAY
-.whoop BRK      ;jmp WHOOP
+\.minit jmp BEEB_CUESONG     ; jmp MINIT
+\.mplay jmp MPLAY
+\.whoop BRK      ;jmp WHOOP
 
 
 IF _TODO
@@ -76,12 +76,14 @@ ENDIF
 \ Don't like that it knows VGM player internals
 \ but will do for now
 
+IF _NOT_BEEB
 .MPLAY
 {
  LDA vgm_player_ended
  EOR #&FF
  RTS
 }
+ENDIF
 
 IF _TODO
 *-------------------------------
