@@ -1499,7 +1499,7 @@ maxmob = mobspace-1
 .check_above
 {
  cmp scrnAbove
- bne check_return
+ bne check_no           ; was check_return BEEB BUG FIX?
 
  lda trloc
  sec
@@ -1698,7 +1698,7 @@ maxmob = mobspace-1
 
 .notbelow
  cmp scrnBelowL
- bne return_40
+ bne checkright_no      ; was return_40 BEEB BUG FIX?
  ;piece is on scrn below & to left
  ldy trloc
  cpy #9
