@@ -87,6 +87,10 @@ INCBIN "audio/ip/m-playerdeath-sword.raw.exo"
 INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
 .pop_music_glug
 INCBIN "audio/ip/3glugs.raw.exo"
+.pop_music_shadow
+INCBIN "audio/ip/m-e4-killedbyshadow.raw.exo"
+.pop_music_jaffar
+INCBIN "audio/ip/m-jaffar.raw.exo"
 
 .pop_audio_bank3_end
 SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
