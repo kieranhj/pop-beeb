@@ -1,16 +1,21 @@
 ; POP - BBC MICRO - AUDIO ROUTINES
 ; Various handlers and hooks for the game code to playback SFX and MUSIC
 
+_AUDIO_BANK_OPTIMIZATION = TRUE ; SM: needed to do this to claw back some precious bytes!
 IF _AUDIO
 
 .beeb_audio
 
 ; all filenames are 8 characters in length
+IF _AUDIO_BANK_OPTIMIZATION
+.audio_filename  EQUS "AudioX $"    ; audio bank filename
+ELSE
 .audio0_filename EQUS "Audio0 $"    ; title music
 .audio1_filename EQUS "Audio1 $"    ; intro music
 .audio2_filename EQUS "Audio2 $"    ; grand vizier music
 .audio3_filename EQUS "Audio3 $"    ; game music jingles
 .audio4_filename EQUS "Audio4 $"    ; cutscene music
+ENDIF
 
 .beeb_audio_loaded_bank EQUB &FF
 
@@ -30,26 +35,23 @@ IF _DEBUG
     .ok
 ENDIF
 
-    STA SongCue
+    sta SongCue
 
-    ;asl a
+    ; get address
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_game_music+2,x
-    pha
-    ; get address
     lda pop_game_music+1,x
     bne have_track    ; dont play if entry is 0
-    STA SongCue
-    PLA
-    RTS
+    sta SongCue
+    rts
 
     .have_track
     tay
     lda pop_game_music+0,x
     tax
-    pla
+
+    ; get bank
+    lda #&80 ;ANDY
     ; play the track
     jsr music_play
 
@@ -69,26 +71,23 @@ IF _DEBUG
     .ok
 ENDIF
 
-    STA SongCue
+    sta SongCue
 
-    ;asl a
+    ; get address
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_title_music+2,x
-    pha
-    ; get address
     lda pop_title_music+1,x
     bne have_track    ; dont play if entry is 0
-    STA SongCue
-    PLA
-    RTS
+    sta SongCue
+    rts
 
     .have_track
     tay
     lda pop_title_music+0,x
     tax
-    pla
+
+    ; get bank
+    lda #&80 ;ANDY
     ; play the track
     jsr music_play
 
@@ -96,7 +95,7 @@ ENDIF
     rts
 }
 
-; A is audio bank number (0-2)
+; A is audio bank number (0-4)
 ; Does not currently save SWR bank selection - this might need looking at.
 .BEEB_LOAD_AUDIO_BANK
 {
@@ -122,6 +121,13 @@ ENDIF
 
     txa
 
+IF _AUDIO_BANK_OPTIMIZATION
+    clc
+    adc #48
+    sta audio_filename+5
+    ldx #LO(audio_filename)
+    ldy #HI(audio_filename)
+ELSE
     asl a:asl a:asl a   ; *8
     clc
     adc #LO(audio0_filename)
@@ -129,6 +135,7 @@ ENDIF
     lda #HI(audio0_filename)
     adc #0
     tay
+ENDIF
 
     lda #&80                ; select ANDY
     jsr swr_select_bank
@@ -258,62 +265,62 @@ ENDIF ; _AUDIO_DEBUG
 
 ; format is: address, bank, indexed by POP source sound id as per soundnames.h.asm
 .pop_game_music
-    EQUW 0 ;, &8080
-    EQUW pop_music_death;, &8080 ; s_Accid = 1 ; "accidental death" music
-    EQUW pop_music_death;, &8080 ; s_Heroic = 2 ; "heroic death" music
-    EQUW pop_music_start;, &8080 ; s_Danger = 3
-    EQUW pop_music_sword;, &8080 ; s_Sword = 4
-    EQUW pop_music_sword;, &8080 ; s_Rejoin = 5
-    EQUW pop_music_death;, &8080 ; s_Shadow = 6
-    EQUW pop_music_sword;, &8080 ; s_Vict = 7
-    EQUW pop_music_sword;, &8080 ; s_Stairs = 8
-    EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
-    EQUW pop_music_start;, &8080 ; s_Jaffar = 10
-    EQUW pop_music_lifepotion;, &8080 ; s_Potion = 11
-    EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
-    EQUW pop_music_timer;, &8080 ; s_Timer = 13
-    EQUW pop_music_tragic;, &8080 ; s_Tragic = 14
-    EQUW pop_music_start;, &8080 ; s_Embrace = 15
-    EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16
+    EQUW 0 
+    EQUW pop_music_death ; s_Accid = 1 ; "accidental death" music
+    EQUW pop_music_death ; s_Heroic = 2 ; "heroic death" music
+    EQUW pop_music_start ; s_Danger = 3
+    EQUW pop_music_sword ; s_Sword = 4
+    EQUW pop_music_sword ; s_Rejoin = 5
+    EQUW pop_music_death ; s_Shadow = 6
+    EQUW pop_music_sword ; s_Vict = 7
+    EQUW pop_music_sword ; s_Stairs = 8
+    EQUW pop_music_sword ; s_Upstairs = 9
+    EQUW pop_music_start ; s_Jaffar = 10
+    EQUW pop_music_lifepotion ; s_Potion = 11
+    EQUW pop_music_potion ; s_ShortPot = 12
+    EQUW pop_music_timer ; s_Timer = 13
+    EQUW pop_music_tragic ; s_Tragic = 14
+    EQUW pop_music_start ; s_Embrace = 15
+    EQUW pop_music_heartbeat ; s_Heartbeat = 16
 
 ; as per 
 .pop_title_music
-    EQUW 0;, &8080
-    EQUW pop_music_title;, &8080 ; s_Presents = 1
-    EQUW 0;, &8080 ; s_Byline = 2
-    EQUW pop_music_mirror;, &8080 ; s_Title = 3
-    EQUW pop_music_intro;, &8080 ; s_Prolog = 4
-    EQUW 0;, &8080 ; s_Sumup = 5
-    EQUW 0; there is no 6
-    EQUW pop_music_intro;, &8080 ; s_Princess = 7
-    EQUW 0;, &8080 ; s_Squeek = 8
-    EQUW 0;, &8080 ; s_Vizier = 9
-    EQUW 0;, &8080 ; s_Buildup = 10
-    EQUW 0;, &8080 ; s_Magic = 11
-    EQUW 0;, &8080 ; s_StTimer = 12
+    EQUW 0
+    EQUW pop_music_title ; s_Presents = 1
+    EQUW 0 ; s_Byline = 2
+    EQUW pop_music_mirror ; s_Title = 3
+    EQUW pop_music_intro ; s_Prolog = 4
+    EQUW 0 ; s_Sumup = 5
+    EQUW 0 ; there is no 6
+    EQUW pop_music_intro ; s_Princess = 7
+    EQUW 0 ; s_Squeek = 8
+    EQUW 0 ; s_Vizier = 9
+    EQUW 0 ; s_Buildup = 10
+    EQUW 0 ; s_Magic = 11
+    EQUW 0 ; s_StTimer = 12
 
 ; These sounds map to the sound triggers named in soundnames.h.asm
 .pop_sound_fx
-	EQUW pop_sfx_00;, &8080		; PlateDown
-	EQUW pop_sfx_01;, &8080		; PlateUp
-	EQUW pop_sfx_02;, &8080		; GateDown
-	EQUW pop_sfx_03;, &8080		; SpecialKey1 - dont think this is used
-	EQUW pop_sfx_04;, &8080		; SpecialKey2 - dont think this is used
-	EQUW pop_sfx_05;, &8080		; Splat
-	EQUW pop_sfx_06;, &8080		; MirrorCrack
-	EQUW pop_sfx_07;, &8080		; LooseCrash
-	EQUW pop_sfx_08;, &8080		; GotKey - dont think this is used
-	EQUW pop_sfx_09;, &8080		; Footstep
-	EQUW pop_sfx_10;, &8080		; RaisingExit
-	EQUW pop_sfx_11;, &8080		; RaisingGate
-	EQUW pop_sfx_12;, &8080		; LoweringGate
-	EQUW pop_sfx_13;, &8080		; SmackWall
-	EQUW pop_sfx_14;, &8080		; Impaled
-	EQUW pop_sfx_15;, &8080		; GateSlam
-	EQUW pop_sfx_16;, &8080		; FlashMsg
-	EQUW pop_sfx_17;, &8080		; SwordClash1
-	EQUW pop_sfx_18;, &8080		; SwordClash2
-	EQUW pop_sfx_19;, &8080		; JawsClash
+	EQUW pop_sfx_00	; PlateDown
+	EQUW pop_sfx_01	; PlateUp
+	EQUW pop_sfx_02	; GateDown
+	EQUW pop_sfx_03	; SpecialKey1 - dont think this is used
+	EQUW pop_sfx_04	; SpecialKey2 - dont think this is used
+	EQUW pop_sfx_05	; Splat
+	EQUW pop_sfx_06	; MirrorCrack
+	EQUW pop_sfx_07	; LooseCrash
+	EQUW pop_sfx_08	; GotKey - dont think this is used
+	EQUW pop_sfx_09	; Footstep
+	EQUW pop_sfx_10	; RaisingExit
+	EQUW pop_sfx_11	; RaisingGate
+	EQUW pop_sfx_12	; LoweringGate
+	EQUW pop_sfx_13	; SmackWall
+	EQUW pop_sfx_14	; Impaled
+	EQUW pop_sfx_15	; GateSlam
+	EQUW pop_sfx_16	; FlashMsg
+	EQUW pop_sfx_17	; SwordClash1
+	EQUW pop_sfx_18	; SwordClash2
+	EQUW pop_sfx_19	; JawsClash
 
 
 .audio_sfx_stop
@@ -328,22 +335,21 @@ ENDIF ; _AUDIO_DEBUG
 ; A contains sound effect id - 0 to 19
 .audio_play_sfx
 {
- ;   asl a
     asl a
     tax
 
     LDA vgm_player_ended
     BEQ skip_sfx
 
-    ; get bank
-    lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
-    pha
     ; get address
     lda pop_sound_fx+1,x
     tay
     lda pop_sound_fx+0,x
     tax
-    pla
+
+    ; get bank
+    lda #BEEB_AUDIO_SFX_BANK
+
     ; play the track
     jsr vgm_sfx_play ;music_play
 
@@ -367,8 +373,9 @@ ENDIF ; _AUDIO_DEBUG
 ; Disable music updates
 .audio_update_off
 {
-    lda #0
-    sta audio_update_enabled
+;    lda #0
+;    sta audio_update_enabled
+    stz audio_update_enabled
 	rts
 }
 
