@@ -23,6 +23,13 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`R` - Return to titles
 * `CTRL`+`G` - Save game to disc (must be write enabled)
 * `CTRL`+`P` - Pause (`P` to step or any other key to continue)
+* `CTRL`+`S` - Sound on/off
+* `CTRL`+`M` - Music on/off
+* `CTRL`+`T` - Show time remaining
+* `CTRL`+`V` - Show version
+* `CTRL`+`3` - Volume down
+* `CTRL`+`4` - Volume up
+
 
 **Debug Keys (Development Build only!)**
 

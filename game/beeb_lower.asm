@@ -276,6 +276,7 @@ ENDIF
 ;.scrncolor skip 1
 .redoppmeter skip 1
 .timerequest skip 1
+.volume EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
 
 \*-------------------------------
 \*

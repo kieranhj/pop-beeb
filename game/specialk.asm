@@ -111,6 +111,9 @@ ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_t OR &80
+kvolume_down = IKN_3 OR &80 ;IKN_minus OR &80
+kvolume_up = IKN_4 OR &80 ;IKN_hat OR &80
+
 
 \\ NOT BEEB supported
 ;ksetjstk = IKN_j OR &80
@@ -473,13 +476,40 @@ ENDIF
  rts
 
 .label_16 cmp #kmusic
- bne label_26
+ bne label_16a
  lda musicon
  eor #1
  sta musicon
  bne label_sk1
  rts
 
+; volume up/down
+.label_16a cmp #kvolume_down
+ bne label_16b
+ lda volume
+ beq min_volume
+ dec volume
+ ldx volume
+ jsr audio_set_volume
+ .min_volume
+ rts
+
+.label_16b cmp #kvolume_up
+ bne label_26
+ lda volume
+ cmp #15
+ beq max_volume
+ inc volume
+ ldx volume
+ jsr audio_set_volume
+ .max_volume
+ rts
+
+
+
+
+
+; version
 .label_26 cmp #kversion
  bne label_17
  jmp dispversion ;display version #
