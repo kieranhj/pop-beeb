@@ -1461,6 +1461,11 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
+IF _AUDIO
+    lda #s_Prolog
+    jsr BEEB_INTROSONG
+ENDIF
+
  lda #30
  jmp tpause
 
@@ -1504,6 +1509,13 @@ EQUS "SUMUP  $"
 
 .Prolog2
 {
+IF _AUDIO
+    ; SM: added title music load & play trigger here
+    ; load title audio bank
+    lda #0
+    jsr BEEB_LOAD_AUDIO_BANK
+ENDIF
+
 \ lda #pacSumup
 \ sta RAMRDmain
 \ jsr DblExpand
@@ -1515,6 +1527,11 @@ EQUS "SUMUP  $"
 \ ldx #250
 \ lda #s_Sumup
 \ jmp master_PlaySongI
+
+IF _AUDIO
+    lda #s_Sumup
+    jsr BEEB_INTROSONG
+ENDIF
 
  RTS
 }

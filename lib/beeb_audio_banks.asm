@@ -9,11 +9,10 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank0_start
-.pop_music_title
-INCBIN "audio/music/Prince of Persia - 01 - Title Screen.raw.exo" ; 2030 bytes
-.pop_music_mirror
-INCBIN "audio/music/Prince of Persia - 08 - Mirror Prince.raw.exo" ; 701 bytes
-
+.pop_music_intro
+INCBIN "audio/ip/m-intro-wrongsignaturevgm.raw.exo"
+.pop_music_sumup
+INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
 .pop_audio_bank0_end
 SAVE "Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
 
@@ -31,8 +30,10 @@ CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank1_start
-.pop_music_intro
-INCBIN "audio/music/Prince of Persia - 02 - Intro.raw.exo" ; 3497 bytes
+.pop_music_princess
+INCBIN "audio/ip/m-story2.raw.exo"
+.pop_music_leaves
+INCBIN "audio/ip/m-story4.raw.exo"
 .pop_audio_bank1_end
 SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
 
@@ -101,7 +102,7 @@ PRINT "AUDIO BANK 3 free = ", ~(ANDY_TOP - pop_audio_bank3_end)
 PRINT "--------"
 
 ;----------------------------------------------------------------
-; Cutscene audio bank
+; In Game Cutscene audio bank
 ;----------------------------------------------------------------
 
 CLEAR 0, &FFFF
