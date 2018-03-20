@@ -636,6 +636,7 @@ ENDIF
     STA write_to+2
 
     \ Where to?
+    LDA write_to+2
     BPL load_direct
 
     \ Wait until next vsync frame swap so we know which buffer we're using!
