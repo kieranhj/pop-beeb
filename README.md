@@ -23,6 +23,8 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`R` - Return to titles
 * `CTRL`+`G` - Save game to disc (must be write enabled)
 * `CTRL`+`P` - Pause (`P` to step or any other key to continue)
+* `CTRL`+`M` - Music on/off (not yet implemented)
+* `CTRL`+`S` - Sound on/off/volume (not yet implemented)
 
 **Debug Keys (Development Build only!)**
 
@@ -39,6 +41,15 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`0` - Set time remaining to 60 seconds...
 * `R` - Resurrect (after death)
 
+**Cheat Codes (Released game!)**
+
+* `SKIP` - Next level
+* `POP` - Cheat mode enabled (following codes then work)
+* `KILL` - Kill guard on screen
+* `BOOST` - Boost health meter (increase max energy)
+* `REST` - Restore health to max
+* `ZAP` - Zap guard to 1 health
+* `TINA` - Jump to end of game
 
 ## References
 
