@@ -1890,6 +1890,14 @@ thinner = 3
 .MARKRED
 {
  bcs mark_os
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  sta redbuf,y
  rts
 }
@@ -1897,6 +1905,14 @@ thinner = 3
 .MARKFRED
 {
  bcs return
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  sta fredbuf,y
 .return
  rts
@@ -1906,6 +1922,14 @@ thinner = 3
 {
  bcs return
  pha
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  lda wipebuf,y
  beq label_2
  lda height
@@ -1923,6 +1947,14 @@ thinner = 3
 .MARKMOVE
 {
  bcs mark_os
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  sta movebuf,y
  rts
 }
@@ -1930,6 +1962,14 @@ thinner = 3
 .MARKFLOOR
 {
  bcs mark_os
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  sta floorbuf,y
  rts
 }
@@ -1937,6 +1977,14 @@ thinner = 3
 .MARKHALF
 {
  bcs mark_os
+
+IF _DEBUG
+ CPY #30
+ BCC ok
+ BRK
+ .ok
+ENDIF
+
  sta halfbuf,y
  rts
 }
