@@ -894,6 +894,8 @@ PAGE_ALIGN
 .pop_audio_bank1_start
 .pop_music_princess
 INCBIN "audio/ip/m-story2.raw.exo"
+.pop_music_creak
+INCBIN "audio/ip/doorcreak.raw.exo"
 .pop_music_enters
 INCBIN "audio/ip/m-story3.raw.exo"
 .pop_music_leaves

@@ -707,15 +707,15 @@ BEEB_CUT0_SPEED_FACTOR=4
  lda #5*BEEB_CUT0_SPEED_FACTOR
  jsr play
 
+ lda #s_Squeek
+ ldx #0
+ jsr subs_PlaySongI ;door squeaks...
+\ BEEB play creak before triggering Princess
+
  lda #Palert
  jsr pjumpseq ;princess hears something...
  lda #9
  jsr play
-
-\ NOT BEEB - unless we get a squeak SFX?
-\ lda #s_Squeek
-\ ldx #0
-\ jsr subs_PlaySongI ;door squeaks...
 
  lda #7
  sta SPEED

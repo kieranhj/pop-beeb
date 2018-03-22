@@ -330,7 +330,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_sumup;, &8080 ; s_Sumup = 5
     EQUW 0; there is no 6
     EQUW pop_music_princess;, &8080 ; s_Princess = 7    **STORY**
-    EQUW 0;, &8080 ; s_Squeek = 8
+    EQUW pop_music_creak;, &8080 ; s_Squeek = 8         **STORY**
     EQUW pop_music_enters;, &8080 ; s_Vizier = 9        **STORY**
     EQUW 0;, &8080 ; s_Buildup = 10
     EQUW pop_music_leaves;, &8080 ; s_Magic = 11        **STORY**
