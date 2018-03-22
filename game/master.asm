@@ -1559,7 +1559,7 @@ EQUS "EPILOG $"
 IF _AUDIO
     ; SM: added title music load & play trigger here
     ; load title audio bank
-    lda #0              ; BEEB TODO not correct bank!
+    lda #2
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
@@ -1569,6 +1569,7 @@ ENDIF
 
  lda #s_Epilog
  jsr BEEB_INTROSONG
+ 
  lda #15
  jsr pauseNI
  jsr unpacksplash

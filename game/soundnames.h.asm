@@ -69,7 +69,7 @@ s_StTimer = 12
 
 \* Set 2 (epilog)
 
-s_Epilog = 1
-s_Curtain = 2
+s_Epilog = 13
+s_Curtain = 14
 
 \ lst off

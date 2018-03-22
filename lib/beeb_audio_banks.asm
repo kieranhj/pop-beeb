@@ -25,17 +25,15 @@ PRINT "--------"
 
 
 ;----------------------------------------------------------------
-; Logo sequence music bank
+; Eiplog (you win) music bank
 ;----------------------------------------------------------------
 
 CLEAR 0, &FFFF
 ORG ANDY_START
 GUARD ANDY_TOP
 .pop_audio_bank2_start
-.pop_music_03
-INCBIN "audio/music/Prince of Persia - 03 - Hourglass.raw.exo"
-.pop_music_09
-INCBIN "audio/music/Prince of Persia - 09 - Grand Vizier.raw.exo" ; 1698 bytes
+.pop_music_epilog
+INCBIN "audio/ip/m-story4.raw.exo"          ; TEMP! Just longest tune
 .pop_audio_bank2_end
 ;SAVE "Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
 
@@ -96,6 +94,8 @@ INCBIN "audio/ip/m-cutscene-notmuchtime.raw.exo"
 INCBIN "audio/ip/m-cutscene-pre2_4_6_C.raw.exo"
 .pop_music_heartbeat
 INCBIN "audio/ip/m-cutscene-pre8_9.raw.exo"
+.pop_music_embrace
+INCBIN "audio/ip/m-embrace.raw.exo"
 .pop_audio_bank4_end
 SAVE "Audio4", pop_audio_bank4_start, pop_audio_bank4_end, 0
 
