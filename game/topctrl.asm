@@ -499,6 +499,10 @@ ENDIF
  cmp level
  beq MainLoop ;Continue until we change levels
 
+\ BEEB let end of level tune play
+ LDA SongCue
+ BNE MainLoop ; don't continue until tune has finished - can't cancel :(
+   
 \ NOT BEEB
 \ jsr yellowcheck ;copy protect!
 
