@@ -1570,16 +1570,16 @@ ENDIF
  lda #s_Epilog
  jsr BEEB_INTROSONG
  
- lda #15
+ ldx #10    ; tbc
  jsr pauseNI
  jsr unpacksplash
- lda #75
+ ldx #10    ; tbc
  jsr pauseNI
 
- lda #s_Curtain
- jsr BEEB_INTROSONG
- lda #60
- jsr pauseNI
+\ lda #s_Curtain
+\ jsr BEEB_INTROSONG
+\ ldx #10    ; tbc
+\ jsr pauseNI
 
  jmp blackout
 }
@@ -1672,6 +1672,7 @@ ENDIF
 \*-------------------------------
 \* non-interruptible pause
 
+IF _NOT_BEEB
 .pauseNI
 {
 .loop sta pausetemp
@@ -1689,6 +1690,32 @@ ENDIF
 }
 .return_61
  rts
+ENDIF
+
+.pauseNI        ; X=seconds
+{
+    LDY #0
+
+    .seconds_loop
+
+    LDA beeb_vsync_count
+    .wait_for_vsync
+    CMP beeb_vsync_count
+    BEQ wait_for_vsync
+
+    INY
+    CPY #50
+    BCC not_a_second
+
+    LDY #0
+    DEX
+    .not_a_second
+
+    CPX #0
+    BNE seconds_loop
+}
+.return_61
+    RTS
 
 \*-------------------------------
 \*
@@ -2343,7 +2370,6 @@ IF _NOT_BEEB
 .return
  rts
 }
-ENDIF
 
 .master_pause txa ;falls thru to tpause
 \*-------------------------------
@@ -2370,9 +2396,11 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 .pause_for_X_seconds
 {
+    STX pausetemp
     LDY #0
 
     .seconds_loop
@@ -2387,14 +2415,18 @@ ENDIF
     BCC not_a_second
 
     LDY #0
-    DEX
+    DEC pausetemp
+    BEQ return
+
     .not_a_second
+    STY store_Y+1
+    jsr master_StartGame
 
-    PHX:PHY:jsr master_StartGame:PLY:PLX
+    .store_Y
+    LDY #0
+    BRA seconds_loop
 
-    CPX #0
-    BNE seconds_loop
-
+    .return
     RTS
 }
 
