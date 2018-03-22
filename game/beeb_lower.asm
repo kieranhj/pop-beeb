@@ -260,7 +260,7 @@ ENDIF
 .FrameCount skip 2
 .FrameCountDelta skip 1
 .FrameCountPrev skip 1
-;.SongCount skip 1
+.SongReq skip 1
 .PreRecPtr skip 1
 .gotsword skip 1
 .message skip 1
