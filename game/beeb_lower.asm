@@ -82,7 +82,7 @@ BBundID ds 1
 redherring2 ds 1
 ENDIF
 .pausetemp skip 1
-.recheck0 skip 1
+\.recheck0 skip 1
 
 \*-------------------------------
 \*

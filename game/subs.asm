@@ -689,6 +689,7 @@ ENDIF
 \*-------------------------------
 \* Opening titles scene
 \*-------------------------------
+BEEB_CUT0_SPEED_FACTOR=4
 .PlayCut0
 {
  jsr startV0
@@ -703,7 +704,7 @@ ENDIF
  ldx #8
  jsr subs_PlaySongI     ; play song to end before continuing
 
- lda #5
+ lda #5*BEEB_CUT0_SPEED_FACTOR
  jsr play
 
  lda #Palert
@@ -719,7 +720,7 @@ ENDIF
  lda #7
  sta SPEED
 
- lda #5
+ lda #5*BEEB_CUT0_SPEED_FACTOR
  jsr play
  lda #Vapproach
  jsr vjumpseq
@@ -735,11 +736,11 @@ ENDIF
 \ jsr subs_PlaySongI
 \ BEEB - start tune that will play across Vizier sequence
  lda #s_Vizier
- jsr BEEB_INTROSONG
- lda #12
+ jsr BEEB_STORYSONG
+ lda #12*BEEB_CUT0_SPEED_FACTOR
  jsr play
  
- lda #4
+ lda #4*BEEB_CUT0_SPEED_FACTOR
  jsr play
 
  lda #Vapproach
@@ -755,7 +756,7 @@ ENDIF
 \ ldx #25
 \ jsr subs_PlaySongI
 \ BEEB - just delay as song already playing
- lda #25
+ lda #25*BEEB_CUT0_SPEED_FACTOR
  jsr play
 
  lda #Vraise ;raises arms
@@ -775,7 +776,7 @@ ENDIF
 
  lda #12
  sta SPEED
- lda #5
+ lda #5*BEEB_CUT0_SPEED_FACTOR
  jsr play
  lda #0
  sta psandcount ;sand starts flowing
@@ -785,8 +786,8 @@ ENDIF
 \ jsr subs_PlaySongI
 \ BEEB - start tune that will play across Vizier sequence
  lda #s_Magic
- jsr BEEB_INTROSONG
- lda #8
+ jsr BEEB_STORYSONG
+ lda #8*BEEB_CUT0_SPEED_FACTOR
  jsr play
 
  lda #7
@@ -900,7 +901,7 @@ ENDIF
 .label_1 tya
 
 IF _AUDIO
- jsr BEEB_INTROSONG             ; was jsr minit
+ jsr BEEB_STORYSONG             ; was jsr minit
 ENDIF
 
  jsr swpage

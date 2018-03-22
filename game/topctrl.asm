@@ -272,7 +272,7 @@ jsr loadgame ;Load saved-game info from disk
 IF EditorDisk
  sta inbuilder
 ENDIF
- sta recheck0
+\ sta recheck0
  sta SINGSTEP
  sta ManCtrl
  sta vibes

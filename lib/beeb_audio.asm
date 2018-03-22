@@ -35,21 +35,18 @@ ENDIF
     ;asl a
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_game_music+2,x
-    pha
     ; get address
     lda pop_game_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
-    PLA
     RTS
 
     .have_track
     tay
     lda pop_game_music+0,x
     tax
-    pla
+    ; get bank
+    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_game_music+2,x
     ; play the track
     jsr music_play
 
@@ -74,21 +71,51 @@ ENDIF
     ;asl a
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_title_music+2,x
-    pha
     ; get address
     lda pop_title_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
-    PLA
     RTS
 
     .have_track
     tay
     lda pop_title_music+0,x
     tax
-    pla
+    ; get bank
+    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_title_music+2,x
+    ; play the track
+    jsr music_play
+
+.no_track
+    rts
+}
+
+.BEEB_STORYSONG
+{
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
+    STA SongCue
+
+    ;asl a
+    asl a
+    tax
+    ; get address
+    lda pop_title_music+1,x
+    bne have_track    ; dont play if entry is 0
+    STA SongCue
+    RTS
+
+    .have_track
+    tay
+    lda pop_title_music+0,x
+    tax
+    ; get bank
+    lda #BEEB_AUDIO_STORY_BANK ;lda pop_title_music+2,x
     ; play the track
     jsr music_play
 
@@ -130,9 +157,8 @@ ENDIF
     adc #0
     tay
 
-    lda #&80                ; select ANDY
+    lda #BEEB_AUDIO_MUSIC_BANK                ; select ANDY
     jsr swr_select_bank
-
 
     \\ Load audio bank into ANDY
     lda #HI(ANDY_START)
@@ -147,6 +173,17 @@ ENDIF
 
     .already_loaded
     rts
+}
+
+.BEEB_LOAD_STORY_BANK
+{
+    lda #BEEB_AUDIO_STORY_BANK
+    jsr swr_select_slot
+
+    lda #HI(pop_audio_bank1_start)
+    LDX #LO(audio1_filename)
+    LDY #HI(audio1_filename)
+    JMP disksys_load_file
 }
 
 IF _AUDIO_DEBUG
@@ -292,11 +329,11 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_prolog;, &8080 ; s_Prolog = 4
     EQUW pop_music_sumup;, &8080 ; s_Sumup = 5
     EQUW 0; there is no 6
-    EQUW pop_music_princess;, &8080 ; s_Princess = 7
+    EQUW pop_music_princess;, &8080 ; s_Princess = 7    **STORY**
     EQUW 0;, &8080 ; s_Squeek = 8
-    EQUW pop_music_enters;, &8080 ; s_Vizier = 9
+    EQUW pop_music_enters;, &8080 ; s_Vizier = 9        **STORY**
     EQUW 0;, &8080 ; s_Buildup = 10
-    EQUW pop_music_leaves;, &8080 ; s_Magic = 11
+    EQUW pop_music_leaves;, &8080 ; s_Magic = 11        **STORY**
     EQUW 0;, &8080 ; s_StTimer = 12
 
 ; These sounds map to the sound triggers named in soundnames.h.asm

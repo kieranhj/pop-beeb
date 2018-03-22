@@ -13,37 +13,14 @@ GUARD ANDY_TOP
 INCBIN "audio/ip/m-intro-wrongsignaturevgm.raw.exo"
 .pop_music_prolog
 INCBIN "audio/ip/m-story1.raw.exo"
+.pop_music_sumup
+INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
 .pop_audio_bank0_end
 SAVE "Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 0 size = ", ~(pop_audio_bank0_end - pop_audio_bank0_start)
 PRINT "AUDIO BANK 0 free = ", ~(ANDY_TOP - pop_audio_bank0_end)
-PRINT "--------"
-
-
-;----------------------------------------------------------------
-; Intro music bank
-;----------------------------------------------------------------
-
-CLEAR 0, &FFFF
-ORG ANDY_START
-GUARD ANDY_TOP
-.pop_audio_bank1_start
-.pop_music_princess
-INCBIN "audio/ip/m-story2.raw.exo"
-.pop_music_enters
-INCBIN "audio/ip/m-story3.raw.exo"
-.pop_music_leaves
-;INCBIN "audio/ip/m-story4.raw.exo"
-.pop_music_sumup
-INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
-.pop_audio_bank1_end
-SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
-
-PRINT "--------"
-PRINT "AUDIO BANK 1 size = ", ~(pop_audio_bank1_end - pop_audio_bank1_start)
-PRINT "AUDIO BANK 1 free = ", ~(ANDY_TOP - pop_audio_bank1_end)
 PRINT "--------"
 
 
