@@ -318,7 +318,6 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_tragic;, &8080 ; s_Tragic = 14         **BANK 4**
     EQUW pop_music_embrace;, &8080 ; s_Embrace = 15       **BANK 4**
     EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16   **BANK 4**
-    EQUW pop_music_glug; s_Glug = 17
 
 ; as per 
 .pop_title_music
@@ -360,6 +359,7 @@ ENDIF ; _AUDIO_DEBUG
 	EQUW pop_sfx_17;, &8080		; SwordClash1
 	EQUW pop_sfx_18;, &8080		; SwordClash2
 	EQUW pop_sfx_19;, &8080		; JawsClash
+    EQUW pop_music_glug; s_Glug = 17
 
 
 .audio_sfx_stop

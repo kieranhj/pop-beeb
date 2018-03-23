@@ -2313,8 +2313,9 @@ RJMaxFujFwd = 2 ;and forward
 
 ; BEEB added drink sfx
  LDA #s_Glug
- LDX #10
- JSR cuesong
+ jsr addsound
+; LDX #10
+; JSR cuesong
 
  lda #drinkpotion ;pick up & drink potion
  jmp jumpseq

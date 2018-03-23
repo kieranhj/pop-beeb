@@ -65,8 +65,6 @@ INCBIN "audio/ip/m-playerdeath-reg.raw.exo"
 INCBIN "audio/ip/m-playerdeath-sword.raw.exo"
 .pop_music_rejoin
 INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
-.pop_music_glug
-INCBIN "audio/ip/3glugs.raw.exo"
 .pop_music_shadow
 INCBIN "audio/ip/m-e4-killedbyshadow.raw.exo"
 .pop_music_jaffar

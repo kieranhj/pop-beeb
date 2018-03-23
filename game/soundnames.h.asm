@@ -27,6 +27,7 @@ FlashMsg = 16
 SwordClash1 = 17
 SwordClash2 = 18
 JawsClash = 19
+s_Glug = 20         ; Added for drinking a potion
 
 \*-------------------------------
 \* game music
@@ -49,8 +50,6 @@ s_Timer = 13        ; Cut scene timer music
 s_Tragic = 14       ; Tragic ending cut scene (out of time I think)
 s_Embrace = 15      ; Happy ending cut scene
 s_Heartbeat = 16    ; Princess cut scene 2/5/8
-
-s_Glug = 17         ; Added for drinking a potion
 
 \* title music
 \* Set 1 (title)
