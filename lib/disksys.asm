@@ -547,6 +547,8 @@ ENDIF
 
 ELSE
 
+disksys_loadto_addr = &4000
+
 .osfile_filename
 EQUS ":0.$.ABCDEFG", 13
 
@@ -621,7 +623,7 @@ ENDIF
     BNE wait_vsync
     
     \ Load to screen if can't load direct
-    LDA #HI(beeb_screen_addr)
+    LDA #HI(disksys_loadto_addr)
     STA read_from+2
 
     .load_direct

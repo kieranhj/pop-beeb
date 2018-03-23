@@ -262,11 +262,23 @@ IF _JMP_TABLE
 .getaboveinf JUMP_A GETABOVEINF, CTRLSUBS_BASE, 66
 .cmpwall JUMP_A CMPWALL, CTRLSUBS_BASE, 67
 
+
 \*-------------------------------
 \* intervy.asm
 \*-------------------------------
 
 .inverty JUMP_A INVERTY, INVERTY_BASE, 0
+
+
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+
+.beeb_copy_shadow JUMP_A BEEB_COPY_SHADOW, BEEB_MASTER_BASE, 0
+.beeb_hide_screen JUMP_A BEEB_HIDE_SCREEN, BEEB_MASTER_BASE, 1
+.beeb_show_screen JUMP_A BEEB_SHOW_SCREEN, BEEB_MASTER_BASE, 2
+.beeb_set_game_screen JUMP_A BEEB_SET_GAME_SCREEN, BEEB_MASTER_BASE, 3
+.beeb_set_attract_screen JUMP_A BEEB_SET_ATTRACT_SCREEN, BEEB_MASTER_BASE, 4
 
 
 \*-------------------------------
@@ -278,6 +290,7 @@ IF _JMP_TABLE
 .getinitobj JUMP_B GETINITOBJ, FRAMEADV_BASE, 2
 .calcblue JUMP_B CALCBLUE, FRAMEADV_BASE, 3
 .zerored JUMP_B ZERORED, FRAMEADV_BASE, 4
+
 
 \*-------------------------------
 \* gamebg.asm
@@ -314,6 +327,7 @@ IF _JMP_TABLE
 .errormsg JUMP_B ERRORMSG, GAMEBG_BASE, 24
 
 .successmsg JUMP_B SUCCESSMSG, GAMEBG_BASE, 25
+
 
 \*-------------------------------
 \* grafix.asm
@@ -488,6 +502,21 @@ ENDIF
 
 
 \*-------------------------------
+\* beeb_screen.asm
+\*-------------------------------
+
+.beeb_clear_status_X JUMP_B BEEB_CLEAR_STATUS_X, BEEB_SCREEN_BASE, 0
+.beeb_clear_status_line JUMP_B BEEB_CLEAR_STATUS_LINE, BEEB_SCREEN_BASE, 1
+.beeb_clear_text_area JUMP_B BEEB_CLEAR_TEXT_AREA, BEEB_SCREEN_BASE, 2
+.beeb_clear_player_energy JUMP_B BEEB_CLEAR_PLAYER_ENERGY, BEEB_SCREEN_BASE, 3
+.beeb_clear_opp_energy JUMP_B BEEB_CLEAR_OPP_ENERGY, BEEB_SCREEN_BASE, 4
+
+.beeb_clear_dhires_line JUMP_B BEEB_CLEAR_DHIRES_LINE, BEEB_SCREEN_BASE, 5
+.beeb_dhires_wipe JUMP_B BEEB_DHIRES_WIPE, BEEB_SCREEN_BASE, 6
+.beeb_display_vsync_counter JUMP_B BEEB_DISPLAY_VSYNC_COUNTER, BEEB_SCREEN_BASE, 7
+.beeb_print_version_and_build JUMP_B BEEB_PRINT_VERSION_AND_BUILD, BEEB_SCREEN_BASE, 8
+
+\*-------------------------------
 \* FUNCTION addresses for AUX A
 \*-------------------------------
 
@@ -618,6 +647,17 @@ EQUB LO(CMPWALL)
 INVERTY_BASE = P%-aux_jump_fn_table_A_LO
 EQUB LO(INVERTY)
 
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+BEEB_MASTER_BASE = P%-aux_jump_fn_table_A_LO
+EQUB LO(BEEB_COPY_SHADOW)
+EQUB LO(BEEB_HIDE_SCREEN)
+EQUB LO(BEEB_SHOW_SCREEN)
+EQUB LO(BEEB_SET_GAME_SCREEN)
+EQUB LO(BEEB_SET_ATTRACT_SCREEN)
+
+
 .aux_jump_fn_table_A_HI
 \*-------------------------------
 \* auto.asm
@@ -739,6 +779,16 @@ EQUB HI(CMPWALL)
 \* inverty.asm
 \*-------------------------------
 EQUB HI(INVERTY)
+
+\*-------------------------------
+\* beeb_master.asm
+\*-------------------------------
+EQUB HI(BEEB_COPY_SHADOW)
+EQUB HI(BEEB_HIDE_SCREEN)
+EQUB HI(BEEB_SHOW_SCREEN)
+EQUB HI(BEEB_SET_GAME_SCREEN)
+EQUB HI(BEEB_SET_ATTRACT_SCREEN)
+
 
 \*-------------------------------
 \* FUNCTION addresses for AUX B
@@ -959,6 +1009,21 @@ EQUB 0      ; EQUB LO(DOSAVEGAME)       ; moved to master.asm
 EQUB LO(CHECKALERT)
 \EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
+\*-------------------------------
+\* beeb_screen.asm
+\*-------------------------------
+BEEB_SCREEN_BASE = P% - aux_jump_fn_table_B_LO
+EQUB LO(BEEB_CLEAR_STATUS_X)
+EQUB LO(BEEB_CLEAR_STATUS_LINE)
+EQUB LO(BEEB_CLEAR_TEXT_AREA)
+EQUB LO(BEEB_CLEAR_PLAYER_ENERGY)
+EQUB LO(BEEB_CLEAR_OPP_ENERGY)
+
+EQUB LO(BEEB_CLEAR_DHIRES_LINE)
+EQUB LO(BEEB_DHIRES_WIPE)
+EQUB LO(BEEB_DISPLAY_VSYNC_COUNTER)
+EQUB LO(BEEB_PRINT_VERSION_AND_BUILD)
+
 
 .aux_jump_fn_table_B_HI
 
@@ -1168,5 +1233,19 @@ EQUB HI(CHECKALERT)
 \EQUB 0      ; EQUB LO(DISPVERSION)     ; moved to specialk.asm
 
 ENDIF
+
+\*-------------------------------
+\* beeb_screen.asm
+\*-------------------------------
+EQUB HI(BEEB_CLEAR_STATUS_X)
+EQUB HI(BEEB_CLEAR_STATUS_LINE)
+EQUB HI(BEEB_CLEAR_TEXT_AREA)
+EQUB HI(BEEB_CLEAR_PLAYER_ENERGY)
+EQUB HI(BEEB_CLEAR_OPP_ENERGY)
+
+EQUB HI(BEEB_CLEAR_DHIRES_LINE)
+EQUB HI(BEEB_DHIRES_WIPE)
+EQUB HI(BEEB_DISPLAY_VSYNC_COUNTER)
+EQUB HI(BEEB_PRINT_VERSION_AND_BUILD)
 
 .aux_jump_end

@@ -202,9 +202,13 @@ INCLUDE "lib/print.asm"
     LDA #HI(pop_beeb_main_start)
     JSR disksys_load_file
 
-\ Setup SHADOW buffers
+\ Setup SHADOW buffers for double buffering
 
-    JSR shadow_init_buffers
+    ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
+    lda &fe34
+    and #255-1  ; set D to 0
+    ora #4    	; set X to 1
+    sta &fe34
 
     \\ Load Aux
 
@@ -307,6 +311,9 @@ ENDIF
 
         JSR beeb_plot_reloc_img_loop
     }
+
+ STZ map_2bpp_to_mode2_pixel+&00         ; left + right 0
+
 \* Start attract loop
 
  jsr initsystem ;in topctrl
@@ -406,7 +413,6 @@ INCLUDE "lib/swr.asm"
 
 INCLUDE "game/beeb_test.asm"
 INCLUDE "game/beeb_platform.asm"
-INCLUDE "game/beeb_screen.asm"
 
 ; PoP source in CORE memory (always present)
 
@@ -419,6 +425,7 @@ INCLUDE "game/topctrl.asm"
 topctrl_end=P%
 INCLUDE "game/audio.asm"            ; this can go eventually
 audio_end=P%
+INCLUDE "lib/unpack.asm"
 
 ; Code moved back into Core from Main
 
@@ -465,10 +472,10 @@ PRINT "BEEB BOOT size = ", ~(beeb_boot_end - beeb_boot_start)
 PRINT "AUX JUMP TABLES size = ", ~(aux_jump_end - aux_jump_start)
 PRINT "BEEB TEST size = ", ~(beeb_test_end - beeb_test_start)
 PRINT "BEEB PLATFORM size = ", ~(beeb_platform_end - beeb_platform_start)
-PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "AUDIO (LEGACY) size = ", ~(audio_end - audio)
+PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
 PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT FONT size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
@@ -779,6 +786,7 @@ INCLUDE "game/auto.asm"
 auto_end=P%
 INCLUDE "game/inverty.asm"
 inverty_end=P%
+INCLUDE "game/beeb_master.asm"
 
 .pop_beeb_aux_b_end
 
@@ -797,6 +805,7 @@ PRINT "CTRLSUBS size = ", ~(ctrlsubs_end-ctrlsubs)
 PRINT "COLL size = ", ~(coll_end-coll)
 PRINT "AUTO size = ", ~(auto_end-auto)
 PRINT "INVERTY size = ", ~(inverty_end-INVERTY)
+PRINT "BEEB MASTER size = ", ~(beeb_master_end-beeb_master_start)
 PRINT "--------"
 PRINT "Aux B code+data size = ", ~(pop_beeb_aux_b_end - pop_beeb_aux_b_start)
 PRINT "Aux B high watermark = ", ~P%
@@ -835,7 +844,7 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
-INCLUDE "lib/unpack.asm"
+INCLUDE "game/beeb_screen.asm"
 
 .pop_beeb_aux_high_end
 
@@ -857,7 +866,7 @@ PRINT "SUBS size = ", ~(subs_end-subs)
 PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
-PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
+PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%
