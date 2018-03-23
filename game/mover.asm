@@ -932,9 +932,14 @@ maxmob = mobspace-1
  cmp #gmaxval
  bcs local_attop ;stop at top
 
+; BEEB only play sound every other frame (moves up in steps of 4)
+ LSR A:LSR A:LSR A
+ BCC skip_sound
+
  lda #RaisingGate
  jsr addsound
 
+.skip_sound
  jmp cont
 
 .local_goingdown

@@ -1480,6 +1480,7 @@ floorY = 151
 .ADDLOWERSOUND
 {
  lsr A
+ LSR A  ; BEEB every 4th frame
  bcc return ;alt frames
 
  lda level
