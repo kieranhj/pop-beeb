@@ -58,6 +58,26 @@ ENDIF
 
 .vsync_swap_buffers	EQUB 0
 
+.vsync_enable_timer EQUB 0
+.vsync_timer_ticks	EQUW 0
+
+.vsync_start_timer
+{
+	LDA #&FF
+	STA vsync_enable_timer
+
+	STZ vsync_timer_ticks+0
+	STZ vsync_timer_ticks+1
+
+	RTS
+}
+
+.vsync_stop_timer
+{
+	STZ vsync_enable_timer
+	RTS
+}
+
 .event_handler
 {
 	php
@@ -79,6 +99,7 @@ ENDIF
 	\\ Increment vsync counter
 	INC beeb_vsync_count
 
+	\\ Swap frame buffers if requested
 	LDA vsync_swap_buffers
 	BEQ no_swap
 	JSR shadow_swap_buffers
@@ -90,6 +111,17 @@ IF _AUDIO
 	jsr audio_update
 ENDIF
 	
+	; is real time counter enabled?
+	{
+		LDA vsync_enable_timer
+		BEQ done
+
+		INC vsync_timer_ticks+0
+		BNE done
+		INC vsync_timer_ticks+1
+		.done
+	}
+
 	; hack in screen flash
 	{
 		LDA vsync_palette_override
