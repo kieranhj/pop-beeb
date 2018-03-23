@@ -9,6 +9,10 @@
 \*
 \*-------------------------------
 
+.keybufptr skip 1
+keybuflen = 10
+.keybuf skip keybuflen
+
 \dum $320
 ;PAGE_ALIGN
 PRINT "ALIGN LOST ", ~((P%+&7F) AND &FF80)-P%, " BYTES"

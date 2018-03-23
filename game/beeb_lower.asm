@@ -191,7 +191,6 @@ ENDIF
 .AMtimer skip 1
 .begrange skip 1
 ;.scrn skip 1
-.keybufptr skip 1
 .VisScrn skip 1
 .OppStrength skip 1
 ;.jarabove skip 1
@@ -300,9 +299,6 @@ ENDIF
 .OpSword skip 1
 .OpLife skip 1
 
-keybuflen = 10
-.keybuf skip keybuflen
-
 \*-------------------------------
 \*
 \*  MOBTABLES
@@ -339,6 +335,8 @@ keybuflen = 10
 
 .splash_filename    EQUS "SPLASH $"
 .presents_filename  EQUS "PRESENT$"
+.byline_filename    EQUS "BYLINE $"
+.title_filename     EQUS "TITLE  $"
 
 \*-------------------------------
 \* Relocated from Core at boot
