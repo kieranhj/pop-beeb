@@ -694,13 +694,16 @@ ENDIF
 .disksys_decrunch_file
 {
     \ Final destination is baked into pu file
+    STA unpack_addr+1
 
     \ Load to screen as can't load direct
     LDA #HI(disksys_loadto_addr)
     JSR disksys_load_direct
 
-    LDX #LO(disksys_loadto_addr + 6)
-    LDY #HI(disksys_loadto_addr + 6)
+    .unpack_addr
+    LDA #&00
+    LDX #LO(disksys_loadto_addr)
+    LDY #HI(disksys_loadto_addr)
     JMP PUCRUNCH_UNPACK
 }
 

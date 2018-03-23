@@ -63,16 +63,16 @@ ENDMACRO
  JMP beeb_show_screen       ; in case previous blackout
 }
 
-MACRO MASTER_LOAD_DHIRES filename, pu_size
+MACRO MASTER_LOAD_DHIRES filename, pu_size, atrow
 {
  LDX #LO(filename)
  LDY #HI(filename)
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
-; LDA #PUCRUNCH_BANK:JSR swr_select_slot
- LDX #LO(&8006 - pu_size)
- LDY #HI(&8006 - pu_size)
+ LDX #LO(&8000 - pu_size)
+ LDY #HI(&8000 - pu_size)
+ LDA #HI(beeb_double_hires_addr + atrow * BEEB_SCREEN_ROW_BYTES)
  JSR PUCRUNCH_UNPACK
 
  JSR beeb_clear_dhires_line
@@ -863,7 +863,7 @@ ENDIF
 
 \* Unpack splash screen into DHires page 1
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Start the main tune!
 
@@ -884,7 +884,7 @@ ENDIF
 
 \* Unpack "Broderbund Presents" onto page 2
 
- MASTER_LOAD_DHIRES presents_filename, pu_presents_size
+ MASTER_LOAD_DHIRES presents_filename, pu_presents_size, 12
  
 \* Show the presents screen at 0:02.00
 
@@ -903,7 +903,7 @@ ENDIF
 {
 \* Unpack byline onto page 1
 
- MASTER_LOAD_DHIRES byline_filename, pu_byline_size
+ MASTER_LOAD_DHIRES byline_filename, pu_byline_size, 12
  
  \* Show the byline at 0:07.00
 
@@ -932,11 +932,11 @@ ENDIF
 
 \* Construct the title page & logo without showing it
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Add the title
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size
+ MASTER_LOAD_DHIRES title_filename, pu_title_size, 12
 
 \* Now wipe to reveal when music finishes (could test explicitly?)
 
@@ -951,7 +951,7 @@ ENDIF
 {
 \* Unpack title onto page 1
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size
+ MASTER_LOAD_DHIRES title_filename, pu_title_size, 12
  
  \* Show title at 0:15.00
 
@@ -975,7 +975,7 @@ ENDIF
 
 .Prolog1
 {
- MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size
+ MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size, 0
  
  MASTER_WIPE_DHIRES 25*50
 
@@ -1022,7 +1022,7 @@ ENDIF
 {
 \* Load and display Prolog immediately
 
- MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
+ MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size, 0
  MASTER_SHOW_DHIRES 0
 
 \* But wait to trigger additional music piece
@@ -1046,7 +1046,7 @@ ENDIF
 {
 \* Load Credits screen
 
- MASTER_LOAD_DHIRES credits_filename, pu_credits_size
+ MASTER_LOAD_DHIRES credits_filename, pu_credits_size, 0
 
 \* Wipe after title been on for 4 seconds
 
@@ -1083,7 +1083,7 @@ ENDIF
 
 \* Load the screen
 
- MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
+ MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size, 0
 
 \* Start the music
 
@@ -1105,7 +1105,7 @@ ENDIF
 
 \* Load the splash
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Show the splash after 10 secs (tbc)
 
