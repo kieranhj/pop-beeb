@@ -57,17 +57,14 @@ ENDMACRO
 
 .master_load_dhires
 {
-IF _DEMO_BUILD
- JSR plot_demo_url
-ENDIF
+ JSR wait_for_timer_XY
 
- JSR beeb_clear_dhires_line
  JSR vblank
  JSR PageFlip
  JMP beeb_show_screen       ; in case previous blackout
 }
 
-MACRO MASTER_LOAD_DHIRES filename, pu_size
+MACRO MASTER_LOAD_DHIRES filename, pu_size, sequence_time
 {
  LDX #LO(filename)
  LDY #HI(filename)
@@ -79,11 +76,20 @@ MACRO MASTER_LOAD_DHIRES filename, pu_size
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
 
+IF _DEMO_BUILD
+ JSR plot_demo_url
+ENDIF
+
+ JSR beeb_clear_dhires_line
+
+ LDX #LO(sequence_time)
+ LDY #HI(sequence_time)
+
  JSR master_load_dhires
 }
 ENDMACRO
 
-MACRO MASTER_WIPE_DHIRES filename, pu_size
+MACRO MASTER_WIPE_DHIRES filename, pu_size, sequence_time
 {
  LDX #LO(filename)
  LDY #HI(filename)
@@ -96,6 +102,11 @@ MACRO MASTER_WIPE_DHIRES filename, pu_size
  JSR PUCRUNCH_UNPACK
 
  JSR beeb_clear_dhires_line
+
+ LDX #LO(sequence_time)
+ LDY #HI(sequence_time)
+ JSR wait_for_timer_XY
+
  JSR beeb_dhires_wipe
 }
 ENDMACRO
@@ -1201,6 +1212,8 @@ EQUS "PRIN2  $"
 
  jsr SetupDHires
 
+ JSR vsync_start_timer
+
  jsr Prolog2
 
  jsr SilentTitle
@@ -1264,21 +1277,23 @@ IF _AUDIO
     jsr BEEB_INTROSONG
 ENDIF
 
-; lda #44/4
-; jsr tpause
- LDX #1:JSR pause_for_X_seconds
+ JSR vsync_start_timer
 
 \* Unpack "Broderbund Presents" onto page 1
 
 \ lda #delPresents
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES presents_filename, pu_presents_size
+; lda #44/4
+; jsr tpause
+; LDX #1:JSR pause_for_X_seconds
+
+ MASTER_LOAD_DHIRES presents_filename, pu_presents_size, 2*50
 
 \ ldx #80
 \ lda #s_Presents
 \ jsr master_PlaySongI
- LDX #4:JSR pause_for_X_seconds     ; on screen for 4 seconds
+; LDX #4:JSR pause_for_X_seconds     ; on screen for 4 seconds
 
  jmp CleanScreen
 }
@@ -1329,12 +1344,12 @@ EQUS "BYLINE $"
 \ lda #delByline
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES byline_filename, pu_byline_size
+ MASTER_LOAD_DHIRES byline_filename, pu_byline_size, 7*50
 
 \ ldx #80
 \ lda #s_Byline
 \ jsr master_PlaySongI
- LDX #7:JSR pause_for_X_seconds     ; on screen for 7 seconds
+; LDX #7:JSR pause_for_X_seconds     ; on screen for 7 seconds
 
 \* Credit line disappears
 
@@ -1408,7 +1423,7 @@ ENDIF
 \ lda #delTitle
 \ jsr DeltaExpPop
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size
+ MASTER_LOAD_DHIRES title_filename, pu_title_size, 15*50
 
 IF _AUDIO
     lda #s_Title
@@ -1419,7 +1434,7 @@ ENDIF
 \ lda #s_Title
 \ jsr master_PlaySongI
 
- LDX #10:JSR pause_for_X_seconds     ; on screen for 10 seconds
+; LDX #10:JSR pause_for_X_seconds     ; on screen for 10 seconds
 
 \* Credit line disappears
 
@@ -1441,7 +1456,7 @@ EQUS "PROLOG $"
 \ sta RAMRDaux
 \ jsr DblExpand
 
- MASTER_WIPE_DHIRES prolog_filename, pu_prolog_size
+ MASTER_WIPE_DHIRES prolog_filename, pu_prolog_size, 25*50
 
 \ ldx #250
 \ lda #s_Prolog
@@ -1494,7 +1509,7 @@ EQUS "SUMUP  $"
 
 \ jsr setdhires
 
- MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
+ MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size, 0
 
 \ BEEB - just delay as music already playing
 \ ldx #250/4
@@ -1523,7 +1538,7 @@ EQUS "CREDITS$"
 
 .BeebCredit
 {
- MASTER_WIPE_DHIRES credits_filename, pu_credits_size
+ MASTER_WIPE_DHIRES credits_filename, pu_credits_size, 0
 
  LDX #4: JSR pause_for_X_seconds
 
@@ -1565,7 +1580,7 @@ ENDIF
 
  jsr SetupDHires
 
- MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
+ MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size, 0 
 
  lda #s_Epilog
  jsr BEEB_INTROSONG
@@ -1589,7 +1604,7 @@ EQUS "SPLASH $"
 
 .unpacksplash
 {
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0 
 
  RTS
 }
@@ -1637,6 +1652,8 @@ ENDIF
 .Demo
 {
  jsr blackout
+
+ JSR vsync_stop_timer
 
 IF _AUDIO
     ; SM: hacked in game audio bank load here
@@ -1752,6 +1769,8 @@ ENDIF
 .DOSTARTGAME
 {
  jsr blackout
+
+ JSR vsync_stop_timer
 
 IF _AUDIO
     ; SM: hacked in game audio bank load here
@@ -2425,6 +2444,28 @@ ENDIF
     .store_Y
     LDY #0
     BRA seconds_loop
+
+    .return
+    RTS
+}
+
+.wait_for_timer_XY
+{
+    STY smTicks_HI+1
+    STX smTicks_LO+1
+
+    .loop
+    JSR master_StartGame
+
+    LDA vsync_timer_ticks+1
+    .smTicks_HI
+    CMP #&FF
+    BCC loop
+
+    LDA vsync_timer_ticks+0
+    .smTicks_LO
+    CMP #&FF
+    BCC loop
 
     .return
     RTS
