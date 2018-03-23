@@ -409,14 +409,8 @@ EQUD savedgame_top
  jsr rdch4 ;char set 4
 
 IF _AUDIO
-    LDA #0
-    JSR disksys_set_drive       ; gah!
-
     lda #3
     jsr BEEB_LOAD_AUDIO_BANK
-
-    LDA #2
-    JSR disksys_set_drive
 ENDIF
 
 \ NOT BEEB - don't know what this is yet!
@@ -1482,14 +1476,14 @@ ENDIF
     JMP LoadStage2_Attract
 
     .in_game
+    LDA #2
+    JSR disksys_set_drive
+
 IF _AUDIO
     ; SM: added intro music load & play trigger here
     lda #4
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
-
-    LDA #2
-    JSR disksys_set_drive
 
     \\ Need to switch CHTAB6 or CHTAB8 depending on level
 

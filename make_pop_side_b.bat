@@ -3,18 +3,14 @@
 rem disk1 now created by beebasm
 
 del "pop-beeb-side-a.ssd.$.PRIN2*"
+del "pop-beeb-side-a.ssd.$.Audio*"
 
 bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
-REM bin\bbcim -e "pop-beeb-side-a.ssd" Audio3
-REM bin\bbcim -e "pop-beeb-side-a.ssd" Audio4
+bin\bbcim -e "pop-beeb-side-a.ssd" Audio3
+bin\bbcim -e "pop-beeb-side-a.ssd" Audio4
 
 del "pop-beeb-side-b.ssd"
 copy "disc\template-side-b.ssd.bin" "pop-beeb-side-b.ssd"
-
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio3"
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
-
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Credits.mode2.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.DUNB.bin"
 
@@ -62,6 +58,8 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "disc\dummy.txt"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL14"
 bin\bbcim -d "pop-beeb-side-b.ssd" "$.DUMMY"
 
+bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio3"
+
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.DUNA.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB2.DUN.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.PALA.bin"
@@ -74,11 +72,9 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SHAD.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SKEL.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.VIZ.bin"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.mode2.bin"
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB7.mode2.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB9.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
 
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.PRINCESS.SCENE.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
+
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.PRIN2"
-REM bin\bbcim -a "pop-beeb-side-b.ssd" "Other/john.Epilog.mode2.bin"
