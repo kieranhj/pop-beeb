@@ -1409,7 +1409,7 @@ ENDIF
     lda #HI(chtable9)
     ldx #LO(chtab9_file_name)
     ldy #HI(chtab9_file_name)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable9)
@@ -1426,7 +1426,7 @@ ENDIF
     lda #HI(chtable7)
     ldx #LO(chtab7_file_name)
     ldy #HI(chtab7_file_name)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable7)
@@ -1443,7 +1443,7 @@ ENDIF
     lda #HI(chtable8)
     ldx #LO(chtab8_file_name)
     ldy #HI(chtab8_file_name)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable8)
@@ -1500,7 +1500,7 @@ ENDIF
     lda #HI(chtable6)
     ldx #LO(chtab6_file_name)
     ldy #HI(chtab6_file_name)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable6)

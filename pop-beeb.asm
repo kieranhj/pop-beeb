@@ -903,6 +903,8 @@ PAGE_ALIGN
 INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
 ; Actually CHTAB6 and CHTAB9 goes over all of this!
 
+PRINT "CHTAB7 = ", ~chtable7
+
 ;----------------------------------------------------------------
 ; Story cutscene music bank
 ;----------------------------------------------------------------
@@ -980,10 +982,13 @@ PUTFILE "Other/byline.pu.bin", "BYLINE", &3000, 0
 PUTFILE "Other/prolog.pu.bin", "PROLOG", &3000, 0
 
 \ Cutscene files
-PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
+;PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
 ;PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
+PUTFILE "Images/chtab9.pu.bin", "CHTAB9", 0, 0
+PUTFILE "Images/chtab7.pu.bin", "CHTAB7", 0, 0
+PUTFILE "Images/chtab8.pu.bin", "CHTAB8", 0, 0
 
 PUTFILE "Other/sumup.pu.bin", "SUMUP", &3000, 0
 

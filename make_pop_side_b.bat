@@ -74,7 +74,9 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.VIZ.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.mode2.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB6.mode2.bin"
+REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/chtab6.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/chtab8.pu.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.PRIN2"
