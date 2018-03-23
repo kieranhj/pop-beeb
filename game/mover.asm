@@ -872,9 +872,9 @@ maxmob = mobspace-1
 
  lda #GateDown
  jsr addsound
- lda #s_Stairs
- ldx #15
- jsr cuesong
+
+; BEEB don't play tune when stairs appear - same as PC
+
  lda #1
  sta exitopen
  jsr mirappear

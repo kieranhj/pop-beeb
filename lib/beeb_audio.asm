@@ -309,7 +309,7 @@ ENDIF ; _AUDIO_DEBUG
     EQUW pop_music_rejoin;, &8080 ; s_Rejoin = 5
     EQUW pop_music_shadow;, &8080 ; s_Shadow = 6
     EQUW pop_music_sword;, &8080 ; s_Vict = 7
-    EQUW 0              ;, &8080 ; s_Stairs = 8
+    EQUW pop_music_beatjaffar ;, &8080 ; s_Stairs = 8
     EQUW pop_music_rejoin;, &8080 ; s_Upstairs = 9
     EQUW pop_music_jaffar;, &8080 ; s_Jaffar = 10
     EQUW pop_music_lifepotion;, &8080 ; s_Potion = 11

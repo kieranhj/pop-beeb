@@ -1854,7 +1854,7 @@ WtlessGravity = 1
  sta PlayCount
  rts
 
-.wingame lda #s_Upstairs        ; BEEB should be Killed Jaffar
+.wingame lda #s_Stairs      ; BEEB is Killed Jaffar tune
  ldx #25
  jsr cuesong
 
