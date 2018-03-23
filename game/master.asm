@@ -137,6 +137,13 @@ ENDIF
 \* Music song #s
 \ Moved to soundnames.h.asm
 
+.byline_filename    EQUS "BYLINE $"
+.title_filename     EQUS "TITLE  $"
+.prolog_filename    EQUS "PROLOG $"
+.sumup_filename     EQUS "SUMUP  $"
+.credits_filename   EQUS "CREDITS$"
+.epilog_filename    EQUS "EPILOG $"
+
 \*-------------------------------
 \* Soft switches
 \ Already defined in grafix.asm
@@ -853,12 +860,6 @@ EQUS "PRIN2  $"
 \*
 \*-------------------------------
 
-.splash_filename
-EQUS "SPLASH $"
-
-.presents_filename
-EQUS "PRESENT$"
-
 .PubCredit
 {
 IF _AUDIO
@@ -906,9 +907,6 @@ ENDIF
 \*
 \*-------------------------------
 
-.byline_filename
-EQUS "BYLINE $"
-
 .AuthorCredit
 {
 \* Unpack byline onto page 1
@@ -927,9 +925,6 @@ EQUS "BYLINE $"
 \* "Prince of Persia"
 \*
 \*-------------------------------
-
-.title_filename
-EQUS "TITLE  $"
 
 CUTSCENE_END_TIME=49.5*50
 CREDITS_SHOW_TIME=5*50
@@ -986,9 +981,6 @@ ENDIF
 \*
 \*-------------------------------
 
-.prolog_filename
-EQUS "PROLOG $"
-
 .Prolog1
 {
  MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size
@@ -1034,9 +1026,6 @@ ENDIF
 \*
 \*-------------------------------
 
-.sumup_filename
-EQUS "SUMUP  $"
-
 .Prolog2
 {
 \* Load and display Prolog immediately
@@ -1061,9 +1050,6 @@ EQUS "SUMUP  $"
 \*
 \*-------------------------------
 
-.credits_filename
-EQUS "CREDITS$"
-
 .BeebCredit
 {
 \* Load Credits screen
@@ -1087,9 +1073,6 @@ EQUS "CREDITS$"
 \* Epilog
 \*
 \*-------------------------------
-
-.epilog_filename
-EQUS "EPILOG $"
 
 .Epilog
 {

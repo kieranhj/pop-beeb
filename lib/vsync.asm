@@ -2,7 +2,11 @@
 \ *	Event Vector Routines
 \ ******************************************************************
 
-\\ System vars
+.vsync_palette_override EQUB &FF
+.vsync_swap_buffers		EQUB 0
+.vsync_enable_timer 	EQUB 0
+.vsync_timer_ticks		EQUW 0
+
 .old_eventv				SKIP 2
 
 .start_eventv				; new event handler in X,Y
@@ -53,13 +57,6 @@ IF 0			; not currently used
 	rts
 }        
 ENDIF
-
-.vsync_palette_override EQUB &FF
-
-.vsync_swap_buffers	EQUB 0
-
-.vsync_enable_timer EQUB 0
-.vsync_timer_ticks	EQUW 0
 
 .vsync_start_timer
 {

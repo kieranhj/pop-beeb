@@ -327,6 +327,20 @@ keybuflen = 10
 .trobcount skip 1
 
 \*-------------------------------
+\*  BEEB SYSTEM VARS
+\*-------------------------------
+
+; all filenames are 8 characters in length
+.audio0_filename EQUS "Audio0 $"    ; 
+.audio1_filename EQUS "Audio1 $"    ; 
+.audio2_filename EQUS "Audio2 $"    ; 
+.audio3_filename EQUS "Audio3 $"    ; game music jingles
+.audio4_filename EQUS "Audio4 $"    ; cutscene music
+
+.splash_filename    EQUS "SPLASH $"
+.presents_filename  EQUS "PRESENT$"
+
+\*-------------------------------
 \* Relocated from Core at boot
 \*-------------------------------
 

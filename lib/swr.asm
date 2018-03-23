@@ -1,5 +1,6 @@
 .beeb_swr_start
 
+IF 0
 SWR_TOP_BANK=7
 SWR_BOTTOM_BANK=4
 
@@ -39,6 +40,7 @@ SWR_BOTTOM_BANK=4
     tya
     rts
 }
+ENDIF
 
 ; A contains ROM bank to be selected
 .swr_select_slot

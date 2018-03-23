@@ -549,6 +549,10 @@ ELSE
 
 disksys_loadto_addr = &4000
 
+\*-------------------------------
+\*  DISKSYS OSFILE PARAMS
+\*-------------------------------
+
 .osfile_filename
 EQUS ":0.$.ABCDEFG", 13
 

@@ -111,7 +111,7 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 INCLUDE "lib/print.asm"
 
-.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks.", 13, 0
+.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
 
 .main_filename  EQUS "Main   $"
 .high_filename  EQUS "High   $"
@@ -131,10 +131,18 @@ INCLUDE "lib/print.asm"
     CPX #6
     BCS fail
 
-    \\ SWRAM init
-    jsr swr_init
-    cmp #4
-    bcs swr_ok
+    \\ Test for SWRAM - need all 4x banks
+    LDA #68
+    JSR osbyte
+    CPX #&F
+    BNE fail
+
+    \\ Test for OSHWM, i.e. PAGE = &E00
+    \\ (Probably wouldn't have loaded if this wasn't the case)
+    LDA #131
+    JSR osbyte
+    CPY #&0E
+    BEQ swr_ok
 
 .fail
     MPRINT swr_fail_text
