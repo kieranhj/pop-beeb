@@ -35,21 +35,18 @@ ENDIF
     ;asl a
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_game_music+2,x
-    pha
     ; get address
     lda pop_game_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
-    PLA
     RTS
 
     .have_track
     tay
     lda pop_game_music+0,x
     tax
-    pla
+    ; get bank
+    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_game_music+2,x
     ; play the track
     jsr music_play
 
@@ -74,21 +71,51 @@ ENDIF
     ;asl a
     asl a
     tax
-    ; get bank
-    lda #&80 ;lda pop_title_music+2,x
-    pha
     ; get address
     lda pop_title_music+1,x
     bne have_track    ; dont play if entry is 0
     STA SongCue
-    PLA
     RTS
 
     .have_track
     tay
     lda pop_title_music+0,x
     tax
-    pla
+    ; get bank
+    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_title_music+2,x
+    ; play the track
+    jsr music_play
+
+.no_track
+    rts
+}
+
+.BEEB_STORYSONG
+{
+IF _DEBUG
+    LDX audio_update_enabled
+    BNE ok
+    BRK
+    .ok
+ENDIF
+
+    STA SongCue
+
+    ;asl a
+    asl a
+    tax
+    ; get address
+    lda pop_title_music+1,x
+    bne have_track    ; dont play if entry is 0
+    STA SongCue
+    RTS
+
+    .have_track
+    tay
+    lda pop_title_music+0,x
+    tax
+    ; get bank
+    lda #BEEB_AUDIO_STORY_BANK ;lda pop_title_music+2,x
     ; play the track
     jsr music_play
 
@@ -130,9 +157,8 @@ ENDIF
     adc #0
     tay
 
-    lda #&80                ; select ANDY
+    lda #BEEB_AUDIO_MUSIC_BANK                ; select ANDY
     jsr swr_select_bank
-
 
     \\ Load audio bank into ANDY
     lda #HI(ANDY_START)
@@ -147,6 +173,17 @@ ENDIF
 
     .already_loaded
     rts
+}
+
+.BEEB_LOAD_STORY_BANK
+{
+    lda #BEEB_AUDIO_STORY_BANK
+    jsr swr_select_slot
+
+    lda #HI(pop_audio_bank1_start)
+    LDX #LO(audio1_filename)
+    LDY #HI(audio1_filename)
+    JMP disksys_load_file
 }
 
 IF _AUDIO_DEBUG
@@ -209,13 +246,19 @@ IF _AUDIO_DEBUG
 ENDIF ; _AUDIO_DEBUG
 
 
-	rts	
 }
+\\ Fall through!
 .BEEB_ZEROSOUND
 {
     rts
 }
 
+.BEEB_MUSIC_IS_PLAYING
+{
+    LDA vgm_player_ended
+    EOR #&FF
+    RTS
+}
 
 ; call this function once to initialise the audio system
 .audio_init
@@ -260,37 +303,39 @@ ENDIF ; _AUDIO_DEBUG
 .pop_game_music
     EQUW 0 ;, &8080
     EQUW pop_music_death;, &8080 ; s_Accid = 1 ; "accidental death" music
-    EQUW pop_music_death;, &8080 ; s_Heroic = 2 ; "heroic death" music
+    EQUW pop_music_heroic;, &8080 ; s_Heroic = 2 ; "heroic death" music
     EQUW pop_music_start;, &8080 ; s_Danger = 3
     EQUW pop_music_sword;, &8080 ; s_Sword = 4
-    EQUW pop_music_sword;, &8080 ; s_Rejoin = 5
-    EQUW pop_music_death;, &8080 ; s_Shadow = 6
+    EQUW pop_music_rejoin;, &8080 ; s_Rejoin = 5
+    EQUW pop_music_shadow;, &8080 ; s_Shadow = 6
     EQUW pop_music_sword;, &8080 ; s_Vict = 7
-    EQUW pop_music_sword;, &8080 ; s_Stairs = 8
-    EQUW pop_music_sword;, &8080 ; s_Upstairs = 9
-    EQUW pop_music_start;, &8080 ; s_Jaffar = 10
+    EQUW pop_music_beatjaffar ;, &8080 ; s_Stairs = 8
+    EQUW pop_music_rejoin;, &8080 ; s_Upstairs = 9
+    EQUW pop_music_jaffar;, &8080 ; s_Jaffar = 10
     EQUW pop_music_lifepotion;, &8080 ; s_Potion = 11
     EQUW pop_music_potion;, &8080 ; s_ShortPot = 12
-    EQUW pop_music_timer;, &8080 ; s_Timer = 13
-    EQUW pop_music_tragic;, &8080 ; s_Tragic = 14
-    EQUW pop_music_start;, &8080 ; s_Embrace = 15
-    EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16
+    EQUW pop_music_timer;, &8080 ; s_Timer = 13           **BANK 4**
+    EQUW pop_music_tragic;, &8080 ; s_Tragic = 14         **BANK 4**
+    EQUW pop_music_embrace;, &8080 ; s_Embrace = 15       **BANK 4**
+    EQUW pop_music_heartbeat;, &8080 ; s_Heartbeat = 16   **BANK 4**
 
 ; as per 
 .pop_title_music
     EQUW 0;, &8080
-    EQUW pop_music_title;, &8080 ; s_Presents = 1
+    EQUW pop_music_intro;, &8080 ; s_Presents = 1       **BANK 0**
     EQUW 0;, &8080 ; s_Byline = 2
-    EQUW pop_music_mirror;, &8080 ; s_Title = 3
-    EQUW pop_music_intro;, &8080 ; s_Prolog = 4
-    EQUW 0;, &8080 ; s_Sumup = 5
+    EQUW 0;, &8080 ; s_Title = 3
+    EQUW pop_music_prolog;, &8080 ; s_Prolog = 4        **BANK 0**
+    EQUW pop_music_sumup;, &8080 ; s_Sumup = 5          **BANK 0**
     EQUW 0; there is no 6
-    EQUW pop_music_intro;, &8080 ; s_Princess = 7
-    EQUW 0;, &8080 ; s_Squeek = 8
-    EQUW 0;, &8080 ; s_Vizier = 9
+    EQUW pop_music_princess;, &8080 ; s_Princess = 7    **STORY**
+    EQUW pop_music_creak;, &8080 ; s_Squeek = 8         **STORY**
+    EQUW pop_music_enters;, &8080 ; s_Vizier = 9        **STORY**
     EQUW 0;, &8080 ; s_Buildup = 10
-    EQUW 0;, &8080 ; s_Magic = 11
+    EQUW pop_music_leaves;, &8080 ; s_Magic = 11        **STORY**
     EQUW 0;, &8080 ; s_StTimer = 12
+    EQUW pop_music_epilog;, &8080 ; s_Epilog = 13       **BANK 2**
+    EQUW 0;, &8080 ; s_Curtain = 14
 
 ; These sounds map to the sound triggers named in soundnames.h.asm
 .pop_sound_fx
@@ -314,6 +359,7 @@ ENDIF ; _AUDIO_DEBUG
 	EQUW pop_sfx_17;, &8080		; SwordClash1
 	EQUW pop_sfx_18;, &8080		; SwordClash2
 	EQUW pop_sfx_19;, &8080		; JawsClash
+    EQUW pop_music_glug; s_Glug = 17
 
 
 .audio_sfx_stop

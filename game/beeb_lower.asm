@@ -82,7 +82,7 @@ BBundID ds 1
 redherring2 ds 1
 ENDIF
 .pausetemp skip 1
-.recheck0 skip 1
+\.recheck0 skip 1
 
 \*-------------------------------
 \*
@@ -260,7 +260,7 @@ ENDIF
 .FrameCount skip 2
 .FrameCountDelta skip 1
 .FrameCountPrev skip 1
-;.SongCount skip 1
+.SongReq skip 1
 .PreRecPtr skip 1
 .gotsword skip 1
 .message skip 1

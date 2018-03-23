@@ -156,7 +156,8 @@ BEEB_SWRAM_SLOT_AUX_B = 6       ; some code
 BEEB_SWRAM_SLOT_AUX_HIGH = 7    ; all code
 
 BEEB_AUDIO_SFX_BANK=5           ; BANK1==ROM5
-;PUCRUNCH_BANK=7                 ; be careful here!
+BEEB_AUDIO_MUSIC_BANK=&80       ; ANDY
+BEEB_AUDIO_STORY_BANK=4         ; Overlay
 
 \*-------------------------------
 ; POP defines

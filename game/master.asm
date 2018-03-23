@@ -139,17 +139,17 @@ ENDIF
 \* Hi bytes of crunch data
 \* Double hi-res (stage 1)
 
-pacSplash = $40
-delPresents = $70
-delByline = $72
-delTitle = $74
-pacProlog = $7c
-pacSumup = $60 ;mainmem
-pacEpilog = $76 ;side B
+\pacSplash = $40
+\delPresents = $70
+\delByline = $72
+\delTitle = $74
+\pacProlog = $7c
+\pacSumup = $60 ;mainmem
+\pacEpilog = $76 ;side B
 
 \* Single hires (stage 2)
 
-pacProom = $84
+\pacProom = $84
 
 \*-------------------------------
 \* Music song #s
@@ -1057,8 +1057,9 @@ IF _AUDIO
     jsr BEEB_INTROSONG
 ENDIF
 
- lda #44/4
- jsr tpause
+; lda #44/4
+; jsr tpause
+ LDX #1:JSR pause_for_X_seconds
 
 \* Unpack "Broderbund Presents" onto page 1
 
@@ -1067,12 +1068,10 @@ ENDIF
 
  MASTER_LOAD_DHIRES presents_filename, pu_presents_size
 
-
-
 \ ldx #80
 \ lda #s_Presents
 \ jsr master_PlaySongI
-
+ LDX #4:JSR pause_for_X_seconds     ; on screen for 4 seconds
 
  jmp CleanScreen
 }
@@ -1115,8 +1114,8 @@ EQUS "BYLINE $"
 
 .AuthorCredit
 {
- lda #42/4
- jsr tpause
+; lda #42/4
+; jsr tpause
 
 \* Unpack byline onto page 1
 
@@ -1128,6 +1127,7 @@ EQUS "BYLINE $"
 \ ldx #80
 \ lda #s_Byline
 \ jsr master_PlaySongI
+ LDX #7:JSR pause_for_X_seconds     ; on screen for 7 seconds
 
 \* Credit line disappears
 
@@ -1182,31 +1182,19 @@ ENDIF
 
  JSR beeb_dhires_wipe
 
-; jsr copy1to2
+\ And wait a couple of seconds
 
- lda #20/4
- jsr tpause
+ LDX #4:JSR pause_for_X_seconds
 
-\ lda #delTitle
-\ jsr DeltaExpPop
- 
-; MASTER_LOAD_DHIRES title_filename, 12
-
-IF _AUDIO
-    lda #s_Title
-    jsr BEEB_INTROSONG
-ENDIF
-
- lda #160/4
- jmp tpause
+ RTS
 }
 
 \*-------------------------------
 
 .TitleScreen
 {
- lda #38/4
- jsr tpause
+; lda #38/4
+; jsr tpause
 
 \* Unpack title onto page 1
 
@@ -1224,9 +1212,7 @@ ENDIF
 \ lda #s_Title
 \ jsr master_PlaySongI
 
-; SM: added this to give music chance to play out
- lda #120/4
- jmp tpause
+ LDX #10:JSR pause_for_X_seconds     ; on screen for 10 seconds
 
 \* Credit line disappears
 
@@ -1254,8 +1240,13 @@ EQUS "PROLOG $"
 \ lda #s_Prolog
 \ jmp master_PlaySongI
 
- lda #30
- jmp tpause
+IF _AUDIO
+    lda #s_Prolog
+    jsr BEEB_INTROSONG
+ENDIF
+
+ LDX #10:JSR pause_for_X_seconds
+ ; music lasts 15 seconds but let it cover cutscene load
 
  RTS
 }
@@ -1274,13 +1265,6 @@ EQUS "PROLOG $"
 
  lda #0 ;don't seek track 0
  jsr cutprincess1
-
-IF _AUDIO
-    ; SM: added intro music load & play trigger here
-    ; BEEB TEMP - this should really be done in subs_PlaySongI
-    lda #s_Princess
-    jsr BEEB_INTROSONG
-ENDIF
 
  lda #0 ;cut #0 (intro)
  jmp playcut ;Apple II was xplaycut aux l.c. via grafix
@@ -1305,9 +1289,17 @@ EQUS "SUMUP  $"
 
  MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
 
-\ ldx #250
+\ BEEB - just delay as music already playing
+\ ldx #250/4
 \ lda #s_Sumup
 \ jmp master_PlaySongI
+
+ LDX #10:JSR pause_for_X_seconds
+
+ lda #s_Sumup
+ jsr BEEB_INTROSONG
+
+ LDX #10:JSR pause_for_X_seconds
 
  RTS
 }
@@ -1326,8 +1318,7 @@ EQUS "CREDITS$"
 {
  MASTER_WIPE_DHIRES credits_filename, pu_credits_size
 
- lda #30
- jmp tpause
+ LDX #4: JSR pause_for_X_seconds
 
  RTS
 }
@@ -1361,7 +1352,7 @@ EQUS "EPILOG $"
 IF _AUDIO
     ; SM: added title music load & play trigger here
     ; load title audio bank
-    lda #0              ; BEEB TODO not correct bank!
+    lda #2
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
@@ -1371,16 +1362,17 @@ ENDIF
 
  lda #s_Epilog
  jsr BEEB_INTROSONG
- lda #15
+ 
+ ldx #10    ; tbc
  jsr pauseNI
  jsr unpacksplash
- lda #75
+ ldx #10    ; tbc
  jsr pauseNI
 
- lda #s_Curtain
- jsr BEEB_INTROSONG
- lda #60
- jsr pauseNI
+\ lda #s_Curtain
+\ jsr BEEB_INTROSONG
+\ ldx #10    ; tbc
+\ jsr pauseNI
 
  jmp blackout
 }
@@ -1473,6 +1465,7 @@ ENDIF
 \*-------------------------------
 \* non-interruptible pause
 
+IF _NOT_BEEB
 .pauseNI
 {
 .loop sta pausetemp
@@ -1490,6 +1483,32 @@ ENDIF
 }
 .return_61
  rts
+ENDIF
+
+.pauseNI        ; X=seconds
+{
+    LDY #0
+
+    .seconds_loop
+
+    LDA beeb_vsync_count
+    .wait_for_vsync
+    CMP beeb_vsync_count
+    BEQ wait_for_vsync
+
+    INY
+    CPY #50
+    BCC not_a_second
+
+    LDY #0
+    DEX
+    .not_a_second
+
+    CPX #0
+    BNE seconds_loop
+}
+.return_61
+    RTS
 
 \*-------------------------------
 \*
@@ -1780,9 +1799,10 @@ EQUS "CHTAB9 $"
 {
 IF _AUDIO
     ; SM: added intro music load & play trigger here
-    lda #1
-    jsr BEEB_LOAD_AUDIO_BANK
+    jsr BEEB_LOAD_STORY_BANK
 ENDIF
+
+    \ Now load sprite banks
 
     lda #BEEB_SWRAM_SLOT_CHTAB9
     jsr swr_select_slot
@@ -1975,6 +1995,7 @@ ENDIF
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .PlaySongNI ;non-interruptible
 {
 ;(& ignores sound/music toggles)
@@ -1990,9 +2011,11 @@ ENDIF
 .return
  rts
 }
+ENDIF
 
 \*-------------------------------
 
+IF _NOT_BEEB
 .master_PlaySongI ;interruptible
 {
 \ jsr setaux
@@ -2037,6 +2060,39 @@ ENDIF
  bne loop
 .return
  rts
+}
+ENDIF
+
+.pause_for_X_seconds
+{
+    STX pausetemp
+    LDY #0
+
+    .seconds_loop
+
+    LDA beeb_vsync_count
+    .wait_for_vsync
+    CMP beeb_vsync_count
+    BEQ wait_for_vsync
+
+    INY
+    CPY #50
+    BCC not_a_second
+
+    LDY #0
+    DEC pausetemp
+    BEQ return
+
+    .not_a_second
+    STY store_Y+1
+    jsr master_StartGame
+
+    .store_Y
+    LDY #0
+    BRA seconds_loop
+
+    .return
+    RTS
 }
 
 IF _NOT_BEEB

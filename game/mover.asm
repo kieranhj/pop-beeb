@@ -872,9 +872,9 @@ maxmob = mobspace-1
 
  lda #GateDown
  jsr addsound
- lda #s_Stairs
- ldx #15
- jsr cuesong
+
+; BEEB don't play tune when stairs appear - same as PC
+
  lda #1
  sta exitopen
  jsr mirappear
@@ -932,9 +932,14 @@ maxmob = mobspace-1
  cmp #gmaxval
  bcs local_attop ;stop at top
 
+; BEEB only play sound every other frame (moves up in steps of 4)
+ LSR A:LSR A:LSR A
+ BCC skip_sound
+
  lda #RaisingGate
  jsr addsound
 
+.skip_sound
  jmp cont
 
 .local_goingdown
@@ -1499,7 +1504,7 @@ maxmob = mobspace-1
 .check_above
 {
  cmp scrnAbove
- bne check_return
+ bne check_no           ; was check_return BEEB BUG FIX?
 
  lda trloc
  sec
@@ -1698,7 +1703,7 @@ maxmob = mobspace-1
 
 .notbelow
  cmp scrnBelowL
- bne return_40
+ bne checkright_no      ; was return_40 BEEB BUG FIX?
  ;piece is on scrn below & to left
  ldy trloc
  cpy #9
