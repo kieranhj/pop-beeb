@@ -27,6 +27,7 @@ FlashMsg = 16
 SwordClash1 = 17
 SwordClash2 = 18
 JawsClash = 19
+s_Glug = 20         ; Added for drinking a potion
 
 \*-------------------------------
 \* game music
@@ -39,7 +40,7 @@ s_Sword = 4         ; got sword
 s_Rejoin = 5        ; Kid & shadow reunite
 s_Shadow = 6        ; death if opponent was shadowman
 s_Vict = 7          ; killed an enemy
-s_Stairs = 8        ; stairs have appeared
+s_Stairs = 8        ; stairs have appeared - BEEB only after beating Jaffar
 s_Upstairs = 9      ; player has won level
 s_Jaffar = 10       ; Play Jaffar's Theme (Level 13)
 s_Potion = 11       ; Drunk potion
@@ -67,7 +68,7 @@ s_StTimer = 12
 
 \* Set 2 (epilog)
 
-s_Epilog = 1
-s_Curtain = 2
+s_Epilog = 13
+s_Curtain = 14
 
 \ lst off

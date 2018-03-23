@@ -49,4 +49,7 @@ INCBIN "audio/sfx/19 jawsclash.raw"
 .pop_sfx_08 ; GotKey
 INCBIN "audio/sfx/annoyshort.raw"
 
+.pop_music_glug
+INCBIN "audio/ip/3glugs.raw"
+
 .pop_sfx_end

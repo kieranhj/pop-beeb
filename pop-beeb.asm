@@ -881,11 +881,32 @@ GUARD SWRAM_TOP
 .chtable9
 INCBIN "Images/BEEB.IMG.CHTAB8.mode2.bin"
 
-ALIGN &100
+PAGE_ALIGN
 .chtable7
 INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
-
 ; Actually CHTAB6 and CHTAB9 goes over all of this!
+
+;----------------------------------------------------------------
+; Story cutscene music bank
+;----------------------------------------------------------------
+
+PAGE_ALIGN
+.pop_audio_bank1_start
+.pop_music_princess
+INCBIN "audio/ip/m-story2.raw.exo"
+.pop_music_creak
+INCBIN "audio/ip/doorcreak.raw.exo"
+.pop_music_enters
+INCBIN "audio/ip/m-story3.raw.exo"
+.pop_music_leaves
+INCBIN "audio/ip/m-story4.raw.exo"
+.pop_audio_bank1_end
+SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
+
+PRINT "--------"
+PRINT "AUDIO BANK 1 size = ", ~(pop_audio_bank1_end - pop_audio_bank1_start)
+PRINT "AUDIO BANK 1 free = ", ~(SWRAM_TOP - pop_audio_bank1_end)
+PRINT "--------"
 
 .overlay_end
 

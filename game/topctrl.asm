@@ -184,7 +184,8 @@ miry = 0
  bne notfirst
  lda #s_Danger
  ldx #25
- jsr cuesong ;Cue "Danger" theme if level 1
+; jsr cuesong ;Cue "Danger" theme if level 1
+ STA SongReq
 .notfirst
 
  lda #initmaxstr
@@ -272,7 +273,7 @@ jsr loadgame ;Load saved-game info from disk
 IF EditorDisk
  sta inbuilder
 ENDIF
- sta recheck0
+\ sta recheck0
  sta SINGSTEP
  sta ManCtrl
  sta vibes
@@ -346,14 +347,14 @@ ENDIF
  sta PlayCount
  sta FrameCountDelta
 
- LDA beeb_vsync_count
- STA FrameCountPrev
-
- ldx SongCue
+ ldx SongReq
  cpx #s_Danger
  beq label_1st
- sta SongCue
+ sta SongReq
 .label_1st
+
+ LDA beeb_vsync_count
+ STA FrameCountPrev
 
  jsr zerosound
 
@@ -492,12 +493,15 @@ ENDIF
 
  jsr flashoff
 
-\ NOT BEEB - music plays on EVENTV
-\ jsr songcues ;Play music
+ jsr songcues ;Play music that has been requested elsewhere
 
  lda NextLevel
  cmp level
  beq MainLoop ;Continue until we change levels
+
+\ BEEB let end of level tune play
+ LDA SongCue
+ BNE MainLoop ; don't continue until tune has finished - can't cancel :(
 
 \ NOT BEEB
 \ jsr yellowcheck ;copy protect!
@@ -1704,6 +1708,23 @@ songcues
  sta PAGE
 
  jmp clearjoy
+ELSE
+.songcues
+{
+  LDA SongReq
+  BEQ return
+
+  lda KidPosn
+  jsr static_query
+  BNE return
+
+  LDA SongReq
+  JSR BEEB_CUESONG
+  STZ SongReq
+
+  .return
+  RTS
+}
 ENDIF
 
 \*-------------------------------
