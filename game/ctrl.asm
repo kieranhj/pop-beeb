@@ -2311,6 +2311,10 @@ RJMaxFujFwd = 2 ;and forward
  lsr A;potion # (0-7)
  jsr RemoveObj
 
+; BEEB added drink sfx
+ LDA #s_Glug
+ jsr addsound
+
  lda #drinkpotion ;pick up & drink potion
  jmp jumpseq
 

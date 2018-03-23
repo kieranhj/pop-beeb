@@ -1196,7 +1196,7 @@ boffset = 2             ; BEEB have to plot Mask to use offset + Layrsave to ani
  sta YCO
  lda glassimg,x
  sta IMAGE
- lda #enum_sta
+ lda #enum_mask         ; was enum_sta but nicer to see through on BEEB
  sta OPACITY
  jsr gamebg_setch6
  jmp addback
@@ -1303,7 +1303,7 @@ ENDIF
  jsr gamebg_setch6
  LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
- jmp lay ;<---DIRECT HIRES CALL
+ jmp fastlay ;<---DIRECT HIRES CALL - BEEB shouldn't use lay as clip not set up correctly
 }
 
 \*-------------------------------
