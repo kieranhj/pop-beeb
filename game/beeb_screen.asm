@@ -4,36 +4,12 @@
 .beeb_screen_start
 
 \*-------------------------------
-; Clear Beeb screen buffer
-\*-------------------------------
-
-.beeb_CLS
-{
-\\ Ignore PAGE as no page flipping yet
-
-  ldx #HI(BEEB_SCREEN_SIZE)
-  lda #HI(beeb_screen_addr)
-
-  sta loop+2
-  lda #0
-  ldy #0
-  .loop
-  sta &3000,Y
-  iny
-  bne loop
-  inc loop+2
-  dex
-  bne loop
-  rts
-}
-
-\*-------------------------------
 ; Clear status line characters
 \*-------------------------------
 
 ; Y=start character [0-79]
 ; X=number of characters to clear
-.beeb_clear_status_X
+.BEEB_CLEAR_STATUS_X
 {
     CLC
     LDA Mult8_LO,Y
@@ -79,39 +55,39 @@
     RTS
 }
 
-.beeb_clear_status_line
+.BEEB_CLEAR_STATUS_LINE
 {
     LDY #0
     LDX #80
-    JMP beeb_clear_status_X
+    JMP BEEB_CLEAR_STATUS_X
 }
 
-.beeb_clear_text_area
+.BEEB_CLEAR_TEXT_AREA
 {
     LDY #20
     LDX #40
-    JMP beeb_clear_status_X
+    JMP BEEB_CLEAR_STATUS_X
 }
 
-.beeb_clear_player_energy
+.BEEB_CLEAR_PLAYER_ENERGY
 {
     LDY #0
     LDX #20
-    JMP beeb_clear_status_X
+    JMP BEEB_CLEAR_STATUS_X
 }
 
-.beeb_clear_opp_energy
+.BEEB_CLEAR_OPP_ENERGY
 {
     LDY #68
     LDX #12
-    JMP beeb_clear_status_X
+    JMP BEEB_CLEAR_STATUS_X
 }
 
-.beeb_clear_dhires_line
+.BEEB_CLEAR_DHIRES_LINE
 {
     LDY #&80/8
     LDX #80
-    JMP beeb_clear_status_X
+    JMP BEEB_CLEAR_STATUS_X
 }
 
 \*-------------------------------
@@ -165,7 +141,7 @@
     RTS
 }
 
-.beeb_dhires_wipe
+.BEEB_DHIRES_WIPE
 {
     LDX #0
     .loop
@@ -187,218 +163,82 @@
 }
 
 \*-------------------------------
-\* IN: XCO, YCO
-\* OUT: beeb_writeptr (to crtc character), beeb_yoffset, beeb_parity (parity)
+; Debug fns
 \*-------------------------------
 
-.beeb_plot_calc_screen_addr
-{
-    \ XCO & YCO are screen coordinates
-    \ XCO (0-39) and YCO (0-191)
-    \ OFFSET (0-3) - maybe 0,1 or 8,9?
-
-    LDX XCO
-    LDY YCO
-
-    CLC
-    LDA Mult16_LO,X
-    ADC YLO,Y
-    STA beeb_writeptr
-    LDA Mult16_HI,X
-    ADC YHI,Y
-    STA beeb_writeptr+1
-
-    \ Handle OFFSET
-
-    LDA OFFSET
-    LSR A
-    STA beeb_mode2_offset       ; not needed by every caller
-
-    AND #&1
-    STA beeb_parity             ; this is parity
-
-    ROR A                       ; return parity in C
-    RTS
-}
-
-\*-------------------------------
-; Additional PREP before sprite plotting for Beeb
-\*-------------------------------
-
-.beeb_PREPREP
-{
-    \\ Must have a swram bank to select or assert
-    LDA BANK
 IF _DEBUG
+.temp_last_count EQUB 0
+
+FR_COUNTER_X=78
+FR_COUNTER_Y=BEEB_STATUS_ROW
+
+.BEEB_DISPLAY_VSYNC_COUNTER
+{
+
+    JSR beeb_plot_font_prep
+    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr
+    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
+    STA beeb_writeptr+1
+    LDA #PAL_FONT:STA PALETTE
+
     SEC
-    SBC #4
-    CMP #4
-    BCC bank_ok
-    BRK
-    .bank_ok
-    LDA BANK
-ENDIF
-    JSR swr_select_slot
+    LDA beeb_vsync_count
+    TAY
+    SBC temp_last_count
+    STY temp_last_count
 
-    \ Turns TABLE & IMAGE# into IMAGE ptr
-    \ Obtains WIDTH & HEIGHT
-    
-    JSR PREPREP
-
-    \ On BEEB eor blend mode changed to PALETTE bump
-
-    LDA OPACITY
-    CMP #enum_eor
-    BNE not_eor
-    INC PALETTE
-    .not_eor
-
-    \ PALETTE now set per sprite
-
-    \ BIT 6 of PALETTE specifies whether sprite is secretly half vertical res
-
-    LDA PALETTE
-    AND #&40
-    STA BEEBHACK
-
-    \ BIT 7 of PALETTE actually indicates there is no palette - data is 4bpp
-
-    LDA PALETTE
-    AND #&BF
-    STA PALETTE
-
-    RTS
-}
-
-\*-------------------------------
-\*
-\* Palette functions
-\*
-\*-------------------------------
-
-.beeb_plot_sprite_setpalette
-{
-    BMI return
-    ASL A:ASL A
-    TAX
-
-    STZ map_2bpp_to_mode2_pixel+&00                     ; left + right 0
-
-    INX
-    LDA palette_table, X
-    AND #MODE2_RIGHT_MASK
-    STA map_2bpp_to_mode2_pixel+$01                     ; right 1
-    ASL A
-    STA map_2bpp_to_mode2_pixel+$02                     ; left 1
-
-    INX
-    LDA palette_table, X
-    AND #MODE2_RIGHT_MASK
-    STA map_2bpp_to_mode2_pixel+$10                     ; right 2
-    ASL A
-    STA map_2bpp_to_mode2_pixel+$20                     ; left 2
-    
-    INX
-    LDA palette_table, X
-    AND #MODE2_RIGHT_MASK
-    STA map_2bpp_to_mode2_pixel+$11                     ; right 3
-    ASL A
-    STA map_2bpp_to_mode2_pixel+$22                     ; left 3
-
-    .return
-    RTS
-}
-
-.beeb_plot_sprite_FlipPalette
-{
-\ L&R pixels need to be swapped over
-
-    LDA map_2bpp_to_mode2_pixel+&02: LDY map_2bpp_to_mode2_pixel+&01
-    STA map_2bpp_to_mode2_pixel+&01: STY map_2bpp_to_mode2_pixel+&02
-
-    LDA map_2bpp_to_mode2_pixel+&20: LDY map_2bpp_to_mode2_pixel+&10
-    STA map_2bpp_to_mode2_pixel+&10: STY map_2bpp_to_mode2_pixel+&20
-
-    LDA map_2bpp_to_mode2_pixel+&22: LDY map_2bpp_to_mode2_pixel+&11
-    STA map_2bpp_to_mode2_pixel+&11: STY map_2bpp_to_mode2_pixel+&22
-
-    RTS    
-}
-
-
-\*-------------------------------
-; Expands 6 bytes left/right logical 0/1/2/3 pixels into all byte combinations
-\*-------------------------------
-
-IF 0    \\ Currently unused as tables are built as assemble time
-.beeb_expand_palette_table
-{
-    STX beeb_writeptr
-    STY beeb_writeptr+1
-
-\\ Update palette address table x2
-
-    TAX
-    LDA beeb_writeptr
-    STA palette_addr_LO, X
-    LDA beeb_writeptr+1
-    STA palette_addr_HI, X
-    TXA
-
-\\ Set small palette lookup
-
-    JSR beeb_plot_sprite_setpalette
-
-\\ Wipe expanded palette lookup
-
-    LDY #0
-    LDA #0
-    .wipe
-    STA (beeb_writeptr), Y
-    INY
-    CPY #&34
-    BNE wipe 
-
-\\ Exapnd each entry in palette lookup
-
-    LDY #0
-    .loop
-
-IF 0
-    TYA:AND #&88            ; pixel D
-    LSR A:LSR A         ; shift down
-    TAX
-    LDA map_2bpp_to_mode2_pixel, X      ; left pixel logical 0/1/2/3
-    ORA (beeb_writeptr), Y
-    STA (beeb_writeptr), Y
-
-    TYA:AND #&44            ; pixel C
-    LSR A: LSR A        ; shift down
-    TAX
-    LDA map_2bpp_to_mode2_pixel, X      ; right pixel logical 0/1/2/3
-    ORA (beeb_writeptr), Y
-    STA (beeb_writeptr), Y
-ENDIF
-
-    TYA:AND #&22            ; pixel B
-    TAX
-    LDA map_2bpp_to_mode2_pixel, X      ; left pixel logical 0/1/2/3
-    ORA (beeb_writeptr), Y
-    STA (beeb_writeptr), Y
-
-    TYA:AND #&11            ; pixel A
-    TAX
-    LDA map_2bpp_to_mode2_pixel, X      ; right pixel logical 0/1/2/3
-    ORA (beeb_writeptr), Y
-    STA (beeb_writeptr), Y
-
-    INY
-    CPY #&34
-    BCC loop
-
-    .return
-    RTS
+    CMP #10
+    BCC diff_ok
+    LDA #9
+    .diff_ok
+    INC A
+    JMP beeb_plot_font_glyph
 }
 ENDIF
+
+.BEEB_PRINT_VERSION_AND_BUILD
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4
+  JMP beeb_plot_font_bcd
+}
 
 .beeb_screen_end

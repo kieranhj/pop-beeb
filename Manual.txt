@@ -1,0 +1,304 @@
+PRINCE of PERSIA
+
+Introduction
+
+It is a time of darkness.  While the sultan is off fighting a foreign
+war, his Grand Vizier Jaffar has seized the reins of power.
+Throughout the land,  the people groan under the yoke of tyranny,
+and dream of better days.
+
+You are the only obstacle between Jaffar and the throne.  An
+adventurer from a foreign land, innocent of palace intrigues, you have
+won the heart of the Sultan's lovely young daughter.  And in so doing,
+you have unwittingly made a powerful enemy.
+
+On Jaffar's orders, you are arrested, stripped of your sword and
+possessions, and thrown into the Sultan's dungeons.  As for the
+Princess, Jaffar gives her a choice, and an hour to decide: Marry
+him--or die.
+
+Locked in her room high in the palace tower, the Princess rests all
+her hopes on you.  For when the last sands drain from the hourglass,
+her choice can bring only a throne for the Grand Vizier...a new reign
+of terror for his long-suffering subjects...and death for the brave
+youth who might have been...Prince of Persia.
+
+----------------
+What you'll Need
+----------------
+
+To play PRINCE of PERSIA, you'll need a BBC Master computer with all four
+sideways RAM banks available for use.
+
+----------------
+Keyboard Control
+----------------
+
+Key configuration can be changed at any time during gameplay by pressing
+CTRL-K. Default controls are:
+
+             _____________________
+            |  Movement     | Key |
+            |---------------+-----|
+            | Left          |  Z  |
+            | Right         |  X  |
+            | Up            |  *  |
+            | Down          |  ?  |
+            | Jump Forward  |  ]  |
+            |_______________|_____|
+
+Action button: RETURN
+
+----------------
+Joystick Control
+----------------
+
+Unfortunately joystick control is not current implemented for the BBC Master
+so use the keyboard instead.
+
+------------------------------
+Running, Jumping, and Climbing
+------------------------------
+
+* To run:  Push the key for the direction you want to go (Left or
+Right).  Release the key to stop.
+
+* To take careful steps:  Hold down the action button and press the
+key for the direction you want to go. You can use careful steps
+to move right up to the edge of a pit or a suspicious-looking floor
+section.
+
+* To jump up:  Press the Up key.
+
+* To jump forward:  When you are standing still, press the Jump Forward
+key or press the Left or Right key and Up together in the direction you
+want to jump.
+
+You can jump farther with a running start.  For a running jump over a
+chasm, back up at least two full strides from the edge.  Press the Left
+or Right key to start running, then Up to jump.  Don't be afraid of
+pressing the Up key too early; your character will wait until the last
+possible moment to jump.
+
+* To climb up onto a ledge:  Stand facing the ledge and press the Up
+key.  If necessary, use careful steps to position yourself up onto the
+ledge and press Up.
+
+* To hang from a ledge:  Press the Action key and hold it down.  To let
+yourself drop, release the Action key.  To pull yourself up onto the
+ledge, push the Up key.
+
+Any time you jump or fall within reach of a ledge, you can grab onto
+it by pressing the Action key.  Remember--when you release the key, you
+let go of the ledge.
+
+* To climb down from a ledge:  Step up to the edge, turn around, then
+press the Down key.  To hang from the ledge, press the Action key and
+hold it down.
+
+* To duck:  Press the Down key.  Release it to stand up.
+
+* To pick something up:  Stand in front of it and press the Action key.
+
+--------
+Fighting
+--------
+
+When you come face to face with an armned opponent, release the
+keys.  You will automatically draw your sword--if you have
+one--and go en garde.  In this stance, the controls are somewhat
+different.
+
+* To strike:  Press the Action key.
+
+* To advance:  Press the key in the direction you're facing
+(towards your opponent).
+
+* To retreat:  Press the key away from your opponent.
+
+* To block your opponent's strike:  Press the Up key just as your
+opponent is striking.  It may take some practice to get the timing
+right.  Watch your opponent carefully, and wait for him to strike.
+
+* To stop fighting:  Press the Down key.  Once you have put away
+your sword, you are free to run, jump and climb as usual.  Be careful,
+though--when you are off guard, a single sword blow can kill
+you.  To draw your sword again, press the Action key.
+
+-----
+Hints
+-----
+
+* To get the maximum distance from a standing jump across a
+  chasm, use careful steps to move right up to the edge of the pit
+  before you jump.
+
+* If you jump a chasm but fall short, you may still be able to grab
+  on to the opposite ledge by pushing a button.  Remember, when
+  you let go of the button, you let go of the ledge.
+
+* Every time you block an opponent's sword strike, the force of
+  the blow pushes you back slightly.  If you adopt a defensive
+  strategy, you will find yourself steadily losing ground.  Try
+  following up a successful block with a strike.
+
+* Test for loose floor sections by jumping up and down.
+
+* You can knock out a loose floor section by standing directly
+  beneath it and jumping up.  Try not to be there when it lands.
+
+* There are two kinds of pressure-activated floor plates.  One kind
+  raises gates, the other lowers them.  With experience, you can
+  learn to distinguish them from ordinary floor sections and from
+  each other.
+
+* Learn to recognize different kinds of potions by sight.
+
+* You can cross a bed of spikes safely by taking careful steps.
+
+* A two-story drop will hurt you.  A three-story drop will kill you.
+
+* You never know what you'll find in a dungeon.  Don't be afraid
+  to explore, and to experiment.  After all, you've got nothing to
+  lose except your life, the Princess, and the entire Kingdom.
+
+--------------
+Life and Death
+--------------
+
+The row of red hearts in the lower left corner of the screen
+indicates your current strength.  Every time you get hurt, you lose
+one unit of strength.  When the last of your strength disappears, you
+die.
+
+You start the game with three units of strength. (Later on, you may be
+able to increase your strength beyond this limit.)
+
+Things that cost you one unit of strenght include a blow by a guard's
+sword, two-story falls, and having a section of the floor collapse on
+your head.  Other, more serious accidents can kill you outright.
+
+An opponent's strength is indicated by a row of blue bullets in the
+lower right corner of the screen.  To kill an opponent, you need to
+take away all his strength units.
+
+-----------
+Adventuring
+-----------
+
+Although this is your time inside the Sultan's palace, you do have
+some general information that may help you:
+
+* The Princess is imprisoned in the high tower of the palace.  To
+  reach her, you must find your way out of the dungeons, through
+  the palace's main building, and up to the top to the tower.
+
+* Generally speaking, the guards on the dungeon duty tend to be the
+  dregs of the Sultan's corps.  The more capable ones are usually
+  assigned to the palace's main building.  The very best of
+  them--the deadliest swordsmen in the Sultan's employ--are
+  kept for the elite honor guard in the tower, where they are
+  responsible for the personal safety of the Princess and of the
+  Grand Vizier.
+
+* Since your arrival in the city, you have heard some strange
+  rumors.  It is whispered that the Grand Vizier Jaffar is a
+  magician, a master of the black arts of enchantment; that his
+  powers are more than mortal.  Knowing, as you do, that much
+  of what passes for magic is mere trickery and superstition, you
+  are reluctant to take these stories too seriously.  Nevertheless,
+  they don't do much for your peace of mind.
+
+----------------------
+Death and Continuation
+----------------------
+
+When you die, the message "PRESS ACTION TO CONTINUE" will appear on
+the screen.  Press the Action key to return to the beginning of the
+current level.
+
+If you don't press the key, the message will remain on the screen for
+about 20 seconds, then start to flash in warning, accompanied by a
+chime.  After ten chimes, the game will end and you will be returned
+to the title sequence.
+
+If you get yourself into a situation where you can find no way out,
+press CTRL-A to restart the level.
+
+You can continue the game as many times as you want without penalty.
+Remember, though, the sands in the hourglass are draining away....
+
+To see how much time is left, press the T key.
+
+
+----------------
+Saving Your Game
+----------------
+
+To save your current game, press CTRL-G at any time during play.
+The program will briefly access the drive, then continue with the game.
+
+The next time you boot the PRINCE of PERSIA disk, instead of pressing
+any key to start a new game, press CTRL-L.  The game will resume from
+he beginning of the level you were on when you last saved it.
+
+------------
+Special Keys
+------------
+
+CTRL-P.........Freeze frame.  Press P for single frame advance.
+               Press any other key to resume play.
+
+CTRL-K.........Redefine keys.
+
+CTRL-R.........Ends the game and returns you to the title sequence.
+
+CTRL-A.........Restarts play from the beginning of the current level.
+
+CTRL-S.........Turns off all sound.  Press again to turn the sound
+               back on.
+
+CTRL-N.........Turns off the music.  Press again to turn the music
+               back on.
+
+CTRL-G.........Saves the current game to disk.
+
+CTRL-L.........Resumes the last saved game. (Press during the title
+               sequence.)
+
+T..............Press to see how much time is left.
+
+----------------
+About the Author
+----------------
+
+Jordan Mechner, 25, is the author of the award-winning computer game
+Karateka.  Hailed by Games magazine as "a software landmark," Karateka
+broke new ground in the use of cinematic techniques to tell a story
+within a computer game, and has sold over 400,000 copies worldwide.
+
+To achieve the extraordinary realism of the animation in PRINCE of
+PERSIA, Jordan studied hours of live-action footage, including
+swordfighting sequences from classic Hollywood swashbuckling films of
+the Thirties.  Two years in the making, PRINCE of PERSIA is the
+culmination of a lifelong fascination with animation, and ten years of
+hacking on the Apple II.
+
+A native New Yorker and a 1985 graduate of Yale University, Jordan now
+lives in San Francisco.
+
+---------------
+About the Music
+---------------
+
+The Music for PRINCE of PERSIA uses a "leitmotiv" approach in which
+each theme is associated with a specific character or idea.  The basic
+themes are:  Prince, Princess, Jaffar, Danger, Sword, Shadow, Death,
+Time, and Magic.
+
+--------------
+About the Port
+--------------
+
+http://bitshifters.github.io
+http://github.com/kieranhj/pop-beeb

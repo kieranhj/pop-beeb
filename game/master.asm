@@ -20,10 +20,10 @@
 \*-------------------------------
 \ org org
 
-.firstboot jmp FIRSTBOOT
-.loadlevel jmp LOADLEVEL
-.reload BRK       ;jmp RELOAD                 EDITOR
-.loadstage2 BRK   ;jmp LoadStage2             UNUSED EXTERN?
+;.firstboot jmp FIRSTBOOT               ; moved to pop-beeb.asm
+;.loadlevel jmp LOADLEVEL
+;.reload BRK       ;jmp RELOAD          ; EDITOR
+;.loadstage2 BRK   ;jmp LoadStage2      ; UNUSED EXTERN?
 .goattract
 .attractmode jmp ATTRACTMODE
 .cutprincess jmp CUTPRINCESS
@@ -32,7 +32,7 @@
 .dostartgame jmp DOSTARTGAME
 
 .epilog jmp EPILOG
-.loadaltset BRK   ;jmp LOADALTSET
+;.loadaltset BRK   ;jmp LOADALTSET      ; unusued Editor?
 \_screendump
 
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
@@ -71,7 +71,7 @@ MACRO MASTER_LOAD_DHIRES filename, pu_size, sequence_time
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(&8006 - pu_size)
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
@@ -96,7 +96,7 @@ MACRO MASTER_WIPE_DHIRES filename, pu_size, sequence_time
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(&8006 - pu_size)
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
@@ -129,43 +129,6 @@ ASCII_MAPCHAR
     JMP beeb_plot_font_string
 }
 ENDIF
-
-\*-------------------------------
-\ lst
-\ put eq
-\ lst
-\ put gameeq
-\ lst off
-\
-\Tmoveauxlc = moveauxlc-$b000
-
-\*-------------------------------
-\* RW18 ID bytes
-\
-\POPside1 = $a9
-\POPside2 = $ad
-\
-\* RW18 zero page vars
-\
-\slot = $fd
-\track = $fe
-\lastrack = $ff
-\
-\* RW18 commands
-\
-\DrvOn = $00
-\DrvOff = $01
-\Seek = $02
-\RdSeqErr = $03
-\RdGrpErr = $04
-\WrtSeqErr = $05
-\WrtGrpErr = $06
-\ModID = $07
-\RdSeq = $83
-\RdGrp = $84
-\WrtSeq = $85
-\WrtGrp = $86
-\Inc = $40 ;.Inc to inc track
 
 \*-------------------------------
 \* Local vars
@@ -206,33 +169,6 @@ ENDIF
 \*-------------------------------
 \* Soft switches
 \ Already defined in grafix.asm
-\IOUDISoff = $c07f
-\IOUDISon = $c07e
-\DHIRESoff = $c05f
-\DHIRESon = $c05e
-\HIRESon = $c057
-\HIRESoff = $c056
-\PAGE2on = $c055
-\PAGE2off = $c054
-\MIXEDon = $c053
-\MIXEDoff = $c052
-\TEXTon = $c051
-\TEXToff = $c050
-\ALTCHARon = $c00f
-\ALTCHARoff = $c00e
-\ADCOLon = $c00d
-\ADCOLoff = $c00c
-\ALTZPon = $c009
-\ALTZPoff = $c008
-\RAMWRTaux = $c005
-\RAMWRTmain = $c004
-\RAMRDaux = $c003
-\RAMRDmain = $c002
-\ADSTOREon = $c001
-\ADSTOREoff = $c000
-
-\RWBANK2 = $c083
-\RWBANK1 = $c08b
 
 \*-------------------------------
 IF FinalDisk==0
@@ -315,50 +251,7 @@ kresume = IKN_l OR $80
     BRA spin
 }
 
-.beeb_print_version_and_build
-{
-  \ Write initial string
-  LDA #LO(version_string):STA beeb_readptr
-  LDA #HI(version_string):STA beeb_readptr+1
-  LDX #10
-  LDY #BEEB_STATUS_ROW
-  LDA #PAL_FONT
-  JSR beeb_plot_font_string
-
-  \ Print version #
-  LDA pop_beeb_version
-  LSR A:LSR A:LSR A:LSR A
-  CLC
-  ADC #1
-  JSR beeb_plot_font_glyph
-
-  LDA #GLYPH_DOT
-  JSR beeb_plot_font_glyph
-
-  LDA pop_beeb_version
-  AND #&F
-  CLC
-  ADC #1
-  JSR beeb_plot_font_glyph
-
-  LDA #LO(build_string):STA beeb_readptr
-  LDA #HI(build_string):STA beeb_readptr+1
-  LDX #38
-  LDY #BEEB_STATUS_ROW
-  LDA #PAL_FONT
-  JSR beeb_plot_font_string
-  
-  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
-  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
-  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
-
-  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
-
-  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
-  LDA pop_beeb_build+4:JMP beeb_plot_font_bcd
-}
-
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *   Reload code & images
@@ -557,27 +450,6 @@ EQUD savedgame_top
 
 .SAVEGAME
 {
-\ NOT BEEB
-\ jsr checkdisk ;sets main
-\
-\ sta RAMRDaux
-\ ldx #15
-\:loop lda savedgame,x ;aux
-\ sta $200,x ;main
-\ dex
-\ bpl :loop
-\ sta RAMRDmain
-\
-\ lda #23
-\ sta track
-\ jsr rw18
-\ db WrtGrpErr
-\ hex 02,00,00,00,00,00,00,00,00
-\ hex 00,00,00,00,00,00,00,00,00
-\ bcc :ok
-\ jsr whoop
-\:ok jmp driveoff
-
     LDA #LO(savedgame)
     STA savegame_params+2
     STA savegame_params+10
@@ -601,25 +473,6 @@ EQUD savedgame_top
 
 .LOADGAME
 {
-\ NOT BEEB
-\ jsr checkdisk ;sets main
-\
-\ lda #23
-\ sta track
-\ jsr rw18
-\ db RdGrp
-\ hex 02,00,00,00,00,00,00,00,00
-\ hex 00,00,00,00,00,00,00,00,00
-\
-\ sta RAMWRTaux
-\ ldx #15
-\:loop lda $200,x ;main
-\ sta savedgame,x ;aux
-\ dex
-\ bpl :loop
-\
-\ jmp driveoff
-
     LDA #LO(savedgame)
     STA savegame_params+2
 
@@ -666,6 +519,41 @@ ENDIF
 \* If bg & char sets in memory aren't right, load them in
 \*
 \*-------------------------------
+\ BEEB MOVED FROM MISC.S
+
+\*-------------------------------
+\* alt bg & char set list
+\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
+.bgset1 EQUB 00,00,00,00,01,01,01,00,00,00,01,01,00,00,01
+\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
+.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
+
+\*-------------------------------
+\*
+\* Load level from disk
+\* In: X = level # (0-14)
+\*
+\*-------------------------------
+.LOADLEVELX
+{
+\ Just keep X as level#
+
+\ lda bluepTRKlst,x
+\ sta bluepTRK
+\ lda bluepREGlst,x
+\ sta bluepREG
+
+ lda bgset1,x ;A
+\ pha
+\ lda bgset2,x ;X
+ ldy chset,x ;Y
+\ tax
+\ pla
+
+\ jmp LOADLEVEL ;in MASTER
+}
+\ Fall through instead!
 .LOADLEVEL
 {
  sta newBGset1
@@ -734,7 +622,7 @@ ENDIF
 \ lda bluepREG
 \]rts rts
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 vidstuff
  lda BBundID
@@ -781,18 +669,6 @@ ENDIF
 \ ANSWER: Tracks 07 & 09 are BGTAB1.DUN and BGTAB2.DUN but on the second disk to reduce swapping
 
 \*-------------------------------
-\rdbg1 ldx newBGset1
-\ cpx BGset1 ;already in memory?
-\ beq :rts ;yes--no need to load
-\ stx BGset1
-\ lda bg1trk,x
-\ sta track
-\ jsr rw18
-\ db RdSeq.Inc,$60
-\ jsr rw18
-\ db RdSeq.Inc,$72
-\]rts
-\:rts rts
 
 .bgset1_to_name
 EQUS "DUN1X  $"
@@ -868,16 +744,6 @@ EQUS "PAL1X  $"
     rts
 }
 
-\rdbg2 ldx newBGset2
-\ cpx BGset2
-\ beq ]rts
-\ stx BGset2
-\ lda bg2trk,x
-\ sta track
-\ jsr rw18
-\ db RdSeq.Inc,$84
-\ rts
-
 .bgset2_to_name
 EQUS "DUN2   $"
 EQUS "PAL2   $"
@@ -918,46 +784,6 @@ EQUS "PAL2   $"
     .return
     rts
 }
-
-\rdch4 ldx newCHset
-\ cpx CHset
-\ beq ]rts
-\ stx CHset
-\ lda ch4trk,x
-\ sta track
-\ lda ch4off,x
-\ beq :off0
-\ cmp #6
-\ beq :off6
-\ cmp #12
-\ beq :off12
-\ rts
-\
-\:off12 jsr rw18
-\ db RdGrp.Inc
-\ hex 00,00,00,00,00,00,00,00,00
-\ hex 00,00,00,96,97,98,99,9a,9b
-\ jsr rw18
-\ db RdSeq.Inc,$9c
-\ rts
-\
-\:off6 jsr rw18
-\ db RdGrp.Inc
-\ hex 00,00,00,00,00,00,96,97,98
-\ hex 99,9a,9b,9c,9d,9e,9f,a0,a1
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex a2,a3,a4,a5,a6,a7,a8,a9,aa
-\ hex ab,ac,ad,00,00,00,00,00,00
-\ rts
-\
-\:off0 jsr rw18
-\ db RdSeq.Inc,$96
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex a8,a9,aa,ab,ac,ad,00,00,00
-\ hex 00,00,00,00,00,00,00,00,00
-\]rts rts
 
 .chset_to_name
 EQUS "GD     $"
@@ -1008,25 +834,7 @@ EQUS "VIZ    $"
 \* read blueprint
 \*
 \*-------------------------------
-\rdbluep
-\ jsr setbluep
-\ bne :reg1
-\
-\:reg0 jsr rw18
-\ db RdGrpErr
-\ hex b7,b8,b9,ba,bb,bc,bd,be,bf
-\ hex 00,00,00,00,00,00,00,00,00
-\ bcc ]rts
-\ jsr error
-\ jmp :reg0
-\
-\:reg1 jsr rw18
-\ db RdGrpErr
-\ hex 00,00,00,00,00,00,00,00,00
-\ hex b7,b8,b9,ba,bb,bc,bd,be,bf
-\ bcc ]rts
-\ jsr error
-\ jmp :reg1
+
 .beeb_level_filename   EQUS "LEVEL0 $"
 
 .rdbluep
@@ -1074,21 +882,6 @@ EQUS "VIZ    $"
 {
     LDA #HI(beeb_double_hires_addr)
     JMP beeb_copy_shadow
-
-\ lda #$40 ;dest
-\ ldx #$20 ;org
-\ bne copydhires
-\
-\copy2to1
-\ lda #$20
-\ ldx #$40
-\
-\copydhires
-\ sta IMAGE+1 ;dest
-\ stx IMAGE ;org
-\
-\ jsr _copy2000aux
-\ jmp _copy2000 ;in hires
 }
 
 \*-------------------------------
@@ -1383,7 +1176,7 @@ ENDIF
  LDA #HI(pu_splash_loadat)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(pu_splash_loadat + 6)
  LDY #HI(pu_splash_loadat + 6)
  JSR PUCRUNCH_UNPACK
@@ -1393,7 +1186,7 @@ ENDIF
  LDA #HI(pu_title_loadat)
  JSR disksys_load_file
 
- LDA #PUCRUNCH_BANK:JSR swr_select_slot
+; LDA #PUCRUNCH_BANK:JSR swr_select_slot
  LDX #LO(pu_title_loadat + 6)
  LDY #HI(pu_title_loadat + 6)
  JSR PUCRUNCH_UNPACK
@@ -1839,78 +1632,7 @@ ENDIF
 \* (only once)
 \*
 \*-------------------------------
-\loadperm
-\ lda #3
-\ sta track
-\
-\ jsr setaux
-\
-\ jsr rw18
-\ db RdSeq.Inc,$0e
-\
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 04,05,06,07,08,09,0a,0b,0c
-\ hex 0d,20,21,22,23,24,25,26,27
-\
-\ jsr setmain
-\ lda #9
-\ sta track
-\ jsr rw18
-\ db RdSeq.Inc,$84
-\ jsr rw18
-\ db RdSeq.Inc,$96
-\
-\ jsr rw18
-\ db RdSeq.Inc,$08
-\
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 1a,1b,1c,1d,1e,1f,a8,a9,aa
-\ hex ab,ac,ad,ae,af,b0,b1,b2,b3
-\
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex b4,b5,b6,b7,b8,b9,ba,bb,bc
-\ hex bd,be,bf,00,00,00,00,00,00
-\
-\*-------------------------------
-\*
-\* Load aux l.c. stuff (tracks 19-21 & 34)
-\* (includes music set 1)
-\*
-\* Load into main hires area & move to aux l.c.
-\*
-\*-------------------------------
-\ lda #19
-\ sta track
-\
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 00,00,20,21,22,23,24,25,26
-\ hex 27,28,29,2a,2b,2c,2d,2e,2f
-\
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 00,00,00,00,30,31,32,33,34
-\ hex 35,36,37,38,39,3a,3b,3c,3d
-\ jsr rw18
-\ db RdSeq.Inc,$3e
-\
-\ lda #34
-\ sta track
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 00,00,50,51,52,53,54,55,56
-\ hex 57,58,59,5a,5b,5c,5d,5e,5f
-\
-\ jsr setaux
-\ lda #1
-\ sta MSset
-\
-\ jsr setmain
-\ jmp Tmoveauxlc
-\
+
 .bank1_filename
 EQUS "BANK1  $"
 
@@ -1973,7 +1695,7 @@ EQUS "CHTAB5 $"
     RTS
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  Stage 1: static dbl hires screens -- no animation
@@ -2075,63 +1797,6 @@ ReloadStuff
  jmp driveoff
 ENDIF
 
-\*-------------------------------
-\*
-\*  Load stage 2 data (6000-a800)
-\*
-\*-------------------------------
-\LoadStage2
-\ ldx BBundID
-\ cpx #POPside2
-\ beq LoadStage2B
-\
-\LoadStage2A
-\ jsr driveon
-\
-\ lda #0
-\ jsr loadch7 ;side A only
-\
-\ lda #29
-\]ls2 sta track
-\
-\:test jsr rw18
-\ db RdSeqErr.Inc,$60
-\ bcc :ok
-\ jsr error
-\ jmp :test
-\:ok
-\ jsr rw18
-\ db RdSeq.Inc,$72
-\ jsr rw18
-\ db RdSeq.Inc,$84
-\ jsr rw18
-\ db RdGrp.Inc
-\ hex 96,97,98,99,9a,9b,9c,9d,9e
-\ hex 00,00,00,00,00,00,00,00,00
-\
-\ lda #$ff
-\ sta BGset1
-\ sta BGset2
-\ sta CHset
-\
-\ jmp driveoff
-\
-\* Load chtable7 (side A only)
-\
-\loadch7
-\ sta recheck0
-\:test lda #28
-\ sta track
-\ jsr rw18
-\ db RdGrpErr.Inc
-\ hex 00,00,00,00,00,00,00,00,00
-\ hex 00,00,00,00,9f,a0,a1,a2,a3
-\ bcc :ok
-\ jsr error
-\ jmp :test
-\:ok
-\]rts rts
-\
 \*-------------------------------
 \*
 \*  Load stage 2 routines (side B)
@@ -2275,7 +1940,7 @@ EQUS "CHTAB6 $"
 .chtab7_file_name
 EQUS "CHTAB7 $"
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 *  Load stage 3
@@ -2471,7 +2136,7 @@ ENDIF
     RTS
 }
 
-IF _TODO
+IF _NOT_BEEB
 *-------------------------------
 *
 * Disk error
@@ -2481,9 +2146,7 @@ IF _TODO
 *-------------------------------
 error
  jsr driveoff
-
  jsr prompt
-
  jmp driveon
 
 \*-------------------------------
@@ -2503,41 +2166,6 @@ ENDIF
 .blackout
 {
     JMP beeb_hide_screen
-}
-
-\ BEEB MOVED FROM MISC.S
-
-\*-------------------------------
-\* alt bg & char set list
-\* Level #:   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-
-.bgset1 EQUB 00,00,00,00,01,01,01,00,00,00,01,01,00,00,01
-\bgset2 EQUB 00,00,00,00,01,01,01,02,02,02,01,01,02,02,01
-.chset  EQUB 00,00,00,01,02,02,03,02,02,02,02,02,04,05,05
-
-\*-------------------------------
-\*
-\* Load level from disk
-\* In: X = level # (0-14)
-\*
-\*-------------------------------
-.LOADLEVELX
-{
-\ Just keep X as level#
-
-\ lda bluepTRKlst,x
-\ sta bluepTRK
-\ lda bluepREGlst,x
-\ sta bluepREG
-
- lda bgset1,x ;A
-\ pha
-\ lda bgset2,x ;X
- ldy chset,x ;Y
-\ tax
-\ pla
-
- jmp LOADLEVEL ;in MASTER
 }
 
 \*-------------------------------
@@ -2599,6 +2227,7 @@ EQUB 0
 
     \\ Relocate pointers to image data
 .beeb_plot_reloc_img_loop
+{
     INY
 
     CLC
@@ -2614,3 +2243,4 @@ EQUB 0
     DEX
     BPL beeb_plot_reloc_img_loop
     RTS
+}

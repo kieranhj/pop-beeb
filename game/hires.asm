@@ -14,7 +14,7 @@
 \*-------------------------------
  \org org
 
-.cls jmp hires_cls
+.cls jmp beeb_CLS
 .lay jmp hires_lay
 .fastlay jmp hires_fastlay
 .layrsave jmp hires_layrsave
@@ -80,6 +80,7 @@
 \*
 \*-------------------------------
 
+IF _NOT_BEEB
 .hires_cls
 {
 \ jsr mainmem
@@ -90,6 +91,7 @@
  BEEB_SELECT_AUX_MEM
  RTS
 }
+ENDIF
 
 .hires_lay
 {
