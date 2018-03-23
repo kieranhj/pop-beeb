@@ -908,7 +908,7 @@ INCBIN "audio/ip/doorcreak.raw.exo"
 .pop_music_enters
 INCBIN "audio/ip/m-story3.raw.exo"
 .pop_music_leaves
-INCBIN "audio/ip/m-story4.raw.exo"
+INCBIN "audio/ip/m-story4-endsright.raw.exo"
 .pop_audio_bank1_end
 SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
 
