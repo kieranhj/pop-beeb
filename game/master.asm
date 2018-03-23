@@ -55,16 +55,15 @@ MACRO MASTER_LOAD_HIRES filename
 }
 ENDMACRO
 
-.master_load_dhires
+.master_show_dhires
 {
  JSR wait_for_timer_XY
-
  JSR vblank
  JSR PageFlip
  JMP beeb_show_screen       ; in case previous blackout
 }
 
-MACRO MASTER_LOAD_DHIRES filename, pu_size, sequence_time
+MACRO MASTER_LOAD_DHIRES filename, pu_size
 {
  LDX #LO(filename)
  LDY #HI(filename)
@@ -75,39 +74,37 @@ MACRO MASTER_LOAD_DHIRES filename, pu_size, sequence_time
  LDX #LO(&8006 - pu_size)
  LDY #HI(&8006 - pu_size)
  JSR PUCRUNCH_UNPACK
+
+ JSR beeb_clear_dhires_line
 
 IF _DEMO_BUILD
  JSR plot_demo_url
 ENDIF
-
- JSR beeb_clear_dhires_line
-
- LDX #LO(sequence_time)
- LDY #HI(sequence_time)
-
- JSR master_load_dhires
 }
 ENDMACRO
 
-MACRO MASTER_WIPE_DHIRES filename, pu_size, sequence_time
+MACRO MASTER_SHOW_DHIRES sequence_time
 {
- LDX #LO(filename)
- LDY #HI(filename)
- LDA #HI(&8000 - pu_size)
- JSR disksys_load_file
+ LDX #LO(sequence_time)
+ LDY #HI(sequence_time)
+ JSR master_show_dhires
+}
+ENDMACRO
 
-; LDA #PUCRUNCH_BANK:JSR swr_select_slot
- LDX #LO(&8006 - pu_size)
- LDY #HI(&8006 - pu_size)
- JSR PUCRUNCH_UNPACK
-
- JSR beeb_clear_dhires_line
-
+MACRO MASTER_WIPE_DHIRES sequence_time
+{
  LDX #LO(sequence_time)
  LDY #HI(sequence_time)
  JSR wait_for_timer_XY
-
  JSR beeb_dhires_wipe
+}
+ENDMACRO
+
+MACRO MASTER_BLOCK_UNTIL sequence_time
+{
+ LDX #LO(sequence_time)
+ LDY #HI(sequence_time)
+ JSR wait_for_timer_XY
 }
 ENDMACRO
 
@@ -135,32 +132,6 @@ ENDIF
 
 \dum locals
 \ Now defined in master.h.asm
-
-\*-------------------------------
-\* Passed params
-
-\ NOT BEEB
-\params = $3f0
-
-\*-------------------------------
-\* Coordinates of default load-in level
-\ NOT BEEB
-
-\*-------------------------------
-\* Hi bytes of crunch data
-\* Double hi-res (stage 1)
-
-\pacSplash = $40
-\delPresents = $70
-\delByline = $72
-\delTitle = $74
-\pacProlog = $7c
-\pacSumup = $60 ;mainmem
-\pacEpilog = $76 ;side B
-
-\* Single hires (stage 2)
-
-\pacProom = $84
 
 \*-------------------------------
 \* Music song #s
@@ -251,124 +222,6 @@ kresume = IKN_l OR $80
     BRA spin
 }
 
-IF _NOT_BEEB
-*-------------------------------
-*
-*   Reload code & images
-*   (Temp routine for game development)
-*
-*-------------------------------
-RELOAD
- IF 0
- jsr driveon
-
- jsr loadperm
- jsr LoadStage3
-
- jmp driveoff
- ENDIF
-
-*-------------------------------
-*
-* Load music (1K)
-*
-* Load at $5000 mainmem & move to aux l.c.
-*
-*-------------------------------
-* Load music set 1 (title)
-
-loadmusic1
- jsr setmain
- lda #34
- sta track
- jsr rw18
- db RdSeq,$4e ;we only want $50-53
-]mm jsr setaux
- jmp xmovemusic
-
-*-------------------------------
-* Load music set 2 (game)
-
-loadmusic2
- jsr setmain
- lda #20
- sta track
- jsr rw18
- db RdGrp.Inc
- hex 50,51,52,53,00,00,00,00,00
- hex 00,00,00,00,00,00,00,00,00
- jmp ]mm
-
-*-------------------------------
-* Load music set 3 (epilog)
-
-loadmusic3
- jmp loadmusic1
-
-*-------------------------------
-setaux sta RAMRDaux
- sta RAMWRTaux
- rts
-
-setmain sta RAMRDmain
- sta RAMWRTmain
- rts
-
-*-------------------------------
-*
-*  D R I V E   O N
-*
-*  In: A = delay
-*      BBundID
-*
-*  Sets auxmem
-*
-*-------------------------------
-driveon lda #0
-driveon1 sta :delay
-
- jsr setaux ;set auxmem
-
-* switch in bank 1 (RW18)
-
- bit RWBANK1
- bit RWBANK1 ;1st 4k bank
-
-* set Bbund ID
-
- lda BBundID
- sta :IDbyte
-
- jsr rw18
- db ModID
-:IDbyte hex a9 ;Bbund ID byte
-
-* turn on drive 1
-
- jsr rw18
- db DrvOn
-:drive hex 01
-:delay hex 00
- rts
-
-*-------------------------------
-*
-*  D R I V E   O F F
-*
-*-------------------------------
-driveoff jsr rw18
- db DrvOff
-
-* switch in bank 2
-
- bit RWBANK2
- bit RWBANK2 ;2nd 4k bank
-
- sta $c010 ;clr kbd
-
- jmp setaux ;& set auxmem
-ENDIF
-
 \*-------------------------------
 \*
 \*  Set first level/demo level
@@ -398,32 +251,6 @@ ENDIF
 \ ldx demolevel+1
  jmp SetLevel
 }
-
-IF _NOT_BEEB
-*-------------------------------
-*
-* Check track 22 to make sure it's the right disk
-*
-* (Scratch page 2 mainmem--return w/mainmem set)
-*
-*-------------------------------
-checkdisk
- jsr setaux
- ldx #POPside2
- stx BBundID
-
- jsr driveon
-:loop jsr setmain
- lda #22
- sta track
- jsr rw18
- db RdGrpErr.Inc
- hex 02,00,00,00,00,00,00,00,00
- hex 00,00,00,00,00,00,00,00,00
- bcc ]rts
- jsr error
- jmp :loop
-ENDIF
 
 \*-------------------------------
 \*
@@ -484,24 +311,6 @@ EQUD savedgame_top
 	LDA #&FF
     JMP osfile
 }
-
-IF _TODO
-*-------------------------------
-*
-* Load alt. character set (chtable4)
-*
-* In: Y = CHset4
-*
-*-------------------------------
-LOADALTSET
- sty newCHset
-
- jsr driveon
-
- jsr rdch4
-
- jmp driveoff
-ENDIF
 
 \*-------------------------------
 \*
@@ -924,18 +733,18 @@ EQUS "PRIN2  $"
  JSR vblank
  JSR PageFlip
 
-\ lda #$40
-\ sta IMAGE+1
-\ lda #$20
-\ sta IMAGE ;copy page 1 to page 2
-\ jmp _copy2000 ;in HIRES
-
 \ Copy the screen buffers
 
  LDA #HI(PRIN2_START)
  JSR beeb_copy_shadow
 
-\ Display
+\* Wait for music to stop in case we're on a fast device
+
+.wait_for_music
+ JSR BEEB_MUSIC_IS_PLAYING
+ BNE wait_for_music
+
+\ Display screen
 
  JMP beeb_show_screen           ; BEEB show screen after blackout
 }
@@ -993,6 +802,8 @@ EQUS "PRIN2  $"
 
  jsr SetupDHires
 
+\ Sequence timer started here after initial load:
+
  jsr PubCredit
 
  jsr AuthorCredit
@@ -1000,12 +811,16 @@ EQUS "PRIN2  $"
  jsr TitleScreen
 
  jsr Prolog1
-.princess
+
+\ Wait here before going to cutscene
+
+ MASTER_BLOCK_UNTIL 34*50
+
+\ Sequence timer reset after Princess scene has loaded
+
  jsr PrincessScene
 
  jsr SetupDHires
-
- JSR vsync_start_timer
 
  jsr Prolog2
 
@@ -1027,9 +842,7 @@ EQUS "PRIN2  $"
 
  jsr blackout
 
-\* Load in Stage 1 data
-
-\ jmp LoadStage1A
+\* Configure screen for attract mode
 
  JMP beeb_set_attract_screen
 }
@@ -1039,6 +852,9 @@ EQUS "PRIN2  $"
 \* "Broderbund Software Presents"
 \*
 \*-------------------------------
+
+.splash_filename
+EQUS "SPLASH $"
 
 .presents_filename
 EQUS "PRESENT$"
@@ -1052,70 +868,36 @@ IF _AUDIO
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
-
 \* Unpack splash screen into DHires page 1
 
- jsr unpacksplash
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size
 
-\* Show DHires page 1
-
-\ jsr setdhires
-
-\* Copy to DHires page 2
-
- jsr copy1to2
+\* Start the main tune!
 
 IF _AUDIO
     lda #s_Presents
     jsr BEEB_INTROSONG
 ENDIF
 
+ MASTER_SHOW_DHIRES 0
+
+\* Start our sequence timer
+
  JSR vsync_start_timer
 
-\* Unpack "Broderbund Presents" onto page 1
+\* Copy to DHires page 2 so can load to this and swap when required
 
-\ lda #delPresents
-\ jsr DeltaExpPop
+ jsr copy1to2
 
-; lda #44/4
-; jsr tpause
-; LDX #1:JSR pause_for_X_seconds
+\* Unpack "Broderbund Presents" onto page 2
 
- MASTER_LOAD_DHIRES presents_filename, pu_presents_size, 2*50
+ MASTER_LOAD_DHIRES presents_filename, pu_presents_size
+ 
+\* Show the presents screen at 0:02.00
 
-\ ldx #80
-\ lda #s_Presents
-\ jsr master_PlaySongI
-; LDX #4:JSR pause_for_X_seconds     ; on screen for 4 seconds
+ MASTER_SHOW_DHIRES 2.5*50
 
- jmp CleanScreen
-}
-
-\*-------------------------------
-\*
-\* Credit line disappears
-\*
-\*-------------------------------
-
-.CleanScreen
-{
-\* Switch to DHires page 2
-\* (credit line disappears)
-
-\ lda PAGE2on
-
-\* Copy DHires page 2 back to hidden page 1
-
-\ jsr copy2to1
-
-\* Display page 1
-
-\ lda PAGE2off
-
-\ Not needed on Beeb as just load the whole lower half of the screen
-
-.return
- rts
+ RTS
 }
 
 \*-------------------------------
@@ -1129,24 +911,15 @@ EQUS "BYLINE $"
 
 .AuthorCredit
 {
-; lda #42/4
-; jsr tpause
-
 \* Unpack byline onto page 1
 
-\ lda #delByline
-\ jsr DeltaExpPop
+ MASTER_LOAD_DHIRES byline_filename, pu_byline_size
+ 
+ \* Show the byline at 0:07.00
 
- MASTER_LOAD_DHIRES byline_filename, pu_byline_size, 7*50
+ MASTER_SHOW_DHIRES 7.5*50
 
-\ ldx #80
-\ lda #s_Byline
-\ jsr master_PlaySongI
-; LDX #7:JSR pause_for_X_seconds     ; on screen for 7 seconds
-
-\* Credit line disappears
-
- jmp CleanScreen
+ RTS
 }
 
 \*-------------------------------
@@ -1158,6 +931,9 @@ EQUS "BYLINE $"
 .title_filename
 EQUS "TITLE  $"
 
+CUTSCENE_END_TIME=49.5*50
+CREDITS_SHOW_TIME=5*50
+
 .SilentTitle
 {
 IF _AUDIO
@@ -1167,39 +943,17 @@ IF _AUDIO
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
 
-; jsr unpacksplash
+\* Construct the title page & logo without showing it
 
-\ Construct the title page without showing it
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size
 
- LDX #LO(splash_filename)
- LDY #HI(splash_filename)
- LDA #HI(pu_splash_loadat)
- JSR disksys_load_file
+\* Add the title
 
-; LDA #PUCRUNCH_BANK:JSR swr_select_slot
- LDX #LO(pu_splash_loadat + 6)
- LDY #HI(pu_splash_loadat + 6)
- JSR PUCRUNCH_UNPACK
+ MASTER_LOAD_DHIRES title_filename, pu_title_size
 
- LDX #LO(title_filename)
- LDY #HI(title_filename)
- LDA #HI(pu_title_loadat)
- JSR disksys_load_file
+\* Now wipe to reveal when music finishes (could test explicitly?)
 
-; LDA #PUCRUNCH_BANK:JSR swr_select_slot
- LDX #LO(pu_title_loadat + 6)
- LDY #HI(pu_title_loadat + 6)
- JSR PUCRUNCH_UNPACK
-
- JSR beeb_clear_dhires_line
-
-\ Now wipe to reveal
-
- JSR beeb_dhires_wipe
-
-\ And wait a couple of seconds
-
- LDX #4:JSR pause_for_X_seconds
+ MASTER_WIPE_DHIRES (CUTSCENE_END_TIME + 12*50)
 
  RTS
 }
@@ -1208,30 +962,22 @@ ENDIF
 
 .TitleScreen
 {
-; lda #38/4
-; jsr tpause
-
 \* Unpack title onto page 1
 
-\ lda #delTitle
-\ jsr DeltaExpPop
+ MASTER_LOAD_DHIRES title_filename, pu_title_size
+ 
+ \* Show title at 0:15.00
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size, 15*50
+ MASTER_SHOW_DHIRES 15.5*50
+
+\* Play next tune (Apple II only)
 
 IF _AUDIO
     lda #s_Title
     jsr BEEB_INTROSONG
 ENDIF
 
-\ ldx #140
-\ lda #s_Title
-\ jsr master_PlaySongI
-
-; LDX #10:JSR pause_for_X_seconds     ; on screen for 10 seconds
-
-\* Credit line disappears
-
- jmp CleanScreen
+ RTS
 }
 
 \*-------------------------------
@@ -1245,23 +991,14 @@ EQUS "PROLOG $"
 
 .Prolog1
 {
-\ lda #pacProlog
-\ sta RAMRDaux
-\ jsr DblExpand
-
- MASTER_WIPE_DHIRES prolog_filename, pu_prolog_size, 25*50
-
-\ ldx #250
-\ lda #s_Prolog
-\ jmp master_PlaySongI
+ MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size
+ 
+ MASTER_WIPE_DHIRES 25*50
 
 IF _AUDIO
     lda #s_Prolog
     jsr BEEB_INTROSONG
 ENDIF
-
- LDX #10:JSR pause_for_X_seconds
- ; music lasts 15 seconds but let it cover cutscene load
 
  RTS
 }
@@ -1281,6 +1018,12 @@ ENDIF
  lda #0 ;don't seek track 0
  jsr cutprincess1
 
+\* Reset the sequence timer
+
+ JSR vsync_start_timer      ; reset the timer to zero
+
+\* Play the cutscene
+
  lda #0 ;cut #0 (intro)
  jmp playcut ;Apple II was xplaycut aux l.c. via grafix
 }
@@ -1296,25 +1039,17 @@ EQUS "SUMUP  $"
 
 .Prolog2
 {
-\ lda #pacSumup
-\ sta RAMRDmain
-\ jsr DblExpand
+\* Load and display Prolog immediately
 
-\ jsr setdhires
+ MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
+ MASTER_SHOW_DHIRES 0
 
- MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size, 0
+\* But wait to trigger additional music piece
 
-\ BEEB - just delay as music already playing
-\ ldx #250/4
-\ lda #s_Sumup
-\ jmp master_PlaySongI
-
- LDX #10:JSR pause_for_X_seconds
+ MASTER_BLOCK_UNTIL CUTSCENE_END_TIME
 
  lda #s_Sumup
  jsr BEEB_INTROSONG
-
- LDX #10:JSR pause_for_X_seconds
 
  RTS
 }
@@ -1331,9 +1066,17 @@ EQUS "CREDITS$"
 
 .BeebCredit
 {
- MASTER_WIPE_DHIRES credits_filename, pu_credits_size, 0
+\* Load Credits screen
 
- LDX #4: JSR pause_for_X_seconds
+ MASTER_LOAD_DHIRES credits_filename, pu_credits_size
+
+\* Wipe after title been on for 4 seconds
+
+ MASTER_WIPE_DHIRES (CUTSCENE_END_TIME + 12*50 + CREDITS_SHOW_TIME)
+
+\* Show Credits for 4 seconds
+
+ MASTER_BLOCK_UNTIL (CUTSCENE_END_TIME + 12*50 + 2*CREDITS_SHOW_TIME)
 
  RTS
 }
@@ -1350,16 +1093,6 @@ EQUS "EPILOG $"
 
 .Epilog
 {
-\\ NOT BEEB
-\ lda IIGS
-\ bne SuperEpilog ;super hi-res ending if IIGS
-
-\ lda #pacEpilog
-\ sta RAMRDaux
-\ jsr DblExpand
-
-\ jsr setdhires
-
 \ BEEB set drive 0 - going to attract after this anyway
  LDA #0
  JSR disksys_set_drive
@@ -1373,68 +1106,47 @@ ENDIF
 
  jsr SetupDHires
 
- MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size, 0 
+\* Load the screen
+
+ MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
+
+\* Start the music
 
  lda #s_Epilog
  jsr BEEB_INTROSONG
- 
- ldx #10    ; tbc
- jsr pauseNI
- jsr unpacksplash
- ldx #10    ; tbc
- jsr pauseNI
 
-\ lda #s_Curtain
-\ jsr BEEB_INTROSONG
-\ ldx #10    ; tbc
-\ jsr pauseNI
+\* Hack wait fn to ignore keys
+
+    LDA #&2C        ; BIT abs
+    STA smWait_for_timer_loop
+
+\* Show the screen
+
+ MASTER_SHOW_DHIRES 0 
+
+\* Start the sequence timer
+
+ JSR vsync_start_timer
+
+\* Load the splash
+
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+
+\* Show the splash after 10 secs (tbc)
+
+ MASTER_SHOW_DHIRES 10*50
+
+\* Wait for some time (tbc)
+
+ MASTER_BLOCK_UNTIL 20*50
+
+\* Undo hack
+
+    LDA #&20        ; JSR abs
+    STA smWait_for_timer_loop
 
  jmp blackout
 }
-
-.splash_filename
-EQUS "SPLASH $"
-
-.unpacksplash
-{
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0 
-
- RTS
-}
-
-IF _NOT_BEEB
-*-------------------------------
-*
-* Super hi-res epilog (IIGS only)
-*
-*-------------------------------
-SuperEpilog
- lda #1 ;aux
- jsr fadein ;fade in epilog screen
- jsr setaux
-
- lda #s_Epilog
- jsr PlaySongNI
-
- jsr fadeout
- lda #0 ;main
- jsr fadein ;fade to palace screen
- jsr setaux
-
- lda #80
- jsr pauseNI
-
- lda #s_Curtain
- jsr PlaySongNI
-
- lda #255
- jsr pauseNI
-
- jsr fadeout ;...and fade to black
-
- jmp * ;and hang (because it's too much
-;trouble to restart)
-ENDIF
 
 \*-------------------------------
 \*
@@ -1466,8 +1178,6 @@ ENDIF
 
 \ This gets loaded anyway at level load?
 \ jsr rdbluep
-
-\ jsr driveoff
 
 \ BEEB AUDIO
 
@@ -1695,118 +1405,11 @@ EQUS "CHTAB5 $"
     RTS
 }
 
-IF _NOT_BEEB
-*-------------------------------
-*
-*  Stage 1: static dbl hires screens -- no animation
-*  Stage 2: character animation only (bg is unpacked)
-*  Stage 3: full game animation
-*
-*-------------------------------
-*
-* Load Stage 1 data (sida A)
-*
-*-------------------------------
-]lsub sta track
-:test jsr rw18
- db RdSeqErr.Inc,$40
- bcc :ok
- jsr error
- jmp :test
-:ok
- jsr rw18
- db RdSeq.Inc,$52
- jsr rw18
- db RdSeq.Inc,$64
- jsr rw18
- db RdSeq.Inc,$76
- jsr rw18
- db RdSeq.Inc,$88
- rts
-
-LoadStage1A
- jsr driveon
-
- lda #22
- jsr ]lsub
-
- jsr setmain
- jsr rw18
- db RdSeq.Inc,$60
- jsr rw18
- db RdSeq.Inc,$72
-
- jsr loadmusic1
-
- jsr setaux
- lda #$ff
- sta BGset1
- sta BGset2
- sta CHset
-
- jmp driveoff
-
-*-------------------------------
-*
-*  Load stage 1 (side B)
-*
-*-------------------------------
-LoadStage1B
- jsr driveon
-
- jsr loadmusic3 ;epilog
-
- lda IIGS
- bne :shires ;Super hi-res ending only if IIGS
-
- lda #18
- jsr ]lsub
- jmp driveoff
-
-:shires jsr loadsuper ;in unpack
- jmp driveoff
-
-*-------------------------------
-*
-* Reload 2000-6000 auxmem
-* (wiped out by dhires titles)
-*
-*-------------------------------
-ReloadStuff
- jsr driveon
-
-:test lda #4
- sta track
- jsr rw18
- db RdGrpErr
- hex 00,00,00,00,00,00,00,00,00
- hex 00,20,21,22,23,24,25,26,27
- bcc :ok
- jsr error
- jmp :test
-:ok
- lda #15
- sta track
- jsr rw18
- db RdSeq.Inc,$28
- jsr rw18
- db RdSeq.Inc,$3a
- jsr rw18
- db RdSeq.Inc,$4c
-
- jmp driveoff
-ENDIF
-
 \*-------------------------------
 \*
 \*  Load stage 2 routines (side B)
 \*
 \*-------------------------------
-\LoadStage2B
-\ jsr driveon
-\
-\ lda #24
-\ bne ]ls2
 
 .chtab8_file_name
 EQUS "CHTAB8 $"
@@ -1940,221 +1543,30 @@ EQUS "CHTAB6 $"
 .chtab7_file_name
 EQUS "CHTAB7 $"
 
-IF _NOT_BEEB
-*-------------------------------
-*
-*  Load stage 3
-*  Full version (from stage 1)
-*
-*  Reload 2000-AC00 auxmem, 6000-7200 mainmem
-*
-*-------------------------------
-LoadStage3
- jsr driveon
-
- lda #4
- sta track
-
-:loop jsr rw18
- db RdGrpErr.Inc
- hex 00,00,00,00,00,00,00,00,00
- hex 00,20,21,22,23,24,25,26,27
- bcc :ok
- jsr error
- jmp :loop
-:ok
- jsr rw18
- db RdSeq.Inc,$60
- jsr rw18
- db RdSeq.Inc,$72 ;bgtable1
-
- jsr setmain
- jsr rw18
- db RdSeq.Inc,$60
- jsr rw18
- db RdSeq.Inc,$72
-
- jsr setaux
-
- lda #13
- sta track
- jsr rw18
- db RdGrp.Inc
- hex 00,00,00,00,00,00,00,00,00
- hex 00,00,00,96,97,98,99,9a,9b
- jsr rw18
- db RdSeq.Inc,$9c ;chtable4
- jsr rw18
- db RdSeq.Inc,$28
- jsr rw18
- db RdSeq.Inc,$3a
- jsr rw18
- db RdSeq.Inc,$4c
- jsr rw18
- db RdSeq.Inc,$84 ;bgtable2
-
- lda #0
- sta BGset1
- sta BGset2
- sta CHset
-
- jsr loadmusic2
-
- jmp setaux
-ENDIF
-
 \*-------------------------------
 \*
-\* Play song--interruptible & non-interruptible
-\*
-\* (Enter & exit w/ bank 2 switched in)
-\*
-\* In: A = song #
-\*     X = length to pause if sound is turned off
+\* Wait functions for attract sequence
 \*
 \*-------------------------------
-
-IF _NOT_BEEB
-.PlaySongNI ;non-interruptible
-{
-;(& ignores sound/music toggles)
-\ jsr setaux
-\ BEEB TODO music
- jsr minit      ; was xminit
- LDA #1
-.loop
-\ BEEB TODO music
- jsr mplay      ; was xmplay
- cmp #0
- bne loop
-.return
- rts
-}
-ENDIF
-
-\*-------------------------------
-
-IF _NOT_BEEB
-.master_PlaySongI ;interruptible
-{
-\ jsr setaux
-\ beq return
-
- tay
- lda musicon
- and soundon
- beq master_pause
-
- tya
- jsr minit      ; was xminit
-.loop jsr master_StartGame
- jsr mplay      ; was xmplay
- cmp #0
- bne loop
-.return
- rts
-}
-
-.master_pause txa ;falls thru to tpause
-\*-------------------------------
-\*
-\*  In: A = delay (max = 255)
-\*
-\*-------------------------------
-.tpause
-{
-.loop sta pausetemp
-
- ldy #2
-.loop1 ldx #0
-.loop2 PHX:PHY:jsr master_StartGame:PLY:PLX
- dex
- bne loop2
- dey
- bne loop1
-
- lda pausetemp
- sec
- sbc #1
- bne loop
-.return
- rts
-}
-ENDIF
-
-.pause_for_X_seconds
-{
-    STX pausetemp
-    LDY #0
-
-    .seconds_loop
-
-    LDA beeb_vsync_count
-    .wait_for_vsync
-    CMP beeb_vsync_count
-    BEQ wait_for_vsync
-
-    INY
-    CPY #50
-    BCC not_a_second
-
-    LDY #0
-    DEC pausetemp
-    BEQ return
-
-    .not_a_second
-    STY store_Y+1
-    jsr master_StartGame
-
-    .store_Y
-    LDY #0
-    BRA seconds_loop
-
-    .return
-    RTS
-}
 
 .wait_for_timer_XY
-{
-    STY smTicks_HI+1
-    STX smTicks_LO+1
+    STY smWait_for_timer_Ticks_HI+1
+    STX smWait_for_timer_Ticks_LO+1
 
-    .loop
+    .smWait_for_timer_loop
     JSR master_StartGame
 
     LDA vsync_timer_ticks+1
-    .smTicks_HI
+    .smWait_for_timer_Ticks_HI
     CMP #&FF
-    BCC loop
+    BCC smWait_for_timer_loop
 
     LDA vsync_timer_ticks+0
-    .smTicks_LO
+    .smWait_for_timer_Ticks_LO
     CMP #&FF
-    BCC loop
+    BCC smWait_for_timer_loop
 
-    .return
     RTS
-}
-
-IF _NOT_BEEB
-*-------------------------------
-*
-* Disk error
-*
-* Prompt user for correct disk side & wait for keypress
-*
-*-------------------------------
-error
- jsr driveoff
- jsr prompt
- jmp driveon
-
-\*-------------------------------
-\ lst
-\eof ds 1
-\ usr $a9,1,$a80,*-org
-\ lst off
-ENDIF
 
 \ BEEB MOVED FROM UNPACK.S
 
