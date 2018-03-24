@@ -1326,9 +1326,6 @@ ENDIF
 EQUS "BANK1  $"
 
 .perm_file_names
-;EQUS "CHTAB1 $"
-;EQUS "CHTAB2 $"
-;EQUS "CHTAB3 $"
 EQUS "CHTAB5 $"
 
 .loadbank1
@@ -1340,7 +1337,7 @@ EQUS "CHTAB5 $"
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
     LDA #HI(chtable1)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
@@ -1371,7 +1368,7 @@ EQUS "CHTAB5 $"
     LDX #LO(perm_file_names)
     LDY #HI(perm_file_names)
     LDA #HI(chtable5)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable5)

@@ -14,9 +14,13 @@ del "pop-beeb-side-a.ssd.$.PRIN2*"
 bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
 bin\pucrunch.exe -d -c0 -l0x1000 "pop-beeb-side-a.ssd.$.PRIN2" disc\prin2.pu.bin
 bin\bbcim -d "pop-beeb-side-a.ssd" "$.PRIN2"
-
-bin\bbcim -a "pop-beeb-side-a.ssd" "disc/boot.txt"
 bin\bbcim -a "pop-beeb-side-a.ssd" "disc/prin2.pu.bin"
+
+del "pop-beeb-side-a.ssd.$.BANK1*"
+bin\bbcim -e "pop-beeb-side-a.ssd" BANK1
+bin\pucrunch.exe -d -c0 -l0x1000 "pop-beeb-side-a.ssd.$.BANK1" disc\bank1.pu.bin
+bin\bbcim -d "pop-beeb-side-a.ssd" "$.BANK1"
+bin\bbcim -a "pop-beeb-side-a.ssd" "disc/bank1.pu.bin"
 
 call make_pop_side_b.bat
 del pop-beeb.dsd
