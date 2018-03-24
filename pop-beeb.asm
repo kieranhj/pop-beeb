@@ -458,7 +458,7 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 
 ; Save Core executable
 
-SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
+SAVE "Prince", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
 ; Core RAM stats
 
@@ -962,7 +962,7 @@ PAGE_ALIGN
 \ All character sprites on SIDE B
 
 \ Loading screen
-PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0
+PUTFILE "Other/bitshifters2.mode7.bin", "BITS", &7C00, 0
 
 \ Attract files
 PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
