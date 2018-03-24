@@ -962,7 +962,7 @@ PAGE_ALIGN
 \ All character sprites on SIDE B
 
 \ Loading screen
-PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0
+PUTFILE "Other/bitshifters2.mode7.bin", "BITS", &7C00, 0
 
 \ Attract files
 PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
