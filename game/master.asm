@@ -38,22 +38,9 @@
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
 .DoSaveGame jmp DOSAVEGAME              ; moved from misc.asm
 
-.master_load_hires
-{
- JSR beeb_set_game_screen
- LDA #HI(beeb_screen_addr)
- JSR disksys_load_file
- JSR vblank
- JMP PageFlip
-}
-
-MACRO MASTER_LOAD_HIRES filename
-{
- LDX #LO(filename)
- LDY #HI(filename)
- JSR master_load_hires
-}
-ENDMACRO
+\*-------------------------------
+\* Sequence MACROS
+\*-------------------------------
 
 .master_show_dhires
 {
@@ -107,6 +94,10 @@ MACRO MASTER_BLOCK_UNTIL sequence_time
  JSR wait_for_timer_XY
 }
 ENDMACRO
+
+\*-------------------------------
+\* Demo watermark
+\*-------------------------------
 
 IF _DEMO_BUILD
 SMALL_FONT_MAPCHAR
@@ -624,7 +615,7 @@ EQUS "VIZ    $"
     tay
 
     lda #HI(chtable4)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable4)

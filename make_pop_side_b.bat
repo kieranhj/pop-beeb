@@ -67,11 +67,11 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal1a.pu.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal1b.pu.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal2.pu.bin"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.FAT.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.GD.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SHAD.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.SKEL.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.VIZ.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/fat.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/gd.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/shad.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/skel.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/viz.pu.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio4"
 

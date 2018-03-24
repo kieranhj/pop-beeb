@@ -12,3 +12,9 @@
 ..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.BGTAB1.PALA.bin pal1a.pu.bin
 ..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.BGTAB1.PALB.bin pal1b.pu.bin
 ..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.BGTAB2.PAL.bin pal2.pu.bin
+
+..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.CHTAB4.FAT.bin fat.pu.bin
+..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.CHTAB4.GD.bin gd.pu.bin
+..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.CHTAB4.SHAD.bin shad.pu.bin
+..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.CHTAB4.SKEL.bin skel.pu.bin
+..\bin\pucrunch.exe -d -c0 -l0x1000 BEEB.IMG.CHTAB4.VIZ.bin viz.pu.bin
