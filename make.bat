@@ -10,7 +10,14 @@ if %ERRORLEVEL% neq 0 (
 	exit /b 1
 )
 
+del "pop-beeb-side-a.ssd.$.PRIN2*"
+bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
+bin\pucrunch.exe -d -c0 -l0x1000 "pop-beeb-side-a.ssd.$.PRIN2" disc\prin2.pu.bin
+bin\bbcim -d "pop-beeb-side-a.ssd" "$.PRIN2"
+
 bin\bbcim -a "pop-beeb-side-a.ssd" "disc/boot.txt"
+bin\bbcim -a "pop-beeb-side-a.ssd" "disc/prin2.pu.bin"
+
 call make_pop_side_b.bat
 del pop-beeb.dsd
 bin\bbcim -interss sd pop-beeb-side-a.ssd pop-beeb-side-b.ssd pop-beeb.dsd

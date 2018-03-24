@@ -2,10 +2,8 @@
 
 rem disk1 now created by beebasm
 
-del "pop-beeb-side-a.ssd.$.PRIN2*"
 del "pop-beeb-side-a.ssd.$.Audio*"
 
-bin\bbcim -e "pop-beeb-side-a.ssd" PRIN2
 bin\bbcim -e "pop-beeb-side-a.ssd" Audio3
 bin\bbcim -e "pop-beeb-side-a.ssd" Audio4
 
@@ -79,4 +77,4 @@ REM bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB8.mode2.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/chtab6.pu.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/chtab8.pu.bin"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.PRIN2"
+bin\bbcim -a "pop-beeb-side-b.ssd" "disc/prin2.pu.bin"

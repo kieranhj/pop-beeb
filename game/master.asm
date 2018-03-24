@@ -701,6 +701,8 @@ EQUS "VIZ    $"
 .pacRoom_name
 EQUS "PRIN2  $"
 
+pacRoom_size = &1100        ; by hand doh!
+
 .CUTPRINCESS
 {
  jsr blackout
@@ -709,11 +711,6 @@ EQUS "PRIN2  $"
 .cutprincess1
 {
  jsr LoadStage2 ;displaces bgtab1-2, chtab4
-
-\ lda #pacProom
-\ jsr SngExpand
-
- JSR beeb_clear_status_line
 
 \ Need game screen dimensions
 
@@ -724,8 +721,15 @@ EQUS "PRIN2  $"
 
  LDX #LO(pacRoom_name)
  LDY #HI(pacRoom_name)
- LDA #HI(PRIN2_START)
+ LDA #HI(&8000 - pacRoom_size)
  JSR disksys_load_file
+
+ LDA #HI(PRIN2_START)
+ LDX #LO(&8000 - pacRoom_size)
+ LDY #HI(&8000 - pacRoom_size)
+ JSR PUCRUNCH_UNPACK
+
+ JSR beeb_clear_status_line
 
 \ Flip the screen buffers
 
