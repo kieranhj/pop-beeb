@@ -50,6 +50,6 @@ INCBIN "audio/sfx/19 jawsclash.raw"
 INCBIN "audio/sfx/annoyshort.raw"
 
 .pop_music_glug
-INCBIN "audio/ip/3glugs.raw"
+INCBIN "audio/sfx/3glugs.raw"
 
 .pop_sfx_end
