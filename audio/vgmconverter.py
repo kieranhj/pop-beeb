@@ -1048,8 +1048,41 @@ class VgmStream:
 							#if latched_channel == 2:
 							#	qw = qw & 0xf0
 							#	quantized_command_list[n]["data"] = struct.pack('B', qw)
+
+							#------------------------------------------------------------------------------------------------------------
+							# extra test for scenarios where channel 2 and channel 3 volumes are audible together during tuned PN
+							#  AND we are targetting an SN76489 chip with 15 bit duty cycle (SR) because these are not harmonious
+							# Explanation:
+							#  On some SN76489 chips the periodic noise cycle is 16 bits and on some it is 15 bits.
+							#  SN tone generators output continuous squarewaves at the given frequency, whereas the periodic noise generator
+							#  emits a squarewave at the given frequency on channel 2 *every duty cycle* - 
+							#  which is either every 1/16 clocks or every 1/15 clocks (depending on chip config)
+							#  At 1/16, the output frequency is in harmony with channel 2. So 440Hz on tone2 
+							#   will be 27.5Hz on PN channel3 (exactly 4 octaves lower). 
+							#  With the BBC, 440Hz on tone2 will deliver 29.33Hz on PN channel3 (*almost* 4 octaves lower - but out of tune).
+							#
+							# So some tunes are able to play all 4 channels with channel 3 in tuned PN mode, in harmony.
+							# Such tunes are not compatible with SN chip variants with 15-bit LFSR registers. 
+							#
+							# Our coping strategy here is to detect and prioritize any currently playing tuned periodic noise, and ignore
+							#  any volume changes on channel 2.
+							# We could attempt to stop the PN from playing if we detect volume changes on channel 2, but that would lead
+							#  to much more complexity in how the registers are updated.
+							#
+							# remember that on SN chip, volume 15 is silent, and 0 is full
+
+							new_volume = qw & 15
+							if latched_channel == 2:
+								if new_volume != 15:
+									if latched_volumes[3] != 15:
+										if (latched_tone_frequencies[3]) & 3 == 3:
+											print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, channel 2 was muted."
+											new_volume = 15
+
+											lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
+											self.command_list[n]["data"] = struct.pack('B', lo_data)
 								
-							latched_volumes[latched_channel] = qw & 15		
+							latched_volumes[latched_channel] = new_volume		
 						else:
 						
 							# save the index of this tone write if it's channel 2 (used below)
