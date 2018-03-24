@@ -8,3 +8,6 @@
 ..\bin\pucrunch.exe -d -c0 -l0x1000 john.Byline.mode2.bin byline.pu.bin
 ..\bin\pucrunch.exe -d -c0 -l0x1000 john.Title.mode2.bin title.pu.bin
 ..\bin\pucrunch.exe -d -c0 -l0x1000 john.Presents.mode2.bin presents.pu.bin
+
+..\bin\pucrunch.exe -d -c0 -l0x7C00 bitshifters.mode7.bin bits.pu.bin
+

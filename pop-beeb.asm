@@ -180,7 +180,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(load_filename)
     LDY #HI(load_filename)
     LDA #HI(&7C00)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     \\ Load executable overlays
 
@@ -466,6 +466,10 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 ; Save Core executable
 
 SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
+
+; Loading screen
+
+PUTFILE "Other/bits.pu.bin", "BITS", &7C00, 0
 
 ; And cheeky lower RAM block
 
@@ -973,9 +977,6 @@ PAGE_ALIGN
 \ All game levels on SIDE B
 \ All background sprites on SIDE B
 \ All character sprites on SIDE B
-
-\ Loading screen
-PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0
 
 \ Attract files
 PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
