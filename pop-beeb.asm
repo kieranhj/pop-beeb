@@ -15,6 +15,8 @@ INCLUDE "pop-beeb.h.asm"
 
 INCLUDE "lib/filesizes.asm"
 
+PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
+
 \*-------------------------------
 ; ZERO PAGE
 \*-------------------------------
@@ -85,9 +87,6 @@ PRINT "--------"
 PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 PRINT "--------"
-
-SAVE "Lower", &C00, &D00,0
-
 
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
@@ -467,6 +466,10 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 ; Save Core executable
 
 SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
+
+; And cheeky lower RAM block
+
+SAVE "Lower", &C00, &D00,0
 
 ; Core RAM stats
 
@@ -970,8 +973,6 @@ PAGE_ALIGN
 \ All game levels on SIDE B
 \ All background sprites on SIDE B
 \ All character sprites on SIDE B
-
-PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
 
 \ Loading screen
 PUTFILE "Other/bitshifters.mode7.bin", "BITS", &7C00, 0

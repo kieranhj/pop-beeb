@@ -516,7 +516,7 @@ EQUS "PAL1X  $"
     LDX beeb_writeptr
     LDY beeb_writeptr+1
     lda #HI(bgtable1b)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(bgtable1b)
@@ -539,7 +539,7 @@ EQUS "PAL1X  $"
     LDX beeb_writeptr
     LDY beeb_writeptr+1
     lda #HI(bgtable1a)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(bgtable1a)
@@ -580,7 +580,7 @@ EQUS "PAL2   $"
     tay
 
     lda #HI(bgtable2)
-    jsr disksys_load_file
+    jsr disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(bgtable2)

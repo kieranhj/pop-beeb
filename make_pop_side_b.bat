@@ -56,13 +56,16 @@ bin\bbcim -a "pop-beeb-side-b.ssd" "disc\dummy.txt"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Levels\LEVEL14"
 bin\bbcim -d "pop-beeb-side-b.ssd" "$.DUMMY"
 
+bin\bbcim -d "pop-beeb-side-b.ssd" "$.DUN1B"
+
 bin\bbcim -a "pop-beeb-side-b.ssd" "pop-beeb-side-a.ssd.$.Audio3"
 
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.DUNA.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB2.DUN.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.PALA.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB1.PALB.bin"
-bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.BGTAB2.PAL.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/dun1a.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/dun1b.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/dun2.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal1a.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal1b.pu.bin"
+bin\bbcim -a "pop-beeb-side-b.ssd" "Images/pal2.pu.bin"
 
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.FAT.bin"
 bin\bbcim -a "pop-beeb-side-b.ssd" "Images/BEEB.IMG.CHTAB4.GD.bin"
