@@ -310,8 +310,8 @@ ENDIF
 {
 \* Load as much of Stage 3 as we can keep
 
-    LDA #0
-    JSR disksys_set_drive
+\    LDA #0
+\    JSR disksys_set_drive
 
     \ Relocate font (in SWRAM)
     \ Relocate the FONT file

@@ -577,15 +577,15 @@ EQUD 0
 ;--------------------------------------------------------------
 ; on entry
 ; A = drive number
+IF 0
 .disksys_set_drive
 {
-;    CLC
-;    ADC #'0'
-
-    LDA #'0'
+    CLC
+    ADC #'0'
     STA osfile_filename+1
     RTS
 }
+ENDIF
 
 ;--------------------------------------------------------------
 ; Load a file from disk to memory (SWR supported)

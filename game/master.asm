@@ -603,7 +603,7 @@ EQUB f_GD, f_SKEL, f_GD, f_FAT, f_SHAD, f_VIZ
 \*
 \*-------------------------------
 
-.beeb_level_filename   EQUS "LEVEL0 $"
+;.beeb_level_filename   EQUS "LEVEL0 $"
 
 .rdbluep
 {
@@ -761,8 +761,8 @@ pacRoom_size = &1100        ; by hand doh!
  TXS
 
 \ BEEB set drive 0 for attract
- LDA #0
- JSR disksys_set_drive
+\ LDA #0
+\ JSR disksys_set_drive
 
  lda #1
  sta musicon
@@ -1037,8 +1037,8 @@ ENDIF
 .Epilog
 {
 \ BEEB set drive 0 - going to attract after this anyway
- LDA #0
- JSR disksys_set_drive
+\ LDA #0
+\ JSR disksys_set_drive
 
 IF _AUDIO
     ; SM: added title music load & play trigger here
@@ -1421,8 +1421,8 @@ ENDIF
     TAX
 
     \\ Invalidate catalog cache
-    LDA #0
-    JSR disksys_set_drive
+\    LDA #0
+\    JSR disksys_set_drive
 
     \\ Invalidate bg cache
     LDA #&ff
@@ -1437,8 +1437,8 @@ ENDIF
     JMP LoadStage2_Attract
 
     .in_game
-    LDA #2
-    JSR disksys_set_drive
+\    LDA #2
+\    JSR disksys_set_drive
 
 IF _AUDIO
     ; SM: added intro music load & play trigger here
