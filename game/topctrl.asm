@@ -308,12 +308,7 @@ ENDIF
  jsr reloadblue
  ELSE
 
-\ NOT BEEB
-\ lda #' '
-\ jsr lrcls
-\ jsr vblank
-\ lda PAGE2off
-\ lda TEXTon
+ jsr beeb_hide_screen
 
  ldx level
  jsr LoadLevelX ;load blueprint & image sets from disk
