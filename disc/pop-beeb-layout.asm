@@ -12,10 +12,10 @@ PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
 PUTFILE "disc/Core", "Prince", &E00, &E77
 PUTFILE "disc/bits.pu.bin", "BITS", &7C00, 0
 PUTFILE "disc/Lower", "Lower", &C00, 0
-PUTFILE "disc/Main", "Main", &3000, 0
-PUTFILE "disc/AuxB", "AuxB", &8000, 0
-PUTFILE "disc/High", "High", &8000, 0
-PUTFILE "disc/Hazel", "Hazel", &D300, 0
+PUTFILE "disc/Main.pu.bin", "Main", &3000, 0
+PUTFILE "disc/AuxB.pu.bin", "AuxB", &8000, 0
+PUTFILE "disc/High.pu.bin", "High", &8000, 0
+PUTFILE "disc/Hazel.pu.bin", "Hazel", &D300, 0
 
 \ Audio Banks
 PUTFILE "disc/Audio0", "Audio0", &8000, 0
@@ -47,4 +47,4 @@ PUTFILE "disc/sprites.bin", "SPRITES", 0
 PUTFILE "disc/levels.bin", "LEVELS", 0
 
 \ Manual (if room at end)
-;PUTFILE "Manual.txt", "MANUAL", 0
+PUTFILE "disc/Manual.txt", "MANUAL", 0

@@ -19,6 +19,11 @@ if %ERRORLEVEL% neq 0 (
 rem Crunch files produced by Code build
 bin\pucrunch.exe -d -c0 -l0x1000 "disc\PRIN2" disc\prin2.pu.bin
 bin\pucrunch.exe -d -c0 -l0x1000 "disc\BANK1" disc\bank1.pu.bin
+bin\pucrunch.exe -d -c0 -l0x1000 "disc\Main" disc\main.pu.bin
+bin\pucrunch.exe -d -c0 -l0x1000 "disc\AuxB" disc\auxb.pu.bin
+bin\pucrunch.exe -d -c0 -l0x1000 "disc\High" disc\high.pu.bin
+bin\pucrunch.exe -d -c0 -l0x1000 "disc\Hazel" disc\hazel.pu.bin
 
+rem Produce the disc image
 del pop-beeb.ssd
 bin\BeebAsm.exe -v -i disc\pop-beeb-layout.asm -boot Prince -di disc\disc-template.ssd.bin -do pop-beeb.ssd

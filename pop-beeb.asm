@@ -219,7 +219,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(main_filename)
     LDY #HI(main_filename)
     LDA #HI(pop_beeb_main_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Ensure SHADOW RAM is writeable
 
@@ -228,7 +228,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(main_filename)
     LDY #HI(main_filename)
     LDA #HI(pop_beeb_main_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Setup SHADOW buffers for double buffering
 
@@ -248,7 +248,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(auxb_filename)
     LDY #HI(auxb_filename)
     LDA #HI(pop_beeb_aux_b_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     LDA #BEEB_SWRAM_SLOT_AUX_HIGH
     JSR swr_select_slot
@@ -258,7 +258,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(high_filename)
     LDY #HI(high_filename)
     LDA #HI(pop_beeb_aux_high_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Ensure HAZEL RAM is writeable - assume this says writable throughout?
 
@@ -269,7 +269,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(hazel_filename)
     LDY #HI(hazel_filename)
     LDA #HI(pop_beeb_aux_hazel_data_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     LDA #0
     STA beeb_vsync_count

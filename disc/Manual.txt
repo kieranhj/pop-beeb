@@ -1,7 +1,7 @@
 PRINCE of PERSIA
-
+----------------
 Introduction
-
+------------
 It is a time of darkness.  While the sultan is off fighting a foreign
 war, his Grand Vizier Jaffar has seized the reins of power.
 Throughout the land,  the people groan under the yoke of tyranny,
@@ -28,7 +28,7 @@ What you'll Need
 ----------------
 
 To play PRINCE of PERSIA, you'll need a BBC Master computer with all four
-sideways RAM banks available for use.
+sideways RAM banks available for use and PAGE at &E00.
 
 ----------------
 Keyboard Control
