@@ -861,6 +861,15 @@ IF _AUDIO
  JSR BEEB_CUESONG               ; was jsr minit
 ENDIF
 
+IF 1        ; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
+.loop
+ LDA #1
+ JSR play
+ jsr BEEB_MUSIC_IS_PLAYING
+ cmp #0
+ bne loop
+ RTS
+ELSE
  jsr swpage
 .loop lda #1
  jsr strobe
@@ -869,6 +878,7 @@ ENDIF
 \ ora $c062
  ora keypress
  bmi interrupt
+
  jsr pburn
  jsr pstars
  jsr pflow
@@ -877,6 +887,7 @@ ENDIF
  bne loop
 .interrupt
  jmp swpage
+ENDIF
 }
 
 \*-------------------------------
@@ -1091,7 +1102,7 @@ ENDIF
 
  lda redrawglass
  beq label_3
- dec redrawglass
+; dec redrawglass
  ldx GlassState
  jsr drawglass ;hourglass
 .label_3
