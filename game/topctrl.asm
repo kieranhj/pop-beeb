@@ -1399,6 +1399,9 @@ ENDIF
 ;*-------------------------------
 .deathsong
 {
+    LDA level
+    BEQ return_17       ; no music in demo level
+
  lda ShadID
  cmp #1
  beq shad ;if opponent was shadowman
