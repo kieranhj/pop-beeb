@@ -9,7 +9,7 @@
 PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
 
 \ All code
-PUTFILE "disc/Core", "Prince", &E00, &E77
+PUTFILE "disc/Core", "Prince", &E00, &E00
 PUTFILE "disc/bits.pu.bin", "BITS", &7C00, 0
 PUTFILE "disc/Lower", "Lower", &C00, 0
 PUTFILE "disc/Main.pu.bin", "Main", &3000, 0

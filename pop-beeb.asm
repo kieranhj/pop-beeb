@@ -127,17 +127,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .beeb_boot_start
 
-INCLUDE "lib/print.asm"
-
-.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
-
-.main_filename  EQUS "Main   $"
-.high_filename  EQUS "High   $"
-.hazel_filename EQUS "Hazel  $"
-.auxb_filename  EQUS "AuxB   $"
-.load_filename  EQUS "BITS   $"
-.lower_filename EQUS "Lower  $"
-
 .pop_beeb_entry
 {
     \\ Test for MASTER
@@ -165,8 +154,7 @@ INCLUDE "lib/print.asm"
     BEQ swr_ok
 
 .fail
-    MPRINT swr_fail_text
-    rts
+    LDX #LO(swr_fail_text):LDY #HI(swr_fail_text):JMP print_XY
 
 .swr_ok
 
@@ -418,6 +406,17 @@ ENDIF
 	EQUB HI(beeb_screen_addr/8)		; R12 screen start address, high
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
+
+INCLUDE "lib/print.asm"
+
+.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
+
+.main_filename  EQUS "Main   $"
+.high_filename  EQUS "High   $"
+.hazel_filename EQUS "Hazel  $"
+.auxb_filename  EQUS "AuxB   $"
+.load_filename  EQUS "BITS   $"
+.lower_filename EQUS "Lower  $"
 
 EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE)-(P%-beeb_boot_start)
 
