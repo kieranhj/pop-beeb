@@ -549,6 +549,10 @@ ELSE
 
 disksys_loadto_addr = &4000
 
+\*-------------------------------
+\*  DISKSYS OSFILE PARAMS
+\*-------------------------------
+
 .osfile_filename
 EQUS ":0.$.ABCDEFG", 13
 
@@ -573,6 +577,7 @@ EQUD 0
 ;--------------------------------------------------------------
 ; on entry
 ; A = drive number
+IF 0
 .disksys_set_drive
 {
     CLC
@@ -580,6 +585,7 @@ EQUD 0
     STA osfile_filename+1
     RTS
 }
+ENDIF
 
 ;--------------------------------------------------------------
 ; Load a file from disk to memory (SWR supported)
@@ -588,15 +594,9 @@ EQUD 0
 ; A=memory address MSB (page aligned)
 ; X=filename address LSB
 ; Y=filename address MSB
-.disksys_load_file
+.disksys_load_direct
 {
-    \ Final destination
-    STA write_to+2
-
-IF _DEBUG
-    LDA &F4
-    PHA
-ENDIF
+    STA osfile_loadaddr+1
 
     \ Copy filename
     STX beeb_readptr
@@ -613,21 +613,10 @@ ENDIF
     DEY
     BPL loop
 
-    \ Where to?
-    LDA write_to+2
-    BPL load_direct
-
-    \ Wait until next vsync frame swap so we know which buffer we're using!
-    .wait_vsync
-    LDA vsync_swap_buffers
-    BNE wait_vsync
-    
-    \ Load to screen if can't load direct
-    LDA #HI(disksys_loadto_addr)
-    STA read_from+2
-
-    .load_direct
-    STA osfile_loadaddr+1
+IF _DEBUG
+    LDA &F4
+    PHA
+ENDIF
 
     \ Ask OSFILE to load our file
 	LDX #LO(osfile_params)
@@ -644,25 +633,55 @@ IF _DEBUG
     .rom_ok
 ENDIF
 
-    LDA write_to+2
-    BPL return
+    RTS
+}
 
-    \ Copy to destination
+.disksys_load_file
+{
+    \ Final destination
+    STA write_to+1
+
+    \ Wait until next vsync frame swap so we know which buffer we're using!
+    .wait_vsync
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    
+    \ Where to?
+    LDA write_to+1
+    BPL load_direct
+
+    \ Load to screen if can't load direct
+    LDA #HI(disksys_loadto_addr)
+
+    \ Load the file
+    .load_direct
+    JSR disksys_load_direct
+
+    \ Do we need to copy it anywhere?
+    .write_to
+    LDX #&FF
+    BPL disksys_copy_block_return
+
+    \ Get filesize 
     LDY osfile_length+1
-
     LDA osfile_length+0
-    BNE extra_page
+    BEQ no_extra_page
 
-IF _DEBUG
-    CPY #0
-    BNE length_ok
-    BRK             ; this would mean a zero length file
-    .length_ok
-ENDIF
+    INY             ; always copy a whole number of pages
+    .no_extra_page
+
+    \ Read from
+    LDA #HI(disksys_loadto_addr)
+}
+\\ Fall through!
+
+; A=read from PAGE, X=write to page, Y=#pages
+.disksys_copy_block
+{
+    STA read_from+2
+    STX write_to+2
 
     \ We always copy a complete number of pages
-    DEY
-    .extra_page
 
     LDX #0
     .read_from
@@ -674,10 +693,196 @@ ENDIF
     INC read_from+2
     INC write_to+2
     DEY
-    BPL read_from
-
-    .return
+    BNE read_from
+}
+.disksys_copy_block_return
     RTS
+
+
+.disksys_decrunch_file
+{
+    \ Final destination is baked into pu file
+    STA unpack_addr+1
+
+    \ Load to screen as can't load direct
+    LDA #HI(disksys_loadto_addr)
+    JSR disksys_load_direct
+
+    .unpack_addr
+    LDA #&00
+    LDX #LO(disksys_loadto_addr)
+    LDY #HI(disksys_loadto_addr)
+    JMP PUCRUNCH_UNPACK
+}
+
+LEVELS_SECTOR_ID=&221
+LEVELS_TRACK=LEVELS_SECTOR_ID DIV 10
+LEVELS_SECTOR=LEVELS_SECTOR_ID MOD 10
+LEVEL_NUM_SECTORS=&9        ;HI(blueprnt_size)
+
+.disksys_osword_params
+.disksys_osword_drive_no
+EQUB 0
+.disksys_osword_buffer_addr
+EQUD disksys_loadto_addr
+.disksys_osword_cmd
+EQUB &3, &53
+.disksys_osword_track_no
+EQUB 0
+.disksys_osword_sector_no
+EQUB 0
+.disksys_osword_num_sectors
+EQUB &20
+.disksys_osword_result
+EQUB 0
+
+; A=#sectors + sector_size
+.disksys_read_sectors
+{
+    ora #&20
+    sta disksys_osword_num_sectors
+
+    LDA #&7F
+    LDX #LO(disksys_osword_params)
+    LDY #HI(disksys_osword_params)
+    JSR osword
+
+    RTS
+}
+
+.disksys_sectors_left
+EQUB 0
+.disksys_sectors_read
+EQUB 0
+
+; A=num sectors - assumes disksys_osword_track_no & disksys_osword_sector_no already set
+.disksys_read_direct
+{
+    STA disksys_sectors_left
+
+    \ Wait until next vsync frame swap so we know which buffer we're using!
+    .wait_vsync
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    
+    .track_loop
+    \ Calc end sector
+    CLC
+    LDA disksys_osword_sector_no
+    ADC disksys_sectors_left
+    CMP #11
+    BCC ok1
+
+    \ Can't be beyond 10
+    LDA #10
+
+    .ok1
+    SEC
+    SBC disksys_osword_sector_no
+    STA disksys_sectors_read
+    ; A=# sectors to load
+    
+    JSR disksys_read_sectors
+
+    \ Reduce sectors left
+    SEC
+    LDA disksys_sectors_left
+    SBC disksys_sectors_read
+    STA disksys_sectors_left
+    BEQ done
+
+    \ Increment start track/sector for next load
+    CLC
+    LDA disksys_osword_sector_no
+    ADC disksys_sectors_read
+    CMP #10
+    BCC ok2
+
+    SBC #10
+    INC disksys_osword_track_no
+
+    .ok2
+    STA disksys_osword_sector_no
+
+    \ Increment load address
+    CLC
+    LDA disksys_osword_buffer_addr+1
+    ADC disksys_sectors_read
+    STA disksys_osword_buffer_addr+1
+
+    BRA track_loop
+
+    .done
+    RTS
+}
+
+; X=level#
+.disksys_load_level
+{
+    txa
+    clc
+    adc #LEVELS_TRACK
+    sta disksys_osword_track_no
+
+    lda #LEVELS_SECTOR
+    sta disksys_osword_sector_no
+
+    lda #HI(disksys_loadto_addr)
+    sta disksys_osword_buffer_addr + 1
+
+    lda #LEVEL_NUM_SECTORS
+    JSR disksys_read_direct
+
+    LDA #HI(disksys_loadto_addr)
+    LDX #HI(blueprnt)
+    LDY #HI(blueprnt_size)
+    JSR disksys_copy_block
+
+    RTS
+}
+
+SPRITES_SECTOR_ID=&179
+SPRITES_TRACK=SPRITES_SECTOR_ID DIV 10
+SPRITES_SECTOR=SPRITES_SECTOR_ID MOD 10
+
+.sprites_catalog
+INCBIN "disc/Catalog.bin"
+
+; X=file# A=dest addr
+.disksys_load_sprite
+{
+    \ Final destination is baked into pu file
+    STA unpack_addr+1
+
+    TXA:ASL A: ASL A:TAX
+
+    CLC
+    LDA #SPRITES_SECTOR
+    ADC sprites_catalog+1, X
+    CMP #10
+    BCC sector_ok
+    SBC #10
+    SEC
+    .sector_ok
+    STA disksys_osword_sector_no
+
+    \ Carry set if prev sector was > 10
+
+    LDA #SPRITES_TRACK
+    ADC sprites_catalog, X
+    STA disksys_osword_track_no
+
+    lda #HI(disksys_loadto_addr)
+    sta disksys_osword_buffer_addr + 1
+    
+    LDA sprites_catalog+2, X
+    JSR disksys_read_direct
+
+    .unpack_addr
+    LDA #&00
+    LDX #LO(disksys_loadto_addr)
+    LDY #HI(disksys_loadto_addr)
+    JMP PUCRUNCH_UNPACK
 }
 
 ENDIF

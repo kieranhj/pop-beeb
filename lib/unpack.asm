@@ -13,37 +13,43 @@ LZPOS=beeb_readptr
 .PUCRUNCH_UNPACK
 {
 
-	; Call with X = HI of packed data, Y = LO of packed data
+	; Call with X = LO of packed data, Y = HI of packed data
 	; Returns exec address in X = HI and Y = LO
 	; Carry will be set for error, cleared for OK
+
+	; Set output address (not baked in)
+	STZ OUTPOS
+	STA OUTPOS+1
 
 	; Setup read pointer
 	stx INPOS
 	sty INPOS+1
 
-\\ We can skip reading the first 4 bytes
-IF 0
+	jsr getbyt	; 'x'
+	jsr getbyt	; 'x'
 	jsr getbyt	; 'p'
-	cmp #112
-	beq s9
-	sec		; error
-	jmp eof2
-.s9:	jsr getbyt	; 'u'
-	cmp #117
-	beq s8
-	sec		; error
-	jmp eof2
-.s8:	jsr getbyt	; skip endAddr
-	jsr getbyt
+IF _DEBUG
+	cmp #'p'
+	beq p_ok
+	BRK
+	.p_ok
 ENDIF
+	jsr getbyt	; 'u'
+IF _DEBUG
+	cmp #'u'
+	beq u_ok
+	BRK
+	.u_ok
+ENDIF
+	jsr getbyt	; skip endAddr
+	jsr getbyt
 
 	jsr getbyt
 	sta esc+1	; starting escape
 
 	jsr getbyt	; read startAddr
-	sta OUTPOS
 	jsr getbyt
-	sta OUTPOS+1
+
 	jsr getbyt	; read # of escape bits
 	sta escB0+1
 	sta escB1+1

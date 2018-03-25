@@ -5,13 +5,6 @@ IF _AUDIO
 
 .beeb_audio
 
-; all filenames are 8 characters in length
-.audio0_filename EQUS "Audio0 $"    ; title music
-.audio1_filename EQUS "Audio1 $"    ; intro music
-.audio2_filename EQUS "Audio2 $"    ; grand vizier music
-.audio3_filename EQUS "Audio3 $"    ; game music jingles
-.audio4_filename EQUS "Audio4 $"    ; cutscene music
-
 .beeb_audio_loaded_bank EQUB &FF
 
 ; POP BBC PORT - Music player hook
@@ -144,8 +137,8 @@ ENDIF
     tax
 
     ; preserve current SWR banksel
-    lda &f4
-    pha
+    ;lda &f4
+    ;pha
 
     txa
 
@@ -165,8 +158,8 @@ ENDIF
     jsr disksys_load_file
 
     ; restore SWR bank
-    pla
-    jsr swr_select_bank
+    ;pla
+    ;jsr swr_select_bank
     
     ; OK to make noise now
     JSR audio_update_on

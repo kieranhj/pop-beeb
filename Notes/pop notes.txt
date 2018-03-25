@@ -2384,3 +2384,27 @@ BANK 2 free =  &179
 BANK 3 free =  &409 (&4F9)
 ~~~
 TOTAL = &CED (&EB7)
+
+24/3/2018
+~~~
+Getting to 31 files...
+31 files on side A
+27 files on side B
+58 total..
+Duplicated = 4 (Audio3, Audio4, PRIN2, CHTAB8)
+Levels = 15
+Audio = 5
+Sprites = 17
+Screens = 10
+Code = 7
+
+Idea: put SSD disc image into a floppy disc as a quick & dirty container format
+All files will continue to be sector aligned (!!)
+Parse the catalogue sector to create a track/sector table for file entries
+Just need track/sector offset of the image file itself
+For low level load, just load a track at a time when going into &4000
+Only going to work for content that gets copied to SWRAM
+Only going to work for compressed content as need file length = sprites
+Could special case levels as known file size?
+
+Code + screens + Sprites + BANK 1 + Audio + Levels = 7 + 10 + 1 + 1 + 5 + 1 = 25

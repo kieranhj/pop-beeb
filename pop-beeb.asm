@@ -15,6 +15,23 @@ INCLUDE "pop-beeb.h.asm"
 
 INCLUDE "lib/filesizes.asm"
 
+f_CHTAB9=0
+f_CHTAB8=1
+f_CHTAB7=2
+f_CHTAB6=3
+f_CHTAB5=4
+f_FAT=5
+f_GD=6
+f_SHAD=7
+f_SKEL=8
+f_VIZ=9
+f_DUN1A=10
+f_DUN1B=11
+f_DUN2=12
+f_PAL1A=13
+f_PAL1B=14
+f_PAL2=15
+
 \*-------------------------------
 ; ZERO PAGE
 \*-------------------------------
@@ -86,8 +103,9 @@ PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 PRINT "--------"
 
-SAVE "Lower", &C00, &D00,0
+; Save cheeky lower RAM block
 
+SAVE "disc/Lower", &C00, &D00,0
 
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
@@ -109,17 +127,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .beeb_boot_start
 
-INCLUDE "lib/print.asm"
-
-.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks.", 13, 0
-
-.main_filename  EQUS "Main   $"
-.high_filename  EQUS "High   $"
-.hazel_filename EQUS "Hazel  $"
-.auxb_filename  EQUS "AuxB   $"
-.load_filename  EQUS "BITS   $"
-.lower_filename EQUS "Lower  $"
-
 .pop_beeb_entry
 {
     \\ Test for MASTER
@@ -131,14 +138,23 @@ INCLUDE "lib/print.asm"
     CPX #6
     BCS fail
 
-    \\ SWRAM init
-    jsr swr_init
-    cmp #4
-    bcs swr_ok
+    \\ Test for SWRAM - need all 4x banks
+    LDA #68
+    JSR osbyte
+    TXA
+    AND #&F         ; for some reason DC DTRAP reports this as &FF?
+    CMP #&F
+    BNE fail
+
+    \\ Test for OSHWM, i.e. PAGE = &E00
+    \\ (Probably wouldn't have loaded if this wasn't the case)
+    LDA #131
+    JSR osbyte
+    CPY #&0E
+    BEQ swr_ok
 
 .fail
-    MPRINT swr_fail_text
-    rts
+    LDX #LO(swr_fail_text):LDY #HI(swr_fail_text):JMP print_XY
 
 .swr_ok
 
@@ -173,7 +189,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(load_filename)
     LDY #HI(load_filename)
     LDA #HI(&7C00)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     \\ Load executable overlays
 
@@ -191,7 +207,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(main_filename)
     LDY #HI(main_filename)
     LDA #HI(pop_beeb_main_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Ensure SHADOW RAM is writeable
 
@@ -200,7 +216,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(main_filename)
     LDY #HI(main_filename)
     LDA #HI(pop_beeb_main_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Setup SHADOW buffers for double buffering
 
@@ -220,7 +236,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(auxb_filename)
     LDY #HI(auxb_filename)
     LDA #HI(pop_beeb_aux_b_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     LDA #BEEB_SWRAM_SLOT_AUX_HIGH
     JSR swr_select_slot
@@ -230,7 +246,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(high_filename)
     LDY #HI(high_filename)
     LDA #HI(pop_beeb_aux_high_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
 \ Ensure HAZEL RAM is writeable - assume this says writable throughout?
 
@@ -241,7 +257,7 @@ INCLUDE "lib/print.asm"
     LDX #LO(hazel_filename)
     LDY #HI(hazel_filename)
     LDA #HI(pop_beeb_aux_hazel_data_start)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     LDA #0
     STA beeb_vsync_count
@@ -294,8 +310,8 @@ ENDIF
 {
 \* Load as much of Stage 3 as we can keep
 
-    LDA #0
-    JSR disksys_set_drive
+\    LDA #0
+\    JSR disksys_set_drive
 
     \ Relocate font (in SWRAM)
     \ Relocate the FONT file
@@ -391,6 +407,17 @@ ENDIF
 	EQUB LO(beeb_screen_addr/8)		; R13 screen start address, low
 }
 
+INCLUDE "lib/print.asm"
+
+.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
+
+.main_filename  EQUS "Main   $"
+.high_filename  EQUS "High   $"
+.hazel_filename EQUS "Hazel  $"
+.auxb_filename  EQUS "AuxB   $"
+.load_filename  EQUS "BITS   $"
+.lower_filename EQUS "Lower  $"
+
 EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE)-(P%-beeb_boot_start)
 
 IF EXO_pad > 0
@@ -458,7 +485,7 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 
 ; Save Core executable
 
-SAVE "Prince", pop_beeb_start, pop_beeb_end, pop_beeb_entry
+SAVE "disc/Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
 ; Core RAM stats
 
@@ -538,7 +565,7 @@ INCLUDE "game/beeb-plot-peel.asm"
 
 ; Save executable code for Main RAM
 
-SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
+SAVE "disc/Main", pop_beeb_main_start, pop_beeb_main_end, 0
 
 PRINT "--------"
 PRINT "MAIN Modules"
@@ -586,7 +613,7 @@ PAGE_ALIGN
 INCBIN "Other/john.PRINCESS.SCENE.mode2.bin"
 .pop_beeb_prin2_end
 
-SAVE "PRIN2", pop_beeb_prin2_start, pop_beeb_prin2_end, 0
+SAVE "disc/PRIN2", pop_beeb_prin2_start, pop_beeb_prin2_end, 0
 
 PRINT "--------"
 PRINT "MAIN Cutscene Overlay"
@@ -609,6 +636,9 @@ GUARD HAZEL_TOP
 PAGE_ALIGN
 .blueprnt
 SKIP &900
+.blueprnt_end
+
+blueprnt_size=blueprnt_end-blueprnt
 
 .pop_beeb_aux_hazel_data_start
 
@@ -638,7 +668,7 @@ INCLUDE "lib/beeb_audio.asm"
 
 ; Save data & code for Aux HAZEL RAM
 
-SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_code_end, 0
+SAVE "disc/Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_code_end, 0
 
 PRINT "--------"
 PRINT "HAZEL Modules"
@@ -754,7 +784,7 @@ PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
 
-SAVE "BANK1", chtable1, bank1_end, 0
+SAVE "disc/BANK1", chtable1, bank1_end, 0
 
 \*-------------------------------
 ; BANK 2
@@ -794,7 +824,7 @@ INCLUDE "game/beeb_master.asm"
 
 ; Save executable code for Aux B RAM
 
-SAVE "AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
+SAVE "disc/AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
 
 PRINT "--------"
 PRINT "AUX B Modules"
@@ -852,7 +882,7 @@ INCLUDE "game/beeb_screen.asm"
 
 ; Save executable code for Aux High RAM
 
-SAVE "High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
+SAVE "disc/High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
 
 PRINT "--------"
 PRINT "AUX High Modules"
@@ -895,6 +925,8 @@ PAGE_ALIGN
 INCBIN "Images/BEEB.IMG.CHTAB7.mode2.bin"
 ; Actually CHTAB6 and CHTAB9 goes over all of this!
 
+PRINT "CHTAB7 = ", ~chtable7
+
 ;----------------------------------------------------------------
 ; Story cutscene music bank
 ;----------------------------------------------------------------
@@ -910,7 +942,7 @@ INCBIN "audio/ip/m-story3.raw.exo"
 .pop_music_leaves
 INCBIN "audio/ip/m-story4-endsright.raw.exo"
 .pop_audio_bank1_end
-SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
+SAVE "disc/Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 1 size = ", ~(pop_audio_bank1_end - pop_audio_bank1_start)
@@ -952,39 +984,3 @@ ORG blueprnt
 .GdStartProg skip 24
 .GdStartSeqH skip 24
 PAGE_ALIGN
-
-\*-------------------------------
-; Put files on SIDE A of the disk
-\*-------------------------------
-
-\ All game levels on SIDE B
-\ All background sprites on SIDE B
-\ All character sprites on SIDE B
-
-\ Loading screen
-PUTFILE "Other/bitshifters2.mode7.bin", "BITS", &7C00, 0
-
-\ Attract files
-PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
-PUTFILE "Other/title.pu.bin", "TITLE", &3000, 0
-PUTFILE "Other/presents.pu.bin", "PRESENT", &3000, 0
-PUTFILE "Other/byline.pu.bin", "BYLINE", &3000, 0
-PUTFILE "Other/prolog.pu.bin", "PROLOG", &3000, 0
-
-\ Cutscene files
-PUTFILE "Images/BEEB.IMG.CHTAB9.mode2.bin", "CHTAB9", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB7.mode2.bin", "CHTAB7", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB8.mode2.bin", "CHTAB8", 0, 0
-;PUTFILE "Other/john.PRINCESS.SCENE.mode2.bin", "PRIN", &3000, 0
-
-PUTFILE "Other/sumup.pu.bin", "SUMUP", &3000, 0
-
-; All saved into single file for BANK1
-;PUTFILE "Images/BEEB.IMG.CHTAB1.bin", "CHTAB1", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB2.bin", "CHTAB2", 0, 0
-;PUTFILE "Images/BEEB.IMG.CHTAB3.bin", "CHTAB3", 0, 0
-PUTFILE "Images/BEEB.IMG.CHTAB5.bin", "CHTAB5", 0, 0
-
-; Want to put this here but disc full...
-PUTFILE "Other/credits.pu.bin", "CREDITS", &3000, 0
-PUTFILE "Other/epilog.pu.bin", "EPILOG", &3000, 0

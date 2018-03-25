@@ -38,22 +38,9 @@
 .LoadLevelX jmp LOADLEVELX              ; moved from misc.asm
 .DoSaveGame jmp DOSAVEGAME              ; moved from misc.asm
 
-.master_load_hires
-{
- JSR beeb_set_game_screen
- LDA #HI(beeb_screen_addr)
- JSR disksys_load_file
- JSR vblank
- JMP PageFlip
-}
-
-MACRO MASTER_LOAD_HIRES filename
-{
- LDX #LO(filename)
- LDY #HI(filename)
- JSR master_load_hires
-}
-ENDMACRO
+\*-------------------------------
+\* Sequence MACROS
+\*-------------------------------
 
 .master_show_dhires
 {
@@ -63,16 +50,16 @@ ENDMACRO
  JMP beeb_show_screen       ; in case previous blackout
 }
 
-MACRO MASTER_LOAD_DHIRES filename, pu_size
+MACRO MASTER_LOAD_DHIRES filename, pu_size, atrow
 {
  LDX #LO(filename)
  LDY #HI(filename)
  LDA #HI(&8000 - pu_size)
  JSR disksys_load_file
 
-; LDA #PUCRUNCH_BANK:JSR swr_select_slot
- LDX #LO(&8006 - pu_size)
- LDY #HI(&8006 - pu_size)
+ LDX #LO(&8000 - pu_size)
+ LDY #HI(&8000 - pu_size)
+ LDA #HI(beeb_double_hires_addr + atrow * BEEB_SCREEN_ROW_BYTES)
  JSR PUCRUNCH_UNPACK
 
  JSR beeb_clear_dhires_line
@@ -108,6 +95,10 @@ MACRO MASTER_BLOCK_UNTIL sequence_time
 }
 ENDMACRO
 
+\*-------------------------------
+\* Demo watermark
+\*-------------------------------
+
 IF _DEMO_BUILD
 SMALL_FONT_MAPCHAR
 .url_message EQUS "bitshifters.github.io", &FF
@@ -136,6 +127,11 @@ ENDIF
 \*-------------------------------
 \* Music song #s
 \ Moved to soundnames.h.asm
+
+.prolog_filename    EQUS "PROLOG $"
+.sumup_filename     EQUS "SUMUP  $"
+.credits_filename   EQUS "CREDITS$"
+.epilog_filename    EQUS "EPILOG $"
 
 \*-------------------------------
 \* Soft switches
@@ -404,14 +400,8 @@ EQUD savedgame_top
  jsr rdch4 ;char set 4
 
 IF _AUDIO
-    LDA #0
-    JSR disksys_set_drive       ; gah!
-
     lda #3
     jsr BEEB_LOAD_AUDIO_BANK
-
-    LDA #2
-    JSR disksys_set_drive
 ENDIF
 
 \ NOT BEEB - don't know what this is yet!
@@ -479,10 +469,12 @@ ENDIF
 
 \*-------------------------------
 
-.bgset1_to_name
-EQUS "DUN1X  $"
-EQUS "PAL1X  $"
+;.bgset1_to_name
+;EQUS "DUN1X  $"
+;EQUS "PAL1X  $"
 \EQUS "DUN1X  $"         ; bgset1=$02 just means side A/B of original disc
+.bgset1_to_id
+EQUB f_DUN1A, f_PAL1A
 
 .rdbg1
 {
@@ -491,33 +483,18 @@ EQUS "PAL1X  $"
     beq return
     stx BGset1
 
-    \ index into table for filename
-;    txa
-    LDA BGset1
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(bgset1_to_name)
-    STA beeb_writeptr
-    lda #HI(bgset1_to_name)
-    adc #0
-    STA beeb_writeptr+1
-
     \ Now need to load 2x blocks for BGTAB1
-
-    \ Poke B into filename
-    LDA #'B'
-    LDY #4
-    STA (beeb_writeptr), Y
 
     \ Set BANK for B
     lda #BEEB_SWRAM_SLOT_BGTAB1_B
     jsr swr_select_slot
 
     \ Load file B
-    LDX beeb_writeptr
-    LDY beeb_writeptr+1
+    LDY BGset1
+    LDX bgset1_to_id, Y
+    INX
     lda #HI(bgtable1b)
-    jsr disksys_load_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable1b)
@@ -527,20 +504,15 @@ EQUS "PAL1X  $"
     JSR beeb_plot_reloc_img
 
 
-    \ Poke A into filename
-    LDA #'A'
-    LDY #4
-    STA (beeb_writeptr), Y
-
     \ Set BANK for A
     lda #BEEB_SWRAM_SLOT_BGTAB1_A
     jsr swr_select_slot
 
     \ Load file B
-    LDX beeb_writeptr
-    LDY beeb_writeptr+1
+    LDY BGset1
+    LDX bgset1_to_id, Y
     lda #HI(bgtable1a)
-    jsr disksys_load_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable1a)
@@ -553,10 +525,12 @@ EQUS "PAL1X  $"
     rts
 }
 
-.bgset2_to_name
-EQUS "DUN2   $"
-EQUS "PAL2   $"
+;.bgset2_to_name
+;EQUS "DUN2   $"
+;EQUS "PAL2   $"
 \EQUS "DUN2   $"            ; $02 just meant side B of original disc
+.bgset2_to_id
+EQUB f_DUN2, f_PAL2
 
 .rdbg2
 {
@@ -570,18 +544,10 @@ EQUS "PAL2   $"
     jsr swr_select_slot
 
     \ index into table for filename
-    LDA BGset2
-;    txa
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(bgset2_to_name)
-    tax
-    lda #HI(bgset2_to_name)
-    adc #0
-    tay
-
+    LDY BGset2
+    LDX bgset2_to_id, Y
     lda #HI(bgtable2)
-    jsr disksys_load_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable2)
@@ -594,13 +560,15 @@ EQUS "PAL2   $"
     rts
 }
 
-.chset_to_name
-EQUS "GD     $"
-EQUS "SKEL   $"
-EQUS "GD     $"
-EQUS "FAT    $"
-EQUS "SHAD   $"
-EQUS "VIZ    $"
+;.chset_to_name
+;EQUS "GD     $"
+;EQUS "SKEL   $"
+;EQUS "GD     $"
+;EQUS "FAT    $"
+;EQUS "SHAD   $"
+;EQUS "VIZ    $"
+.chset_to_id
+EQUB f_GD, f_SKEL, f_GD, f_FAT, f_SHAD, f_VIZ
 
 .rdch4
 {
@@ -613,19 +581,10 @@ EQUS "VIZ    $"
     lda #BEEB_SWRAM_SLOT_CHTAB4
     jsr swr_select_slot
 
-    \ index into table for filename
-;    txa
-    lda CHset
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(chset_to_name)
-    tax
-    lda #HI(chset_to_name)
-    adc #0
-    tay
-
+    ldy CHset
+    ldx chset_to_id, y
     lda #HI(chtable4)
-    jsr disksys_load_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable4)
@@ -644,10 +603,11 @@ EQUS "VIZ    $"
 \*
 \*-------------------------------
 
-.beeb_level_filename   EQUS "LEVEL0 $"
+;.beeb_level_filename   EQUS "LEVEL0 $"
 
 .rdbluep
 {
+IF 0
 \\ Now all levels on SIDE B
 
     LDA #2
@@ -679,6 +639,9 @@ EQUS "VIZ    $"
     jsr disksys_load_file
     
     rts
+ELSE
+    JMP disksys_load_level
+ENDIF
 }
 
 \*-------------------------------
@@ -702,6 +665,8 @@ EQUS "VIZ    $"
 .pacRoom_name
 EQUS "PRIN2  $"
 
+pacRoom_size = &1100        ; by hand doh!
+
 .CUTPRINCESS
 {
  jsr blackout
@@ -710,11 +675,6 @@ EQUS "PRIN2  $"
 .cutprincess1
 {
  jsr LoadStage2 ;displaces bgtab1-2, chtab4
-
-\ lda #pacProom
-\ jsr SngExpand
-
- JSR beeb_clear_status_line
 
 \ Need game screen dimensions
 
@@ -725,8 +685,15 @@ EQUS "PRIN2  $"
 
  LDX #LO(pacRoom_name)
  LDY #HI(pacRoom_name)
- LDA #HI(PRIN2_START)
+ LDA #HI(&8000 - pacRoom_size)
  JSR disksys_load_file
+
+ LDA #HI(PRIN2_START)
+ LDX #LO(&8000 - pacRoom_size)
+ LDY #HI(&8000 - pacRoom_size)
+ JSR PUCRUNCH_UNPACK
+
+ JSR beeb_clear_status_line
 
 \ Flip the screen buffers
 
@@ -794,8 +761,8 @@ EQUS "PRIN2  $"
  TXS
 
 \ BEEB set drive 0 for attract
- LDA #0
- JSR disksys_set_drive
+\ LDA #0
+\ JSR disksys_set_drive
 
  lda #1
  sta musicon
@@ -853,12 +820,6 @@ EQUS "PRIN2  $"
 \*
 \*-------------------------------
 
-.splash_filename
-EQUS "SPLASH $"
-
-.presents_filename
-EQUS "PRESENT$"
-
 .PubCredit
 {
 IF _AUDIO
@@ -870,7 +831,7 @@ ENDIF
 
 \* Unpack splash screen into DHires page 1
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Start the main tune!
 
@@ -891,7 +852,7 @@ ENDIF
 
 \* Unpack "Broderbund Presents" onto page 2
 
- MASTER_LOAD_DHIRES presents_filename, pu_presents_size
+ MASTER_LOAD_DHIRES presents_filename, pu_presents_size, 12
  
 \* Show the presents screen at 0:02.00
 
@@ -906,14 +867,11 @@ ENDIF
 \*
 \*-------------------------------
 
-.byline_filename
-EQUS "BYLINE $"
-
 .AuthorCredit
 {
 \* Unpack byline onto page 1
 
- MASTER_LOAD_DHIRES byline_filename, pu_byline_size
+ MASTER_LOAD_DHIRES byline_filename, pu_byline_size, 12
  
  \* Show the byline at 0:07.00
 
@@ -927,9 +885,6 @@ EQUS "BYLINE $"
 \* "Prince of Persia"
 \*
 \*-------------------------------
-
-.title_filename
-EQUS "TITLE  $"
 
 CUTSCENE_END_TIME=49.5*50
 CREDITS_SHOW_TIME=5*50
@@ -945,11 +900,11 @@ ENDIF
 
 \* Construct the title page & logo without showing it
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Add the title
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size
+ MASTER_LOAD_DHIRES title_filename, pu_title_size, 12
 
 \* Now wipe to reveal when music finishes (could test explicitly?)
 
@@ -964,7 +919,7 @@ ENDIF
 {
 \* Unpack title onto page 1
 
- MASTER_LOAD_DHIRES title_filename, pu_title_size
+ MASTER_LOAD_DHIRES title_filename, pu_title_size, 12
  
  \* Show title at 0:15.00
 
@@ -986,12 +941,9 @@ ENDIF
 \*
 \*-------------------------------
 
-.prolog_filename
-EQUS "PROLOG $"
-
 .Prolog1
 {
- MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size
+ MASTER_LOAD_DHIRES prolog_filename, pu_prolog_size, 0
  
  MASTER_WIPE_DHIRES 25*50
 
@@ -1034,14 +986,11 @@ ENDIF
 \*
 \*-------------------------------
 
-.sumup_filename
-EQUS "SUMUP  $"
-
 .Prolog2
 {
 \* Load and display Prolog immediately
 
- MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size
+ MASTER_LOAD_DHIRES sumup_filename, pu_sumup_size, 0
  MASTER_SHOW_DHIRES 0
 
 \* But wait to trigger additional music piece
@@ -1061,14 +1010,11 @@ EQUS "SUMUP  $"
 \*
 \*-------------------------------
 
-.credits_filename
-EQUS "CREDITS$"
-
 .BeebCredit
 {
 \* Load Credits screen
 
- MASTER_LOAD_DHIRES credits_filename, pu_credits_size
+ MASTER_LOAD_DHIRES credits_filename, pu_credits_size, 0
 
 \* Wipe after title been on for 4 seconds
 
@@ -1088,14 +1034,11 @@ EQUS "CREDITS$"
 \*
 \*-------------------------------
 
-.epilog_filename
-EQUS "EPILOG $"
-
 .Epilog
 {
 \ BEEB set drive 0 - going to attract after this anyway
- LDA #0
- JSR disksys_set_drive
+\ LDA #0
+\ JSR disksys_set_drive
 
 IF _AUDIO
     ; SM: added title music load & play trigger here
@@ -1108,7 +1051,7 @@ ENDIF
 
 \* Load the screen
 
- MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size
+ MASTER_LOAD_DHIRES epilog_filename, pu_epilog_size, 0
 
 \* Start the music
 
@@ -1130,7 +1073,7 @@ ENDIF
 
 \* Load the splash
 
- MASTER_LOAD_DHIRES splash_filename, pu_splash_size
+ MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
 \* Show the splash after 10 secs (tbc)
 
@@ -1346,11 +1289,8 @@ ENDIF
 .bank1_filename
 EQUS "BANK1  $"
 
-.perm_file_names
-;EQUS "CHTAB1 $"
-;EQUS "CHTAB2 $"
-;EQUS "CHTAB3 $"
-EQUS "CHTAB5 $"
+;.perm_file_names
+;EQUS "CHTAB5 $"
 
 .loadbank1
 {
@@ -1361,7 +1301,7 @@ EQUS "CHTAB5 $"
     LDX #LO(bank1_filename)
     LDY #HI(bank1_filename)
     LDA #HI(chtable1)
-    JSR disksys_load_file
+    JSR disksys_decrunch_file
 
     \ Relocate the IMG file
     LDA #LO(chtable1)
@@ -1389,10 +1329,9 @@ EQUS "CHTAB5 $"
     jsr swr_select_slot
 
     \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
+    LDX #f_CHTAB5
     LDA #HI(chtable5)
-    JSR disksys_load_file
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable5)
@@ -1411,11 +1350,11 @@ EQUS "CHTAB5 $"
 \*
 \*-------------------------------
 
-.chtab8_file_name
-EQUS "CHTAB8 $"
+;.chtab8_file_name
+;EQUS "CHTAB8 $"
 
-.chtab9_file_name
-EQUS "CHTAB9 $"
+;.chtab9_file_name
+;EQUS "CHTAB9 $"
 
 .LoadStage2_Attract
 {
@@ -1431,10 +1370,9 @@ ENDIF
 
     \ CHTAB9 (aka CHTAB6.A.B)
 
-    lda #HI(chtable9)
-    ldx #LO(chtab9_file_name)
-    ldy #HI(chtab9_file_name)
-    jsr disksys_load_file
+    LDX #f_CHTAB9
+    LDA #HI(chtable9)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable9)
@@ -1448,10 +1386,9 @@ ENDIF
 
     \ CHTAB7
 
-    lda #HI(chtable7)
-    ldx #LO(chtab7_file_name)
-    ldy #HI(chtab7_file_name)
-    jsr disksys_load_file
+    LDX #f_CHTAB7
+    LDA #HI(chtable7)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable7)
@@ -1465,10 +1402,9 @@ ENDIF
 {
     \ CHTAB8 (aka CHTAB6.A.A)
 
-    lda #HI(chtable8)
-    ldx #LO(chtab8_file_name)
-    ldy #HI(chtab8_file_name)
-    jsr disksys_load_file
+    LDX #f_CHTAB8
+    LDA #HI(chtable8)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable8)
@@ -1485,8 +1421,8 @@ ENDIF
     TAX
 
     \\ Invalidate catalog cache
-    LDA #0
-    JSR disksys_set_drive
+\    LDA #0
+\    JSR disksys_set_drive
 
     \\ Invalidate bg cache
     LDA #&ff
@@ -1501,14 +1437,14 @@ ENDIF
     JMP LoadStage2_Attract
 
     .in_game
+\    LDA #2
+\    JSR disksys_set_drive
+
 IF _AUDIO
     ; SM: added intro music load & play trigger here
     lda #4
     jsr BEEB_LOAD_AUDIO_BANK
 ENDIF
-
-    LDA #2
-    JSR disksys_set_drive
 
     \\ Need to switch CHTAB6 or CHTAB8 depending on level
 
@@ -1522,10 +1458,9 @@ ENDIF
     JMP loadch8     ; just the level 1-2 interstitial
 
     .later_cutscenes
-    lda #HI(chtable6)
-    ldx #LO(chtab6_file_name)
-    ldy #HI(chtab6_file_name)
-    jsr disksys_load_file
+    LDX #f_CHTAB6
+    LDA #HI(chtable6)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable6)
@@ -1537,11 +1472,11 @@ ENDIF
     RTS
 }
 
-.chtab6_file_name
-EQUS "CHTAB6 $"
+;.chtab6_file_name
+;EQUS "CHTAB6 $"
 
-.chtab7_file_name
-EQUS "CHTAB7 $"
+;.chtab7_file_name
+;EQUS "CHTAB7 $"
 
 \*-------------------------------
 \*
