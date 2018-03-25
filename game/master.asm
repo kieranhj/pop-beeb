@@ -177,8 +177,11 @@ kresume = IKN_l OR $80
     STZ SavLevel        ; clear save flag
     JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
-    \\ We weren't saving so just restart
+    \\ We weren't saving so display crash message
     .not_trying_to_save
+
+    \\ Firstly try and show the screen in case not visible
+    LDA #8:STA &FE00:LDA #0:STA &FE01
 
     .wait_vsync
 ;    DEX:BEQ stop_wait       ; in case our event handler has crashed
