@@ -16,7 +16,7 @@ INCBIN "audio/ip/m-story1.raw.exo"
 .pop_music_sumup
 INCBIN "audio/ip/m-story5-end-merge-bla.raw.exo"
 .pop_audio_bank0_end
-SAVE "Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
+SAVE "disc/Audio0", pop_audio_bank0_start, pop_audio_bank0_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 0 size = ", ~(pop_audio_bank0_end - pop_audio_bank0_start)
@@ -35,7 +35,7 @@ GUARD ANDY_TOP
 .pop_music_epilog
 INCBIN "audio/ip/m-story4.raw.exo"          ; TEMP! Just longest tune
 .pop_audio_bank2_end
-SAVE "Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
+SAVE "disc/Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 2 size = ", ~(pop_audio_bank2_end - pop_audio_bank2_start)
@@ -73,7 +73,7 @@ INCBIN "audio/ip/m-jaffar.raw.exo"
 INCBIN "audio/ip/m-killjaffar.raw.exo"
 
 .pop_audio_bank3_end
-SAVE "Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
+SAVE "disc/Audio3", pop_audio_bank3_start, pop_audio_bank3_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 3 size = ", ~(pop_audio_bank3_end - pop_audio_bank3_start)
@@ -97,7 +97,7 @@ INCBIN "audio/ip/m-cutscene-pre8_9.raw.exo"
 .pop_music_embrace
 INCBIN "audio/ip/m-embrace.raw.exo"
 .pop_audio_bank4_end
-SAVE "Audio4", pop_audio_bank4_start, pop_audio_bank4_end, 0
+SAVE "disc/Audio4", pop_audio_bank4_start, pop_audio_bank4_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 4 size = ", ~(pop_audio_bank4_end - pop_audio_bank4_start)

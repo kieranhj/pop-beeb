@@ -15,7 +15,22 @@ INCLUDE "pop-beeb.h.asm"
 
 INCLUDE "lib/filesizes.asm"
 
-PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
+f_CHTAB9=0
+f_CHTAB8=1
+f_CHTAB7=2
+f_CHTAB6=3
+f_CHTAB5=4
+f_FAT=5
+f_GD=6
+f_SHAD=7
+f_SKEL=8
+f_VIZ=9
+f_DUN1A=10
+f_DUN1B=11
+f_DUN2=12
+f_PAL1A=13
+f_PAL1B=14
+f_PAL2=15
 
 \*-------------------------------
 ; ZERO PAGE
@@ -88,6 +103,10 @@ PRINT "Lower workspace high watermark = ", ~P%
 PRINT "Lower workspace RAM free = ", ~(LOWER_TOP - P%)
 PRINT "--------"
 
+; Save cheeky lower RAM block
+
+SAVE "disc/Lower", &C00, &D00,0
+
 \ Should be OK for disk scratch RAM to overlap run time workspace
 \ Need to be aware of disc catalogue caching though
 SCRATCH_RAM_ADDR = &300
@@ -133,7 +152,9 @@ INCLUDE "lib/print.asm"
     \\ Test for SWRAM - need all 4x banks
     LDA #68
     JSR osbyte
-    CPX #&F
+    TXA
+    AND #&F         ; for some reason DC DTRAP reports this as &FF?
+    CMP #&F
     BNE fail
 
     \\ Test for OSHWM, i.e. PAGE = &E00
@@ -465,15 +486,11 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 
 ; Save Core executable
 
-SAVE "Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
+SAVE "disc/Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
 ; Loading screen
 
 PUTFILE "Other/bits.pu.bin", "BITS", &7C00, 0
-
-; And cheeky lower RAM block
-
-SAVE "Lower", &C00, &D00,0
 
 ; Core RAM stats
 
@@ -553,7 +570,7 @@ INCLUDE "game/beeb-plot-peel.asm"
 
 ; Save executable code for Main RAM
 
-SAVE "Main", pop_beeb_main_start, pop_beeb_main_end, 0
+SAVE "disc/Main", pop_beeb_main_start, pop_beeb_main_end, 0
 
 PRINT "--------"
 PRINT "MAIN Modules"
@@ -601,7 +618,7 @@ PAGE_ALIGN
 INCBIN "Other/john.PRINCESS.SCENE.mode2.bin"
 .pop_beeb_prin2_end
 
-SAVE "PRIN2", pop_beeb_prin2_start, pop_beeb_prin2_end, 0
+SAVE "disc/PRIN2", pop_beeb_prin2_start, pop_beeb_prin2_end, 0
 
 PRINT "--------"
 PRINT "MAIN Cutscene Overlay"
@@ -624,6 +641,9 @@ GUARD HAZEL_TOP
 PAGE_ALIGN
 .blueprnt
 SKIP &900
+.blueprnt_end
+
+blueprnt_size=blueprnt_end-blueprnt
 
 .pop_beeb_aux_hazel_data_start
 
@@ -653,7 +673,7 @@ INCLUDE "lib/beeb_audio.asm"
 
 ; Save data & code for Aux HAZEL RAM
 
-SAVE "Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_code_end, 0
+SAVE "disc/Hazel", pop_beeb_aux_hazel_data_start, pop_beeb_aux_hazel_code_end, 0
 
 PRINT "--------"
 PRINT "HAZEL Modules"
@@ -769,7 +789,7 @@ PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"
 
-SAVE "BANK1", chtable1, bank1_end, 0
+SAVE "disc/BANK1", chtable1, bank1_end, 0
 
 \*-------------------------------
 ; BANK 2
@@ -809,7 +829,7 @@ INCLUDE "game/beeb_master.asm"
 
 ; Save executable code for Aux B RAM
 
-SAVE "AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
+SAVE "disc/AuxB", pop_beeb_aux_b_start, pop_beeb_aux_b_end, 0
 
 PRINT "--------"
 PRINT "AUX B Modules"
@@ -867,7 +887,7 @@ INCLUDE "game/beeb_screen.asm"
 
 ; Save executable code for Aux High RAM
 
-SAVE "High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
+SAVE "disc/High", pop_beeb_aux_high_start, pop_beeb_aux_high_end, 0
 
 PRINT "--------"
 PRINT "AUX High Modules"
@@ -927,7 +947,7 @@ INCBIN "audio/ip/m-story3.raw.exo"
 .pop_music_leaves
 INCBIN "audio/ip/m-story4-endsright.raw.exo"
 .pop_audio_bank1_end
-SAVE "Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
+SAVE "disc/Audio1", pop_audio_bank1_start, pop_audio_bank1_end, 0
 
 PRINT "--------"
 PRINT "AUDIO BANK 1 size = ", ~(pop_audio_bank1_end - pop_audio_bank1_start)
@@ -969,32 +989,3 @@ ORG blueprnt
 .GdStartProg skip 24
 .GdStartSeqH skip 24
 PAGE_ALIGN
-
-\*-------------------------------
-; Put files on SIDE A of the disk
-\*-------------------------------
-
-\ All game levels on SIDE B
-\ All background sprites on SIDE B
-\ All character sprites on SIDE B
-
-\ Attract files
-PUTFILE "Other/splash.pu.bin", "SPLASH", &3000, 0
-PUTFILE "Other/title.pu.bin", "TITLE", &3000, 0
-PUTFILE "Other/presents.pu.bin", "PRESENT", &3000, 0
-PUTFILE "Other/byline.pu.bin", "BYLINE", &3000, 0
-PUTFILE "Other/prolog.pu.bin", "PROLOG", &3000, 0
-
-\ Cutscene files
-PUTFILE "Images/chtab9.pu.bin", "CHTAB9", 0, 0
-PUTFILE "Images/chtab7.pu.bin", "CHTAB7", 0, 0
-PUTFILE "Images/chtab8.pu.bin", "CHTAB8", 0, 0
-
-PUTFILE "Other/sumup.pu.bin", "SUMUP", &3000, 0
-
-; All saved into single file for BANK1
-PUTFILE "Images/chtab5.pu.bin", "CHTAB5", 0, 0
-
-; Want to put this here but disc full...
-PUTFILE "Other/credits.pu.bin", "CREDITS", &3000, 0
-PUTFILE "Other/epilog.pu.bin", "EPILOG", &3000, 0

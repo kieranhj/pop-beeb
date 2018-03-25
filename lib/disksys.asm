@@ -579,8 +579,10 @@ EQUD 0
 ; A = drive number
 .disksys_set_drive
 {
-    CLC
-    ADC #'0'
+;    CLC
+;    ADC #'0'
+
+    LDA #'0'
     STA osfile_filename+1
     RTS
 }
@@ -691,6 +693,30 @@ ENDIF
     RTS
 }
 
+; A=read from PAGE, X=write to page, Y=#pages
+.disksys_copy_block
+{
+    STA read_from+2
+    STX write_to+2
+
+    \ We always copy a complete number of pages
+
+    LDX #0
+    .read_from
+    LDA &FF00, X
+    .write_to
+    STA &FF00, X
+    INX
+    BNE read_from
+    INC read_from+2
+    INC write_to+2
+    DEY
+    BNE read_from
+
+    .return
+    RTS
+}
+
 .disksys_decrunch_file
 {
     \ Final destination is baked into pu file
@@ -699,6 +725,176 @@ ENDIF
     \ Load to screen as can't load direct
     LDA #HI(disksys_loadto_addr)
     JSR disksys_load_direct
+
+    .unpack_addr
+    LDA #&00
+    LDX #LO(disksys_loadto_addr)
+    LDY #HI(disksys_loadto_addr)
+    JMP PUCRUNCH_UNPACK
+}
+
+LEVELS_SECTOR_ID=&24B
+LEVELS_TRACK=LEVELS_SECTOR_ID DIV 10
+LEVELS_SECTOR=LEVELS_SECTOR_ID MOD 10
+LEVEL_NUM_SECTORS=&9        ;HI(blueprnt_size)
+
+.disksys_osword_params
+.disksys_osword_drive_no
+EQUB 0
+.disksys_osword_buffer_addr
+EQUD disksys_loadto_addr
+.disksys_osword_cmd
+EQUB &3, &53
+.disksys_osword_track_no
+EQUB 0
+.disksys_osword_sector_no
+EQUB 0
+.disksys_osword_num_sectors
+EQUB &20
+.disksys_osword_result
+EQUB 0
+
+; A=#sectors + sector_size
+.disksys_read_sectors
+{
+    ora #&20
+    sta disksys_osword_num_sectors
+
+    LDA #&7F
+    LDX #LO(disksys_osword_params)
+    LDY #HI(disksys_osword_params)
+    JSR osword
+
+    RTS
+}
+
+.disksys_sectors_left
+EQUB 0
+.disksys_sectors_read
+EQUB 0
+
+; A=num sectors - assumes disksys_osword_track_no & disksys_osword_sector_no already set
+.disksys_read_direct
+{
+    STA disksys_sectors_left
+
+    \ Wait until next vsync frame swap so we know which buffer we're using!
+    .wait_vsync
+    LDA vsync_swap_buffers
+    BNE wait_vsync
+    
+    .track_loop
+    \ Calc end sector
+    CLC
+    LDA disksys_osword_sector_no
+    ADC disksys_sectors_left
+    CMP #11
+    BCC ok1
+
+    \ Can't be beyond 10
+    LDA #10
+
+    .ok1
+    SEC
+    SBC disksys_osword_sector_no
+    STA disksys_sectors_read
+    ; A=# sectors to load
+    
+    JSR disksys_read_sectors
+
+    \ Reduce sectors left
+    SEC
+    LDA disksys_sectors_left
+    SBC disksys_sectors_read
+    STA disksys_sectors_left
+    BEQ done
+
+    \ Increment start track/sector for next load
+    CLC
+    LDA disksys_osword_sector_no
+    ADC disksys_sectors_read
+    CMP #10
+    BCC ok2
+
+    SBC #10
+    INC disksys_osword_track_no
+
+    .ok2
+    STA disksys_osword_sector_no
+
+    \ Increment load address
+    CLC
+    LDA disksys_osword_buffer_addr+1
+    ADC disksys_sectors_read
+    STA disksys_osword_buffer_addr+1
+
+    BRA track_loop
+
+    .done
+    RTS
+}
+
+; X=level#
+.disksys_load_level
+{
+    txa
+    clc
+    adc #LEVELS_TRACK
+    sta disksys_osword_track_no
+
+    lda #LEVELS_SECTOR
+    sta disksys_osword_sector_no
+
+    lda #HI(disksys_loadto_addr)
+    sta disksys_osword_buffer_addr + 1
+
+    lda #LEVEL_NUM_SECTORS
+    JSR disksys_read_direct
+
+    LDA #HI(disksys_loadto_addr)
+    LDX #HI(blueprnt)
+    LDY #HI(blueprnt_size)
+    JSR disksys_copy_block
+
+    RTS
+}
+
+SPRITES_SECTOR_ID=&1A2 ; needs to be track aligned...
+SPRITES_TRACK=SPRITES_SECTOR_ID DIV 10
+SPRITES_SECTOR=SPRITES_SECTOR_ID MOD 10
+
+.sprites_catalog
+INCBIN "disc/Catalog.bin"
+
+; X=file# A=dest addr
+.disksys_load_sprite
+{
+    \ Final destination is baked into pu file
+    STA unpack_addr+1
+
+    TXA:ASL A: ASL A:TAX
+
+    CLC
+    LDA #SPRITES_SECTOR
+    ADC sprites_catalog+1, X
+    CMP #10
+    BCC sector_ok
+    SBC #10
+    SEC
+    .sector_ok
+    STA disksys_osword_sector_no
+
+    \ Carry set if prev sector was > 10
+
+    LDA #SPRITES_TRACK
+    ADC sprites_catalog, X
+    STA disksys_osword_track_no
+
+    lda #HI(disksys_loadto_addr)
+    sta disksys_osword_buffer_addr + 1
+    
+    LDA sprites_catalog+2, X
+    JSR disksys_read_direct
 
     .unpack_addr
     LDA #&00

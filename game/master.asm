@@ -469,10 +469,12 @@ ENDIF
 
 \*-------------------------------
 
-.bgset1_to_name
-EQUS "DUN1X  $"
-EQUS "PAL1X  $"
+;.bgset1_to_name
+;EQUS "DUN1X  $"
+;EQUS "PAL1X  $"
 \EQUS "DUN1X  $"         ; bgset1=$02 just means side A/B of original disc
+.bgset1_to_id
+EQUB f_DUN1A, f_PAL1A
 
 .rdbg1
 {
@@ -481,33 +483,18 @@ EQUS "PAL1X  $"
     beq return
     stx BGset1
 
-    \ index into table for filename
-;    txa
-    LDA BGset1
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(bgset1_to_name)
-    STA beeb_writeptr
-    lda #HI(bgset1_to_name)
-    adc #0
-    STA beeb_writeptr+1
-
     \ Now need to load 2x blocks for BGTAB1
-
-    \ Poke B into filename
-    LDA #'B'
-    LDY #4
-    STA (beeb_writeptr), Y
 
     \ Set BANK for B
     lda #BEEB_SWRAM_SLOT_BGTAB1_B
     jsr swr_select_slot
 
     \ Load file B
-    LDX beeb_writeptr
-    LDY beeb_writeptr+1
+    LDY BGset1
+    LDX bgset1_to_id, Y
+    INX
     lda #HI(bgtable1b)
-    jsr disksys_decrunch_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable1b)
@@ -517,20 +504,15 @@ EQUS "PAL1X  $"
     JSR beeb_plot_reloc_img
 
 
-    \ Poke A into filename
-    LDA #'A'
-    LDY #4
-    STA (beeb_writeptr), Y
-
     \ Set BANK for A
     lda #BEEB_SWRAM_SLOT_BGTAB1_A
     jsr swr_select_slot
 
     \ Load file B
-    LDX beeb_writeptr
-    LDY beeb_writeptr+1
+    LDY BGset1
+    LDX bgset1_to_id, Y
     lda #HI(bgtable1a)
-    jsr disksys_decrunch_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable1a)
@@ -543,10 +525,12 @@ EQUS "PAL1X  $"
     rts
 }
 
-.bgset2_to_name
-EQUS "DUN2   $"
-EQUS "PAL2   $"
+;.bgset2_to_name
+;EQUS "DUN2   $"
+;EQUS "PAL2   $"
 \EQUS "DUN2   $"            ; $02 just meant side B of original disc
+.bgset2_to_id
+EQUB f_DUN2, f_PAL2
 
 .rdbg2
 {
@@ -560,18 +544,10 @@ EQUS "PAL2   $"
     jsr swr_select_slot
 
     \ index into table for filename
-    LDA BGset2
-;    txa
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(bgset2_to_name)
-    tax
-    lda #HI(bgset2_to_name)
-    adc #0
-    tay
-
+    LDY BGset2
+    LDX bgset2_to_id, Y
     lda #HI(bgtable2)
-    jsr disksys_decrunch_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(bgtable2)
@@ -584,13 +560,15 @@ EQUS "PAL2   $"
     rts
 }
 
-.chset_to_name
-EQUS "GD     $"
-EQUS "SKEL   $"
-EQUS "GD     $"
-EQUS "FAT    $"
-EQUS "SHAD   $"
-EQUS "VIZ    $"
+;.chset_to_name
+;EQUS "GD     $"
+;EQUS "SKEL   $"
+;EQUS "GD     $"
+;EQUS "FAT    $"
+;EQUS "SHAD   $"
+;EQUS "VIZ    $"
+.chset_to_id
+EQUB f_GD, f_SKEL, f_GD, f_FAT, f_SHAD, f_VIZ
 
 .rdch4
 {
@@ -603,19 +581,10 @@ EQUS "VIZ    $"
     lda #BEEB_SWRAM_SLOT_CHTAB4
     jsr swr_select_slot
 
-    \ index into table for filename
-;    txa
-    lda CHset
-    asl a:asl a:asl a       ; x8
-    clc
-    adc #LO(chset_to_name)
-    tax
-    lda #HI(chset_to_name)
-    adc #0
-    tay
-
+    ldy CHset
+    ldx chset_to_id, y
     lda #HI(chtable4)
-    jsr disksys_decrunch_file
+    jsr disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable4)
@@ -638,6 +607,7 @@ EQUS "VIZ    $"
 
 .rdbluep
 {
+IF 0
 \\ Now all levels on SIDE B
 
     LDA #2
@@ -669,6 +639,9 @@ EQUS "VIZ    $"
     jsr disksys_load_file
     
     rts
+ELSE
+    JMP disksys_load_level
+ENDIF
 }
 
 \*-------------------------------
@@ -1316,8 +1289,8 @@ ENDIF
 .bank1_filename
 EQUS "BANK1  $"
 
-.perm_file_names
-EQUS "CHTAB5 $"
+;.perm_file_names
+;EQUS "CHTAB5 $"
 
 .loadbank1
 {
@@ -1356,10 +1329,9 @@ EQUS "CHTAB5 $"
     jsr swr_select_slot
 
     \ index into table for filename
-    LDX #LO(perm_file_names)
-    LDY #HI(perm_file_names)
+    LDX #f_CHTAB5
     LDA #HI(chtable5)
-    JSR disksys_decrunch_file
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable5)
@@ -1378,11 +1350,11 @@ EQUS "CHTAB5 $"
 \*
 \*-------------------------------
 
-.chtab8_file_name
-EQUS "CHTAB8 $"
+;.chtab8_file_name
+;EQUS "CHTAB8 $"
 
-.chtab9_file_name
-EQUS "CHTAB9 $"
+;.chtab9_file_name
+;EQUS "CHTAB9 $"
 
 .LoadStage2_Attract
 {
@@ -1398,10 +1370,9 @@ ENDIF
 
     \ CHTAB9 (aka CHTAB6.A.B)
 
-    lda #HI(chtable9)
-    ldx #LO(chtab9_file_name)
-    ldy #HI(chtab9_file_name)
-    jsr disksys_decrunch_file
+    LDX #f_CHTAB9
+    LDA #HI(chtable9)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable9)
@@ -1415,10 +1386,9 @@ ENDIF
 
     \ CHTAB7
 
-    lda #HI(chtable7)
-    ldx #LO(chtab7_file_name)
-    ldy #HI(chtab7_file_name)
-    jsr disksys_decrunch_file
+    LDX #f_CHTAB7
+    LDA #HI(chtable7)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable7)
@@ -1432,10 +1402,9 @@ ENDIF
 {
     \ CHTAB8 (aka CHTAB6.A.A)
 
-    lda #HI(chtable8)
-    ldx #LO(chtab8_file_name)
-    ldy #HI(chtab8_file_name)
-    jsr disksys_decrunch_file
+    LDX #f_CHTAB8
+    LDA #HI(chtable8)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable8)
@@ -1489,10 +1458,9 @@ ENDIF
     JMP loadch8     ; just the level 1-2 interstitial
 
     .later_cutscenes
-    lda #HI(chtable6)
-    ldx #LO(chtab6_file_name)
-    ldy #HI(chtab6_file_name)
-    jsr disksys_decrunch_file
+    LDX #f_CHTAB6
+    LDA #HI(chtable6)
+    JSR disksys_load_sprite
 
     \ Relocate the IMG file
     LDA #LO(chtable6)
@@ -1504,11 +1472,11 @@ ENDIF
     RTS
 }
 
-.chtab6_file_name
-EQUS "CHTAB6 $"
+;.chtab6_file_name
+;EQUS "CHTAB6 $"
 
-.chtab7_file_name
-EQUS "CHTAB7 $"
+;.chtab7_file_name
+;EQUS "CHTAB7 $"
 
 \*-------------------------------
 \*

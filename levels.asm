@@ -1,0 +1,55 @@
+; levels.asm
+
+ORG 0
+GUARD &FFFF
+
+.levels_start
+
+INCBIN "Levels/LEVEL0"
+
+SKIP &100
+INCBIN "Levels/LEVEL1"
+
+SKIP &100
+INCBIN "Levels/LEVEL2"
+
+SKIP &100
+INCBIN "Levels/LEVEL3"
+
+SKIP &100
+INCBIN "Levels/LEVEL4"
+
+SKIP &100
+INCBIN "Levels/LEVEL5"
+
+SKIP &100
+INCBIN "Levels/LEVEL6"
+
+SKIP &100
+INCBIN "Levels/LEVEL7"
+
+SKIP &100
+INCBIN "Levels/LEVEL8"
+
+SKIP &100
+INCBIN "Levels/LEVEL9"
+
+SKIP &100
+INCBIN "Levels/LEVEL10"
+
+SKIP &100
+INCBIN "Levels/LEVEL11"
+
+SKIP &100
+INCBIN "Levels/LEVEL12"
+
+SKIP &100
+INCBIN "Levels/LEVEL13"
+
+SKIP &100
+INCBIN "Levels/LEVEL14"
+
+SKIP &100
+.levels_end
+
+SAVE "disc/Levels.bin", levels_start, levels_end, 0

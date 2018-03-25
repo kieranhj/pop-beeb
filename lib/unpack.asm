@@ -28,7 +28,19 @@ LZPOS=beeb_readptr
 	jsr getbyt	; 'x'
 	jsr getbyt	; 'x'
 	jsr getbyt	; 'p'
+IF _DEBUG
+	cmp #'p'
+	beq p_ok
+	BRK
+	.p_ok
+ENDIF
 	jsr getbyt	; 'u'
+IF _DEBUG
+	cmp #'u'
+	beq u_ok
+	BRK
+	.u_ok
+ENDIF
 	jsr getbyt	; skip endAddr
 	jsr getbyt
 
