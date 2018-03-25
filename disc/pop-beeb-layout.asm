@@ -2,20 +2,20 @@
 ; Make the disc
 
 \*-------------------------------
-; Put files on SIDE A of the disk
+; Put files on the disc in prefered order
 \*-------------------------------
 
 \ Start with !BOOT
-;PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
+PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
 
 \ All code
 PUTFILE "disc/Core", "Prince", &E00, &E77
 PUTFILE "disc/bits.pu.bin", "BITS", &7C00, 0
 PUTFILE "disc/Lower", "Lower", &C00, 0
 PUTFILE "disc/Main", "Main", &3000, 0
-PUTFILE "disc/Hazel", "Hazel", &D300, 0
 PUTFILE "disc/AuxB", "AuxB", &8000, 0
 PUTFILE "disc/High", "High", &8000, 0
+PUTFILE "disc/Hazel", "Hazel", &D300, 0
 
 \ Audio Banks
 PUTFILE "disc/Audio0", "Audio0", &8000, 0
@@ -34,16 +34,16 @@ PUTFILE "disc/sumup.pu.bin", "SUMUP", &3000, 0
 PUTFILE "disc/credits.pu.bin", "CREDITS", &3000, 0
 PUTFILE "disc/epilog.pu.bin", "EPILOG", &3000, 0
 
-\ Game file
-PUTFILE "disc/BANK1.pu.bin", "BANK1", &8000, 0
-
 \ Princess room
 PUTFILE "disc/PRIN2.pu.bin", "PRIN2", &3F00, 0
 
-\ Sprites
+\ Game file
+PUTFILE "disc/BANK1.pu.bin", "BANK1", &8000, 0
+
+\ Sprites PAK file
 PUTFILE "disc/sprites.bin", "SPRITES", 0
 
-\ Levels
+\ Levels PAK
 PUTFILE "disc/levels.bin", "LEVELS", 0
 
 \ Manual (if room at end)

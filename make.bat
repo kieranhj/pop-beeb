@@ -21,4 +21,4 @@ bin\pucrunch.exe -d -c0 -l0x1000 "disc\PRIN2" disc\prin2.pu.bin
 bin\pucrunch.exe -d -c0 -l0x1000 "disc\BANK1" disc\bank1.pu.bin
 
 del pop-beeb.ssd
-bin\BeebAsm.exe -v -i disc\pop-beeb-layout.asm -boot Prince -do pop-beeb.ssd
+bin\BeebAsm.exe -v -i disc\pop-beeb-layout.asm -boot Prince -di disc\disc-template.ssd.bin -do pop-beeb.ssd
