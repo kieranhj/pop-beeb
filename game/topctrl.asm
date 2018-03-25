@@ -308,12 +308,7 @@ ENDIF
  jsr reloadblue
  ELSE
 
-\ NOT BEEB
-\ lda #' '
-\ jsr lrcls
-\ jsr vblank
-\ lda PAGE2off
-\ lda TEXTon
+ jsr beeb_hide_screen
 
  ldx level
  jsr LoadLevelX ;load blueprint & image sets from disk
@@ -1404,6 +1399,9 @@ ENDIF
 ;*-------------------------------
 .deathsong
 {
+    LDA level
+    BEQ return_17       ; no music in demo level
+
  lda ShadID
  cmp #1
  beq shad ;if opponent was shadowman

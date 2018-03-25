@@ -7,67 +7,67 @@ GUARD &FFFF
 
 ALIGN &100
 .file0
-INCBIN "Images/chtab9.pu.bin"
+INCBIN "disc/chtab9.pu.bin"
 
 ALIGN &100
 .file1
-INCBIN "Images/chtab8.pu.bin"
+INCBIN "disc/chtab8.pu.bin"
 
 ALIGN &100
 .file2
-INCBIN "Images/chtab7.pu.bin"
+INCBIN "disc/chtab7.pu.bin"
 
 ALIGN &100
 .file3
-INCBIN "Images/chtab6.pu.bin"
+INCBIN "disc/chtab6.pu.bin"
 
 ALIGN &100
 .file4
-INCBIN "Images/chtab5.pu.bin"
+INCBIN "disc/chtab5.pu.bin"
 
 ALIGN &100
 .file5
-INCBIN "Images/fat.pu.bin"
+INCBIN "disc/fat.pu.bin"
 
 ALIGN &100
 .file6
-INCBIN "Images/gd.pu.bin"
+INCBIN "disc/gd.pu.bin"
 
 ALIGN &100
 .file7
-INCBIN "Images/shad.pu.bin"
+INCBIN "disc/shad.pu.bin"
 
 ALIGN &100
 .file8
-INCBIN "Images/skel.pu.bin"
+INCBIN "disc/skel.pu.bin"
 
 ALIGN &100
 .file9
-INCBIN "Images/viz.pu.bin"
+INCBIN "disc/viz.pu.bin"
 
 ALIGN &100
 .file10
-INCBIN "Images/dun1a.pu.bin"
+INCBIN "disc/dun1a.pu.bin"
 
 ALIGN &100
 .file11
-INCBIN "Images/dun1b.pu.bin"
+INCBIN "disc/dun1b.pu.bin"
 
 ALIGN &100
 .file12
-INCBIN "Images/dun2.pu.bin"
+INCBIN "disc/dun2.pu.bin"
 
 ALIGN &100
 .file13
-INCBIN "Images/pal1a.pu.bin"
+INCBIN "disc/pal1a.pu.bin"
 
 ALIGN &100
 .file14
-INCBIN "Images/pal1b.pu.bin"
+INCBIN "disc/pal1b.pu.bin"
 
 ALIGN &100
 .file15
-INCBIN "Images/pal2.pu.bin"
+INCBIN "disc/pal2.pu.bin"
 
 ALIGN &100
 .sprites_end
@@ -82,11 +82,7 @@ MACRO CAT_ENTRY file_no, byte_offset, byte_end
     byte_size = byte_end - byte_offset
     num_sectors = (byte_size + &FF) DIV 256
 
-    PRINT "File #", file_no
-    PRINT "Byte offset =", ~byte_offset
-    PRINT "Byte size =", ~byte_size
-    PRINT "Track =", track_no, " Sector =", sector_no
-    PRINT "Num sectors =", num_sectors
+    PRINT "File #", file_no, "Byte offset =", ~byte_offset, "Byte size =", ~byte_size, "Track =", track_no, "Sector =", sector_no, "Num sectors =", num_sectors
 
     EQUB track_no, sector_no, num_sectors, 0
 }

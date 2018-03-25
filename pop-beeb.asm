@@ -488,10 +488,6 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 
 SAVE "disc/Core", pop_beeb_start, pop_beeb_end, pop_beeb_entry
 
-; Loading screen
-
-PUTFILE "Other/bits.pu.bin", "BITS", &7C00, 0
-
 ; Core RAM stats
 
 PRINT "--------"

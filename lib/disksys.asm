@@ -639,59 +639,41 @@ ENDIF
 .disksys_load_file
 {
     \ Final destination
-    STA write_to+2
-
-    \ Where to?
-    LDA write_to+2
-    BPL load_direct
+    STA write_to+1
 
     \ Wait until next vsync frame swap so we know which buffer we're using!
     .wait_vsync
     LDA vsync_swap_buffers
     BNE wait_vsync
     
+    \ Where to?
+    LDA write_to+1
+    BPL load_direct
+
     \ Load to screen if can't load direct
     LDA #HI(disksys_loadto_addr)
-    STA read_from+2
 
+    \ Load the file
     .load_direct
     JSR disksys_load_direct
 
-    LDA write_to+2
-    BPL return
-
-    \ Copy to destination
-    LDY osfile_length+1
-
-    LDA osfile_length+0
-    BNE extra_page
-
-IF _DEBUG
-    CPY #0
-    BNE length_ok
-    BRK             ; this would mean a zero length file
-    .length_ok
-ENDIF
-
-    \ We always copy a complete number of pages
-    DEY
-    .extra_page
-
-    LDX #0
-    .read_from
-    LDA &FF00, X
+    \ Do we need to copy it anywhere?
     .write_to
-    STA &FF00, X
-    INX
-    BNE read_from
-    INC read_from+2
-    INC write_to+2
-    DEY
-    BPL read_from
+    LDX #&FF
+    BPL disksys_copy_block_return
 
-    .return
-    RTS
+    \ Get filesize 
+    LDY osfile_length+1
+    LDA osfile_length+0
+    BEQ no_extra_page
+
+    INY             ; always copy a whole number of pages
+    .no_extra_page
+
+    \ Read from
+    LDA #HI(disksys_loadto_addr)
 }
+\\ Fall through!
 
 ; A=read from PAGE, X=write to page, Y=#pages
 .disksys_copy_block
@@ -712,10 +694,10 @@ ENDIF
     INC write_to+2
     DEY
     BNE read_from
-
-    .return
-    RTS
 }
+.disksys_copy_block_return
+    RTS
+
 
 .disksys_decrunch_file
 {
@@ -733,7 +715,7 @@ ENDIF
     JMP PUCRUNCH_UNPACK
 }
 
-LEVELS_SECTOR_ID=&24B
+LEVELS_SECTOR_ID=&249
 LEVELS_TRACK=LEVELS_SECTOR_ID DIV 10
 LEVELS_SECTOR=LEVELS_SECTOR_ID MOD 10
 LEVEL_NUM_SECTORS=&9        ;HI(blueprnt_size)
@@ -859,7 +841,7 @@ EQUB 0
     RTS
 }
 
-SPRITES_SECTOR_ID=&1A2 ; needs to be track aligned...
+SPRITES_SECTOR_ID=&1A1
 SPRITES_TRACK=SPRITES_SECTOR_ID DIV 10
 SPRITES_SECTOR=SPRITES_SECTOR_ID MOD 10
 
