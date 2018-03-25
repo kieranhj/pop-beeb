@@ -263,7 +263,7 @@ ENDIF ; _AUDIO_DEBUG
 ; call this function once to initialise the audio system
 .audio_init
 {
-	JMP audio_update_off        ; don't update until we've initialised
+	JMP audio_update_off        ; don't update until we say so
 }
 
 \\ Initialise music player - pass in VGM_stream_data address in X/Y, RAM bank number in A, or &80 for ANDY
