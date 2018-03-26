@@ -692,6 +692,7 @@ ENDIF
 BEEB_CUT0_SPEED_FACTOR=4
 .PlayCut0
 {
+ STZ level      ; this is not in game
  jsr startV0
  jsr SaveKid
  jsr startP0 ;put chars in starting posn
@@ -861,33 +862,26 @@ IF _AUDIO
  JSR BEEB_CUESONG               ; was jsr minit
 ENDIF
 
-IF 1        ; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
+; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
 .loop
+\ Check for keys
+ lda #1
+ jsr strobe
+
+ lda keypress
+ bmi interrupt
+
+\ Play a frame
  LDA #1
  JSR play
+
+\ See if music has finished or not
  jsr BEEB_MUSIC_IS_PLAYING
  cmp #0
  bne loop
- RTS
-ELSE
- jsr swpage
-.loop lda #1
- jsr strobe
-\ NOT BEEB
-\ lda $c061
-\ ora $c062
- ora keypress
- bmi interrupt
 
- jsr pburn
- jsr pstars
- jsr pflow
- jsr BEEB_MUSIC_IS_PLAYING      ; was jsr mplay
- cmp #0
- bne loop
 .interrupt
- jmp swpage
-ENDIF
+ RTS
 }
 
 \*-------------------------------
@@ -915,41 +909,27 @@ IF _AUDIO
  jsr BEEB_STORYSONG             ; was jsr minit
 ENDIF
 
- jsr swpage
-.loop jsr musickeys
+; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
+.loop
+\ Check for keys
+ jsr musickeys
  cmp #$80
  bcs interrupt
- jsr pburn
- jsr pstars
- jsr pflow
- jsr BEEB_MUSIC_IS_PLAYING      ; was jsr mplay
+
+\ Play a frame
+ LDA #1
+ JSR play
+
+\ See if music has finished or not
+ jsr BEEB_MUSIC_IS_PLAYING
  cmp #0
  bne loop
- jmp swpage
+ RTS
+
 .interrupt
- jsr swpage
  jmp dostartgame
 }
 
-\*-------------------------------
-\*  Switch hires pages for duration of song
-\\ KC note - this means lay is just poking visible screen directly
-\\ whilst the rest of the system is "frozen" during music playback
-
-.swpage
-{
- lda PAGE
- eor #$20
- sta PAGE
-
-\\ BEEB equivalent here to invert RAM bit 2 only
-\\ BEEB effectively become single buffered here!
-\\ BEEB use with caution and make sure you set it back...
-
- lda &fe34
- eor #4	; invert bits 0 (CRTC) & 2 (RAM)
- sta &fe34
-}
 .return_63
  rts
 
@@ -1000,12 +980,8 @@ ENDIF
  jmp dostartgame ;interrupted--start a new game
 
 .notdemo
-IF _NOT_BEEB            \\ BEEB TODO KEYPRESS
- lda $c061
- ora $c062
- ora keypress
- bmi return_56 ;key or button to end scene
-ENDIF
+ lda keypress
+ bmi return_63 ;key or button to end scene
 
 .cont jsr subs_NextFrame ;Determine what next frame should look like
 
