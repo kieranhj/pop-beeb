@@ -2410,3 +2410,6 @@ Only going to work for compressed content as need file length = sprites
 Could special case levels as known file size?
 
 Code + screens + Sprites + BANK 1 + Audio + Levels = 7 + 10 + 1 + 1 + 5 + 1 = 25
+
+Palettes used:
+0 1 2 3 4 5 6 7 8 9 10 11 12 13

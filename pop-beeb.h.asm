@@ -77,11 +77,11 @@ PAL_RCW=10
 PAL_YCW=11
 PAL_CMW=12          ; player
 PAL_BWC=13          ; Shadow
-PAL_BMW=14          ; Palace guard regular
-PAL_GMW=15          ; Palace guard special
-PAL_RMC=16
-PAL_RGY=17
-RAL_YMW=18          ; font
+RAL_YMW=14          ; font
+PAL_BMW=15          ; Palace guard regular
+PAL_GMW=16          ; Palace guard special
+;PAL_RMC
+;PAL_RGY            ; no longer used?
 
 PAL_FONT=RAL_YMW
 
