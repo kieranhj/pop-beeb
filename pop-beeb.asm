@@ -956,6 +956,24 @@ PRINT "OVERLAY size = ", ~(overlay_end - overlay_start)
 PRINT "OVERLAY free = ", ~(SWRAM_TOP - overlay_end)
 PRINT "--------"
 
+;----------------------------------------------------------------
+; Eiplog (you win) music bank is going to be special (again)
+;----------------------------------------------------------------
+
+CLEAR 0, &FFFF
+ORG SWRAM_START
+GUARD SWRAM_TOP
+.pop_audio_bank2_start
+.pop_music_epilog
+INCBIN "audio/ip/m-won-wip1.raw.exo"
+.pop_audio_bank2_end
+SAVE "disc/Audio2", pop_audio_bank2_start, pop_audio_bank2_end, 0
+
+PRINT "--------"
+PRINT "AUDIO BANK 2 size = ", ~(pop_audio_bank2_end - pop_audio_bank2_start)
+PRINT "AUDIO BANK 2 free = ", ~(SWRAM_TOP - pop_audio_bank2_end)
+PRINT "--------"
+
 \*-------------------------------
 \*
 \*  Blueprint info

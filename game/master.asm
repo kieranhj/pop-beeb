@@ -665,6 +665,13 @@ ENDIF
 \*
 \*-------------------------------
 
+.wait_for_music_to_end
+{
+ JSR BEEB_MUSIC_IS_PLAYING
+ BNE wait_for_music_to_end
+ RTS
+}
+
 .pacRoom_name
 EQUS "PRIN2  $"
 
@@ -710,9 +717,7 @@ pacRoom_size = &1100        ; by hand doh!
 
 \* Wait for music to stop in case we're on a fast device
 
-.wait_for_music
- JSR BEEB_MUSIC_IS_PLAYING
- BNE wait_for_music
+ JSR wait_for_music_to_end
 
 \ Display screen
 
@@ -1043,11 +1048,15 @@ ENDIF
 \ LDA #0
 \ JSR disksys_set_drive
 
+    \\ Invalidate bg cache
+    LDA #&ff
+    sta CHset
+    sta BGset1
+    sta BGset2
+
 IF _AUDIO
     ; SM: added title music load & play trigger here
-    ; load title audio bank
-    lda #2
-    jsr BEEB_LOAD_AUDIO_BANK
+    jsr BEEB_LOAD_EPILOG_BANK
 ENDIF
 
  jsr SetupDHires
@@ -1059,7 +1068,7 @@ ENDIF
 \* Start the music
 
  lda #s_Epilog
- jsr BEEB_INTROSONG
+ jsr BEEB_EPILOGSONG
 
 \* Hack wait fn to ignore keys
 
@@ -1078,13 +1087,13 @@ ENDIF
 
  MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
-\* Show the splash after 10 secs (tbc)
+\* Show the splash after 30 secs (tbc)
 
- MASTER_SHOW_DHIRES 10*50
+ MASTER_SHOW_DHIRES 30*50
 
-\* Wait for some time (tbc)
+\* Wait for some time (tbc) or just the end of the tune :)
 
- MASTER_BLOCK_UNTIL 20*50
+ JSR wait_for_music_to_end
 
 \* Undo hack
 
