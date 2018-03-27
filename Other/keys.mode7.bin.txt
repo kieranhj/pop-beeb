@@ -1,0 +1,25 @@
+ÑùÉç        Prince of Persia         å ú
+ÑùÉç        Prince of Persia           ú
+                                        
+           by Jordan Mechner            
+ÜPorted to BBC Master by Kieran Connell 
+á                                       
+áKeys:Ö      Z  `  Left                 
+Ö            X  `  Right                
+Ç            *  `  Up / Jump            
+Ç            ?  `  Down / Crouch        
+É            ]  `  Forward Jump         
+É       RETURN  `  Action               
+Ü            T  `  Time remaining       
+                                        
+á       CTRL-K  `  Redefine keys        
+Å       CTRL-A  `  Restart level        
+Å       CTRL-R  `  Return to titles     
+á       CTRL-G  `  Save game to disc    
+á       CTRL-P  `  Pause                
+Å       CTRL-M  `  Music on/off         
+Å       CTRL-S  `  Sound on/off         
+                                        
+   For more help *TYPE MANUAL on disc   
+                                        
+Ñùá    PRESS ANY KEY TO CONTINUE      ú 

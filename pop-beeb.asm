@@ -162,11 +162,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
     LDX #&FF:TXS                ; reset stack
 
-    SEI
-    LDA #&7F:STA &FE4E          ; disable all interupts
-    LDA #&82:STA &FE4E          ; enable vsync interupt
-    CLI
-
     \\ MODE 7 during initialise
 
     LDA #22:JSR oswrch
@@ -218,14 +213,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
     LDA #HI(pop_beeb_main_start)
     JSR disksys_decrunch_file
 
-\ Setup SHADOW buffers for double buffering
-
-    ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
-    lda &fe34
-    and #255-1  ; set D to 0
-    ora #4    	; set X to 1
-    sta &fe34
-
     \\ Load Aux
 
     \\ And Aux B (SWRAM)
@@ -258,6 +245,34 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
     LDY #HI(hazel_filename)
     LDA #HI(pop_beeb_aux_hazel_data_start)
     JSR disksys_decrunch_file
+
+\ Ensure MAIN RAM is writeable
+
+    LDA &FE34:AND #&FB:STA &FE34
+
+    \\ Keys screen
+
+    LDX #LO(keys_filename)
+    LDY #HI(keys_filename)
+    LDA #HI(&7C00)
+    JSR disksys_decrunch_file
+
+    \\ Wait for 10 seconds for a key press
+    LDA #&81:LDX #LO(1000):LDY #HI(1000):JSR osbyte
+
+    \\ Disable interupts from now on
+    SEI
+    LDA #&7F:STA &FE4E          ; disable all interupts
+    LDA #&82:STA &FE4E          ; enable vsync interupt
+    CLI
+
+\ Setup SHADOW buffers for double buffering
+
+    ; we set bits 0 and 2 of ACCCON, so that display=Main RAM, and shadow ram is selected as main memory
+    lda &fe34
+    and #255-1  ; set D to 0
+    ora #4    	; set X to 1
+    sta &fe34
 
     LDA #0
     STA beeb_vsync_count
@@ -409,7 +424,7 @@ ENDIF
 
 INCLUDE "lib/print.asm"
 
-.swr_fail_text EQUS "Requires Master w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
+.swr_fail_text EQUS "Requires Master", 13,0; w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
 
 .main_filename  EQUS "Main   $"
 .high_filename  EQUS "High   $"
@@ -417,6 +432,7 @@ INCLUDE "lib/print.asm"
 .auxb_filename  EQUS "AuxB   $"
 .load_filename  EQUS "BITS   $"
 .lower_filename EQUS "Lower  $"
+.keys_filename  EQUS "Keys   $"
 
 EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE)-(P%-beeb_boot_start)
 
