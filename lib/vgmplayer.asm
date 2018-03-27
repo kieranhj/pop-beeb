@@ -4,7 +4,7 @@
 \ ******************************************************************
 
 _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testing/demo loop)
-
+_ENABLE_VOLUME = TRUE
 
 .vgm_player_start
 
@@ -31,14 +31,11 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 \\ Y - hi byte of data stream to be played
 .vgm_init_stream
 {
-	\\ Initialise exomizer - must have some data ready to decrunch
-	JSR exo_init_decruncher
-
 	\\ Initialise music player
-	LDA #0
-	STA vgm_player_ended
+	stz vgm_player_ended
 
-	RTS
+	\\ Initialise exomizer - must have some data ready to decrunch
+	jmp exo_init_decruncher	
 }
 
 
@@ -86,18 +83,21 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	TAY
 	.sound_data_loop
 	BEQ wait_20_ms
-	TYA:PHA
+	phy
 	jsr exo_get_decrunched_byte
 	bcc not_sample_end
-	PLA
+	ply
 	JMP _sample_end
 
 	.not_sample_end
 
 
 	JSR psg_strobe
-	PLA:TAY:DEY
-	JMP sound_data_loop
+	ply
+	dey
+
+;	JMP sound_data_loop
+	bpl sound_data_loop	; equivalent to JMP as will always be positive
 	
 	.wait_20_ms
 	CLC
@@ -211,6 +211,109 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 	rts
 }
 
+; volume ramp table - set by audio_set_volume - note that on SN chip 15=off, 0=full
+.volume_table	EQUB 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15		;
+
+
+; local ZP vars
+volume_interp = locals + 0
+volume_increment = locals + 2
+volume_store = locals + 3
+
+
+; 0 = 16* 0 =   0 &00
+; 1 = 16* 1 =  16 &10
+; 2 = 16* 2 =  32 &20
+; 8 = 16* 8 =     &80 
+;...
+;15 = 16*15 = 240 &F0
+
+; at full volume, it's 0 to 15 (0-15)
+; at half volume it's 8 to 15 (0-8)
+; at silence it's 15 to 15 (0-0)
+
+;
+.volume EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
+
+
+
+.audio_volume_up
+{
+	ldx volume
+	cpx #15
+	beq quit
+	inx
+	stx volume
+	jsr audio_set_volume
+.quit
+	rts
+}
+
+.audio_volume_down
+{
+	ldx volume
+	beq quit
+	dex 
+	stx volume
+	jsr audio_set_volume
+.quit
+	rts
+}
+
+; set volume by setting the 16-byte volume_table ramp using a hacky linear interpolation
+; TODO: needs a bug fix as the full volume ramp is out by 1 level
+; Note that volumes below 7 will degrade music quality due to lack of precision
+; on entry X is volume (0=silence, 15=full)
+.audio_set_volume
+{
+IF _ENABLE_VOLUME
+;	stx volume_store
+	lda #15
+	sta volume_store
+;	sec
+;	sbc volume_store
+;	sta volume_store
+	; set volume table
+	lda #0
+	stz volume_interp+0
+	stz volume_interp+1
+	
+	cpx #0
+	beq done_loopx
+	inc volume_store
+.loopx
+	dec volume_store
+	clc
+	adc #17
+	dex
+	bne loopx
+.done_loopx
+	sta volume_increment
+
+	; x=0 on entry
+.loopx2
+	clc
+	lda volume_interp+1
+	adc volume_store
+	sta volume_table,x
+
+	lda volume_interp+0
+	clc
+	adc volume_increment
+	sta volume_interp+0
+	lda volume_interp+1
+	adc #0
+	sta volume_interp+1
+
+	; offset volume
+	inx
+	cpx #16
+	bne loopx2
+ENDIF
+	rts
+}
+
+
 
 ; SN76489 register update
 ; A contains register data to write
@@ -219,6 +322,34 @@ _ENABLE_AUDIO = TRUE				; enables output to sound chip (disable for silent testi
 
 .psg_strobe_sei
 ;	sei					; **SELF-MODIFIED CODE**
+
+IF _ENABLE_VOLUME
+; Check if volume control needs applying
+; First check if bit 7 is set, 0=DATA 1=LATCH
+
+	bit psg_latch_bit 	; 
+	beq no_volume 		; [3]
+
+;	; this is a latch register write
+; and check bit 4 to see if it is a volume register write, 1=VOLUME, 0=PITCH
+	bit psg_volume_bit	; [4]
+	beq no_volume		; not a volume register write
+
+	tay				; [2]
+	and #&f0		; [2]
+	sta psg_register
+	tya				; [2]
+	and #&0f		; [2]
+
+	tay				; [2]
+	lda volume_table,y
+	and #&0f
+	ora psg_register
+
+.no_volume
+
+ENDIF ; _ENABLE_VOLUME
+
 
 IF _ENABLE_AUDIO
 
@@ -243,7 +374,9 @@ ENDIF ; _ENABLE_AUDIO
 ;	cli					; **SELF-MODIFIED CODE**
 	RTS
 
-
+.psg_register	EQUB 0		; cant be in ZP as used in IRQ
+.psg_volume_bit	EQUB 16		; bit 4
+.psg_latch_bit	EQUB 128	; bit 7
 
 ;PSG_STROBE_SEI_INSN = psg_strobe_sei
 ;PSG_STROBE_CLI_INSN = psg_strobe_cli
