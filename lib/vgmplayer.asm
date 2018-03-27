@@ -260,6 +260,9 @@ volume_store = locals + 3
 	rts
 }
 
+; set volume by setting the 16-byte volume_table ramp using a hacky linear interpolation
+; TODO: needs a bug fix as the full volume ramp is out by 1 level
+; Note that volumes below 7 will degrade music quality due to lack of precision
 ; on entry X is volume (0=silence, 15=full)
 .audio_set_volume
 {
