@@ -31,10 +31,10 @@
             "isBuildCommand": true
         },
         {
-            "taskName": "Run 'pop-beeb.dsd' in Emulator",
+            "taskName": "Run 'pop-beeb.ssd' in Emulator",
             "isTestCommand": true,
             "args": [
-                "B-Em.exe pop-beeb.dsd"
+                "B-Em.exe pop-beeb.ssd"
             ]
         },
         {
