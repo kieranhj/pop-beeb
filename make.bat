@@ -5,10 +5,12 @@ echo EQUB $%DATE:~8,2%, $%DATE:~3,2%, $%DATE:~0,2%, $%HH%, $%TIME:~3,2%, "%USERN
 
 rem SM: selfishly not sending compiler output to compile.txt so I can use VS.code console instead
 rem KC: super hack balls just for me ;)
-if "%USERNAME%"=="kconnell" (
-bin\BeebAsm.exe -v -i pop-beeb.asm > compile.txt
+rem SM: better fix
+rem if "%USERNAME%"=="kconnell" (
+if "%1"=="vsc" (
+bin\BeebAsm.exe -v -i pop-beeb.asm 
 ) else (
-bin\BeebAsm.exe -v -i pop-beeb.asm -di disc/template-side-a.ssd.bin -do pop-beeb-side-a.ssd 
+bin\BeebAsm.exe -v -i pop-beeb.asm > compile.txt
 )
 
 if %ERRORLEVEL% neq 0 (
