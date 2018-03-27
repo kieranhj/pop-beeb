@@ -143,8 +143,8 @@ ktimeback = IKN_1 OR &80
 ktimefwd = IKN_2 OR &80
 ktimeup = IKN_0 OR &80
 kerasegame = IKN_9 OR &80
-kvolume_down = IKN_3 OR &80 ;IKN_minus OR &80
-kvolume_up = IKN_4 OR &80 ;IKN_hat OR &80
+kvolume_down = IKN_down OR &80
+kvolume_up = IKN_up OR &80
 
 \*-------------------------------
 ; BEEB allow keys to be redefined
@@ -488,11 +488,11 @@ ENDIF
 ; volume up/down
 .label_16a cmp #kvolume_down
  bne label_16b
- jmp audio_volume_down
+ jmp vgm_volume_down
 
 .label_16b cmp #kvolume_up
  bne label_26
- jmp audio_volume_up
+ jmp vgm_volume_up
 
 .label_26 cmp #kversion
  bne label_17

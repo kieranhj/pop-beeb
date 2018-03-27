@@ -45,6 +45,11 @@ _ENABLE_VOLUME = TRUE
 	LDA #&FF
 	STA vgm_player_ended
 
+	\\ FALLS THROUGH TO vgm_silence_psg
+}
+
+.vgm_silence_psg
+{
 	\\ Zero volume on all channels
 	LDA #&9F: JSR psg_strobe
 	LDA #&BF: JSR psg_strobe
@@ -233,29 +238,29 @@ volume_store = locals + 3
 ; at silence it's 15 to 15 (0-0)
 
 ;
-.volume EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
+.vgm_volume EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
 
 
 
-.audio_volume_up
+.vgm_volume_up
 {
-	ldx volume
+	ldx vgm_volume
 	cpx #15
 	beq quit
 	inx
-	stx volume
-	jsr audio_set_volume
+	stx vgm_volume
+	jsr vgm_set_volume
 .quit
 	rts
 }
 
-.audio_volume_down
+.vgm_volume_down
 {
-	ldx volume
+	ldx vgm_volume
 	beq quit
 	dex 
-	stx volume
-	jsr audio_set_volume
+	stx vgm_volume
+	jsr vgm_set_volume
 .quit
 	rts
 }
@@ -264,7 +269,7 @@ volume_store = locals + 3
 ; TODO: needs a bug fix as the full volume ramp is out by 1 level
 ; Note that volumes below 7 will degrade music quality due to lack of precision
 ; on entry X is volume (0=silence, 15=full)
-.audio_set_volume
+.vgm_set_volume
 {
 IF _ENABLE_VOLUME
 ;	stx volume_store
