@@ -1,5 +1,8 @@
+
 PRINCE of PERSIA
-----------------
+~~~~~~~~~~~~~~~~
+
+------------
 Introduction
 ------------
 It is a time of darkness.  While the sultan is off fighting a foreign
@@ -37,9 +40,9 @@ Keyboard Control
 Key configuration can be changed at any time during gameplay by pressing
 CTRL-K. Default controls are:
 
-             _____________________
+             _______________________
             |  Movement     | Key |
-            |---------------+-----|
+            |---------------++-----|
             | Left          |  Z  |
             | Right         |  X  |
             | Up            |  *  |
@@ -47,7 +50,7 @@ CTRL-K. Default controls are:
             | Jump Forward  |  ]  |
             |_______________|_____|
 
-Action button: RETURN
+              Action button: RETURN
 
 ----------------
 Joystick Control
@@ -296,9 +299,9 @@ each theme is associated with a specific character or idea.  The basic
 themes are:  Prince, Princess, Jaffar, Danger, Sword, Shadow, Death,
 Time, and Magic.
 
---------------
-About the Port
---------------
+----------------------------
+About the BBC Master Version
+----------------------------
 
-http://bitshifters.github.io
-http://github.com/kieranhj/pop-beeb
+For more details *TYPE README
+Or visit http://bitshifters.github.io
