@@ -2039,6 +2039,8 @@ ENDIF
  lda &fe34
  eor #4	; invert bits 0 (CRTC) & 2 (RAM)
  sta &fe34
+
+ RTS    ; this would help
 }
 
 \*-------------------------------

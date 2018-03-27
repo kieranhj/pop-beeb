@@ -17,6 +17,9 @@ PUTFILE "disc/AuxB.pu.bin", "AuxB", &8000, 0
 PUTFILE "disc/High.pu.bin", "High", &8000, 0
 PUTFILE "disc/Hazel.pu.bin", "Hazel", &D300, 0
 
+\ Keys
+PUTFILE "disc/keys.pu.bin", "KEYS", &7C00
+
 \ Audio Banks
 PUTFILE "disc/Audio0", "Audio0", &8000, 0
 PUTFILE "disc/Audio1", "Audio1", &8000, 0

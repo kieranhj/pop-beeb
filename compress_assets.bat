@@ -30,6 +30,7 @@ bin\pucrunch.exe -d -c0 -l0x1000 Other\john.Title.mode2.bin disc\title.pu.bin
 bin\pucrunch.exe -d -c0 -l0x1000 Other\john.Presents.mode2.bin disc\presents.pu.bin
 
 bin\pucrunch.exe -d -c0 -l0x7C00 Other\bitshifters3.mode7.bin disc\bits.pu.bin
+bin\pucrunch.exe -d -c0 -l0x7C00 Other\keys.mode7.bin disc\keys.pu.bin
 
 REM Now convert assets to pak file
 
