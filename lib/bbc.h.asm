@@ -18,6 +18,7 @@ IRQ2V = &206
 EVENTV = &0220
 
 \\ Internal Key Number not INKEY!
+; see http://beebwiki.mdfs.net/Keyboard
 IKN_esc = 112
 IKN_up = 57
 IKN_down = 41
@@ -60,9 +61,16 @@ IKN_w = 33
 IKN_0 = 39
 IKN_1 = 48
 IKN_2 = 49
+IKN_3 = 17
+IKN_4 = 18
 IKN_5 = 19
+IKN_6 = 52
+IKN_7 = 36
+IKN_8 = 21
 IKN_9 = 37
 IKN_t = 35
+IKN_minus = 23
+IKN_hat = 24
 
 \\ Opcodes
 SEI_OP = $78
