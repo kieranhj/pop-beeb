@@ -158,10 +158,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .swr_ok
 
-    \\ Early system init
-
-    LDX #&FF:TXS                ; reset stack
-
     \\ MODE 7 during initialise
 
     LDA #22:JSR oswrch
@@ -936,6 +932,7 @@ misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
 INCLUDE "game/beeb_screen.asm"
+INCLUDE "game/attract.asm"
 
 .pop_beeb_aux_high_end
 
@@ -958,6 +955,7 @@ PRINT "MOVER size = ", ~(mover_end-mover)
 PRINT "MISC size = ", ~(misc_end-misc)
 PRINT "SPECIALK size = ", ~(specialk_end-specialk)
 PRINT "BEEB SCREEN size = ", ~(beeb_screen_end - beeb_screen_start)
+PRINT "ATTRACT size = ", ~(attract_end-attract_start)
 PRINT "--------"
 PRINT "Aux High code size = ", ~(pop_beeb_aux_high_end - pop_beeb_aux_high_start)
 PRINT "Aux High high watermark = ", ~P%

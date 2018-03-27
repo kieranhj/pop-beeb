@@ -1097,7 +1097,8 @@ ENDIF
  lda #30
  sta FCharIndex
  jsr addkidobj
- jsr pmask ;kludge to mask face & hair
+\ NOT BEEB
+\ jsr pmask ;kludge to mask face & hair
 .label_2
  jsr fast ;get char/objs into mid table
 

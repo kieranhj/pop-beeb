@@ -140,8 +140,8 @@ ENDIF
     tax
 
     ; preserve current SWR banksel
-    ;lda &f4
-    ;pha
+    lda &f4
+    pha
 
     txa
 
@@ -161,8 +161,8 @@ ENDIF
     jsr disksys_load_file
 
     ; restore SWR bank
-    ;pla
-    ;jsr swr_select_bank
+    pla
+    jsr swr_select_bank
     
     ; OK to make noise now
     JSR audio_update_on
@@ -173,6 +173,9 @@ ENDIF
 
 .BEEB_LOAD_STORY_BANK
 {
+    ; preserve current SWR banksel
+    lda &f4
+    pha
     lda #BEEB_AUDIO_STORY_BANK
     jsr swr_select_slot
 

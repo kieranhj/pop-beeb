@@ -8,7 +8,7 @@ rem KC: super hack balls just for me ;)
 if "%USERNAME%"=="kconnell" (
 bin\BeebAsm.exe -v -i pop-beeb.asm > compile.txt
 ) else (
-bin\BeebAsm.exe -v -i pop-beeb.asm -di disc/template-side-a.ssd.bin -do pop-beeb-side-a.ssd 
+bin\BeebAsm.exe -v -i pop-beeb.asm 
 )
 
 if %ERRORLEVEL% neq 0 (
