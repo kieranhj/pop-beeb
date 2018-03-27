@@ -173,9 +173,6 @@ ENDIF
 
 .BEEB_LOAD_STORY_BANK
 {
-    ; preserve current SWR banksel
-    lda &f4
-    pha
     lda #BEEB_AUDIO_STORY_BANK
     jsr swr_select_slot
 
