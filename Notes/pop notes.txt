@@ -2330,7 +2330,9 @@ Large 16/109 = 8x109 = 4x109 = 4*8 + 13*640 + 5
 
 14/91 = 7x91 = 3.1x92 = 3*8 + 11*640 + 2
 20/112 = 10x112 = 5x112 = 5*8 + 14*640
-Med 22/98
+
+
+Med 22/98 = 11x98 = 5.1x98 = 5*8 + 12*640 + 2
 
 
 RAM thoughts
@@ -2408,3 +2410,6 @@ Only going to work for compressed content as need file length = sprites
 Could special case levels as known file size?
 
 Code + screens + Sprites + BANK 1 + Audio + Levels = 7 + 10 + 1 + 1 + 5 + 1 = 25
+
+Palettes used:
+0 1 2 3 4 5 6 7 8 9 10 11 12 13

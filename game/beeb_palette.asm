@@ -134,9 +134,9 @@ ENDMACRO
     EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_WHITE_PAIR           ; 0=BRW
     EQUB 0, MODE2_BLUE_PAIR, MODE2_CYAN_PAIR, MODE2_YELLOW_PAIR         ; 1=BCY
     EQUB 0, MODE2_RED_PAIR, MODE2_YELLOW_PAIR, MODE2_WHITE_PAIR         ; 2=RYW
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR      ; 3=BMY (guard regular) Palace: Yellow=White
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR      ; 3=BMY (Dungeon guard regular)
 
-    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR       ; 4=RMY (guard special) Palace: Yellow=White Red=Green
+    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_YELLOW_PAIR       ; 4=RMY (Dungeon guard special)
     EQUB 0, MODE2_BLUE_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; 5=BRY
     EQUB 0, MODE2_CYAN_PAIR, MODE2_RED_PAIR, MODE2_YELLOW_PAIR          ; 6=CRY
     EQUB 0, MODE2_BLUE_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR        ; 7=BGY
@@ -148,65 +148,17 @@ ENDMACRO
 
     EQUB 0, MODE2_CYAN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 12=CMW (player)
     EQUB 0, MODE2_BLUE_PAIR, MODE2_WHITE_PAIR, MODE2_CYAN_PAIR          ; 13=BWC (Shadow)
-    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 14=BMW
-    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; 15=GMW
+    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 14=YMW (font)
+    EQUB 0, MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 15=BMW (Palace guard regular)
+    EQUB 0, MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR      ; 16=GMW (Palace guard special)
 
-    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_CYAN_PAIR         ; 16=RMC (cutscene)
-    EQUB 0, MODE2_RED_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR         ; 17=RGY
-    EQUB 0, MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 18=YMW (font)
+; No longer used?
+;    EQUB 0, MODE2_RED_PAIR, MODE2_MAGENTA_PAIR, MODE2_CYAN_PAIR         ; 16=RMC
+;    EQUB 0, MODE2_RED_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR         ; 17=RGY
+
 }
 
-BEEB_PALETTE_MAX=18
-
-\*-------------------------------
-; Expanded palette table going from 2bpp data directly to MODE 2 bytes
-\*-------------------------------
-
-.palette_addr_LO
-{
-    EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_1)
-    EQUB LO(fast_palette_lookup_2)
-    EQUB LO(fast_palette_lookup_3)
-    EQUB LO(fast_palette_lookup_4)
-    EQUB LO(fast_palette_lookup_5)
-    EQUB LO(fast_palette_lookup_6)
-    EQUB LO(fast_palette_lookup_7)
-    EQUB LO(fast_palette_lookup_8)
-    EQUB LO(fast_palette_lookup_9)
-    EQUB LO(fast_palette_lookup_10)
-    EQUB LO(fast_palette_lookup_11)
-    EQUB LO(fast_palette_lookup_12)
-    EQUB LO(fast_palette_lookup_13)
-    EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_17)
-    EQUB LO(fast_palette_lookup_18)
-}
-
-.palette_addr_HI
-{
-    EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_1)
-    EQUB HI(fast_palette_lookup_2)
-    EQUB HI(fast_palette_lookup_3)
-    EQUB HI(fast_palette_lookup_4)
-    EQUB HI(fast_palette_lookup_5)
-    EQUB HI(fast_palette_lookup_6)
-    EQUB HI(fast_palette_lookup_7)
-    EQUB HI(fast_palette_lookup_8)
-    EQUB HI(fast_palette_lookup_9)
-    EQUB HI(fast_palette_lookup_10)
-    EQUB HI(fast_palette_lookup_11)
-    EQUB HI(fast_palette_lookup_12)
-    EQUB HI(fast_palette_lookup_13)
-    EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_17)
-    EQUB HI(fast_palette_lookup_18)
-}
+BEEB_PALETTE_MAX=16
 
 \*-------------------------------
 ; Expanded palette table going from 2bpp data directly to MODE 2 bytes
@@ -254,10 +206,13 @@ MAP_PAIR_TO_MODE2 MODE2_CYAN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 
 .fast_palette_lookup_13
 MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_WHITE_PAIR, MODE2_CYAN_PAIR          ; 13=BWC
 
-.fast_palette_lookup_17
-MAP_PAIR_TO_MODE2 MODE2_RED_PAIR, MODE2_GREEN_PAIR, MODE2_YELLOW_PAIR         ; 17=RGY
-
-.fast_palette_lookup_18
+.fast_palette_lookup_14
 MAP_PAIR_TO_MODE2 MODE2_YELLOW_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR     ; 18=YMW
+
+.fast_palette_lookup_15
+MAP_PAIR_TO_MODE2 MODE2_BLUE_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 15=BMW
+
+.fast_palette_lookup_16
+MAP_PAIR_TO_MODE2 MODE2_GREEN_PAIR, MODE2_MAGENTA_PAIR, MODE2_WHITE_PAIR       ; 16=GMW
 
 .beeb_palette_end

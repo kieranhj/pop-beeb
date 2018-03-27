@@ -83,6 +83,9 @@ ENDIF
     rts
 }
 
+IF BEEB_AUDIO_STORY_BANK=BEEB_AUDIO_EPILOG_BANK
+.BEEB_EPILOGSONG
+ENDIF
 .BEEB_STORYSONG
 {
 IF _DEBUG
@@ -176,6 +179,17 @@ ENDIF
     lda #HI(pop_audio_bank1_start)
     LDX #LO(audio1_filename)
     LDY #HI(audio1_filename)
+    JMP disksys_load_file
+}
+
+.BEEB_LOAD_EPILOG_BANK
+{
+    lda #BEEB_AUDIO_EPILOG_BANK
+    jsr swr_select_slot
+
+    lda #HI(pop_audio_bank2_start)
+    LDX #LO(audio2_filename)
+    LDY #HI(audio2_filename)
     JMP disksys_load_file
 }
 

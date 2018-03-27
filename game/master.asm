@@ -177,8 +177,11 @@ kresume = IKN_l OR $80
     STZ SavLevel        ; clear save flag
     JMP MainLoop        ; re-enter game (and keep fingers crossed)
 
-    \\ We weren't saving so just restart
+    \\ We weren't saving so display crash message
     .not_trying_to_save
+
+    \\ Firstly try and show the screen in case not visible
+    LDA #8:STA &FE00:LDA #0:STA &FE01
 
     .wait_vsync
 ;    DEX:BEQ stop_wait       ; in case our event handler has crashed
@@ -366,31 +369,6 @@ EQUD savedgame_top
  sta newBGset2
  sty newCHset
 
-    \ Switch Guard palettes - super hacky and can only get away with it because background sprites
-    \ Using these palettes never become loose pieces that can move - otherwise they would change too!
-    {
-        CMP #1
-        BEQ is_palace
-
-        \ Is Dungeon
-        LDA #MODE2_YELLOW_PAIR
-        STA palette_table+4*3+3     ; ick! Change colour 3 in palette 3 to Yellow (guard outfit)
-        STA palette_table+4*4+3     ; ick! Change colour 3 in palette 4 to Yellow (guard outfit)
-        
-        LDA #MODE2_RED_PAIR
-        STA palette_table+4*4+1     ; ick! Change colour 1 in palette 4 to Red (special guard)
-        BNE is_done
-
-        .is_palace
-        LDA #MODE2_WHITE_PAIR
-        STA palette_table+4*3+3     ; ick! Change colour 3 in palette 3 to White (guard outfit)
-        STA palette_table+4*4+3     ; ick! Change colour 3 in palette 3 to White (guard outfit)
-
-        LDA #MODE2_GREEN_PAIR
-        STA palette_table+4*4+1     ; ick! Change colour 1 in palette 4 to Green (special guard)
-        .is_done
-    }
-
 \ NOT BEEB
 \ jsr driveon
 
@@ -572,16 +550,22 @@ EQUB f_GD, f_SKEL, f_GD, f_FAT, f_SHAD, f_VIZ
 
 .rdch4
 {
-    ldx newCHset
-    cpx CHset
-    beq return
-    stx CHset
+    \ Merge guard type with level type
+    lda newBGset1
+    CLC:ROR A:ROR A
+    ora newCHset
 
-    \ Need to define slot numbers for different data block
+    cmp CHset
+    beq return
+    sta CHset
+
+    \ Load sprite bank for guard
     lda #BEEB_SWRAM_SLOT_CHTAB4
     jsr swr_select_slot
 
-    ldy CHset
+    lda CHset
+    and #&f
+    tay
     ldx chset_to_id, y
     lda #HI(chtable4)
     jsr disksys_load_sprite
@@ -592,6 +576,23 @@ EQUB f_GD, f_SKEL, f_GD, f_FAT, f_SHAD, f_VIZ
     LDA #HI(chtable4)
     STA beeb_readptr+1
     JSR beeb_plot_reloc_img
+
+    \ Check if this is a Palace guard
+    {
+        LDA CHset
+        BPL keep_pal
+
+        \ Swap Guard outfit
+        LDA #PAL_BMY
+        LDX #PAL_BMW
+        JSR beeb_plot_swap_pal
+
+        \ Swap Guard blood...
+        LDA #PAL_BRY
+        LDX #PAL_BRW
+        JSR beeb_plot_swap_pal
+        .keep_pal
+    }
 
     .return
     rts
@@ -662,6 +663,13 @@ ENDIF
 \*
 \*-------------------------------
 
+.wait_for_music_to_end
+{
+ JSR BEEB_MUSIC_IS_PLAYING
+ BNE wait_for_music_to_end
+ RTS
+}
+
 .pacRoom_name
 EQUS "PRIN2  $"
 
@@ -707,9 +715,7 @@ pacRoom_size = &1100        ; by hand doh!
 
 \* Wait for music to stop in case we're on a fast device
 
-.wait_for_music
- JSR BEEB_MUSIC_IS_PLAYING
- BNE wait_for_music
+ JSR wait_for_music_to_end
 
 \ Display screen
 
@@ -1040,11 +1046,15 @@ ENDIF
 \ LDA #0
 \ JSR disksys_set_drive
 
+    \\ Invalidate bg cache
+    LDA #&ff
+    sta CHset
+    sta BGset1
+    sta BGset2
+
 IF _AUDIO
     ; SM: added title music load & play trigger here
-    ; load title audio bank
-    lda #2
-    jsr BEEB_LOAD_AUDIO_BANK
+    jsr BEEB_LOAD_EPILOG_BANK
 ENDIF
 
  jsr SetupDHires
@@ -1056,7 +1066,7 @@ ENDIF
 \* Start the music
 
  lda #s_Epilog
- jsr BEEB_INTROSONG
+ jsr BEEB_EPILOGSONG
 
 \* Hack wait fn to ignore keys
 
@@ -1075,13 +1085,13 @@ ENDIF
 
  MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
 
-\* Show the splash after 10 secs (tbc)
+\* Show the splash after 30 secs (tbc)
 
- MASTER_SHOW_DHIRES 10*50
+ MASTER_SHOW_DHIRES 30*50
 
-\* Wait for some time (tbc)
+\* Wait for some time (tbc) or just the end of the tune :)
 
- MASTER_BLOCK_UNTIL 20*50
+ JSR wait_for_music_to_end
 
 \* Undo hack
 
@@ -1589,5 +1599,47 @@ EQUB 0
 
     DEX
     BPL beeb_plot_reloc_img_loop
+    RTS
+}
+
+; Swap palette# in A for X
+.beeb_plot_swap_pal
+{
+    STA beeb_temp
+    STX beeb_data
+
+    \ Get number of images
+    LDY #0
+    LDA (beeb_readptr), Y
+    TAX
+
+    \ For each image
+    .loop
+
+    \ Get pointer to sprite data
+    INY
+    LDA (beeb_readptr), Y
+    STA beeb_writeptr
+
+    INY
+    LDA (beeb_readptr), Y
+    STA beeb_writeptr+1
+
+    PHY
+
+    \ Pull out byte 2 (PALETTE)
+    LDY #2
+    LDA (beeb_writeptr), Y
+    CMP beeb_temp
+    BNE next_one
+
+    \ Replace with our new data if there's a match
+    LDA beeb_data
+    STA (beeb_writeptr), Y
+
+    .next_one
+    PLY
+    DEX
+    BNE loop
     RTS
 }

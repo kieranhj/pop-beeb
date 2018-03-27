@@ -150,7 +150,7 @@ unsigned char nula_colours[16][3] =
 	{ 255, 255, 255, },		// white
 };
 
-#define MAX_PALETTES 24
+#define MAX_PALETTES 17
 
 unsigned char palette_selection[MAX_PALETTES][3] =
 {
@@ -171,13 +171,16 @@ unsigned char palette_selection[MAX_PALETTES][3] =
 
 	{ 6, 5, 7 },			// 12=cyan, magenta, white (player)
 	{ 4, 7, 6 },			// 13=blue, white, cyan (shadow)
-	{ 4, 5, 7 },			// 14=blue, magenta, white (guard)
-	{ 2, 5, 7 },			// 15=green, magenta, white (guard)
+	{ 3, 5, 7 },			// 14=yellow, magenta, white (font)
 
-	{ 1, 5, 6 },			// 16=red, magenta, cyan (cutscene)
-	{ 1, 2, 3 },			// 17=red, green, yellow
-	{ 3, 5, 7 },			// 18=yellow, magenta, white (font)
+	{ 4, 5, 7 },			// 15=blue, magenta, white (guard)
+	{ 2, 5, 7 },			// 16=green, magenta, white (guard)
+
+//	{ 1, 5, 6 },			// 16=red, magenta, cyan (cutscene)
+//	{ 1, 2, 3 },			// 17=red, green, yellow
 };
+
+int palette_used[MAX_PALETTES];
 
 int convert_apple_to_pixels(unsigned char *apple_data, int apple_width, int apple_height, unsigned char *pixel_data)
 {
@@ -1396,6 +1399,8 @@ int main(int argc, char **argv)
 		mode5_total_width = 8 * mode5_total_width / 7;
 		mode5_total_width += num_images * 8;
 
+		for (int i = 0; i < MAX_PALETTES; i++) palette_used[i] = 0;
+
 		printf("Reading bitmap data from '%s'...\n", bitmapname);
 
 		CImg<unsigned char> bitmap(bitmapname);
@@ -1507,7 +1512,6 @@ int main(int argc, char **argv)
 				*beebptr++ = 0xff;			// don't know free yet
 
 											// Write Beeb data
-
 				for (int j = 0, i = start_image - 1; i < end_image; i++, j++)
 				{
 					int pixel_height = pixel_size[i][1];
@@ -1560,6 +1564,8 @@ int main(int argc, char **argv)
 							printf("Image %d matched palette %d\n", i + 1, palsel);
 						}
 
+						palette_used[palsel]++;
+
 						// Write bytes directly from bitmap
 
 						*beebptr++ = palsel | (half[i] ? 0x40 : 0);			// experiment - put palette index into sprite header!!!
@@ -1610,6 +1616,14 @@ int main(int argc, char **argv)
 
 				free(beebdata);
 				beebdata = NULL;
+
+				if (verbose)
+				{
+					printf("USED PALETTES: ");
+					for (int i = 0; i < MAX_PALETTES; i++)
+						if (palette_used[i]) printf("%d ", i);
+					printf("\n");
+				}
 			}
 		}
 	}

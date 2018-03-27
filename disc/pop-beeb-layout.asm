@@ -1,4 +1,4 @@
-; pop-beeb-side-a.asm
+; pop-beeb-layout.asm
 ; Make the disc
 
 \*-------------------------------

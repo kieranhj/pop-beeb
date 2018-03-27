@@ -127,7 +127,7 @@ starx = 2
 .stari EQUB $2a,$2b,$2b,$2a ;chtable6
 ENDIF
 
-.staraddr EQUW (beeb_screen_addr + &259B), (beeb_screen_addr + &232D), (beeb_screen_addr + &20A5), (beeb_screen_addr + &1BA6)
+.staraddr EQUW (beeb_screen_addr + &259B), (beeb_screen_addr + &232D), (beeb_screen_addr + &1E2A), (beeb_screen_addr + &1BA6)
 
 \ Stars all right-hand pixel
 \ Twinkle between cyan and blue

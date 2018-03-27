@@ -2022,6 +2022,26 @@ ENDIF
 }
 
 \*-------------------------------
+\*  Switch hires pages for duration of song
+\\ KC note - this means lay is just poking visible screen directly
+\\ whilst the rest of the system is "frozen" during music playback
+
+.swpage
+{
+ lda PAGE
+ eor #$20
+ sta PAGE
+
+\\ BEEB equivalent here to invert RAM bit 2 only
+\\ BEEB effectively become single buffered here!
+\\ BEEB use with caution and make sure you set it back...
+
+ lda &fe34
+ eor #4	; invert bits 0 (CRTC) & 2 (RAM)
+ sta &fe34
+}
+
+\*-------------------------------
 \*
 \*  R E D E F I N E  K E Y S
 \*
