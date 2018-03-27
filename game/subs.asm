@@ -370,7 +370,7 @@ slicersync = 3 ;# frames out of sync
  jsr psetupflame
  LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
- jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
+ jmp lay  ;<---DIRECT HIRES CALL
 }
 
 \*-------------------------------

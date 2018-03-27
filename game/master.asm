@@ -687,14 +687,8 @@ ENDIF
 
  jsr attract_epilog
 
-\ NOT BEEB
-\ lda #POPside1
-\ sta BBundID
-\ sta $c010
-
-\ BEEB TODO wait for keypress
-\.loop lda $c000
-\ bpl .loop ;fall thru
+    \ Could wait for keypress here... same as Apple II
+    \ But they've probably waited long enough if listen to 2 minute tune
 }
 \\ Fall thru!
 

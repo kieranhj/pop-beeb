@@ -420,7 +420,7 @@ ENDIF
 
 INCLUDE "lib/print.asm"
 
-.swr_fail_text EQUS "Requires Master", 13,0; w/ 4x SWRAM banks + PAGE at &E00.", 13, 0
+.swr_fail_text EQUS "Requires Master with 4x SWRAM banks + PAGE at &E00.", 13, 0
 
 .main_filename  EQUS "Main   $"
 .high_filename  EQUS "High   $"
@@ -439,6 +439,7 @@ ENDIF
 
 .beeb_boot_end
 
+ALIGN &8
 .pop_beeb_version
 EQUB _VERSION
 .pop_beeb_build

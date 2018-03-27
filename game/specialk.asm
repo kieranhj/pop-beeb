@@ -45,8 +45,8 @@ DebugKeys = 0
 .dloop BRK       ;jmp DLOOP
 .strobe jmp STROBE
 .controller jmp CONTROLLER
-.setcenter BRK  ;jmp SETCENTER      BEEB TODO JOYSTICK
-.pread BRK      ;jmp PREAD          BEEB TODO JOYSTICK
+.setcenter BRK  ;jmp SETCENTER      BEEB JOYSTICK
+.pread BRK      ;jmp PREAD          BEEB JOYSTICK
 
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -436,7 +436,7 @@ ENDIF
 .label_2 cmp #ksetkbd
  bne label_3
 
-; BEEB TODO JOYSTICK
+; BEEB JOYSTICK
 ; lda #0
 ; sta joyon
 
@@ -1703,7 +1703,7 @@ nummsg = P%-timetable
 
 .CONTROLLER
 {
-\ BEEB TODO JOYSTICK
+\ BEEB JOYSTICK
 \ jsr JREAD ;read jstk
 
  jmp BREAD ;& btns
