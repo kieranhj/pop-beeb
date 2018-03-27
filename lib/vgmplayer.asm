@@ -31,17 +31,11 @@ _ENABLE_VOLUME = TRUE
 \\ Y - hi byte of data stream to be played
 .vgm_init_stream
 {
-
-
 	\\ Initialise music player
-	;LDA #0
-	;STA vgm_player_ended
 	stz vgm_player_ended
-
 
 	\\ Initialise exomizer - must have some data ready to decrunch
 	jmp exo_init_decruncher	
-	;RTS
 }
 
 
@@ -89,11 +83,9 @@ _ENABLE_VOLUME = TRUE
 	TAY
 	.sound_data_loop
 	BEQ wait_20_ms
-	;TYA:PHA
 	phy
 	jsr exo_get_decrunched_byte
 	bcc not_sample_end
-	;PLA
 	ply
 	JMP _sample_end
 
@@ -101,7 +93,6 @@ _ENABLE_VOLUME = TRUE
 
 
 	JSR psg_strobe
-	;PLA:TAY
 	ply
 	dey
 
@@ -333,21 +324,11 @@ IF _ENABLE_VOLUME
 ; Check if volume control needs applying
 ; First check if bit 7 is set, 0=DATA 1=LATCH
 
-;	sta psg_register
-;	and #128
-;	beq no_volume
-
 	bit psg_latch_bit 	; 
 	beq no_volume 		; [3]
 
 ;	; this is a latch register write
 ; and check bit 4 to see if it is a volume register write, 1=VOLUME, 0=PITCH
-
-;	lda psg_register	
-;	and #16
-;	beq no_volume
-
-;	lda psg_register
 	bit psg_volume_bit	; [4]
 	beq no_volume		; not a volume register write
 
@@ -360,17 +341,10 @@ IF _ENABLE_VOLUME
 	tay				; [2]
 	lda volume_table,y
 	and #&0f
-
-;	lsr a
-;	asl a
-
-;	lda #&08
 	ora psg_register
-;	sta psg_register
 
 .no_volume
 
-;	lda psg_register
 ENDIF ; _ENABLE_VOLUME
 
 
@@ -397,11 +371,9 @@ ENDIF ; _ENABLE_AUDIO
 ;	cli					; **SELF-MODIFIED CODE**
 	RTS
 
-.psg_register EQUB 0	; cant be in ZP as used in IRQ
-;.psg_volume_cmd EQUB 128+16	; bits 7+4
-
-.psg_volume_bit	EQUB 16	; bit 4
-.psg_latch_bit EQUB 128 ; bit 7
+.psg_register	EQUB 0		; cant be in ZP as used in IRQ
+.psg_volume_bit	EQUB 16		; bit 4
+.psg_latch_bit	EQUB 128	; bit 7
 
 ;PSG_STROBE_SEI_INSN = psg_strobe_sei
 ;PSG_STROBE_CLI_INSN = psg_strobe_cli

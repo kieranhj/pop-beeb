@@ -489,25 +489,10 @@ ENDIF
 .label_16a cmp #kvolume_down
  bne label_16b
  jmp audio_volume_down
- ;lda volume
- ;beq min_volume
- ;dec volume
- ;ldx volume
- ;jsr audio_set_volume
- ;.min_volume
- ;rts
 
 .label_16b cmp #kvolume_up
  bne label_26
  jmp audio_volume_up
- ;lda volume
- ;cmp #15
- ;beq max_volume
- ;inc volume
- ;ldx volume
- ;jsr audio_set_volume
- ;.max_volume
- ;rts
 
 .label_26 cmp #kversion
  bne label_17
