@@ -675,7 +675,7 @@ INCBIN "Other/small_font.bin"
 ; Music & Audio routines crammed in here
 INCLUDE "lib/exomiser.asm"
 INCLUDE "lib/vgmplayer.asm"
-INCLUDE "lib/beeb_audio.asm"
+INCLUDE "game/beeb_audio.asm"
 
 .pop_beeb_aux_hazel_code_end
 
@@ -722,7 +722,7 @@ PRINT "ANDY RAM free = ", ~(ANDY_TOP - P%)
 PRINT "--------"
 
 ; Create the music banks and save them to disk
-INCLUDE "lib/beeb_audio_banks.asm"
+INCLUDE "game/beeb_audio_banks.asm"
 
 
 
@@ -787,7 +787,7 @@ INCBIN "Images/BEEB.IMG.CHTAB2.bin"
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
 
 PAGE_ALIGN                                  ; technically no reason to be PAGE ALIGNED
-INCLUDE "lib/beeb_sfx_bank.asm"
+INCLUDE "game/beeb_sfx_bank.asm"
 
 .bank1_end
 

@@ -26,7 +26,7 @@ INCLUDE "lib/swr.asm"
 INCLUDE "lib/vsync.asm"
 INCLUDE "lib/exomiser.asm"
 INCLUDE "lib/vgmplayer.asm"
-INCLUDE "lib/beeb_audio.asm"
+INCLUDE "game/beeb_audio.asm"
 
 ; SM: put music in ANDY. There are a few buffers we'll need to swap/load during the game.
 .pop_music_04
