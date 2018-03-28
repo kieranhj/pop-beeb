@@ -471,7 +471,7 @@ ENDIF
 .label_3 cmp #ksound
  bne label_16
 .togsound
- jsr zerosound
+ jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound
  lda soundon
  eor #1
  sta soundon
@@ -480,6 +480,8 @@ ENDIF
 
 .label_16 cmp #kmusic
  bne label_16a
+ jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound. In the case of music, this prevents any lingering sounds.
+
  lda musicon
  eor #1
  sta musicon
