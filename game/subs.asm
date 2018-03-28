@@ -78,7 +78,7 @@ ENDIF
 \ContMsg = 2
 \TimeMsg = 3
 
-timemsgtimer = 20
+timemsgtimer = 40
 
 \mirscrn = 4
 \mirx = 4
@@ -370,7 +370,7 @@ slicersync = 3 ;# frames out of sync
  jsr psetupflame
  LDA #BEEB_SWRAM_SLOT_CHTAB678
  STA BANK       ; BEEB hideous hack
- jmp lay  ;<---DIRECT HIRES CALL        BEEB TODO check OK
+ jmp lay  ;<---DIRECT HIRES CALL
 }
 
 \*-------------------------------
@@ -1420,8 +1420,6 @@ floorY = 151
 .normal
  lda msgtimer
  bne return ;wait till other msgs are gone
-
- STA msgdrawn       ; force this message to draw
 
  lda #TimeMsg
  sta message

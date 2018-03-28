@@ -82,12 +82,15 @@ ContMsg = 2
 TimeMsg = 3
 ErrorMsg = 4
 SuccessMsg = 5
+VolumeMsg = 6
+EasyMsg = 7
 
-leveltimer = 20 ;level message timer
+leveltimer = 40 ;level message timer
 contflash = 95
 contoff = 15
 deadenough = 4
-savtimer = 40
+savtimer = 50
+voltimer = 30
 
 \*-------------------------------
 \* Mirror location
@@ -144,7 +147,7 @@ miry = 0
  cpx #locals_top      ; BEEB don't zero all ZP
  bne loop
 
-\ BEEB TODO JOYSTICK
+\ BEEB JOYSTICK
 \ jsr setcenter ;Center joystick
 
 \ BEEB set keyboard mode
@@ -217,14 +220,10 @@ jsr loadgame ;Load saved-game info from disk
 
 \* No game saved--start new game instead
 
-\ NOT BEEB
-\ jsr flipdisk
-\ lda #POPside1
-\ sta BBundID
-
  lda #1
  sta level
  sta NextLevel
+ stz SavLevel
  jmp RESTART
 
 \* Restore strength & timer
@@ -246,13 +245,10 @@ jsr loadgame ;Load saved-game info from disk
  lda #1
  sta timerequest ;show time remaining
 
-\ NOT BEEB
-\ lda #$80
-\ sta yellowflag ;pass copy prot. test
-
  lda SavLevel
  sta level
  sta NextLevel
+ stz SavLevel
 
 \ BEEB addition - show cutscene before level after save game load
  jmp LoadNextLevel
@@ -290,6 +286,14 @@ ENDIF
 
  lda #1 ;no delay
  sta SPEED
+ rts
+}
+
+; A=message no. X=time
+.topctrl_setmessage
+{
+ sta message
+ stx msgtimer
  rts
 }
 
@@ -395,9 +399,8 @@ ENDIF
  sta skipmessage
  beq nomsg ;skip level 13 message 1st time
 .label_1 lda #LevelMsg
- sta message
- lda #leveltimer
- sta msgtimer
+ ldx #leveltimer
+ jsr topctrl_setmessage
 .nomsg
 
  jsr entrance ;entrance slams shut
@@ -422,14 +425,11 @@ ENDIF
   {
     LDA SavError
     BEQ no_error
-    LDA msgtimer
-    BNE no_error
+
     lda #ErrorMsg
-    sta message
-    lda #savtimer
-    sta msgtimer
+    ldx #savtimer
+    jsr topctrl_setmessage
     STZ SavError
-    STZ msgdrawn
     .no_error
   }
   \\ Handle Save Game request at top level
@@ -438,12 +438,10 @@ ENDIF
     BEQ no_savegame
     JSR DoSaveGame
     STZ SavLevel
-    LDA msgtimer
-    BNE no_savegame
+
     lda #SuccessMsg
-    sta message
-    lda #savtimer
-    sta msgtimer
+    ldx #savtimer
+    jsr topctrl_setmessage
     .no_savegame
   }
 
@@ -1335,10 +1333,11 @@ ENDIF
  lda msgtimer
  bne ok
 
-.label_1 lda #ContMsg
- sta message
- lda #255
- sta msgtimer ;Put up continue message
+.label_1
+ lda #ContMsg
+ ldx #255
+ jsr topctrl_setmessage
+ ; Put up continue message
 
 .ok cmp #1
  beq gameover ;End game when msgtimer = 1
@@ -1788,22 +1787,29 @@ ENDIF
 \* Kid is alive -- message is "Level #" or "# Minutes"
 
 .local_alive
- lda msgtimer
- cmp #leveltimer-2
- bcs return_62
+; BEEB not sure why this is here - just delays messages from appearing?
+; lda msgtimer
+; cmp #leveltimer-2
+; bcs return_62
 
-  LDA msgdrawn
-  CMP #REDRAW_FRAMES
-  BCC stuff_to_draw
+;  LDA msgdrawn
+;  CMP #REDRAW_FRAMES
+;  BCC stuff_to_draw
 
- lda message
- cmp #TimeMsg
- LDA msgtimer
- CMP #2
- bcs return_62
+; BEEB not sure why this is here either?
+; lda message
+; cmp #TimeMsg
+; LDA msgtimer
+; CMP #2
+; bcs return_62
   
+\ BEEB always draw message - only going to be for a few frames anyway
   .stuff_to_draw
-  INC msgdrawn
+ ; INC msgdrawn
+  LDA #REDRAW_FRAMES
+  STA msgdrawn    ; need to blank this many frames when we're done
+
+  JSR beeb_clear_text_area
 
  lda message
  cmp #LevelMsg
@@ -1822,12 +1828,25 @@ ENDIF
 
 .label_4
  cmp #SuccessMsg
- bne return_62
+ bne label_5
  jmp successmsg
+
+.label_5
+ cmp #VolumeMsg
+ bne label_6
+ jmp volumemsg
+
+.label_6
+ cmp #EasyMsg
+ bne return
+ jmp easymodemsg
+
+.return
+ RTS
 
 .no_message_to_display
   LDA msgdrawn
-  BEQ return_62
+  BEQ return
   DEC msgdrawn
   IF _DEMO_BUILD
   JMP plot_demo_watermark

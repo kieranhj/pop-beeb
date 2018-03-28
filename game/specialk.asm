@@ -45,8 +45,8 @@ DebugKeys = 0
 .dloop BRK       ;jmp DLOOP
 .strobe jmp STROBE
 .controller jmp CONTROLLER
-.setcenter BRK  ;jmp SETCENTER      BEEB TODO JOYSTICK
-.pread BRK      ;jmp PREAD          BEEB TODO JOYSTICK
+.setcenter BRK  ;jmp SETCENTER      BEEB JOYSTICK
+.pread BRK      ;jmp PREAD          BEEB JOYSTICK
 
 .getselect jmp GETSELECT
 .getdesel jmp GETDESEL
@@ -111,6 +111,7 @@ ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_t OR &80
+keasymode = IKN_e OR &80
 
 \\ NOT BEEB supported
 ;ksetjstk = IKN_j OR &80
@@ -131,7 +132,7 @@ kblackout = IKN_b OR &80
 ;kspeedup = ']'
 ;kslowdown = '['
 kantimatter = IKN_q OR &80
-kupone = IKN_e OR &80
+kupone = IKN_u OR &80
 ;kautoman = 'A'
 kincstr = IKN_s OR &80
 kdecstr = IKN_d OR &80
@@ -436,7 +437,7 @@ ENDIF
 .label_2 cmp #ksetkbd
  bne label_3
 
-; BEEB TODO JOYSTICK
+; BEEB JOYSTICK
 ; lda #0
 ; sta joyon
 
@@ -488,11 +489,16 @@ ENDIF
 ; volume up/down
 .label_16a cmp #kvolume_down
  bne label_16b
- jmp audio_volume_down
+ jsr audio_volume_down
+    .disp_vol
+    lda #VolumeMsg
+    ldx #voltimer
+    jmp topctrl_setmessage
 
 .label_16b cmp #kvolume_up
  bne label_26
- jmp audio_volume_up
+ jsr audio_volume_up
+ bra disp_vol
 
 .label_26 cmp #kversion
  bne label_17
@@ -510,12 +516,12 @@ ENDIF
 \* Show time left
 
 .label_18
-\ BEEB no CTRL so moved up
-\ cmp #kshowtime
-\ bne label_19
-\ lda #3
-\ sta timerequest
-\ rts
+ cmp #keasymode
+ bne label_19
+    lda #EasyMsg
+    ldx #savtimer
+    jsr topctrl_setmessage
+ JMP auto_set_easy_mode
 
 .label_19
 
@@ -1703,7 +1709,7 @@ nummsg = P%-timetable
 
 .CONTROLLER
 {
-\ BEEB TODO JOYSTICK
+\ BEEB JOYSTICK
 \ jsr JREAD ;read jstk
 
  jmp BREAD ;& btns
@@ -2173,9 +2179,6 @@ ASCII_MAPCHAR
   \ Clear the status line and reset to double buffering
   JSR beeb_clear_status_line
   JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
-
-  \ Print last message again
-  LDA #2:STA msgdrawn
 
   \ Mark energy meters to be redrawn
   JMP markmeters

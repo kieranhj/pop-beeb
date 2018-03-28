@@ -4,7 +4,7 @@
 
 .audio
 
-.gtone RTS      ;jmp GTONE          BEEB TODO SOUND
+.gtone RTS      ;jmp GTONE   ; meant to be small ding for keyboard options
 \.minit jmp BEEB_CUESONG     ; jmp MINIT
 \.mplay jmp MPLAY
 \.whoop BRK      ;jmp WHOOP
