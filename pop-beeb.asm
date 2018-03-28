@@ -500,6 +500,12 @@ INCLUDE "game/beeb-plot-layrsave.asm"
 INCLUDE "game/core_data.asm"
 
 .pop_beeb_data_end
+
+\ Pad out Core in DEBUG to keep sector location the same... 
+IF _DEBUG
+SKIP (CORE_TOP - P%)
+ENDIF
+
 .pop_beeb_end
 
 ; Save Core executable
@@ -529,8 +535,8 @@ PRINT "BEEB PLOT LAYRSAVE size = ", ~(beeb_plot_layrsave_end - beeb_plot_layrsav
 PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
-PRINT "Core high watermark = ", ~P%
-PRINT "Core RAM free = ", ~(CORE_TOP - P%)
+PRINT "Core high watermark = ", ~P%-(pop_beeb_end - pop_beeb_data_end)
+PRINT "Core RAM free = ", ~(CORE_TOP - P%) - (pop_beeb_end - pop_beeb_data_end)
 PRINT "--------"
 
 ; Run time initalised data in Core can overlay boot

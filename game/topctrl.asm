@@ -423,8 +423,9 @@ ENDIF
   {
     LDA SavError
     BEQ no_error
-    LDA msgtimer
-    BNE no_error
+; Error msg important so force it
+;    LDA msgtimer
+;    BNE no_error
     lda #ErrorMsg
     sta message
     lda #savtimer
@@ -439,8 +440,9 @@ ENDIF
     BEQ no_savegame
     JSR DoSaveGame
     STZ SavLevel
-    LDA msgtimer
-    BNE no_savegame
+; Save msg important so force it
+;    LDA msgtimer
+;    BNE no_savegame
     lda #SuccessMsg
     sta message
     lda #savtimer
@@ -1789,22 +1791,27 @@ ENDIF
 \* Kid is alive -- message is "Level #" or "# Minutes"
 
 .local_alive
- lda msgtimer
- cmp #leveltimer-2
- bcs return_62
+; BEEB not sure why this is here - just delays messages from appearing?
+; lda msgtimer
+; cmp #leveltimer-2
+; bcs return_62
 
-  LDA msgdrawn
-  CMP #REDRAW_FRAMES
-  BCC stuff_to_draw
+;  LDA msgdrawn
+;  CMP #REDRAW_FRAMES
+;  BCC stuff_to_draw
 
- lda message
- cmp #TimeMsg
- LDA msgtimer
- CMP #2
- bcs return_62
+; BEEB not sure why this is here either?
+; lda message
+; cmp #TimeMsg
+; LDA msgtimer
+; CMP #2
+; bcs return_62
   
+\ BEEB always draw message - only going to be for a few frames anyway
   .stuff_to_draw
-  INC msgdrawn
+ ; INC msgdrawn
+  LDA #REDRAW_FRAMES
+  STA msgdrawn    ; need to blank this many frames when we're done
 
  lda message
  cmp #LevelMsg
