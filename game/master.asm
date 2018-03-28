@@ -44,10 +44,7 @@
 \dum locals
 \ Now defined in master.h.asm
 
-\*-------------------------------
-\* Music song #s
-\ Moved to soundnames.h.asm
-
+.byline_filename    EQUS "BYLINE $"
 .title_filename     EQUS "TITLE  $"
 .prolog_filename    EQUS "PROLOG $"
 .sumup_filename     EQUS "SUMUP  $"
