@@ -949,9 +949,9 @@ ENDIF
 
 .KREAD
 {
- lda #0
- sta kbdX
- sta kbdY
+ ;lda #0
+ stz kbdX
+ stz kbdY
 
  lda keypress
  bmi cont ;fresh press
@@ -1084,11 +1084,11 @@ ENDIF
 
 .INITINPUT
 {
- lda #0
+ ;lda #0
 
  ldx #4
-.loop sta clrDESEL,x
- sta clrSEL,x
+.loop stz clrDESEL,x
+ stz clrSEL,x
  dex
  bpl loop
 .return
