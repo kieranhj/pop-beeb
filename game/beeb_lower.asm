@@ -325,13 +325,18 @@ ENDIF
 \*-------------------------------
 \*  BEEB SYSTEM VARS
 \*-------------------------------
+_AUDIO_BANK_OPTIMIZATION = TRUE ; SM: needed to do this to claw back some precious bytes!
 
+IF _AUDIO_BANK_OPTIMIZATION
+.audio_filename  EQUS "AudioX $"    ; audio bank filename ** MODIFIED BY beeb_load_audio_bank **
+ELSE
 ; all filenames are 8 characters in length
 .audio0_filename EQUS "Audio0 $"    ; 
 .audio1_filename EQUS "Audio1 $"    ; 
 .audio2_filename EQUS "Audio2 $"    ; 
 .audio3_filename EQUS "Audio3 $"    ; game music jingles
 .audio4_filename EQUS "Audio4 $"    ; cutscene music
+ENDIF
 
 .splash_filename    EQUS "SPLASH $"
 .presents_filename  EQUS "PRESENT$"
