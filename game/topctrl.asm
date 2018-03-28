@@ -218,14 +218,10 @@ jsr loadgame ;Load saved-game info from disk
 
 \* No game saved--start new game instead
 
-\ NOT BEEB
-\ jsr flipdisk
-\ lda #POPside1
-\ sta BBundID
-
  lda #1
  sta level
  sta NextLevel
+ stz SavLevel
  jmp RESTART
 
 \* Restore strength & timer
@@ -247,13 +243,10 @@ jsr loadgame ;Load saved-game info from disk
  lda #1
  sta timerequest ;show time remaining
 
-\ NOT BEEB
-\ lda #$80
-\ sta yellowflag ;pass copy prot. test
-
  lda SavLevel
  sta level
  sta NextLevel
+ stz SavLevel
 
 \ BEEB addition - show cutscene before level after save game load
  jmp LoadNextLevel
@@ -431,7 +424,6 @@ ENDIF
     lda #savtimer
     sta msgtimer
     STZ SavError
-    STZ msgdrawn
     .no_error
   }
   \\ Handle Save Game request at top level

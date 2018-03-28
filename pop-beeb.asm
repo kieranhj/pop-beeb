@@ -536,7 +536,7 @@ PRINT "--------"
 PRINT "Core code size = ", ~(pop_beeb_core_end - pop_beeb_core_start)
 PRINT "Core data size = ", ~(pop_beeb_data_end - pop_beeb_data_start)
 PRINT "Core high watermark = ", ~P%-(pop_beeb_end - pop_beeb_data_end)
-PRINT "Core RAM free = ", ~(CORE_TOP - P%) - (pop_beeb_end - pop_beeb_data_end)
+PRINT "Core RAM free = ", ~(CORE_TOP - P%) + (pop_beeb_end - pop_beeb_data_end)
 PRINT "--------"
 
 ; Run time initalised data in Core can overlay boot

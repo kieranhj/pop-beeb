@@ -2181,9 +2181,6 @@ ASCII_MAPCHAR
   JSR beeb_clear_status_line
   JSR swpage    ; BEEB EXTRA CAUTION - DIRECT FN CALL INTO ANOTHER MODULE
 
-  \ Print last message again
-  LDA #2:STA msgdrawn
-
   \ Mark energy meters to be redrawn
   JMP markmeters
 }

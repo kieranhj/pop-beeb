@@ -87,6 +87,7 @@ kresume = IKN_l OR $80
     LDX #&FF
     TXS                 ; reset stack
 
+    LDA SavLevel
     BPL go_mainloop
     STX SavLevel
     STZ SavError
