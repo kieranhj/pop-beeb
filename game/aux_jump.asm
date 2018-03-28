@@ -491,8 +491,6 @@ IF _DEBUG
 ELSE
 .beeb_display_vsync_counter BRK
 ENDIF
-.beeb_print_version_and_build JUMP_B BEEB_PRINT_VERSION_AND_BUILD, BEEB_SCREEN_BASE, 8
-
 
 \*-------------------------------
 \* attract.asm
@@ -989,7 +987,6 @@ EQUB LO(BEEB_DISPLAY_VSYNC_COUNTER)
 ELSE
 EQUB 0
 ENDIF
-EQUB LO(BEEB_PRINT_VERSION_AND_BUILD)
 
 \*-------------------------------
 \* attract.asm
@@ -1201,7 +1198,6 @@ EQUB HI(BEEB_DISPLAY_VSYNC_COUNTER)
 ELSE
 EQUB 0
 ENDIF
-EQUB HI(BEEB_PRINT_VERSION_AND_BUILD)
 
 \*-------------------------------
 \* attract.asm

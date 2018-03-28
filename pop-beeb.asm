@@ -888,8 +888,8 @@ INCLUDE "game/misc.asm"
 misc_end=P%
 INCLUDE "game/specialk.asm"
 specialk_end=P%
-INCLUDE "game/beeb_screen.asm"
 INCLUDE "game/attract.asm"
+INCLUDE "game/beeb_screen.asm"
 
 .pop_beeb_aux_high_end
 
