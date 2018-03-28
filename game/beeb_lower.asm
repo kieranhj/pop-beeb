@@ -352,7 +352,7 @@ EQUS "IF~POSSIBLE~SAVE~STATE~IN~EMULATOR", &FF
 EQUS "PC:~",&FF
 ASCII_MAPCHAR
 
-ALIGN &8
+SKIP (&CF8-P%)
 .pop_beeb_version
 EQUB _VERSION
 .pop_beeb_build
