@@ -12,10 +12,19 @@ IF _AUDIO
 ; See soundnames.h.asm for the various effects & music enums
 
 ; Start playing a game music track
-; A contains song to play (1-16), and assumes correct audio bank has been loaded.
-; Note that our song IDs dont match the Apple ones since we nicked them from the Master system version.
-.BEEB_CUESONG
+; on entry:
+; A contains song to play (1-16), and assumes correct audio bank has been loaded. (max 127 songs supported per table)
+; X/Y contains table of songs used for lookups
+; 'audio_cuesong_bank' contains the SWR bank the audio is stored in
+
+.audio_cuesong_bank EQUB 0
+.audio_cuesong
 {
+    stx lut1+1
+    stx lut2+1
+    sty lut1+2
+    sty lut2+2
+
 IF _DEBUG
     LDX audio_update_enabled
     BNE ok
@@ -25,62 +34,50 @@ ENDIF
 
     STA SongCue
 
-    ;asl a
     asl a
     tax
+    inx
     ; get address
-    lda pop_game_music+1,x
+.lut1
+    lda &ffff,x         ; Get HI byte from music table **MODIFIED**
     bne have_track    ; dont play if entry is 0
     STA SongCue
     RTS
 
     .have_track
     tay
-    lda pop_game_music+0,x
+    dex
+.lut2
+    lda &ffff,x     ; Get LO byte from music table **MODIFIED**
     tax
     ; get bank
-    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_game_music+2,x
+    lda audio_cuesong_bank ;#BEEB_AUDIO_MUSIC_BANK
     ; play the track
     jsr music_play
 
-.no_track
-	rts
+.no_track    
+    rts
+}
+
+; A contains index of song to be played 
+.BEEB_CUESONG
+{
+    ldx #BEEB_AUDIO_MUSIC_BANK
+    stx audio_cuesong_bank
+    ldx #lo(pop_game_music)
+    ldy #hi(pop_game_music)
+    jmp audio_cuesong
 }
 
 ; Start playing an intro music track
 ; A contains song to play (1-16), and assumes correct audio bank has been loaded.
-
 .BEEB_INTROSONG
 {
-IF _DEBUG
-    LDX audio_update_enabled
-    BNE ok
-    BRK
-    .ok
-ENDIF
-
-    STA SongCue
-
-    ;asl a
-    asl a
-    tax
-    ; get address
-    lda pop_title_music+1,x
-    bne have_track    ; dont play if entry is 0
-    STA SongCue
-    RTS
-
-    .have_track
-    tay
-    lda pop_title_music+0,x
-    tax
-    ; get bank
-    lda #BEEB_AUDIO_MUSIC_BANK ;lda pop_title_music+2,x
-    ; play the track
-    jsr music_play
-
-.no_track
-    rts
+    ldx #BEEB_AUDIO_MUSIC_BANK
+    stx audio_cuesong_bank    
+    ldx #lo(pop_title_music)
+    ldy #hi(pop_title_music)
+    jmp audio_cuesong
 }
 
 IF BEEB_AUDIO_STORY_BANK=BEEB_AUDIO_EPILOG_BANK
@@ -88,36 +85,34 @@ IF BEEB_AUDIO_STORY_BANK=BEEB_AUDIO_EPILOG_BANK
 ENDIF
 .BEEB_STORYSONG
 {
-IF _DEBUG
-    LDX audio_update_enabled
-    BNE ok
-    BRK
-    .ok
-ENDIF
-
-    STA SongCue
-
-    ;asl a
-    asl a
-    tax
-    ; get address
-    lda pop_title_music+1,x
-    bne have_track    ; dont play if entry is 0
-    STA SongCue
-    RTS
-
-    .have_track
-    tay
-    lda pop_title_music+0,x
-    tax
-    ; get bank
-    lda #BEEB_AUDIO_STORY_BANK ;lda pop_title_music+2,x
-    ; play the track
-    jsr music_play
-
-.no_track
-    rts
+    ldx #BEEB_AUDIO_STORY_BANK
+    stx audio_cuesong_bank    
+    ldx #lo(pop_title_music)
+    ldy #hi(pop_title_music)
+    jmp audio_cuesong
 }
+
+IF _AUDIO_BANK_OPTIMIZATION
+
+; on entry:
+; A is the audio bank file number (ie. the filename to be loaded $.Audio0, $.Audio1 etc.)
+; X is the SWR *bank* (***NOT SLOT***) to select for loading into (Slots arent supported in POP)
+; Y is the high byte of the address to load to
+.beeb_load_audio_bank
+{
+    clc
+    adc #48
+    sta audio_filename+5    ; write ASCII value of bank number to "$.AudioX" filename string
+
+    txa
+    jsr swr_select_bank
+
+    tya
+    ldx #LO(audio_filename)
+    ldy #HI(audio_filename)
+    JMP disksys_load_file    
+}
+ENDIF
 
 ; A is audio bank number (0-2)
 ; Does not currently save SWR bank selection - this might need looking at.
@@ -135,16 +130,23 @@ ENDIF
     ; Don't let update run
     JSR audio_update_off
 
-    pla
-    STA beeb_audio_loaded_bank
-    tax
+    plx
+    stx beeb_audio_loaded_bank
+;    tax
 
     ; preserve current SWR banksel
     lda &f4
     pha
 
-    txa
+    txa     ; A now contains audio file number
 
+
+IF _AUDIO_BANK_OPTIMIZATION
+;    lda #0                          ; audio file number
+    ldx #BEEB_AUDIO_MUSIC_BANK
+    ldy #HI(ANDY_START)
+    jsr beeb_load_audio_bank
+ELSE
     asl a:asl a:asl a   ; *8
     clc
     adc #LO(audio0_filename)
@@ -159,6 +161,7 @@ ENDIF
     \\ Load audio bank into ANDY
     lda #HI(ANDY_START)
     jsr disksys_load_file
+ENDIF
 
     ; restore SWR bank
     pla
@@ -173,6 +176,13 @@ ENDIF
 
 .BEEB_LOAD_STORY_BANK
 {
+IF _AUDIO_BANK_OPTIMIZATION
+    lda #1                          ; audio bank number
+    ldx #BEEB_AUDIO_STORY_BANK
+    ldy #HI(pop_audio_bank1_start)
+    jmp beeb_load_audio_bank
+
+ELSE    
     lda #BEEB_AUDIO_STORY_BANK
     jsr swr_select_slot
 
@@ -180,10 +190,18 @@ ENDIF
     LDX #LO(audio1_filename)
     LDY #HI(audio1_filename)
     JMP disksys_load_file
+ENDIF
 }
 
 .BEEB_LOAD_EPILOG_BANK
 {
+IF _AUDIO_BANK_OPTIMIZATION
+    lda #2                          ; audio bank number
+    ldx #BEEB_AUDIO_EPILOG_BANK
+    ldy #HI(pop_audio_bank2_start)
+    jmp beeb_load_audio_bank
+
+ELSE        
     lda #BEEB_AUDIO_EPILOG_BANK
     jsr swr_select_slot
 
@@ -191,6 +209,7 @@ ENDIF
     LDX #LO(audio2_filename)
     LDY #HI(audio2_filename)
     JMP disksys_load_file
+ENDIF
 }
 
 IF _AUDIO_DEBUG
@@ -316,7 +335,6 @@ ENDIF ; _AUDIO_DEBUG
 ; A contains sound effect id - 0 to 19
 .audio_play_sfx
 {
- ;   asl a
     asl a
     tax
 
@@ -324,15 +342,15 @@ ENDIF ; _AUDIO_DEBUG
     BEQ skip_sfx
 
     ; get bank
-    lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
-    pha
+;    pha
     ; get address
     lda pop_sound_fx+1,x
     tay
     lda pop_sound_fx+0,x
     tax
-    pla
+;    pla
     ; play the track
+    lda #BEEB_AUDIO_SFX_BANK ; lda pop_sound_fx+2,x
     jsr vgm_sfx_play ;music_play
 
     .skip_sfx
@@ -355,8 +373,8 @@ ENDIF ; _AUDIO_DEBUG
 ; Disable music updates
 .audio_update_off
 {
-    lda #0
-    sta audio_update_enabled
+    ;lda #0
+    stz audio_update_enabled
 	rts
 }
 

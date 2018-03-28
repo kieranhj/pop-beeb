@@ -102,8 +102,8 @@ DELETE = $7f
 SHIFT = $20
 \ BEEB use IKN defines in bbc.asm.h
 
-ksound = IKN_s OR &80
-kmusic = IKN_m OR &80
+ksound = IKN_right OR &80
+kmusic = IKN_left OR &80
 
 \*-------------------------------
 \*  Joystick "center" width (increase for bigger center)

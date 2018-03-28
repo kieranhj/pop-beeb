@@ -144,8 +144,8 @@ ktimeback = IKN_1 OR &80
 ktimefwd = IKN_2 OR &80
 ktimeup = IKN_0 OR &80
 kerasegame = IKN_9 OR &80
-kvolume_down = IKN_3 OR &80 ;IKN_minus OR &80
-kvolume_up = IKN_4 OR &80 ;IKN_hat OR &80
+kvolume_down = IKN_down OR &80
+kvolume_up = IKN_up OR &80
 
 \*-------------------------------
 ; BEEB allow keys to be redefined
@@ -471,7 +471,7 @@ ENDIF
 .label_3 cmp #ksound
  bne label_16
 .togsound
- jsr zerosound
+ jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound
  lda soundon
  eor #1
  sta soundon
@@ -480,6 +480,8 @@ ENDIF
 
 .label_16 cmp #kmusic
  bne label_16a
+ jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound. In the case of music, this prevents any lingering sounds.
+
  lda musicon
  eor #1
  sta musicon
@@ -489,7 +491,7 @@ ENDIF
 ; volume up/down
 .label_16a cmp #kvolume_down
  bne label_16b
- jsr audio_volume_down
+ jsr vgm_volume_down
     .disp_vol
     lda #VolumeMsg
     ldx #voltimer
@@ -497,7 +499,7 @@ ENDIF
 
 .label_16b cmp #kvolume_up
  bne label_26
- jsr audio_volume_up
+ jsr vgm_volume_up
  bra disp_vol
 
 .label_26 cmp #kversion
@@ -949,9 +951,9 @@ ENDIF
 
 .KREAD
 {
- lda #0
- sta kbdX
- sta kbdY
+ ;lda #0
+ stz kbdX
+ stz kbdY
 
  lda keypress
  bmi cont ;fresh press
@@ -1084,11 +1086,11 @@ ENDIF
 
 .INITINPUT
 {
- lda #0
+ ;lda #0
 
  ldx #4
-.loop sta clrDESEL,x
- sta clrSEL,x
+.loop stz clrDESEL,x
+ stz clrSEL,x
  dex
  bpl loop
 .return

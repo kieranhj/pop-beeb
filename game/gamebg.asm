@@ -397,13 +397,13 @@ ASCII_MAPCHAR
 .VOLUMEMSG
 {
     LDX #8
-    LDA volume
+    LDA vgm_volume
     CMP #10
     BCC single_digit
     LDA #2      ; numbers start at #1 so this = '1'
     STA volume_string, X
     INX
-    LDA volume
+    LDA vgm_volume
     SBC #10
     .single_digit
     INC A       ; numbers start at #1
