@@ -69,10 +69,16 @@ _ENABLE_VOLUME = TRUE
 \\ <eof section>
 \\  [0xff] - eof
 
+
+
+
 ; VGM "Music" player - fetches data from a compressed EXO stream
 ; We use EXO since music tracks benefit around 50% less RAM by using compression
 .vgm_poll_player
 {
+	ldx musicon
+	jsr vgm_set_volume_mask
+	
 	\\ Assume this is called every 20ms..
 	LDA vgm_player_ended
 	BNE _sample_end
@@ -169,6 +175,9 @@ _ENABLE_VOLUME = TRUE
 ; Carry set if SFX finished
 .vgm_sfx_update
 {
+	ldx soundon
+	jsr vgm_set_volume_mask
+
 	; only play something if sfx addr hi byte is valid
 	lda vgm_sfx_addr+1
 	beq finished
@@ -238,31 +247,39 @@ volume_store = locals + 3
 ; at silence it's 15 to 15 (0-0)
 
 ;
-.vgm_volume EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
+.vgm_volume			EQUB 15 ; volume is 0-15 where 0 is silence, 15 is full
+.vgm_volume_mask	EQUB 0	; set to 0 for no volume adjust, 15 for full audio mask
+.vgm_volume_mask_t	EQUB 15,0
 
+; set volume mask
+; X contains volume flag (1=on,0=off)
+; 
+.vgm_set_volume_mask
+{
+	lda vgm_volume_mask_t,x
+	sta vgm_volume_mask
+	rts
+}
 
 
 .vgm_volume_up
 {
 	ldx vgm_volume
 	cpx #15
-	beq quit
+	beq local_rts
 	inx
 	stx vgm_volume
-	jsr vgm_set_volume
-.quit
-	rts
+	jmp vgm_set_volume
 }
+.local_rts RTS
 
 .vgm_volume_down
 {
 	ldx vgm_volume
-	beq quit
+	beq local_rts
 	dex 
 	stx vgm_volume
-	jsr vgm_set_volume
-.quit
-	rts
+	jmp vgm_set_volume
 }
 
 ; set volume by setting the 16-byte volume_table ramp using a hacky linear interpolation
@@ -348,7 +365,8 @@ IF _ENABLE_VOLUME
 
 	tay				; [2]
 	lda volume_table,y
-	and #&0f
+	and #&0f			
+	ora vgm_volume_mask		; all bits set to mask audio, or clear to leave as is
 	ora psg_register
 
 .no_volume
