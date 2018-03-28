@@ -185,7 +185,7 @@ ENDIF
 \*
 \*-------------------------------
 
-CUTSCENE_END_TIME=49.5*50
+CUTSCENE_END_TIME=49.85*50
 CREDITS_SHOW_TIME=5*50
 
 .SilentTitle

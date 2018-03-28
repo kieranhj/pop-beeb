@@ -677,9 +677,11 @@ pacRoom_size = &1100        ; by hand doh!
 
 .EPILOG
 {
- lda #1
- sta soundon
- sta musicon
+\ BEEB - this seems a little harsh if playing late at night!
+\ lda #1
+\ sta soundon
+\ sta musicon
+
  jsr blackout
 
 IF _AUDIO
@@ -714,8 +716,9 @@ ENDIF
 \ LDA #0
 \ JSR disksys_set_drive
 
- lda #1
- sta musicon
+\ BEEB - respect user's wishes on audio
+\ lda #1
+\ sta musicon
 
 \ Part one (PubCredit, AuthorCredit, TitleScreen, Prolog1)
 
@@ -891,8 +894,9 @@ ENDIF
 
 \* Go to TOPCTRL
 
- lda #1
- sta musicon
+\ BEEB - respect user's wishes on audio
+\ lda #1
+\ sta musicon
 
  \ BEEB - should probably reconcile with above
  JSR audio_update_on
