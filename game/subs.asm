@@ -78,7 +78,7 @@ ENDIF
 \ContMsg = 2
 \TimeMsg = 3
 
-timemsgtimer = 20
+timemsgtimer = 40
 
 \mirscrn = 4
 \mirx = 4

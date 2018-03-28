@@ -111,6 +111,7 @@ ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_t OR &80
+keasymode = IKN_e OR &80
 
 \\ NOT BEEB supported
 ;ksetjstk = IKN_j OR &80
@@ -131,7 +132,7 @@ kblackout = IKN_b OR &80
 ;kspeedup = ']'
 ;kslowdown = '['
 kantimatter = IKN_q OR &80
-kupone = IKN_e OR &80
+kupone = IKN_u OR &80
 ;kautoman = 'A'
 kincstr = IKN_s OR &80
 kdecstr = IKN_d OR &80
@@ -491,10 +492,8 @@ ENDIF
  jsr audio_volume_down
     .disp_vol
     lda #VolumeMsg
-    sta message
-    lda #savtimer
-    sta msgtimer
-    rts
+    ldx #voltimer
+    jmp topctrl_setmessage
 
 .label_16b cmp #kvolume_up
  bne label_26
@@ -517,12 +516,12 @@ ENDIF
 \* Show time left
 
 .label_18
-\ BEEB no CTRL so moved up
-\ cmp #kshowtime
-\ bne label_19
-\ lda #3
-\ sta timerequest
-\ rts
+ cmp #keasymode
+ bne label_19
+    lda #EasyMsg
+    ldx #savtimer
+    jsr topctrl_setmessage
+ JMP auto_set_easy_mode
 
 .label_19
 

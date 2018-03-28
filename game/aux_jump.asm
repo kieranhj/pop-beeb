@@ -140,7 +140,7 @@ IF _JMP_TABLE
 .addguard JUMP_A ADDGUARD, AUTO_BASE, 6
 .cut JUMP_A CUT, AUTO_BASE, 7
 .demo JUMP_A DEMO, AUTO_BASE, 8             \\ moved from subs.asm
-
+.auto_set_easy_mode JUMP_A AUTO_SET_EASY_MODE, AUTO_BASE, 9
 
 \*-------------------------------
 \* coll.asm
@@ -274,7 +274,6 @@ IF _JMP_TABLE
 \* beeb_master.asm
 \*-------------------------------
 
-.beeb_copy_shadow JUMP_A BEEB_COPY_SHADOW, BEEB_MASTER_BASE, 0
 .blackout
 .beeb_hide_screen JUMP_A BEEB_HIDE_SCREEN, BEEB_MASTER_BASE, 1
 .beeb_show_screen JUMP_A BEEB_SHOW_SCREEN, BEEB_MASTER_BASE, 2
@@ -326,6 +325,8 @@ IF _JMP_TABLE
 .errormsg JUMP_B ERRORMSG, GAMEBG_BASE, 22
 .successmsg JUMP_B SUCCESSMSG, GAMEBG_BASE, 23
 .volumemsg  JUMP_B VOLUMEMSG, GAMEBG_BASE, 24
+
+.easymodemsg  JUMP_B EASYMODEMSG, GAMEBG_BASE, 25
 
 \*-------------------------------
 \* grafix.asm
@@ -486,11 +487,7 @@ ENDIF
 
 .beeb_clear_dhires_line JUMP_B BEEB_CLEAR_DHIRES_LINE, BEEB_SCREEN_BASE, 5
 .beeb_dhires_wipe JUMP_B BEEB_DHIRES_WIPE, BEEB_SCREEN_BASE, 6
-IF _DEBUG
-.beeb_display_vsync_counter JUMP_B BEEB_DISPLAY_VSYNC_COUNTER, BEEB_SCREEN_BASE, 7
-ELSE
-.beeb_display_vsync_counter BRK
-ENDIF
+.beeb_copy_shadow JUMP_B BEEB_COPY_SHADOW, BEEB_SCREEN_BASE, 7
 
 \*-------------------------------
 \* attract.asm
@@ -521,6 +518,7 @@ EQUB LO(CUTGUARD)
 EQUB LO(ADDGUARD)
 EQUB LO(CUT)
 EQUB LO(DEMO)
+EQUB LO(AUTO_SET_EASY_MODE)
 
 \*-------------------------------
 \* coll.asm
@@ -636,7 +634,7 @@ EQUB LO(INVERTY)
 \* beeb_master.asm
 \*-------------------------------
 BEEB_MASTER_BASE = P%-aux_jump_fn_table_A_LO
-EQUB LO(BEEB_COPY_SHADOW)
+EQUB 0;LO(BEEB_COPY_SHADOW)
 EQUB LO(BEEB_HIDE_SCREEN)
 EQUB LO(BEEB_SHOW_SCREEN)
 EQUB LO(BEEB_SET_GAME_SCREEN)
@@ -657,6 +655,7 @@ EQUB HI(CUTGUARD)
 EQUB HI(ADDGUARD)
 EQUB HI(CUT)
 EQUB HI(DEMO)
+EQUB HI(AUTO_SET_EASY_MODE)
 
 \*-------------------------------
 \* coll.asm
@@ -768,7 +767,7 @@ EQUB HI(INVERTY)
 \*-------------------------------
 \* beeb_master.asm
 \*-------------------------------
-EQUB HI(BEEB_COPY_SHADOW)
+EQUB 0;HI(BEEB_COPY_SHADOW)
 EQUB HI(BEEB_HIDE_SCREEN)
 EQUB HI(BEEB_SHOW_SCREEN)
 EQUB HI(BEEB_SET_GAME_SCREEN)
@@ -838,6 +837,8 @@ EQUB LO(FLOW)
 EQUB LO(ERRORMSG)
 EQUB LO(SUCCESSMSG)
 EQUB LO(VOLUMEMSG)
+
+EQUB LO(EASYMODEMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -982,11 +983,7 @@ EQUB LO(BEEB_CLEAR_OPP_ENERGY)
 
 EQUB LO(BEEB_CLEAR_DHIRES_LINE)
 EQUB LO(BEEB_DHIRES_WIPE)
-IF _DEBUG
-EQUB LO(BEEB_DISPLAY_VSYNC_COUNTER)
-ELSE
-EQUB 0
-ENDIF
+EQUB LO(BEEB_COPY_SHADOW)
 
 \*-------------------------------
 \* attract.asm
@@ -1053,6 +1050,8 @@ EQUB HI(FLOW)
 EQUB HI(ERRORMSG)
 EQUB HI(SUCCESSMSG)
 EQUB HI(VOLUMEMSG)
+
+EQUB HI(EASYMODEMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -1193,11 +1192,7 @@ EQUB HI(BEEB_CLEAR_OPP_ENERGY)
 
 EQUB HI(BEEB_CLEAR_DHIRES_LINE)
 EQUB HI(BEEB_DHIRES_WIPE)
-IF _DEBUG
-EQUB HI(BEEB_DISPLAY_VSYNC_COUNTER)
-ELSE
-EQUB 0
-ENDIF
+EQUB HI(BEEB_COPY_SHADOW)
 
 \*-------------------------------
 \* attract.asm

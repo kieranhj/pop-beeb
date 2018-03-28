@@ -253,8 +253,14 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
     LDA #HI(&7C00)
     JSR disksys_decrunch_file
 
-    \\ Wait for 10 seconds for a key press
-    LDA #&81:LDX #LO(1000):LDY #HI(1000):JSR osbyte
+    \\ Wait for X seconds for a key press
+    LDA #&81
+IF _DEBUG
+    LDX #LO(100):LDY #HI(100)
+ELSE
+    LDX #LO(3000):LDY #HI(3000)
+ENDIF
+    JSR osbyte
 
     \\ Disable interupts from now on
     SEI
@@ -347,6 +353,7 @@ ENDIF
 
  lda #0
  sta invert ;rightside up Y tables
+ sta auto_is_easy   ; default difficulty
 
  lda #1
  sta soundon ;Sound on

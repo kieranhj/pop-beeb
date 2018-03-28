@@ -83,12 +83,14 @@ TimeMsg = 3
 ErrorMsg = 4
 SuccessMsg = 5
 VolumeMsg = 6
+EasyMsg = 7
 
-leveltimer = 20 ;level message timer
+leveltimer = 40 ;level message timer
 contflash = 95
 contoff = 15
 deadenough = 4
-savtimer = 40
+savtimer = 50
+voltimer = 30
 
 \*-------------------------------
 \* Mirror location
@@ -287,6 +289,14 @@ ENDIF
  rts
 }
 
+; A=message no. X=time
+.topctrl_setmessage
+{
+ sta message
+ stx msgtimer
+ rts
+}
+
 \*-------------------------------
 \*
 \*  Restart current level
@@ -389,9 +399,8 @@ ENDIF
  sta skipmessage
  beq nomsg ;skip level 13 message 1st time
 .label_1 lda #LevelMsg
- sta message
- lda #leveltimer
- sta msgtimer
+ ldx #leveltimer
+ jsr topctrl_setmessage
 .nomsg
 
  jsr entrance ;entrance slams shut
@@ -416,13 +425,10 @@ ENDIF
   {
     LDA SavError
     BEQ no_error
-; Error msg important so force it
-;    LDA msgtimer
-;    BNE no_error
+
     lda #ErrorMsg
-    sta message
-    lda #savtimer
-    sta msgtimer
+    ldx #savtimer
+    jsr topctrl_setmessage
     STZ SavError
     .no_error
   }
@@ -432,13 +438,10 @@ ENDIF
     BEQ no_savegame
     JSR DoSaveGame
     STZ SavLevel
-; Save msg important so force it
-;    LDA msgtimer
-;    BNE no_savegame
+
     lda #SuccessMsg
-    sta message
-    lda #savtimer
-    sta msgtimer
+    ldx #savtimer
+    jsr topctrl_setmessage
     .no_savegame
   }
 
@@ -1330,10 +1333,11 @@ ENDIF
  lda msgtimer
  bne ok
 
-.label_1 lda #ContMsg
- sta message
- lda #255
- sta msgtimer ;Put up continue message
+.label_1
+ lda #ContMsg
+ ldx #255
+ jsr topctrl_setmessage
+ ; Put up continue message
 
 .ok cmp #1
  beq gameover ;End game when msgtimer = 1
@@ -1805,6 +1809,8 @@ ENDIF
   LDA #REDRAW_FRAMES
   STA msgdrawn    ; need to blank this many frames when we're done
 
+  JSR beeb_clear_text_area
+
  lda message
  cmp #LevelMsg
  bne label_1
@@ -1827,8 +1833,13 @@ ENDIF
 
 .label_5
  cmp #VolumeMsg
- bne return
+ bne label_6
  jmp volumemsg
+
+.label_6
+ cmp #EasyMsg
+ bne return
+ jmp easymodemsg
 
 .return
  RTS

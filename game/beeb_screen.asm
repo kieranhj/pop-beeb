@@ -163,38 +163,44 @@
 }
 
 \*-------------------------------
-; Debug fns
+; Copy SHADOW
+; A=Start address PAGE
 \*-------------------------------
 
-IF _DEBUG
-.temp_last_count EQUB 0
-
-FR_COUNTER_X=78
-FR_COUNTER_Y=BEEB_STATUS_ROW
-
-.BEEB_DISPLAY_VSYNC_COUNTER
+.BEEB_COPY_SHADOW
 {
+    STA smRead+2
+    STA smWrite+2
 
-    JSR beeb_plot_font_prep
-    LDA #LO(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr
-    LDA #HI(beeb_screen_addr + FR_COUNTER_Y*BEEB_SCREEN_ROW_BYTES + FR_COUNTER_X*8)
-    STA beeb_writeptr+1
-    LDA #PAL_FONT:STA PALETTE
+    LDX #0
+    
+    .next_page
+    \\ Read from visible screen
+    LDA &FE34:EOR #&4:STA &FE34
 
-    SEC
-    LDA beeb_vsync_count
-    TAY
-    SBC temp_last_count
-    STY temp_last_count
+    .read_page_loop
+    .smRead
+    LDA &FF00, X
+    STA DISKSYS_BUFFER_ADDR, X
+    INX
+    BNE read_page_loop
 
-    CMP #10
-    BCC diff_ok
-    LDA #9
-    .diff_ok
-    INC A
-    JMP beeb_plot_font_glyph
+    \\ Copy to alternate screen
+    LDA &FE34:EOR #&4:STA &FE34
+
+    .write_page_loop
+    LDA DISKSYS_BUFFER_ADDR, X
+    .smWrite
+    STA &FF00, X
+    INX
+    BNE write_page_loop
+
+    INC smRead+2
+    INC smWrite+2
+
+    BPL next_page
+
+    RTS
 }
-ENDIF
 
 .beeb_screen_end

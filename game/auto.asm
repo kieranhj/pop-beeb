@@ -111,7 +111,7 @@ blocktime = 4
 \* advprob = of advancing to within striking range
 \* refractimer = length of refractory period after being hit
 \*
-\*               0   1   2   3   4   5   6   7   8   9   10  11
+\*      0   1   2   3   4   5   6   7   8   9   10  11
 
 .strikeprob
  EQUB 075,100,075,075,075,050,100,220,000,060,040,060
@@ -144,6 +144,24 @@ numprogs = 12
  EQUB 0,0,0,1,1,0,0
 
 shadstrength = 4
+
+.AUTO_SET_EASY_MODE
+{
+    LDA auto_is_easy
+    EOR #1
+    STA auto_is_easy
+    
+    \\ Toggle opcode between NOP and SHIFT
+
+    LDA MaybeStrike_smShift1
+    EOR #(NOP_OP EOR OPCODE_LSRA)
+    STA MaybeStrike_smShift1
+    STA MaybeStrike_smShift2
+
+    .return
+    RTS
+}
+
 
 \*-------------------------------
 \*
@@ -539,11 +557,12 @@ ENDIF ;DemoDisk
 .local_eng lda EnemyAlert
  beq return
 
- lda level
- cmp #13
- bne label_1 ;Vizier only: wait for music to finish
- lda SongCue
- bne return
+\ BEEB - don't do this otherwise can get to Vizier before he is ready!
+\ lda level
+\ cmp #13
+\ bne label_1 ;Vizier only: wait for music to finish
+\ lda SongCue
+\ bne return
 
 .label_1 jmp auto_DoEngarde
 .return
@@ -869,7 +888,6 @@ ENDIF ;DemoDisk
 \*-------------------------------
 
 .MaybeStrike
-{
  ldx OpPosn
  cpx #169
  beq return_48
@@ -878,21 +896,29 @@ ENDIF ;DemoDisk
 
  ldx CharPosn
  cpx #161 ;have I just blocked?
- beq local_restrike
+ beq MaybeStrike_restrike
  cpx #150
- beq local_restrike ;yes--restrike?
+ beq MaybeStrike_restrike ;yes--restrike?
 
  jsr rndp
- cmp strikeprob,x
- bcs return_48
+ STA beeb_temp
+ LDA strikeprob,X
+.MaybeStrike_smShift1
+ NOP 
+ CMP beeb_temp
+ bcc return_48
  jmp auto_DoStrike
 
-.local_restrike
+.MaybeStrike_restrike
  jsr rndp
- cmp restrikeprob,x
- bcs return_48
+ STA beeb_temp
+ LDA restrikeprob,x
+.MaybeStrike_smShift2
+ NOP
+ CMP beeb_temp
+ bcc return_48
  jmp auto_DoStrike
-}
+
 
 \*-------------------------------
 

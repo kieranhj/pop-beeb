@@ -360,8 +360,6 @@ ASCII_MAPCHAR
 
 .ERRORMSG
 {
-    JSR beeb_clear_text_area
-
     LDA #LO(error_string)
     STA beeb_readptr
     LDA #HI(error_string)
@@ -380,8 +378,6 @@ ASCII_MAPCHAR
 
 .SUCCESSMSG
 {
-    JSR beeb_clear_text_area
-
     LDA #LO(success_string)
     STA beeb_readptr
     LDA #HI(success_string)
@@ -400,8 +396,6 @@ ASCII_MAPCHAR
 
 .VOLUMEMSG
 {
-    JSR beeb_clear_text_area
-
     LDX #8
     LDA volume
     CMP #10
@@ -426,7 +420,43 @@ ASCII_MAPCHAR
     LDA #PAL_FONT
     LDX #30
     LDY #BEEB_STATUS_ROW
-    JSR beeb_plot_font_string
+    JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.easymode_string
+EQUS "EASY GUARDS:~OXX~", &FF
+ASCII_MAPCHAR
+
+.EASYMODEMSG
+{
+    LDX #14
+    LDA auto_is_easy
+    BEQ easy_off
+
+    LDA #'N'-'A'+GLYPH_A
+    BNE do_print
+
+    .easy_off
+    LDA #'F'-'A'+GLYPH_A
+    STA easymode_string, X
+    INX
+
+    .do_print
+    STA easymode_string, X
+    INX
+    LDA #BLANK_GLYPH
+    STA easymode_string, X
+
+    LDA #LO(easymode_string)
+    STA beeb_readptr
+    LDA #HI(easymode_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #24
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
 }
 
 IF _NOT_BEEB
@@ -543,9 +573,6 @@ ENDIF
 
  lda #UseLayrsave OR UseCharTable
  jmp addmid
-
-.return
- rts
 }
 
 \*-------------------------------
