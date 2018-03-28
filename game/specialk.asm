@@ -488,11 +488,18 @@ ENDIF
 ; volume up/down
 .label_16a cmp #kvolume_down
  bne label_16b
- jmp audio_volume_down
+ jsr audio_volume_down
+    .disp_vol
+    lda #VolumeMsg
+    sta message
+    lda #savtimer
+    sta msgtimer
+    rts
 
 .label_16b cmp #kvolume_up
  bne label_26
- jmp audio_volume_up
+ jsr audio_volume_up
+ bra disp_vol
 
 .label_26 cmp #kversion
  bne label_17

@@ -325,7 +325,7 @@ IF _JMP_TABLE
 .flow JUMP_B FLOW, GAMEBG_BASE, 21
 .errormsg JUMP_B ERRORMSG, GAMEBG_BASE, 22
 .successmsg JUMP_B SUCCESSMSG, GAMEBG_BASE, 23
-
+.volumemsg  JUMP_B VOLUMEMSG, GAMEBG_BASE, 24
 
 \*-------------------------------
 \* grafix.asm
@@ -839,6 +839,7 @@ EQUB LO(TWINKLE)
 EQUB LO(FLOW)
 EQUB LO(ERRORMSG)
 EQUB LO(SUCCESSMSG)
+EQUB LO(VOLUMEMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -1054,6 +1055,7 @@ EQUB HI(TWINKLE)
 EQUB HI(FLOW)
 EQUB HI(ERRORMSG)
 EQUB HI(SUCCESSMSG)
+EQUB HI(VOLUMEMSG)
 
 \*-------------------------------
 \* grafix.asm

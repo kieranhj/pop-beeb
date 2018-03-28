@@ -82,6 +82,7 @@ ContMsg = 2
 TimeMsg = 3
 ErrorMsg = 4
 SuccessMsg = 5
+VolumeMsg = 6
 
 leveltimer = 20 ;level message timer
 contflash = 95
@@ -1822,12 +1823,20 @@ ENDIF
 
 .label_4
  cmp #SuccessMsg
- bne return_62
+ bne label_5
  jmp successmsg
+
+.label_5
+ cmp #VolumeMsg
+ bne return
+ jmp volumemsg
+
+.return
+ RTS
 
 .no_message_to_display
   LDA msgdrawn
-  BEQ return_62
+  BEQ return
   DEC msgdrawn
   IF _DEMO_BUILD
   JMP plot_demo_watermark
