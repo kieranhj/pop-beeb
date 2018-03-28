@@ -216,42 +216,6 @@ ASCII_MAPCHAR
 
 .TIMELEFTMSG
 {
-\ NOT BEEB
-\ lda #timeleft
-\ ldx #>timeleft
-\ jsr setupimage
-
-\ lda MinLeft
-\ cmp #2
-\ bcs ok
-\ lda KidAction
-\ cmp #3
-\ beq ok
-\ cmp #4
-\ beq ok ;falling
-\ lda KidBlockY
-\ cmp #1
-\ bne ok
-\ lda #lowmy
-\ sta YCO ;keep msg box out of kid's way
-\.ok
-\ jsr superim1
-\
-\ lda YCO
-\ sec
-\ sbc #5
-\ sta YCO
-\
-\ lda XCO
-\ clc
-\ adc #1
-\ sta XCO
-\ lda #0
-\ sta OPACITY
-\
-\ lda #ora
-\ sta OPACITY
-
     JSR beeb_clear_text_area
 
     jsr getminleft
@@ -322,52 +286,6 @@ ASCII_MAPCHAR
 
 .PRINTLEVEL
 {
-\ NOT BEEB
-\ lda #msgbox
-\ ldx #>msgbox
-\ jsr superimage
-\
-\ lda #levelmsg
-\ ldx #>levelmsg
-\ jsr setupimage
-\
-\ jsr getlevelno
-\ cpx #10
-\ bcc :1
-\ lda #0
-\ sta OFFSET
-\:1
-\ lda #ora
-\ sta OPACITY
-\ jsr addmsg
-\
-\ lda XCO
-\ clc
-\ adc #6
-\ sta XCO
-\
-\ jsr getlevelno ;X = level # (0-12)
-\ lda digit1,x ;1st digit
-\ beq :skip1st
-\ sta IMAGE
-\
-\ lda #ora
-\ sta OPACITY
-\ jsr addmsg
-\
-\ lda XCO
-\ clc
-\ adc #1
-\ sta XCO
-\
-\ jsr getlevelno
-\:skip1st lda digit2,x ;2nd digit
-\ sta IMAGE
-\
-\ lda #ora
-\ sta OPACITY
-\ jmp addmsg
-
     JSR beeb_clear_text_area
 
     LDY #6
@@ -424,18 +342,6 @@ ASCII_MAPCHAR
 
 .CONTINUEMSG
 {
-\ NOT BEEB
-\ lda #contbox
-\ ldx #>contbox
-\ jsr setupimage
-\
-\ lda KidBlockX
-\ and #1
-\ bne :1
-\ lda #lowconty
-\ sta YCO
-\:1 jmp superim1
-
     LDA #LO(continue_string)
     STA beeb_readptr
     LDA #HI(continue_string)
@@ -454,8 +360,6 @@ ASCII_MAPCHAR
 
 .ERRORMSG
 {
-    JSR beeb_clear_text_area
-
     LDA #LO(error_string)
     STA beeb_readptr
     LDA #HI(error_string)
@@ -474,8 +378,6 @@ ASCII_MAPCHAR
 
 .SUCCESSMSG
 {
-    JSR beeb_clear_text_area
-
     LDA #LO(success_string)
     STA beeb_readptr
     LDA #HI(success_string)
@@ -487,6 +389,75 @@ ASCII_MAPCHAR
     JMP beeb_plot_font_string
 }
 
+SMALL_FONT_MAPCHAR
+.volume_string
+EQUS "VOLUME:~XX~", &FF
+ASCII_MAPCHAR
+
+.VOLUMEMSG
+{
+    LDX #8
+    LDA vgm_volume
+    CMP #10
+    BCC single_digit
+    LDA #2      ; numbers start at #1 so this = '1'
+    STA volume_string, X
+    INX
+    LDA vgm_volume
+    SBC #10
+    .single_digit
+    INC A       ; numbers start at #1
+    STA volume_string, X
+    INX
+    LDA #BLANK_GLYPH
+    STA volume_string, X
+
+    LDA #LO(volume_string)
+    STA beeb_readptr
+    LDA #HI(volume_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #30
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.easymode_string
+EQUS "EASY GUARDS:~OXX~", &FF
+ASCII_MAPCHAR
+
+.EASYMODEMSG
+{
+    LDX #14
+    LDA auto_is_easy
+    BEQ easy_off
+
+    LDA #'N'-'A'+GLYPH_A
+    BNE do_print
+
+    .easy_off
+    LDA #'F'-'A'+GLYPH_A
+    STA easymode_string, X
+    INX
+
+    .do_print
+    STA easymode_string, X
+    INX
+    LDA #BLANK_GLYPH
+    STA easymode_string, X
+
+    LDA #LO(easymode_string)
+    STA beeb_readptr
+    LDA #HI(easymode_string)
+    STA beeb_readptr+1
+
+    LDA #PAL_FONT
+    LDX #24
+    LDY #BEEB_STATUS_ROW
+    JMP beeb_plot_font_string
+}
 
 IF _NOT_BEEB
 *-------------------------------
@@ -602,9 +573,6 @@ ENDIF
 
  lda #UseLayrsave OR UseCharTable
  jmp addmid
-
-.return
- rts
 }
 
 \*-------------------------------

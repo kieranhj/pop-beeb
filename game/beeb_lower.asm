@@ -321,6 +321,7 @@ ENDIF
 ;.soundtable ds maxsfx
 
 .trobcount skip 1
+.auto_is_easy skip 1
 
 \*-------------------------------
 \*  BEEB SYSTEM VARS
@@ -341,7 +342,6 @@ ENDIF
 .splash_filename    EQUS "SPLASH $"
 .presents_filename  EQUS "PRESENT$"
 .byline_filename    EQUS "BYLINE $"
-.title_filename     EQUS "TITLE  $"
 
 \*-------------------------------
 \* Relocated from Core at boot

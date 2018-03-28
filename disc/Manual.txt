@@ -221,7 +221,7 @@ the screen.  Press the Action key to return to the beginning of the
 current level.
 
 If you don't press the key, the message will remain on the screen for
-about 20 seconds, then start to flash in warning, accompanied by a
+about 10 seconds, then start to flash in warning, accompanied by a
 chime.  After ten chimes, the game will end and you will be returned
 to the title sequence.
 
@@ -259,10 +259,10 @@ CTRL-R.........Ends the game and returns you to the title sequence.
 CTRL-A.........Restarts play from the beginning of the current level.
 
 CTRL-S.........Turns off all sound.  Press again to turn the sound
-               back on.
+               back on. (NOT IMPLEMENTED)
 
-CTRL-N.........Turns off the music.  Press again to turn the music
-               back on.
+CTRL-M.........Turns off the music.  Press again to turn the music
+               back on. (NOT IMPLEMENTED)
 
 CTRL-G.........Saves the current game to disk.
 
@@ -299,9 +299,12 @@ each theme is associated with a specific character or idea.  The basic
 themes are:  Prince, Princess, Jaffar, Danger, Sword, Shadow, Death,
 Time, and Magic.
 
+(c) Jordan Mechner 1990
+
 ----------------------------
 About the BBC Master Version
 ----------------------------
 
+Lovingly ported to the BBC Master by Kieran Connell and friends
 For more details *TYPE README
-Or visit http://bitshifters.github.io
+Or visit https://bitshifters.github.io

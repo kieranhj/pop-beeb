@@ -25,6 +25,7 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`P` - Pause (`P` to step or any other key to continue)
 * `CTRL`+`M` - Music on/off (not yet implemented)
 * `CTRL`+`S` - Sound on/off/volume (not yet implemented)
+* `CTRL`+`E` - Toggle easy guards on/off (reduce attack probability)
 
 **Debug Keys (Development Build only!)**
 
@@ -34,7 +35,7 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`W` - Increase max energy
 * `CTRL`+`S` - Increase energy
 * `CTRL`+`D` - Decrease energy
-* `CTRL`+`E` - Move Player up one row on screen
+* `CTRL`+`U` - Move Player up one row on screen
 * `CTRL`+`Q` - Antimatter (press and walk through gates etc.)
 * `CTRL`+`1` - Add one minute to time remaining
 * `CTRL`+`2` - Remove one minute from time remaining

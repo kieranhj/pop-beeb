@@ -870,8 +870,9 @@ maxmob = mobspace-1
 
 .local_stop jsr stopobj
 
- lda #GateDown
- jsr addsound
+; BEEB - remove clang sound when exit finishes opening at IP's request
+; lda #GateDown
+; jsr addsound
 
 ; BEEB don't play tune when stairs appear - same as PC
 

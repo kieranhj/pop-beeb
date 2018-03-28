@@ -48,6 +48,7 @@
 \* Music song #s
 \ Moved to soundnames.h.asm
 
+.title_filename     EQUS "TITLE  $"
 .prolog_filename    EQUS "PROLOG $"
 .sumup_filename     EQUS "SUMUP  $"
 .credits_filename   EQUS "CREDITS$"
@@ -87,6 +88,7 @@ kresume = IKN_l OR $80
     LDX #&FF
     TXS                 ; reset stack
 
+    LDA SavLevel
     BPL go_mainloop
     STX SavLevel
     STZ SavError
@@ -687,14 +689,8 @@ ENDIF
 
  jsr attract_epilog
 
-\ NOT BEEB
-\ lda #POPside1
-\ sta BBundID
-\ sta $c010
-
-\ BEEB TODO wait for keypress
-\.loop lda $c000
-\ bpl .loop ;fall thru
+    \ Could wait for keypress here... same as Apple II
+    \ But they've probably waited long enough if listen to 2 minute tune
 }
 \\ Fall thru!
 
@@ -1242,4 +1238,48 @@ EQUB 0
     DEX
     BNE loop
     RTS
+}
+
+.beeb_print_version_and_build
+{
+  \ Write initial string
+  LDA #LO(version_string):STA beeb_readptr
+  LDA #HI(version_string):STA beeb_readptr+1
+  LDX #10
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+
+  \ Print version #
+  LDA pop_beeb_version
+  LSR A:LSR A:LSR A:LSR A
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #GLYPH_DOT
+  JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_version
+  AND #&F
+  CLC
+  ADC #1
+  JSR beeb_plot_font_glyph
+
+  LDA #LO(build_string):STA beeb_readptr
+  LDA #HI(build_string):STA beeb_readptr+1
+  LDX #38
+  LDY #BEEB_STATUS_ROW
+  LDA #PAL_FONT
+  JSR beeb_plot_font_string
+  
+  LDA pop_beeb_build+0:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+1:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+2:JSR beeb_plot_font_bcd
+
+  LDA #GLYPH_DOT:JSR beeb_plot_font_glyph
+
+  LDA pop_beeb_build+3:JSR beeb_plot_font_bcd
+  LDA pop_beeb_build+4
+  JMP beeb_plot_font_bcd
 }
