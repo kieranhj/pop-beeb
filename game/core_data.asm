@@ -5,49 +5,6 @@
 ; Expanded palette table going from 2bpp data directly to MODE 2 bytes
 \*-------------------------------
 
-.palette_addr_LO
-{
-    EQUB LO(fast_palette_lookup_0)
-    EQUB LO(fast_palette_lookup_1)
-    EQUB LO(fast_palette_lookup_2)
-    EQUB LO(fast_palette_lookup_3)
-    EQUB LO(fast_palette_lookup_4)
-    EQUB LO(fast_palette_lookup_5)
-    EQUB LO(fast_palette_lookup_6)
-    EQUB LO(fast_palette_lookup_7)
-    EQUB LO(fast_palette_lookup_8)
-    EQUB LO(fast_palette_lookup_9)
-    EQUB LO(fast_palette_lookup_10)
-    EQUB LO(fast_palette_lookup_11)
-    EQUB LO(fast_palette_lookup_12)
-    EQUB LO(fast_palette_lookup_13)
-    EQUB LO(fast_palette_lookup_14)
-    EQUB LO(fast_palette_lookup_15)
-    EQUB LO(fast_palette_lookup_16)
-}
-
-.palette_addr_HI
-{
-    EQUB HI(fast_palette_lookup_0)
-    EQUB HI(fast_palette_lookup_1)
-    EQUB HI(fast_palette_lookup_2)
-    EQUB HI(fast_palette_lookup_3)
-    EQUB HI(fast_palette_lookup_4)
-    EQUB HI(fast_palette_lookup_5)
-    EQUB HI(fast_palette_lookup_6)
-    EQUB HI(fast_palette_lookup_7)
-    EQUB HI(fast_palette_lookup_8)
-    EQUB HI(fast_palette_lookup_9)
-    EQUB HI(fast_palette_lookup_10)
-    EQUB HI(fast_palette_lookup_11)
-    EQUB HI(fast_palette_lookup_12)
-    EQUB HI(fast_palette_lookup_13)
-    EQUB HI(fast_palette_lookup_14)
-    EQUB HI(fast_palette_lookup_15)
-    EQUB HI(fast_palette_lookup_16)
-}
-
-
 \*-------------------------------
 ; Audio tables map sfx / music enums to data address
 \*-------------------------------
@@ -92,30 +49,4 @@
     EQUW 0;, &8080 ; s_StTimer = 12
     EQUW pop_music_epilog;, &8080 ; s_Epilog = 13       **BANK 2**
     EQUW 0;, &8080 ; s_Curtain = 14
-}
-
-; These sounds map to the sound triggers named in soundnames.h.asm
-.pop_sound_fx
-{
-	EQUW pop_sfx_00;, &8080		; PlateDown
-	EQUW pop_sfx_01;, &8080		; PlateUp
-	EQUW pop_sfx_02;, &8080		; GateDown
-	EQUW pop_sfx_03;, &8080		; SpecialKey1 - dont think this is used
-	EQUW pop_sfx_04;, &8080		; SpecialKey2 - dont think this is used
-	EQUW pop_sfx_05;, &8080		; Splat
-	EQUW pop_sfx_06;, &8080		; MirrorCrack
-	EQUW pop_sfx_07;, &8080		; LooseCrash
-	EQUW pop_sfx_08;, &8080		; GotKey - dont think this is used
-	EQUW pop_sfx_09;, &8080		; Footstep
-	EQUW pop_sfx_10;, &8080		; RaisingExit
-	EQUW pop_sfx_11;, &8080		; RaisingGate
-	EQUW pop_sfx_12;, &8080		; LoweringGate
-	EQUW pop_sfx_13;, &8080		; SmackWall
-	EQUW pop_sfx_14;, &8080		; Impaled
-	EQUW pop_sfx_15;, &8080		; GateSlam
-	EQUW pop_sfx_16;, &8080		; FlashMsg
-	EQUW pop_sfx_17;, &8080		; SwordClash1
-	EQUW pop_sfx_18;, &8080		; SwordClash2
-	EQUW pop_sfx_19;, &8080		; JawsClash
-    EQUW pop_music_glug; s_Glug = 17
 }

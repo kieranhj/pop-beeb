@@ -31,7 +31,7 @@ IF _UNROLL_WIPE
     STA beeb_writeptr+1
     
     \\ Jump to function
-IF _DEBUG
+IF 0;_DEBUG
     LDX width
     CPX #4
     BEQ width_ok
