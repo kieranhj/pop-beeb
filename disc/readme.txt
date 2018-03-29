@@ -58,6 +58,7 @@ www.inversephase.com
 MANY THANKS
 Matt Godbolt
 Rich Talbot-Watkins
+Stewart Badger
 Richard 'Tricky' Broadhurst
 Sarah Walker
 Dave 'Arcadian' Moore
