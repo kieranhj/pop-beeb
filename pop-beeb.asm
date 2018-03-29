@@ -165,8 +165,13 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
     \\ Turn off cursor
 
-    LDA #8:STA &FE00
-    LDA #&D3:STA &FE01
+\\ SM: no worky on Beeb Em - where did this voodoo come from anyways?!
+\\    LDA #8:STA &FE00
+\\    LDA #&D3:STA &FE01
+
+	\\ Turn off cursor by directly poking crtc
+	LDA #10: STA &FE00
+	LDA #32: STA &FE01
 
     \\ Hard reset on break
     LDA #200:LDX #3:JSR &FFF4
