@@ -109,7 +109,6 @@ ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_t OR &80
-keasymode = IKN_e OR &80
 kvolume_down = IKN_down OR &80
 kvolume_up = IKN_up OR &80
 ksound = IKN_s OR &80
@@ -541,13 +540,6 @@ ENDIF
 \* Show time left
 
 .label_18
- cmp #keasymode
- bne label_19
-    lda #EasyMsg
-    ldx #savtimer
-    jsr topctrl_setmessage
- JMP auto_set_easy_mode
-
 .label_19
 
 .return
@@ -886,9 +878,15 @@ ENDIF
  bmi label_5
  lda #14
  sta NextLevel
- jsr SHORTENTIME
- rts
-.label_5
+ jmp SHORTENTIME
+
+.label_5 lda #LO(C_easy)
+ ldx #HI(C_easy)
+ jsr checkcode
+ bmi label_6
+ JMP auto_set_easy_mode
+
+.label_6
 .return
  rts
 }
@@ -956,6 +954,7 @@ IF NoCheatKeys=0
 .C_restore EQUS IKN_t, IKN_s, IKN_e, IKN_r, 0       ; "REST"
 .C_zap1 EQUS IKN_p, IKN_a, IKN_z, 0                 ; "ZAP"
 .C_tina EQUS IKN_a, IKN_n, IKN_i, IKN_t, 0          ; "TINA"
+.C_easy EQUS IKN_y, IKN_s, IKN_a, IKN_e, 0          ; "EASY"
 
  ENDIF
 ENDIF
