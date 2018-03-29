@@ -1,12 +1,21 @@
-# pop-beeb
-A port of the original Apple II version of Prince of Persia to the BBC Master computer.
+# Prince Of Persia (pop-beeb)
+## For 6502 Acorn BBC Master 128Kb 
+A port of **Jordan Mechner's** original Apple II version of Prince of Persia to the BBC Master computer.
 
-Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/forums/viewtopic.php?f=53&t=13079) Stardot forum thread.
+Ported by **Kieran Connell**.
+
+A development blog (of sorts) can be found on [this](http://www.stardot.org.uk/forums/viewtopic.php?f=53&t=13079) Stardot forum thread.
 
 
-## Keys
+<p float="left">
+<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/TitleScreen.png.png" width="160" height="128" />
+<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/PrincessScreen.png" width="160" height="128" />
+<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/LevelScreen1.png" width="160" height="128" />
+<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/LevelScreen2.png" width="160" height="128" />
 
-**Player Controls**
+# Game Controls
+
+**Player Control Keys**
 
 * `Z` - Left
 * `X` - Right
@@ -23,8 +32,10 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `CTRL`+`R` - Return to titles
 * `CTRL`+`G` - Save game to disc (must be write enabled)
 * `CTRL`+`P` - Pause (`P` to step or any other key to continue)
-* `CTRL`+`M` - Music on/off (not yet implemented)
-* `CTRL`+`S` - Sound on/off/volume (not yet implemented)
+* `CTRL`+`M` - Music on/off 
+* `CTRL`+`S` - Sound on/off
+* `CTRL`+`↑` - Volume up
+* `CTRL`+`↓` - Volume down
 * `CTRL`+`E` - Toggle easy guards on/off (reduce attack probability)
 
 **Debug Keys (Development Build only!)**
@@ -52,7 +63,7 @@ Development blog (of sorts) can be found on [this](http://www.stardot.org.uk/for
 * `ZAP` - Zap guard to 1 health
 * `TINA` - Jump to end of game
 
-## References
+# References
 
 [Logo1](http://edit.tf/#8:QIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECAigNf2qBUvQf2qBAgQav6BAvS6v69Bq_oECBAgQIECBAgQICKA1_f79X9V_fpf79fq_r2v9rv_r1W_-vQfvqD-_SoP7VAgIoDX9rq1f0H9qg_9eGr-ga_2ur-gQav6DV__tf7XR8_tUCAigNf2urV_Qf2qBHr_6v6Br_a6v6BBq_oMXPmx_tdX9elQICKA1_-_tX9B_-tPn7_q_oGv9rq_oEGr_8Rb36H-11f0CBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECAkgNf2qBUvQf2qBAgQav6BAvS6v69Bq_oECBAgQIECBAgQICSA1_f79X9V_fpf79fq_r2v9rv_r1W_-vQfvqD-_SoP7VAgJIDX9rq1f0H9qg_9eGr-ga_2ur-gQav6DV__tf7XR8_tUCAkgNf2urV_Qf2qBHr_6v6Br_a6v6BBq_oMXPmx_tdX9elQICSA1_-_tX9B_-tPn7_q_oGv9rq_oEGr_8Rb36H-11f0CBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECAmgNf2qBUvQf2qBAgQav6BAvS6v69Bq_oECBAgQIECBAgQICaA1_f79X9V_fpf79fq_r2v9rv_r1W_-vQfvqD-_SoP7VAgJoDX9rq1f0H9qg_9eGr-ga_2ur-gQav6DV__tf7XR8_tUCAmgNf2urV_Qf2qBHr_6v6Br_a6v6BBq_oMXPmx_tdX9elQICaA1_-_tX9B_-tPn7_q_oGv9rq_oEGr_8Rb36H-11f0CBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECAogNf2qBUvQf2qBAgQav6BAvS6v69Bq_oECBAgQIECBAgQICiA1_f79X9V_fpf79fq_r2v9rv_r1W_-vQfvqD-_SoP7VAgKIDX9rq1f0H9qg_9eGr-ga_2ur-gQav6DV__tf7XR8_tUCAogNf2urV_Qf2qBHr_6v6Br_a6v6BBq_oMXPmx_tdX9elQICiA1_-_tX9B_-tPn7_q_oGv9rq_oEGr_8Rb36H-11f0CBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECBAgQIECA)
 
