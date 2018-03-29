@@ -1752,8 +1752,12 @@ ENDIF
  beq no_message_to_display
  dec msgtimer
 
- lda KidLife
- bmi local_alive
+\ lda KidLife
+\ bmi local_alive
+
+ lda message
+ cmp #ContMsg
+ bne local_alive
 
 \* Kid is dead -- message is "Press button to continue"
 
