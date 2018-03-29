@@ -973,18 +973,23 @@ class VgmStream:
 					if output_freq < 1:
 						output_freq = 1
 					
-					hz1 = float(self.vgm_source_clock) / (2.0 * float(tone_frequency) * 16.0) # target frequency
-					hz2 = float(self.vgm_target_clock) / (2.0 * float(output_freq) * 16.0)
+					if is_periodic_noise_tone:
+						hz1 = float(self.vgm_source_clock) / (2.0 * float(tone_frequency) * 16.0 * 15.0) # target frequency
+						hz2 = float(self.vgm_target_clock) / (2.0 * float(output_freq) * 16.0 * 15.0)					
+					else:
+						hz1 = float(self.vgm_source_clock) / (2.0 * float(tone_frequency) * 16.0) # target frequency
+						hz2 = float(self.vgm_target_clock) / (2.0 * float(output_freq) * 16.0)
+
 					hz_err = hz2-hz1
 					if self.VERBOSE: print "channel=" + str(latched_channel) + ", old frequency=" + str(tone_frequency) + ", new frequency=" + str(output_freq) + ", source_clock=" + str(self.vgm_source_clock) + ", target_clock=" + str(self.vgm_target_clock) + ", src_hz=" + str(hz1) + ", tgt_hz=" + str(hz2) + ", hz_err =" + str(hz_err)
 					if hz_err > 2.0 or hz_err < -2.0:
-						print "  WARNING: Large error transposing tone! [" + str(hz_err) + " Hz ]"
+						print "  WARNING: Large error transposing tone! [" + str(hz_err) + " Hz ] (channel="+str(latched_channel)+", PN="+str(is_periodic_noise_tone)+")"
 					#if self.VERBOSE: print ""
 				
 				return output_freq		
 
 
-				
+			TEST_OUTPUT = False # show additional test output in this section
 		
 			# iterate through write commands looking for tone writes and recalculate their frequencies
 			## first create a reference copy of the command list (just for a tuning hack below)
@@ -1023,8 +1028,8 @@ class VgmStream:
 							if pcommand == "63":	#wait50
 								vgm_time += 882								
 				
-				
-				
+				if TEST_OUTPUT:
+					print "TEST: vgm frame (1/60ths) = " + str( (vgm_time/735) )
 				
 				# only process write data commands
 				if command == struct.pack('B', 0x50):
@@ -1074,13 +1079,19 @@ class VgmStream:
 							# UPDATE: there is an issue with this approach. If channel 2 keys on with a volume setting BEFORE channel 3
 							# has keyed off a previously playing tuned periodic noise, it will mistakenly think this is a quad tone.
 
+
+
 							new_volume = qw & 15
+							if TEST_OUTPUT:
+								print "TEST: channel " + str(latched_channel) + " volume set to " + str(new_volume)
+
+							# True/False to enable detection & correction of "quad tones"
 							if True:
 								if latched_channel == 2:
 									if new_volume != 15:
 										if latched_volumes[3] != 15:
 											if (latched_tone_frequencies[3]) & 3 == 3:
-												print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, channel 2 was muted."
+												print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, analysing..."
 												
 												# ok, to make doubly sure we arent muting channel 2 unnecessarily, look ahead
 												# to see if any other volume writes (to set volume 0) on channel 3 are incoming for this time slot
@@ -1092,10 +1103,12 @@ class VgmStream:
 													ncommand = self.command_list[nindex]["command"]
 													# interpret any non-VGM-write commands to mean end of time slot
 													if ncommand != struct.pack('B', 0x50):
-														print " INFO: end of time slot"
+														if TEST_OUTPUT:
+															print " INFO: end of time slot (command " + str(binascii.hexlify(ncommand)) + ")"
 														break
 													else:
-														print " INFO: found command in same time slot"
+														if TEST_OUTPUT:
+															print " INFO: found command in same time slot"
 														# found the next VGM write command
 														ndata = self.command_list[nindex]["data"]
 
@@ -1105,16 +1118,21 @@ class VgmStream:
 						
 															# Check incoming channel id and if volume command 
 															incoming_channel_id = (nw>>5)&3
+															if TEST_OUTPUT:
+																print "  INFO: is a data command on channel " + str(incoming_channel_id)
 															if (incoming_channel_id == 3) and (nw & 16) != 0:	
+																if TEST_OUTPUT:
+																	print "  INFO: is a volume setting of " + str(nw & 15)
+																
 																# Yes, it's a volume command on channel 3
 																if (nw & 15) == 15:	# silent
-																	print " INFO: detected incoming volume off on channel 3"
+																	print " INFO: detected incoming volume off on channel 3, overrides correction"
 																	volume_channel3_will_be_zeroed = True
 																	break	
 
 												# so only mute channel 2 if we know channel 3 isnt going to be set to volume 15 this frame
 												if not volume_channel3_will_be_zeroed:
-													print " INFO: corrected volume on channel 2"
+													print " INFO: corrected volume, channel 2 was auto-muted due to active channel 3 periodic noise"
 													new_volume = 15
 
 													lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
@@ -1133,6 +1151,9 @@ class VgmStream:
 							qfreq = (qw & 0b00001111)
 							latched_tone_frequencies[latched_channel] = (latched_tone_frequencies[latched_channel] & 0b1111110000) | qfreq
 							
+							if TEST_OUTPUT:
+								print "TEST: channel " + str(latched_channel) + " pitch set to " + str(qfreq)
+
 							# check for non-tuned periodic noise (might sound out of tune when converted, because clock speed drives this)
 							# bit 2 of frequency on noise channel =0 for PN, or =1 for white noise
 							if latched_channel == 3 and (latched_tone_frequencies[3] < 3):
@@ -1271,7 +1292,6 @@ class VgmStream:
 	#-------------------------------------------------------------------------------------------------
 	# iterate through the command list, removing any duplicate volume or tone writes
 	def optimize(self):
-
 		print "   VGM Processing : Optimizing VGM Stream "
 
 		# total number of commands in the vgm stream
@@ -1485,7 +1505,6 @@ class VgmStream:
 	# this allows for better frequency correction - some tunes set tones before volumes which makes it tricky
 	# to detect tuned noise effects and compensate accordingly. Sorting register updates makes this more accurate.
 	def optimize2(self):
-
 		print "   VGM Processing : Optimizing VGM Packets "
 
 		# total number of commands in the vgm stream
