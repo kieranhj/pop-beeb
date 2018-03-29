@@ -94,18 +94,6 @@ ENDIF
 \USEROM = $c082
 
 \*-------------------------------
-\*  Key equates
-\ Should be in specialk.asm
-CTRL = $60
-ESC = $9b
-DELETE = $7f
-SHIFT = $20
-\ BEEB use IKN defines in bbc.asm.h
-
-ksound = IKN_right OR &80
-kmusic = IKN_left OR &80
-
-\*-------------------------------
 \*  Joystick "center" width (increase for bigger center)
 
 cwidthx = 10 ;15

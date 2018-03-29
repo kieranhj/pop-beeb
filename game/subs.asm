@@ -868,11 +868,16 @@ ENDIF
 ; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
 .loop
 \ Check for keys
- lda #1
- jsr strobe
+\ lda #1
+\ jsr strobe
+\
+\ lda keypress
+\ bmi interrupt
 
- lda keypress
- bmi interrupt
+\ Check for keys
+ jsr musickeys
+ cmp #$80
+ bcs interrupt
 
 \ Play a frame
  LDA #1
@@ -974,17 +979,21 @@ ENDIF
  lda SPEED
  jsr pause
 
- jsr strobe ;strobe kbd & jstk
+\ BEEB just use musickeys as standard
+\ jsr strobe ;strobe kbd & jstk
 
  lda level
  bne notdemo
- jsr demokeys
+
+\ jsr demokeys
+ jsr musickeys
  bpl cont
  lda #1
  jmp dostartgame ;interrupted--start a new game
 
 .notdemo
- lda keypress
+\ lda keypress
+ jsr musickeys
  bmi return_63 ;key or button to end scene
 
 .cont jsr subs_NextFrame ;Determine what next frame should look like
