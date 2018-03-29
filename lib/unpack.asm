@@ -84,7 +84,7 @@ ENDIF
 	tay
 .s0:	beq s1		; Y == 0 ?
 	jsr getbyt
-	sta table,x
+	sta pucrunch_table,x
 	inx
 	dey
 	bne s0
@@ -149,10 +149,10 @@ ENDIF
 
 .chrcode:	jsr getval	; Byte Code, X = 0
 	tax		; this is executed most of the time anyway
-	lda table-1,x	; Saves one jump if done here (loses one txa)
+	lda pucrunch_table-1,x	; Saves one jump if done here (loses one txa)
 
 	cpx #32		; 31-32 -> C clear, 32-32 -> C set..
-	bcc s1a		; 1..31, we got the right byte from the table
+	bcc s1a		; 1..31, we got the right byte from the pucrunch_table
 
 	; Ranks 32..64 (11111�xxxxx), get byte..
 	txa		; get back the value (5 valid bits)
@@ -262,13 +262,6 @@ OUTPOS = *+1		; ZP
 	bne s0b
 	inc OUTPOS+1	; ZP
 .s0b:	rts
-
-
-
-.table:	EQUB 0,0,0,0,0,0,0
-	EQUB 0,0,0,0,0,0,0,0
-	EQUB 0,0,0,0,0,0,0,0
-	EQUB 0,0,0,0,0,0,0,0
 
 }
 

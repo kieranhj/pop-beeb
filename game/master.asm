@@ -48,10 +48,6 @@
 \* Music song #s
 \ Moved to soundnames.h.asm
 
-.title_filename     EQUS "TITLE  $"
-.prolog_filename    EQUS "PROLOG $"
-.sumup_filename     EQUS "SUMUP  $"
-.credits_filename   EQUS "CREDITS$"
 .epilog_filename    EQUS "EPILOG $"
 
 \*-------------------------------

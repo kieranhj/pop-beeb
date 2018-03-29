@@ -432,4 +432,46 @@ ENDIF
 \\ 21*2-1=41c per Apple byte + ~14c per row
 ENDIF
 
+.palette_addr_LO
+{
+    EQUB LO(fast_palette_lookup_0)
+    EQUB LO(fast_palette_lookup_1)
+    EQUB LO(fast_palette_lookup_2)
+    EQUB LO(fast_palette_lookup_3)
+    EQUB LO(fast_palette_lookup_4)
+    EQUB LO(fast_palette_lookup_5)
+    EQUB LO(fast_palette_lookup_6)
+    EQUB LO(fast_palette_lookup_7)
+    EQUB LO(fast_palette_lookup_8)
+    EQUB LO(fast_palette_lookup_9)
+    EQUB LO(fast_palette_lookup_10)
+    EQUB LO(fast_palette_lookup_11)
+    EQUB LO(fast_palette_lookup_12)
+    EQUB LO(fast_palette_lookup_13)
+    EQUB LO(fast_palette_lookup_14)
+    EQUB LO(fast_palette_lookup_15)
+    EQUB LO(fast_palette_lookup_16)
+}
+
+.palette_addr_HI
+{
+    EQUB HI(fast_palette_lookup_0)
+    EQUB HI(fast_palette_lookup_1)
+    EQUB HI(fast_palette_lookup_2)
+    EQUB HI(fast_palette_lookup_3)
+    EQUB HI(fast_palette_lookup_4)
+    EQUB HI(fast_palette_lookup_5)
+    EQUB HI(fast_palette_lookup_6)
+    EQUB HI(fast_palette_lookup_7)
+    EQUB HI(fast_palette_lookup_8)
+    EQUB HI(fast_palette_lookup_9)
+    EQUB HI(fast_palette_lookup_10)
+    EQUB HI(fast_palette_lookup_11)
+    EQUB HI(fast_palette_lookup_12)
+    EQUB HI(fast_palette_lookup_13)
+    EQUB HI(fast_palette_lookup_14)
+    EQUB HI(fast_palette_lookup_15)
+    EQUB HI(fast_palette_lookup_16)
+}
+
 .beeb_plot_peel_end
