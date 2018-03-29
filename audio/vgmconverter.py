@@ -1071,17 +1071,54 @@ class VgmStream:
 							#
 							# remember that on SN chip, volume 15 is silent, and 0 is full
 
+							# UPDATE: there is an issue with this approach. If channel 2 keys on with a volume setting BEFORE channel 3
+							# has keyed off a previously playing tuned periodic noise, it will mistakenly think this is a quad tone.
+
 							new_volume = qw & 15
-							if False:
+							if True:
 								if latched_channel == 2:
 									if new_volume != 15:
 										if latched_volumes[3] != 15:
 											if (latched_tone_frequencies[3]) & 3 == 3:
 												print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, channel 2 was muted."
-												new_volume = 15
+												
+												# ok, to make doubly sure we arent muting channel 2 unnecessarily, look ahead
+												# to see if any other volume writes (to set volume 0) on channel 3 are incoming for this time slot
+												volume_channel3_will_be_zeroed = False
+												nindex = n
+												while (nindex < (len(self.command_list)-1)):# check we dont overflow the array, bail if we do, since it means we didn't find any further DATA writes.
+													nindex += 1
 
-												lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
-												self.command_list[n]["data"] = struct.pack('B', lo_data)
+													ncommand = self.command_list[nindex]["command"]
+													# interpret any non-VGM-write commands to mean end of time slot
+													if ncommand != struct.pack('B', 0x50):
+														print " INFO: end of time slot"
+														break
+													else:
+														print " INFO: found command in same time slot"
+														# found the next VGM write command
+														ndata = self.command_list[nindex]["data"]
+
+														# Check if next this is a DATA write, and check if a channel 3 volume
+														nw = int(binascii.hexlify(ndata), 16)
+														if (nw & 128):	# check for data
+						
+															# Check incoming channel id and if volume command 
+															incoming_channel_id = (nw>>5)&3
+															if (incoming_channel_id == 3) and (nw & 16) != 0:	
+																# Yes, it's a volume command on channel 3
+																if (nw & 15) == 15:	# silent
+																	print " INFO: detected incoming volume off on channel 3"
+																	volume_channel3_will_be_zeroed = True
+																	break	
+
+												# so only mute channel 2 if we know channel 3 isnt going to be set to volume 15 this frame
+												if not volume_channel3_will_be_zeroed:
+													print " INFO: corrected volume on channel 2"
+													new_volume = 15
+
+													lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
+													self.command_list[n]["data"] = struct.pack('B', lo_data)
 								
 							latched_volumes[latched_channel] = new_volume		
 						else:
