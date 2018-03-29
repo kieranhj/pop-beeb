@@ -977,8 +977,8 @@ class VgmStream:
 					hz2 = float(self.vgm_target_clock) / (2.0 * float(output_freq) * 16.0)
 					hz_err = hz2-hz1
 					if self.VERBOSE: print "channel=" + str(latched_channel) + ", old frequency=" + str(tone_frequency) + ", new frequency=" + str(output_freq) + ", source_clock=" + str(self.vgm_source_clock) + ", target_clock=" + str(self.vgm_target_clock) + ", src_hz=" + str(hz1) + ", tgt_hz=" + str(hz2) + ", hz_err =" + str(hz_err)
-					if hz_err > 1.0:
-						print "  Large error transposing tone! [" + str(hz_err) + "]"
+					if hz_err > 2.0 or hz_err < -2.0:
+						print "  WARNING: Large error transposing tone! [" + str(hz_err) + " Hz ]"
 					#if self.VERBOSE: print ""
 				
 				return output_freq		
@@ -1071,16 +1071,54 @@ class VgmStream:
 							#
 							# remember that on SN chip, volume 15 is silent, and 0 is full
 
-							new_volume = qw & 15
-							if latched_channel == 2:
-								if new_volume != 15:
-									if latched_volumes[3] != 15:
-										if (latched_tone_frequencies[3]) & 3 == 3:
-											print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, channel 2 was muted."
-											new_volume = 15
+							# UPDATE: there is an issue with this approach. If channel 2 keys on with a volume setting BEFORE channel 3
+							# has keyed off a previously playing tuned periodic noise, it will mistakenly think this is a quad tone.
 
-											lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
-											self.command_list[n]["data"] = struct.pack('B', lo_data)
+							new_volume = qw & 15
+							if True:
+								if latched_channel == 2:
+									if new_volume != 15:
+										if latched_volumes[3] != 15:
+											if (latched_tone_frequencies[3]) & 3 == 3:
+												print "WARNING: Volume non zero on channel 2 when channel 3 is playing periodic noise, channel 2 was muted."
+												
+												# ok, to make doubly sure we arent muting channel 2 unnecessarily, look ahead
+												# to see if any other volume writes (to set volume 0) on channel 3 are incoming for this time slot
+												volume_channel3_will_be_zeroed = False
+												nindex = n
+												while (nindex < (len(self.command_list)-1)):# check we dont overflow the array, bail if we do, since it means we didn't find any further DATA writes.
+													nindex += 1
+
+													ncommand = self.command_list[nindex]["command"]
+													# interpret any non-VGM-write commands to mean end of time slot
+													if ncommand != struct.pack('B', 0x50):
+														print " INFO: end of time slot"
+														break
+													else:
+														print " INFO: found command in same time slot"
+														# found the next VGM write command
+														ndata = self.command_list[nindex]["data"]
+
+														# Check if next this is a DATA write, and check if a channel 3 volume
+														nw = int(binascii.hexlify(ndata), 16)
+														if (nw & 128):	# check for data
+						
+															# Check incoming channel id and if volume command 
+															incoming_channel_id = (nw>>5)&3
+															if (incoming_channel_id == 3) and (nw & 16) != 0:	
+																# Yes, it's a volume command on channel 3
+																if (nw & 15) == 15:	# silent
+																	print " INFO: detected incoming volume off on channel 3"
+																	volume_channel3_will_be_zeroed = True
+																	break	
+
+												# so only mute channel 2 if we know channel 3 isnt going to be set to volume 15 this frame
+												if not volume_channel3_will_be_zeroed:
+													print " INFO: corrected volume on channel 2"
+													new_volume = 15
+
+													lo_data = (qw & 0b11110000) | (new_volume & 0b00001111)
+													self.command_list[n]["data"] = struct.pack('B', lo_data)
 								
 							latched_volumes[latched_channel] = new_volume		
 						else:
@@ -1095,6 +1133,10 @@ class VgmStream:
 							qfreq = (qw & 0b00001111)
 							latched_tone_frequencies[latched_channel] = (latched_tone_frequencies[latched_channel] & 0b1111110000) | qfreq
 							
+							# check for non-tuned periodic noise (might sound out of tune when converted, because clock speed drives this)
+							# bit 2 of frequency on noise channel =0 for PN, or =1 for white noise
+							if latched_channel == 3 and (latched_tone_frequencies[3] < 3):
+								print "WARNING: Non-tuned periodic noise detected, may not sound in tune due to different clock speed."
 							
 							# sanity check - detect if ratio of DATA writes is 1:1 with LATCH writes
 							if False:
@@ -1155,18 +1197,20 @@ class VgmStream:
 							
 							# calculate the correct retuned frequncy for this channel						
 
-							# leave channel 3 (noise channel) alone.. it's not a frequency
+							# leave channel 3 (noise channel) alone mostly.. it's not a frequency, unless its a tuned white/periodic noise
 							if latched_channel == 3:
 								new_freq = latched_tone_frequencies[latched_channel]	
 
 								# if we're starting a tuned periodic or white noise, we may need to do further adjustments
 								# We check if volume on channel 2 is 15 (zero volume) because that indicates
 								# a tuned noise effect
+								# this is detected by bit0 and bit1 being set (bit2 being white(1) or periodic noise(0))
 								if True:
 									if (new_freq & 3 == 3) and latched_volumes[2] == 15:
 										
 										if tone2_offsets[0] < 0:
-											print "Unexepected scenario - tone2 offset is not set"
+											# Likely cause of this is that the tuned PN is started, and the pitch is set on channel2 afterwards
+											print "WARNING: Unexpected scenario - tone2 offset is not set"
 										else:
 
 											#print "POTENTIAL RETUNE REQUIRED"
@@ -1669,7 +1713,7 @@ class VgmStream:
 									else:
 										unhandled_commands += 1		
 				
-				if self.VERBOSE: print "vgm_time=" + str(vgm_time) + ", playback_time=" + str(playback_time) + ", vgm_command_index=" + str(vgm_command_index) + ", output_command_list=" + str(len(output_command_list)) + ", command=" + scommand
+				if self.VERBOSE: print "vgm_time=" + str(vgm_time) + ", playback_time=" + str(playback_time) + ", vgm_command_index=" + str(vgm_command_index) + ", output_command_list=" + str(len(output_command_list)) + ", command=" + pcommand
 				vgm_command_index += 1
 			
 			if self.VERBOSE: print "vgm_time has caught up with playback_time"
@@ -2200,7 +2244,7 @@ class VgmStream:
 				# gather tone data
 				if (w & 128) == 0:
 					if tone_latch_write == False:
-						print "UNEXPECTED tone data write with no previous latch write"
+						print "ERROR: UNEXPECTED tone data write with no previous latch write"
 					tone_packet_block.extend(data)
 					tone_data_write_count += 1
 					tone_latch_write = False

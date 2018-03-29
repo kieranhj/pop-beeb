@@ -1773,10 +1773,11 @@ ENDIF
  cmp #2
  bne local_steady
 
- lda soundon
- bne label_2
- jsr gtone ;if sound off
-.label_2
+\ BEEB - audio system will sort this out
+\ lda soundon
+\ bne label_2
+\ jsr gtone ;if sound off
+\.label_2
  lda #FlashMsg
  jsr addsound
 

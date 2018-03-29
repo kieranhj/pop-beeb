@@ -357,6 +357,7 @@ ENDIF
 
  lda #1
  sta soundon ;Sound on
+ sta musicon ;Music on - from here we respect user's wishes
 
  lda #$ff   ; no level sprites cached
  sta CHset
