@@ -7,36 +7,52 @@ Proudly Presented by Bitshifters
 
 
 ABOUT
-Original Apple II, bugs and all.
-Lovingly crafted over approximately
-one year to create the ultimate 8-bit
-version of the game.  <MOAR>
+This faithful port has been lovingly
+crafted from the original Apple II
+6502 assembly source code posted on
+GitHub by the author Jordan Mechner.
+
+All original gameplay features (and
+some original bugs!) are complete
+but with an entirely custom written
+sprite engine, music & audio system,
+memory handler, file system and more.
+
+Our goal was to create the ultimate
+8-bit version of the game for the
+BBC Master computer, featuring
+entirely brand new 8 colour graphics
+and a whole soundtrack based on the
+PC midi music considered definitive
+by the original author.
+
+We hope you enjoy playing this game
+as much as we've enjoyed making it.
 
 
 CREDITS
 Ported by Kieran Connell
 Graphics by John 'Dethmunk' Blythe
-BBC Music & Sound by Inverse Phase
 Additional Code by Simon Morris
-Bitshifters Logo by Steve Horsborough
+BBC Music & Sound by Inverse Phase
+Bitshifters Logo by @Horsenburger
 
 
 CONTACT
 Visit our BBC Retro Coding webpage
 https://bitshifters.github.io
-Find us on Facebook: <link>
-Say hello on Twitter @khconnell
-Join the conversation at the Stardot
-forums: <link>
+Find us on Facebook
+https://www.facebook.com/bitshiftrs/
+Say hello on Twitter
+https://twitter.com/khconnell
+Join the Acorn community at Stardot
+http://stardot.org.uk/forums/
 
 
 INVERSE PHASE
+is creating authentic chiptunes
+please offer your support by visiting
 www.inversephase.com
-Facebook: <link>
-Twitter: <link>
-Soundcloud: <link>
-Bandcamp: <link>
-Patreon: <link>
 
 
 MANY THANKS
@@ -45,21 +61,17 @@ Rich Talbot-Watkins
 Richard 'Tricky' Broadhurst
 Sarah Walker
 Dave 'Arcadian' Moore
-Norbert @ Princed
-David @ Princed
+David 'Hoglet' Banks
+Norbert @ princed.org
+David @ princed.org
 Matt Furniss
 All our friends & supporters on Stardot
 
 
 TOOLS USED
-BeebAsm assembler: <link>
-b-em emulator: <link>
-jsbeeb emulator: <link>
-Exomizer compressor: <link>
-Pucrunch compressor: <link>
-Deflemask Tracker: <link>
-Visual Studio Code
-GitHub
+BeebAsm, b-em emulator, jsbeeb emulator
+Exomizer, Pucrunch, Deflemask Tracker
+Visual Studio Code, GitHub & more
 
 
 TECHNICAL SUPPORT
@@ -76,8 +88,8 @@ precious RAM!  Try unplugging any
 non-essential ROMS with *UNPLUG.
 
 This game has been tested on real
-floppy disc, DataCentre, SMART SPI,
-Turbo MMC and MMFS hardware.
+floppy disc hardware, Retroclinic
+DataCentre and MAMMFS for MMC devices.
 
 For DataCentre:
 *IMPORT -0 pop-beeb.ssd
