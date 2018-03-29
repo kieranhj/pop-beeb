@@ -8,7 +8,7 @@ A development blog (of sorts) can be found on [this](http://www.stardot.org.uk/f
 
 
 <p float="left">
-<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/TitleScreen.png.png" width="160" height="128" />
+<img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/TitleScreen.png" width="160" height="128" />
 <img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/PrincessScreen.png" width="160" height="128" />
 <img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/LevelScreen1.png" width="160" height="128" />
 <img src="https://github.com/kieranhj/pop-beeb/raw/master/Notes/LevelScreen2.png" width="160" height="128" />
