@@ -104,14 +104,17 @@ kbutton = IKN_return
 kfreeze = IKN_p OR &80
 krestart = IKN_r OR &80
 kabort = IKN_a OR &80
-\ksound = IKN_s OR &80    ; already defined
-\kmusic = IKN_m OR &80
 ksetkbd = IKN_k OR &80
 ksavegame = IKN_g OR &80
 kversion = IKN_v OR &80
 ;kreturn = IKN_e  OR &80;editor disk only
 kshowtime = IKN_t OR &80
 keasymode = IKN_e OR &80
+kvolume_down = IKN_down OR &80
+kvolume_up = IKN_up OR &80
+ksound = IKN_s OR &80
+kmusic = IKN_m OR &80
+
 
 \\ NOT BEEB supported
 ;ksetjstk = IKN_j OR &80
@@ -122,7 +125,7 @@ keasymode = IKN_e OR &80
 \* BEEB all required CTRL
 
 knextlevel = IKN_n OR &80
-knextlevel2 = IKN_m OR &80
+knextlevel2 = IKN_l OR &80
 ;kclean = 'm'-CTRL
 ;kscreendump = '@'
 ;kreload = 'c'-CTRL
@@ -144,8 +147,6 @@ ktimeback = IKN_1 OR &80
 ktimefwd = IKN_2 OR &80
 ktimeup = IKN_0 OR &80
 kerasegame = IKN_9 OR &80
-kvolume_down = IKN_down OR &80
-kvolume_up = IKN_up OR &80
 
 \*-------------------------------
 ; BEEB allow keys to be redefined
@@ -176,6 +177,41 @@ kvolume_up = IKN_up OR &80
 \*  Detect & respond to keypresses
 \*
 \*-------------------------------
+
+.specialk_scan_for_fresh_key
+{
+\ Scan all keys
+ LDA #&79
+ LDX #0
+ JSR osbyte
+
+ CPX #&FF
+ BNE key_pressed 
+
+\ No key pressed
+ LDA #0
+ STA keydown
+ BEQ return
+
+.key_pressed
+
+  TXA
+  AND #&7F
+
+  LDY keydown
+  BNE stale_press
+
+  LDY #&80
+  STY keydown
+
+  \ If strobe 0 then fresh press
+  ORA #&80
+  .stale_press
+  
+  .return
+  RTS
+}
+
 .KEYS
 {
  lda SINGSTEP
@@ -252,34 +288,9 @@ kvolume_up = IKN_up OR &80
  JSR osbyte
  STX beeb_keypress_jump
 
-\ Scan all keys
- LDA #&79
- LDX #0
- JSR osbyte
-
- CPX #&FF
- BNE key_pressed 
-
-\ No key pressed
- LDA #0
- STA keydown
- JMP KEYS2
-
-.key_pressed
-
-  TXA
-  AND #&7F
-
-  LDY keydown
-  BNE stale_press
-
-  LDY #&80
-  STY keydown
-
-  \ If strobe 0 then fresh press
-  ORA #&80
-  .stale_press
+ JSR specialk_scan_for_fresh_key
 }
+\\ Fall through!
 .KEYS2
 {
  sta keypress
@@ -390,6 +401,25 @@ ENDIF
 \*
 \*-------------------------------
 
+.specialk_toggle_soundon
+{
+ jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound
+ lda soundon
+ eor #1
+ sta soundon
+ rts
+}
+
+.specialk_toggle_musicon
+{
+  jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound. In the case of music, this prevents any lingering sounds.
+
+ lda musicon
+ eor #1
+ sta musicon
+ rts
+}
+
 .LegitKeys
 {
 \* Show time left
@@ -471,20 +501,13 @@ ENDIF
 .label_3 cmp #ksound
  bne label_16
 .togsound
- jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound
- lda soundon
- eor #1
- sta soundon
+ jsr specialk_toggle_soundon
  bne label_sk1
  rts
 
 .label_16 cmp #kmusic
  bne label_16a
- jsr vgm_silence_psg ; jsr zerosound SM:RC hack, TODO: implement zerosound. In the case of music, this prevents any lingering sounds.
-
- lda musicon
- eor #1
- sta musicon
+ jsr specialk_toggle_musicon
  bne label_sk1
  rts
 
@@ -1279,10 +1302,10 @@ ENDIF
  bmi interrupt
  lda keypress
  bpl cont
- cmp #ESC
- beq cont
- cmp #ksound
- beq cont
+\ cmp #ESC
+\ beq cont
+\ cmp #ksound
+\ beq cont
 .interrupt
  lda #$ff
  rts
@@ -1962,48 +1985,16 @@ ENDIF
  AND #&80
  STA beeb_keypress_ctrl
 
-\ lda $c000
-\ sta keypress
-\ bpl nokey
-\ sta $c010
-
-\ Check keys above CTRL
- LDA #&79
- LDX #&2
- JSR osbyte
-
- CPX #&FF
- BEQ nokey
-
- TXA
- ORA #&80
+ JSR specialk_scan_for_fresh_key
  STA keypress
 
- CMP #IKN_esc OR &80
- bne cont
-
-.froze
-\ lda $c000
-\ sta keypress
-\ bpl froze
-\ sta $c010
-
- LDA #&79
- LDX #IKN_esc EOR &80
- JSR osbyte
-
- TXA
- BPL froze
-
- and #$7f
- rts
+ LDX beeb_keypress_ctrl
+ BEQ nobtn
 
 .cont
  cmp #ksound
  bne label_3
- lda soundon
- eor #1
- sta soundon
+ jsr specialk_toggle_soundon
 
 .label_21
  beq label_2
@@ -2016,21 +2007,23 @@ ENDIF
 .label_3
  cmp #kmusic
  bne label_1
- lda musicon
- eor #1
- sta musicon
+ jsr specialk_toggle_musicon
  jmp label_21
 
 .label_1
+ cmp #kvolume_down
+ bne label_16b
+ jsr vgm_volume_down
+ bra label_2
+
+.label_16b cmp #kvolume_up
+ bne nobtn
+ jsr vgm_volume_up
+ bra label_2
+
 .nobtn
  lda keypress
  rts
-
-\ Check Apple / joystick button
-\ lda $c061
-\ ora $c062
-\ bpl :nobtn
-\ lda #$ff
 
 .nokey
  LDA #0

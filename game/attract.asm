@@ -148,8 +148,23 @@ ENDIF
 \* Rest of sequence moved here
 
  jsr AuthorCredit
+ 
+ \* Show the byline at 0:07.00
+
+ MASTER_SHOW_DHIRES 7.5*50
 
  jsr TitleScreen
+ 
+ \* Show title at 0:15.00
+
+ MASTER_SHOW_DHIRES 15.5*50
+
+\* Play next tune (Apple II only)
+
+IF _AUDIO
+    lda #s_Title
+    jsr BEEB_INTROSONG
+ENDIF
 
  jsr Prolog1
 
@@ -171,10 +186,6 @@ ENDIF
 \* Unpack byline onto page 1
 
  MASTER_LOAD_DHIRES byline_filename, pu_byline_size, 12
- 
- \* Show the byline at 0:07.00
-
- MASTER_SHOW_DHIRES 7.5*50
 
  RTS
 }
@@ -185,7 +196,7 @@ ENDIF
 \*
 \*-------------------------------
 
-CUTSCENE_END_TIME=49.5*50
+CUTSCENE_END_TIME=49.85*50
 CREDITS_SHOW_TIME=5*50
 
 .SilentTitle
@@ -219,17 +230,6 @@ ENDIF
 \* Unpack title onto page 1
 
  MASTER_LOAD_DHIRES title_filename, pu_title_size, 12
- 
- \* Show title at 0:15.00
-
- MASTER_SHOW_DHIRES 15.5*50
-
-\* Play next tune (Apple II only)
-
-IF _AUDIO
-    lda #s_Title
-    jsr BEEB_INTROSONG
-ENDIF
 
  RTS
 }
@@ -282,6 +282,14 @@ ENDIF
 
  jsr BeebCredit
 
+\* Wipe after title been on for 4 seconds
+
+ MASTER_WIPE_DHIRES (CUTSCENE_END_TIME + 12*50 + CREDITS_SHOW_TIME)
+
+\* Show Credits for 4 seconds
+
+ MASTER_BLOCK_UNTIL (CUTSCENE_END_TIME + 12*50 + 2*CREDITS_SHOW_TIME)
+
  RTS
 }
 
@@ -296,14 +304,6 @@ ENDIF
 \* Load Credits screen
 
  MASTER_LOAD_DHIRES credits_filename, pu_credits_size, 0
-
-\* Wipe after title been on for 4 seconds
-
- MASTER_WIPE_DHIRES (CUTSCENE_END_TIME + 12*50 + CREDITS_SHOW_TIME)
-
-\* Show Credits for 4 seconds
-
- MASTER_BLOCK_UNTIL (CUTSCENE_END_TIME + 12*50 + 2*CREDITS_SHOW_TIME)
 
  RTS
 }
@@ -350,13 +350,30 @@ ENDIF
 
  JSR vsync_start_timer
 
-\* Load the splash
+\* Show the splash after 30 secs
 
  MASTER_LOAD_DHIRES splash_filename, pu_splash_size, 0
-
-\* Show the splash after 30 secs (tbc)
-
  MASTER_SHOW_DHIRES 30*50
+
+ jsr copy1to2
+
+\* Show the title after another X secs
+
+ jsr TitleScreen
+ MASTER_WIPE_DHIRES 50*50
+
+\* Show the Jordan credit after another X secs
+
+ jsr AuthorCredit
+ MASTER_WIPE_DHIRES 70*50
+
+\* Show our credits after another X secs
+
+ jsr BeebCredit
+ MASTER_WIPE_DHIRES 90*50
+
+ MASTER_BLOCK_UNTIL 116*50
+ jsr blackout           ; oh for a fade
 
 \* Wait for some time (tbc) or just the end of the tune :)
 
