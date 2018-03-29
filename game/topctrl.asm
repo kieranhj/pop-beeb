@@ -84,6 +84,8 @@ ErrorMsg = 4
 SuccessMsg = 5
 VolumeMsg = 6
 EasyMsg = 7
+MusicMsg = 8
+SoundMsg = 9
 
 leveltimer = 40 ;level message timer
 contflash = 95
@@ -1750,8 +1752,12 @@ ENDIF
  beq no_message_to_display
  dec msgtimer
 
- lda KidLife
- bmi local_alive
+\ lda KidLife
+\ bmi local_alive
+
+ lda message
+ cmp #ContMsg
+ bne local_alive
 
 \* Kid is dead -- message is "Press button to continue"
 
@@ -1773,11 +1779,6 @@ ENDIF
  cmp #2
  bne local_steady
 
-\ BEEB - audio system will sort this out
-\ lda soundon
-\ bne label_2
-\ jsr gtone ;if sound off
-\.label_2
  lda #FlashMsg
  jsr addsound
 
@@ -1788,25 +1789,8 @@ ENDIF
 \* Kid is alive -- message is "Level #" or "# Minutes"
 
 .local_alive
-; BEEB not sure why this is here - just delays messages from appearing?
-; lda msgtimer
-; cmp #leveltimer-2
-; bcs return_62
 
-;  LDA msgdrawn
-;  CMP #REDRAW_FRAMES
-;  BCC stuff_to_draw
-
-; BEEB not sure why this is here either?
-; lda message
-; cmp #TimeMsg
-; LDA msgtimer
-; CMP #2
-; bcs return_62
-  
 \ BEEB always draw message - only going to be for a few frames anyway
-  .stuff_to_draw
- ; INC msgdrawn
   LDA #REDRAW_FRAMES
   STA msgdrawn    ; need to blank this many frames when we're done
 
@@ -1839,9 +1823,20 @@ ENDIF
 
 .label_6
  cmp #EasyMsg
- bne return
+ bne label_7
  jmp easymodemsg
 
+.label_7
+ cmp #MusicMsg
+ bne label_8
+ jmp musicmsg
+
+.label_8
+ cmp #SoundMsg
+ bne label_9
+ jmp soundmsg
+
+.label_9
 .return
  RTS
 

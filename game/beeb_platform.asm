@@ -288,6 +288,99 @@ ENDIF
 }
 
 \*-------------------------------
+; Clear status line characters
+\*-------------------------------
+
+; Y=start character [0-79]
+; X=number of characters to clear
+.BEEB_CLEAR_STATUS_X
+.beeb_clear_status_X
+{
+    CLC
+    LDA Mult8_LO,Y
+    ADC #LO(beeb_status_addr)
+    STA beeb_writeptr
+    LDA Mult8_HI,Y
+    ADC #HI(beeb_status_addr)
+    STA beeb_writeptr+1
+
+    .loop
+    LDA #0
+
+    LDY #0
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+    INY
+    STA (beeb_writeptr), Y
+
+    DEX
+    BEQ done_loop
+
+    CLC
+    LDA beeb_writeptr
+    ADC #8
+    STA beeb_writeptr
+    BCC no_carry
+    INC beeb_writeptr+1
+    .no_carry
+    BNE loop
+
+    .done_loop
+    RTS
+}
+
+.BEEB_CLEAR_STATUS_LINE
+.beeb_clear_status_line
+{
+    LDY #0
+    LDX #80
+    JMP BEEB_CLEAR_STATUS_X
+}
+
+.BEEB_CLEAR_TEXT_AREA
+.beeb_clear_text_area
+{
+    LDY #20
+    LDX #40
+    JMP BEEB_CLEAR_STATUS_X
+}
+
+.BEEB_CLEAR_PLAYER_ENERGY
+.beeb_clear_player_energy
+{
+    LDY #0
+    LDX #20
+    JMP BEEB_CLEAR_STATUS_X
+}
+
+.BEEB_CLEAR_OPP_ENERGY
+.beeb_clear_opp_energy
+{
+    LDY #68
+    LDX #12
+    JMP BEEB_CLEAR_STATUS_X
+}
+
+.BEEB_CLEAR_DHIRES_LINE
+.beeb_clear_dhires_line
+{
+    LDY #&80/8
+    LDX #80
+    JMP BEEB_CLEAR_STATUS_X
+}
+
+\*-------------------------------
 ; Debug fns
 \*-------------------------------
 
