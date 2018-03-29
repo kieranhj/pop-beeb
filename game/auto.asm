@@ -158,8 +158,9 @@ shadstrength = 4
     STA MaybeStrike_smShift1
     STA MaybeStrike_smShift2
 
-    .return
-    RTS
+    lda #EasyMsg
+    ldx #savtimer
+    jmp topctrl_setmessage
 }
 
 

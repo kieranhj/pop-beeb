@@ -207,6 +207,7 @@ ENDIF ;actual frame rate approx. 11 fps)
 .outer pha
  ldx #0
 .loop dex
+ NOP:NOP
  bne loop
  pla
  sec
@@ -547,9 +548,10 @@ ELSE
  lda #8
  sta SPEED
 
- lda #1
- sta soundon
- sta musicon ;they must listen!!
+\ BEEB - this seems a little harsh if playing late at night!
+\ lda #1
+\ sta soundon
+\ sta musicon ;they must listen!!
 
  jsr startP7
  jsr SaveShad
@@ -689,7 +691,7 @@ ENDIF
 \*-------------------------------
 \* Opening titles scene
 \*-------------------------------
-BEEB_CUT0_SPEED_FACTOR=4
+BEEB_CUT0_SPEED_FACTOR=3
 .PlayCut0
 {
  STZ level      ; this is not in game
@@ -777,7 +779,7 @@ BEEB_CUT0_SPEED_FACTOR=4
 
  lda #12
  sta SPEED
- lda #5*BEEB_CUT0_SPEED_FACTOR
+ lda #15*BEEB_CUT0_SPEED_FACTOR
  jsr play
  lda #0
  sta psandcount ;sand starts flowing
@@ -838,13 +840,14 @@ BEEB_CUT0_SPEED_FACTOR=4
 \*-------------------------------
 .PlaySongX
 {
- tay
- lda soundon
- and musicon
- bne label_1
- txa
- jmp play
-.label_1 tya ;falls thru to PlaySong
+\ BEEB - just play cutscene as if it had music; audio code will sort everything out
+\ tay
+\ lda soundon
+\ and musicon
+\ bne label_1
+\ txa
+\ jmp play
+\.label_1 tya ;falls thru to PlaySong
 }
 
 \*-------------------------------
@@ -865,11 +868,16 @@ ENDIF
 ; for BEEB better to run the cutscene player than go into single buffer mode and poke screen directly...
 .loop
 \ Check for keys
- lda #1
- jsr strobe
+\ lda #1
+\ jsr strobe
+\
+\ lda keypress
+\ bmi interrupt
 
- lda keypress
- bmi interrupt
+\ Check for keys
+ jsr musickeys
+ cmp #$80
+ bcs interrupt
 
 \ Play a frame
  LDA #1
@@ -896,14 +904,15 @@ ENDIF
 \*-------------------------------
 .subs_PlaySongI
 {
- tay
- lda soundon
- and musicon
- bne label_1
- txa
- beq return_56
- jmp play
-.label_1 tya
+\ BEEB - just play cutscene as if it had music; audio code will sort everything out
+\ tay
+\ lda soundon
+\ and musicon
+\ bne label_1
+\ txa
+\ beq return_56
+\ jmp play
+\.label_1 tya
 
 IF _AUDIO
  jsr BEEB_STORYSONG             ; was jsr minit
@@ -970,17 +979,21 @@ ENDIF
  lda SPEED
  jsr pause
 
- jsr strobe ;strobe kbd & jstk
+\ BEEB just use musickeys as standard
+\ jsr strobe ;strobe kbd & jstk
 
  lda level
  bne notdemo
- jsr demokeys
+
+\ jsr demokeys
+ jsr musickeys
  bpl cont
  lda #1
  jmp dostartgame ;interrupted--start a new game
 
 .notdemo
- lda keypress
+\ lda keypress
+ jsr musickeys
  bmi return_63 ;key or button to end scene
 
 .cont jsr subs_NextFrame ;Determine what next frame should look like

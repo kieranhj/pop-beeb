@@ -51,3 +51,4 @@ PUTFILE "disc/levels.bin", "LEVELS", 0
 
 \ Manual (if room at end)
 PUTFILE "disc/Manual.txt", "MANUAL", 0
+PUTFILE "disc/Readme.txt", "README", 0
