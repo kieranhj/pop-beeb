@@ -327,6 +327,8 @@ IF _JMP_TABLE
 .volumemsg  JUMP_B VOLUMEMSG, GAMEBG_BASE, 24
 
 .easymodemsg  JUMP_B EASYMODEMSG, GAMEBG_BASE, 25
+.musicmsg  JUMP_B MUSICMSG, GAMEBG_BASE, 26
+.soundmsg  JUMP_B SOUNDMSG, GAMEBG_BASE, 27
 
 \*-------------------------------
 \* grafix.asm
@@ -839,6 +841,8 @@ EQUB LO(SUCCESSMSG)
 EQUB LO(VOLUMEMSG)
 
 EQUB LO(EASYMODEMSG)
+EQUB LO(MUSICMSG)
+EQUB LO(SOUNDMSG)
 
 \*-------------------------------
 \* grafix.asm
@@ -1052,6 +1056,8 @@ EQUB HI(SUCCESSMSG)
 EQUB HI(VOLUMEMSG)
 
 EQUB HI(EASYMODEMSG)
+EQUB HI(MUSICMSG)
+EQUB HI(SOUNDMSG)
 
 \*-------------------------------
 \* grafix.asm

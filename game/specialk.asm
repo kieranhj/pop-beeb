@@ -501,12 +501,20 @@ ENDIF
  bne label_16
 .togsound
  jsr specialk_toggle_soundon
+    lda #SoundMsg
+    ldx #voltimer
+    jsr topctrl_setmessage
+ lda soundon
  bne label_sk1
  rts
 
 .label_16 cmp #kmusic
  bne label_16a
  jsr specialk_toggle_musicon
+    lda #MusicMsg
+    ldx #voltimer
+    jsr topctrl_setmessage
+ lda musicon
  bne label_sk1
  rts
 
