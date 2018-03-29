@@ -430,33 +430,75 @@ ASCII_MAPCHAR
 
 .EASYMODEMSG
 {
-    LDX #14
-    LDA auto_is_easy
-    BEQ easy_off
-
-    LDA #'N'-'A'+GLYPH_A
-    BNE do_print
-
-    .easy_off
-    LDA #'F'-'A'+GLYPH_A
-    STA easymode_string, X
-    INX
-
-    .do_print
-    STA easymode_string, X
-    INX
-    LDA #BLANK_GLYPH
-    STA easymode_string, X
-
     LDA #LO(easymode_string)
     STA beeb_readptr
     LDA #HI(easymode_string)
     STA beeb_readptr+1
+    LDY #14
+    LDX #24
+    LDA auto_is_easy
+    JMP gamebg_setonoff
+}
+
+; A=bool; X=X pos; Y=index into string after 'O'; beeb_readptr
+.gamebg_setonoff
+{
+    CMP #0
+    BEQ off
+
+    \\ ON
+    LDA #'N'-'A'+GLYPH_A
+    BNE do_print
+
+    \\ OFF
+    .off
+    LDA #'F'-'A'+GLYPH_A
+    STA (beeb_readptr), Y
+    INY
+
+    .do_print
+    STA (beeb_readptr), Y
+    INY
+    LDA #BLANK_GLYPH
+    STA (beeb_readptr), Y
 
     LDA #PAL_FONT
-    LDX #24
     LDY #BEEB_STATUS_ROW
     JMP beeb_plot_font_string
+}
+
+SMALL_FONT_MAPCHAR
+.music_string
+EQUS "MUSIC:~OXX~", &FF
+ASCII_MAPCHAR
+
+.MUSICMSG
+{
+    LDA #LO(music_string)
+    STA beeb_readptr
+    LDA #HI(music_string)
+    STA beeb_readptr+1
+    LDY #8
+    LDX #30
+    LDA musicon
+    JMP gamebg_setonoff
+}
+
+SMALL_FONT_MAPCHAR
+.sound_string
+EQUS "SOUND FX:~OXX~", &FF
+ASCII_MAPCHAR
+
+.SOUNDMSG
+{
+    LDA #LO(sound_string)
+    STA beeb_readptr
+    LDA #HI(sound_string)
+    STA beeb_readptr+1
+    LDY #11
+    LDX #27
+    LDA soundon
+    JMP gamebg_setonoff
 }
 
 IF _NOT_BEEB
