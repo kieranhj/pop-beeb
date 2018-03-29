@@ -386,6 +386,10 @@ ELSE
 ENDIF
 }
 
+IF _DEBUG=0
+SKIP 21
+ENDIF
+
 \*-------------------------------
 ; Set custom CRTC mode for game
 \*-------------------------------
