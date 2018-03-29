@@ -52,13 +52,6 @@ CTRL-K. Default controls are:
 
               Action button: RETURN
 
-----------------
-Joystick Control
-----------------
-
-Unfortunately joystick control is not current implemented for the BBC Master
-so use the keyboard instead.
-
 ------------------------------
 Running, Jumping, and Climbing
 ------------------------------
@@ -233,7 +226,6 @@ Remember, though, the sands in the hourglass are draining away....
 
 To see how much time is left, press the T key.
 
-
 ----------------
 Saving Your Game
 ----------------
@@ -258,18 +250,30 @@ CTRL-R.........Ends the game and returns you to the title sequence.
 
 CTRL-A.........Restarts play from the beginning of the current level.
 
-CTRL-S.........Turns off all sound.  Press again to turn the sound
-               back on. (NOT IMPLEMENTED)
+CTRL-S.........Turns off sound FX.  Press again to turn the sound FX
+               back on.
 
 CTRL-M.........Turns off the music.  Press again to turn the music
-               back on. (NOT IMPLEMENTED)
+               back on.
 
-CTRL-G.........Saves the current game to disk.
+CTRL-Up........Increase sound volume.
+
+CTRL-Down......Reduce sound volume.
+
+CTRL-G.........Saves the current game to disk. (Disc must not be
+               write protected.)
 
 CTRL-L.........Resumes the last saved game. (Press during the title
                sequence.)
 
 T..............Press to see how much time is left.
+
+----------------
+Joystick Control
+----------------
+
+Unfortunately joystick control is not current implemented for the BBC Master
+so use the keyboard instead.
 
 ----------------
 About the Author
