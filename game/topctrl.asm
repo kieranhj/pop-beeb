@@ -1415,8 +1415,9 @@ ENDIF
 .label1 lda #s_Heroic
 .label2 ldx #255
  jmp cuesong
-;]rts rts
 }
+.return_17
+ rts
 
 
 \*-------------------------------
@@ -1487,22 +1488,20 @@ ENDIF
 .shakeloose
 {
  lda jarabove
- bmi jarbelow
- bne jarabove
-}
-.return_17
+ bmi local_jarbelow
+ bne local_jarabove
+
+.return
  rts
 
-.jarbelow
-{
+.local_jarbelow
  lda #0
  sta jarabove
 
  lda CharBlockY
  jmp shakem ;shake every loose floorboard on level
-}
-.jarabove
-{
+
+.local_jarabove
  lda #0
  sta jarabove
 
