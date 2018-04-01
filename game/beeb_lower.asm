@@ -193,7 +193,7 @@ ENDIF
 ;.scrn skip 1
 .VisScrn skip 1
 .OppStrength skip 1
-;.jarabove skip 1
+.jarabove skip 1
 .KidStrength skip 1
 .ChgKidStr skip 1
 .MaxKidStr skip 1
