@@ -314,6 +314,9 @@ ENDIF
  jsr reloadblue
  ELSE
 
+ ldx #$ff ;Reset stack pointer at level start
+ txs
+
  jsr beeb_hide_screen
 
  ldx level
