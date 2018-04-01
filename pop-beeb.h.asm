@@ -8,9 +8,9 @@
 \*-------------------------------
 
 CPU 1                       ; MASTER ONLY
-_VERSION = $10              ; BCD version Demo.1
+_VERSION = $11              ; BCD version Demo.1
 
-_DEBUG = TRUE               ; enable bounds checks and other debug fetures
+_DEBUG = FALSE              ; enable bounds checks and other debug fetures
 _DEMO_BUILD = FALSE         ; restrict to just one level & watermark
 _BOOT_ATTRACT = TRUE        ; boot to attract mode not straight into game
 _START_LEVEL = 1            ; _DEBUG only start on a different level

@@ -56,6 +56,7 @@ www.inversephase.com
 
 
 MANY THANKS
+Jordan Mechner
 Matt Godbolt
 Rich Talbot-Watkins
 Stewart Badger
@@ -63,8 +64,10 @@ Richard 'Tricky' Broadhurst
 Sarah Walker
 Dave 'Arcadian' Moore
 David 'Hoglet' Banks
+Diminished @ Stardot.org.uk
 Norbert @ princed.org
 David @ princed.org
+Adam Green https://github.com/adamgreen
 Matt Furniss
 All our friends & supporters on Stardot
 
@@ -77,16 +80,28 @@ Visual Studio Code, GitHub & more
 
 TECHNICAL SUPPORT
 This game requires a standard issue
-BBC Master 128K computer with all 4x
-sideways RAM banks available and PAGE
-at &E00.
+BBC Master 128K computer with MOS 3.20.
+Type *FX0 to check your MOS version.
+Other MOS versions may be supported in
+future.
 
-Type "P.~PAGE" in BASIC to
-check your PAGE value.  If this is
-higher than &E00 then you may have
-a ROM installed that is claiming
-precious RAM!  Try unplugging any
-non-essential ROMS with *UNPLUG.
+All 4x sideways RAM banks 4 - 7 must be
+available for use. If you have ROMs
+installed internally these may be
+occupying sideways RAM banks. You will
+need to remove them and check links
+LK18 and LK19 are set correcly as per
+the Master Reference manual.
+
+PAGE must be at &E00. Type "P.~PAGE"
+in BASIC to check your PAGE value.
+If this is higher than &E00 then you
+may have a ROM installed that is
+claiming precious RAM!  Try unplugging
+any non-essential ROMS with *UNPLUG.
+
+Coprocessors and the Tube must be
+disabled. Type *CONF.NOTUBE and reset.
 
 This game has been tested on real
 floppy disc hardware, Retroclinic
@@ -104,6 +119,10 @@ remembering the disc number used:
 To enable save game:
 *DUNLOCK <disc no>
 
+For MAMMFS:
+You may need to *UNPLUG the standard
+DFS ROM before running, try *UNPLUG 9
+
 Hit SHIFT-BREAK to boot the disc!
 
 If you experience a crash or other bug
@@ -114,3 +133,10 @@ if possible.
 
 RELEASE NOTES
 30/3/2018 Version 1.0
+Initial release!
+
+01/4/2018 Version 1.1
+Fixed memory scribble in jarabove
+function in topctrl.
+Reset stack pointer in RESTART function
+as per patch to original Apple II game.
