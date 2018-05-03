@@ -540,6 +540,7 @@ PRINT "MASTER size = ", ~(master_end - master)
 PRINT "TOPCTRL size = ", ~(topctrl_end - topctrl)
 PRINT "AUDIO (LEGACY) size = ", ~(audio_end - audio)
 PRINT "PUCRUNCH size = ", ~(pucrunch_end-pucrunch_start)
+PRINT "BEEB AUDIO size = ", ~(beeb_audio_end-beeb_audio)
 PRINT "HIRES size = ", ~(hires_end - hires)
 PRINT "BEEB PLOT FONT size = ", ~(beeb_plot_font_end - beeb_plot_font_start)
 PRINT "BEEB PLOT FASTLAY size = ", ~(beeb_plot_fastlay_end - beeb_plot_fastlay_start)
@@ -722,7 +723,7 @@ PRINT "HRTABLES size = ", ~(hrtables_end-hrtables)
 PRINT "BEEB PALETTE DATA size = ", ~(beeb_palette_end-beeb_palette_start)
 PRINT "EXO size = ", ~(exo_end-exo_start)
 PRINT "VGMPLAYER size = ", ~(vgm_player_end-vgm_player_start)
-PRINT "BEEB AUDIO size = ", ~(beeb_audio_end-beeb_audio)
+PRINT "FONT size = ",~(pop_beeb_aux_hazel_code_end-small_font)
 PRINT "--------"
 PRINT "HAZEL data size = ", ~(pop_beeb_aux_hazel_data_end - pop_beeb_aux_hazel_data_start)
 PRINT "HAZEL code size = ", ~(pop_beeb_aux_hazel_code_end - pop_beeb_aux_hazel_code_start)
@@ -776,17 +777,26 @@ GUARD SWRAM_TOP
 PAGE_ALIGN
 .bgtable1a
 INCBIN "Images/BEEB.IMG.BGTAB1.PALA.bin"            ; larger than DUNA
+.bgtable1a_end
 
 PAGE_ALIGN
 .bgtable2
 INCBIN "Images/BEEB.IMG.BGTAB2.PAL.bin"            ; larger than DUN
+.bgtable2_end
 
 PAGE_ALIGN
 .chtable4
 INCBIN "Images/BEEB.IMG.CHTAB4.GD.bin"              ; largest of CHTAB4.X
+.chtable4_end
 
 .bank0_end
 
+PRINT "--------"
+PRINT "SIDEWAYS RAM BANK 0"
+PRINT "--------"
+PRINT "BGTABLE 1A size = ", ~(bgtable1a_end - bgtable1a)
+PRINT "BGTABLE 2 size = ", ~(bgtable2_end - bgtable2)
+PRINT "CHTABLE 4 size = ", ~(chtable4_end - chtable4)
 PRINT "--------"
 PRINT "BANK 0 size = ", ~(bank0_end - bank0_start)
 PRINT "BANK 0 free = ", ~(SWRAM_TOP - bank0_end)
@@ -805,16 +815,20 @@ GUARD SWRAM_TOP
 PAGE_ALIGN
 .bgtable1b
 INCBIN "Images/BEEB.IMG.BGTAB1.DUNB.bin"    ; larger than PALB
+.bgtable1b_end
 
 PAGE_ALIGN
 .chtable1
 INCBIN "Images/BEEB.IMG.CHTAB1.bin"
+.chtable1_end
 
 .chtable2
 INCBIN "Images/BEEB.IMG.CHTAB2.bin"
+.chtable2_end
 
 .chtable3
 INCBIN "Images/BEEB.IMG.CHTAB3.bin"
+.chtable3_end
 
 PAGE_ALIGN                                  ; technically no reason to be PAGE ALIGNED
 INCLUDE "game/beeb_sfx_bank.asm"
@@ -822,7 +836,14 @@ INCLUDE "game/beeb_sfx_bank.asm"
 .bank1_end
 
 PRINT "--------"
+PRINT "SIDEWAYS RAM BANK 1"
+PRINT "--------"
+PRINT "BGTABLE 1B size = ", ~(bgtable1b_end - bgtable1b)
+PRINT "CHTABLE 1 size = ", ~(chtable1_end - chtable1)
+PRINT "CHTABLE 2 size = ", ~(chtable2_end - chtable2)
+PRINT "CHTABLE 3 size = ", ~(chtable3_end - chtable3)
 PRINT "AUDIO SFX size = ", ~(pop_sfx_end - pop_sfx_start)
+PRINT "--------"
 PRINT "BANK 1 size = ", ~(bank1_end - bank1_start)
 PRINT "BANK 1 free = ", ~(SWRAM_TOP - bank1_end)
 PRINT "--------"

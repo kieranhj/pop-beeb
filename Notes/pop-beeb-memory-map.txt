@@ -1,0 +1,210 @@
+-------- 
+POP-BEEB MEMORY MAP
+-------- 
+
+-------- 
+ZERO PAGE
+-------- 
+&0000 - &00FF: ZERO PAGE
+-------- 
+Zero page high watermark =  &A0 
+Zero page free =  &0 
+--------
+Global variables &00 - &9F
+Local variables &D0 - &DF
+-------- 
+
+-------- 
+LOWER Workspace 
+-------- 
+&0300 - &0DFF: "Lower" RAM aka "Lang" (legacy name)
+-------- 
+Lower workspace high watermark =  &CF8 
+Lower workspace RAM free =  &8 
+-------- 
+General run-time buffers
+E.g. image lists, collision buffers, moveable object tables, global variables (not ZP)
+--------
+&0C00 - &0CFF: Lower data loaded from file "$.Lower" at boot
+Contains filenames, sfx lookup table, crash message text, version number at &CF0
+-------- 
+
+-------- 
+CORE Modules 
+-------- 
+&0E00 - &2FFF: "Core" RAM
+-------- 
+BEEB BOOT size =  &1EC              ; System and game bootstrap
+AUX JUMP TABLES size =  &81E        ; Jump tables for AUX (gameplay) functions
+DISKSYS size =  &187                ; Disk system (file + sector load)
+SWR size =  &6                      ; Sideways RAM routines
+BEEB TEST size =  &0 
+BEEB PLATFORM size =  &129          ; ULA palette, sprite palette routines
+MASTER size =  &446                 ; attract mode, load data for levels or cutscenes
+TOPCTRL size =  &77E                ; main game loop
+AUDIO (LEGACY) size =  &1 
+PUCRUNCH size =  &15B               ; decompress static screens etc. 
+BEEB AUDIO size =  &106             ; Beeb audio module handling
+HIRES size =  &1DC                  ; original Apple II screen plotting routines
+BEEB PLOT FONT size =  &F6          ; font plot routines
+BEEB PLOT FASTLAY size =  &13C      ; fast sprite plot routines
+BEEB PLOT LAYRSAVE size =  &167     ; unrolled sprite "layrsave" routines
+-------- 
+Core code size =  &20E1 
+Core data size =  &40 
+Core high watermark =  &2F21 
+Core RAM free =  &DF 
+-------- 
+Code entry is at &E00
+BEEB BOOT section is trashed after boot completes and used as the Exomizer decompression buffer (for music player.)
+Aux jump table transparently redirects function calls to appropriate Aux (gameplay) module in sideways RAM bank, preserving registers and ROM slot on entry and exit.
+Fastlay sprite routines are byte aligned and have no clipping - used for background objects
+Layrsave routines save the screen buffer beneath the character sprites into the "peel" buffer memory area
+-------- 
+
+-------- 
+MAIN Modules 
+-------- 
+&3000 - &7FFF: "Main" RAM (also shadowed x2)
+-------- 
+BEEB PLOT size =  &360              ; character sprite plot routines
+BEEB PLOT WIPE size =  &64          ; unrolled sprite wipe routines
+BEEB PLOT LAY size =  &0 
+BEEB PLOT PEEL size =  &125         ; unrolled sprite "peel" routines
+-------- 
+Main code size =  &4E9 
+Main high watermark =  &34E9 
+Peel buffer address = &3500
+Peel buffer size = &C00
+Screen buffer address =  &4100 
+Screen buffer size =  &3F00 
+Main RAM free =  &17 
+--------
+Character sprite plotting routines support per-pixel plotting with mirroring and per-byte clipping on all four sides
+Sprite peel routines "peel" sprites off the screen by writing previously saved ("layrsaved") data back
+Screen is MODE 2 but at 160x200 resolution (24 character rows for game and 1 character row for the status line)
+Entire Main RAM area is double-buffered using SHADOW RAM
+--------
+
+--------
+ANDY RAM
+-------- 
+&8000 - &8FFF: "Andy" RAM
+-------- 
+AUDIO BANK 0 size =  &D6B           ; title screen music
+AUDIO BANK 0 free =  &295 
+AUDIO BANK 3 size =  &F14           ; in-game musical ditties
+AUDIO BANK 3 free =  &EC 
+AUDIO BANK 4 size =  &B09           ; in-game cutscene music
+AUDIO BANK 4 free =  &4F7 
+-------- 
+Audio banks are overlaid as required by master.asm module
+-------- 
+
+-------- 
+SIDEWAYS RAM BANK 0 
+-------- 
+&8000 - &BFFF: "Bank 0" (ROM slot 4)
+-------- 
+BGTABLE 1A size =  &171D            ; background sprites set 1A (Palace or Dungeon)
+BGTABLE 2 size =  &1223             ; background sprites set 2
+CHTABLE 4 size =  &14C1             ; enemy character sprites (Guards)
+-------- 
+BANK 0 size =  &3FC1 
+BANK 0 free =  &3F 
+-------- 
+
+-------- 
+SIDEWAYS RAM BANK 1
+-------- 
+&8000 - &BFFF: "Bank 1" (ROM slot 5)
+-------- 
+BGTABLE 1B size =  &7D8             ; background sprites set 1B
+CHTABLE 1 size =  &129E             ; player sprites set 1
+CHTABLE 2 size =  &1283             ; player sprites set 2
+CHTABLE 3 size =  &E1A              ; player sprites set 3
+AUDIO SFX size =  &3A2              ; sound effects
+-------- 
+BANK 1 size =  &3FA2 
+BANK 1 free =  &5E 
+-------- 
+
+-------- 
+SIDEWAYS RAM BANK 2
+-------- 
+&8000 - &BFFF: "Bank 2" (ROM slot 6) aka "AUX B" gameplay modules
+-------- 
+SEQTABLE size =  &9F1               ; animation sequence data
+FRAMEDEFS size =  &7B7              ; animation frame data
+CTRLSUBS size =  &86F               ; sub-routines for controling characters
+COLL size =  &736                   ; collision detection routines
+AUTO size =  &A4E                   ; AI / enemy character auto control
+INVERTY size =  &DF                 ; code to invert all plot routines in Y axis
+BEEB MASTER size =  &4B             ; Beeb specific functions for attract sequence
+-------- 
+Aux B code+data size =  &2CC5 
+Aux B high watermark =  &BFC5 
+-------- 
+BANK 2 size =  &3FC5 
+BANK 2 free =  &3B 
+-------- 
+
+-------- 
+SIDEWAYS RAM BANK 3
+-------- 
+&8000 - &BFFF: "Bank 3" (ROM slot 7) aka "AUX High" gameplay modules
+-------- 
+CTRL size =  &B4C                   ; character control routines
+FRAMEADV size =  &B41               ; render a single gameplay frame into image lists
+GAMEBG size =  &507                 ; functions to plot specific game objects
+GRAFIX size =  &40E                 ; plot sprites from image lists onto screen
+SUBS size =  &868                   ; general sub-routines including cutscene
+MOVER size =  &A60                  ; moveable object routines
+MISC size =  &3EE                   ; misc routines including energy meters
+SPECIALK size =  &5E2               ; keyboard handling
+BEEB SCREEN size =  &89             ; Beeb specific screen functions
+ATTRACT size =  &20F                ; entire attract sequence
+-------- 
+Aux High code size =  &3ED2 
+Aux High high watermark =  &BED2 
+-------- 
+BANK 3 size =  &3ED2 
+BANK 3 free =  &12E 
+-------- 
+
+-------- 
+HAZEL Modules 
+-------- 
+&C300 - &DEFF: "Hazel" RAM
+-------- 
+BLUEPRINT size = &900               ; level data loaded from disc
+TABLES size =  &57C                 ; multiplication tables
+BGDATA size =  &1EB                 ; data tables related to background sprite pieces
+HRTABLES size =  &190               ; lookup tables for sprite plot
+BEEB PALETTE DATA size =  &4C1      ; unrolled palette tables for fast sprite plot
+EXO size =  &134                    ; Exomizer decompressor
+VGMPLAYER size =  &132              ; VGM music player module
+FONT size =  &1CA                   ; font data
+-------- 
+HAZEL data size =  &F00 
+HAZEL code size =  &2FC 
+HAZEL BSS (blueprint) size =  &900 
+HAZEL high watermark =  &DEFC 
+HAZEL RAM free =  &4 
+-------- 
+
+-------- 
+CUTSCENE OVERLAYS
+--------
+CHTABLE 6 size =  &3E0A             ; cutscene sprites (4bpp) level 2+
+CHTABLE 7 size =  &8EB              ; cutscene sprites (4bpp) attract only
+CHTABLE 8 size =  &1B9E             ; cutscene sprites (4bpp) attract + level 1-2
+CHTABLE 9 size =  &2B0F             ; cutscene sprites (4bpp) attract only
+AUDIO BANK 1 size =  &128C          ; story cutscene music
+AUDIO BANK 2 size =  &2B48          ; epilog cutscene music
+--------
+CHTABLE 6 or 8 are loaded into BANK 0 (ROM slot 4) between gameplay levels, displacing background sprite sets
+CHTABLE 9 is loaded into BANK 1 (ROM slot 5) during attract cutscene only, diplacing background and player sprite sets
+CHTABLE 7 and AUDIO BANK 1 are loaded into BANK 0 (ROM slot 4) during attract sequence only
+AUDIO BANK 2 is loaded into BANK 0 (ROM slot 4) before the final epilog cutscene
+--------
