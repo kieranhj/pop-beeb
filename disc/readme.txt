@@ -140,3 +140,8 @@ Fixed memory scribble in jarabove
 function in topctrl.
 Reset stack pointer in RESTART function
 as per patch to original Apple II game.
+
+15/7/2020 Version 1.2
+Add Loader to check requirements.
+Avoid area of HAZEL page $DA used by
+DFS versions in MOS 3.5+.

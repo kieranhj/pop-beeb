@@ -129,35 +129,6 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
 
 .pop_beeb_entry
 {
-    \\ Test for MASTER
-    LDA #0
-    LDX #1
-    JSR osbyte
-    CPX #3
-    BCC fail
-    CPX #6
-    BCS fail
-
-    \\ Test for SWRAM - need all 4x banks
-    LDA #68
-    JSR osbyte
-    TXA
-    AND #&F         ; for some reason DC DTRAP reports this as &FF?
-    CMP #&F
-    BNE fail
-
-    \\ Test for OSHWM, i.e. PAGE = &E00
-    \\ (Probably wouldn't have loaded if this wasn't the case)
-    LDA #131
-    JSR osbyte
-    CPY #&0E
-    BEQ swr_ok
-
-.fail
-    LDX #LO(swr_fail_text):LDY #HI(swr_fail_text):JMP print_XY
-
-.swr_ok
-
     \\ MODE 7 during initialise
 
     LDA #22:JSR oswrch
@@ -246,6 +217,9 @@ GUARD CORE_TOP             ; bottom of SHADOW RAM
     LDY #HI(hazel_filename)
     LDA #HI(pop_beeb_aux_hazel_data_start)
     JSR disksys_decrunch_file
+
+    \\ Convince MOS3.5+ that DFS is still active after we tramped Hazel.
+    lda #&ff:sta &dad3:sta &dad4    ; super hackballs!
 
 \ Ensure MAIN RAM is writeable
 
@@ -437,8 +411,6 @@ ENDIF
 
 INCLUDE "lib/print.asm"
 
-.swr_fail_text EQUS "Requires Master with 4x SWRAM banks + PAGE at &E00.", 13, 0
-
 .main_filename  EQUS "Main   $"
 .high_filename  EQUS "High   $"
 .hazel_filename EQUS "Hazel  $"
@@ -447,7 +419,7 @@ INCLUDE "lib/print.asm"
 .lower_filename EQUS "Lower  $"
 .keys_filename  EQUS "Keys   $"
 
-EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE)-(P%-beeb_boot_start)
+EXO_pad=(EXO_buffer_len+EXO_TABL_SIZE+31+$31)-(P%-beeb_boot_start)
 
 IF EXO_pad > 0
     PRINT "PAD LOST", ~EXO_pad, " BYTES"
@@ -513,6 +485,9 @@ INCLUDE "game/core_data.asm"
 
 .pop_beeb_data_end
 
+; Music & Audio routines crammed in here
+INCLUDE "lib/exomiser.asm"
+
 \ Pad out Core in DEBUG to keep sector location the same... 
 IF _DEBUG
 SKIP (CORE_TOP - P%)
@@ -564,6 +539,12 @@ PAGE_ALIGN
 .EXO_buffer SKIP EXO_buffer_len
 .exo_tabl_bi SKIP EXO_TABL_SIZE
 .pucrunch_table SKIP 31
+
+\\ Exomiser unpack buffer (must be page aligned)
+EXO_buffer_start = EXO_buffer ; &400
+EXO_buffer_end = EXO_buffer_start + EXO_buffer_len
+exo_tabl_lo = exo_tabl_bi + 52
+exo_tabl_hi = exo_tabl_bi + 104
 
 .mobscrn skip mobspace
 .mobvel skip mobspace
@@ -671,7 +652,7 @@ HAZEL_TOP=&DF00         ; looks like last page is FS control data
 
 CLEAR 0, &FFFF
 ORG HAZEL_START
-GUARD &DB00             ; Can't use page &DBxx with MMFS FFS
+GUARD &DAC0             ; Can't use page &DBxx with MMFS FFS
 
 PAGE_ALIGN
 .blueprnt
@@ -692,10 +673,7 @@ hrtables_end=P%
 ; Beeb specific data
 INCLUDE "game/beeb_palette.asm"
 
-; Music & Audio routines crammed in here
-INCLUDE "lib/exomiser.asm"
-
-PAGE_ALIGN
+INCLUDE "lib/exomiser_part2.asm"
 
 .pop_beeb_aux_hazel_data_end
 

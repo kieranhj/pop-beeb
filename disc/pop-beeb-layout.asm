@@ -7,6 +7,7 @@
 
 \ Start with !BOOT
 PUTFILE "disc/boot.txt", "!BOOT", &FFFF, 0
+PUTBASIC "disc/loader.bas", "LOADER"
 
 \ All code
 PUTFILE "disc/Core", "Prince", &E00, &E00
